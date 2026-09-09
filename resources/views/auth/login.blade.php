@@ -428,7 +428,7 @@
                         id="login" 
                         name="login" 
                         class="form-input" 
-                        placeholder="hendri atau hendri@indraco.com" 
+                        placeholder="superadmin atau superadmin@indraco.com" 
                         value="{{ old('login') }}" 
                         required 
                         autofocus
@@ -476,21 +476,17 @@
         <!-- Quick Fill Helpers -->
         <div class="quick-accounts">
             <div class="quick-title">Akun Bawaan (Klik untuk Isi Cepat)</div>
-            <div class="account-chips">
-                <button type="button" class="account-chip" onclick="fillCredentials('hendri', 'password')">
+            <div class="account-chips" style="grid-template-columns: 1.1fr 1fr 1fr;">
+                <button type="button" class="account-chip" onclick="fillCredentials('superadmin', 'password')">
                     <span class="chip-role">Superadmin</span>
-                    <span class="chip-user">hendri / hendri@...</span>
-                </button>
-                <button type="button" class="account-chip" onclick="fillCredentials('admin', 'password')">
-                    <span class="chip-role">Admin</span>
-                    <span class="chip-user">admin / admin@...</span>
+                    <span class="chip-user">superadmin / ...</span>
                 </button>
                 <button type="button" class="account-chip" onclick="fillCredentials('sarah', 'password')">
-                    <span class="chip-role">Agent 1</span>
+                    <span class="chip-role">Staff CS (Sarah)</span>
                     <span class="chip-user">sarah / sarah@...</span>
                 </button>
                 <button type="button" class="account-chip" onclick="fillCredentials('budi', 'password')">
-                    <span class="chip-role">Agent 2</span>
+                    <span class="chip-role">Staff CS (Budi)</span>
                     <span class="chip-user">budi / budi@...</span>
                 </button>
             </div>

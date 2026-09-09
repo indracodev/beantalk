@@ -16,7 +16,7 @@ class CreateUsersTable extends Migration
             $table->string('email');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('role', ['superadmin', 'owner', 'admin', 'agent'])->default('agent');
+            $table->enum('role', ['superadmin', 'agent'])->default('agent');
             $table->enum('status', ['online', 'busy', 'offline'])->default('offline');
             $table->string('avatar_url', 500)->nullable();
             $table->rememberToken();

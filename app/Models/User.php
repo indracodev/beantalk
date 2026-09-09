@@ -49,22 +49,28 @@ class User extends Authenticatable
 
     public function isSuperAdmin(): bool
     {
-        return in_array($this->role, ['superadmin', 'owner']);
-    }
-
-    public function isOwner(): bool
-    {
-        return in_array($this->role, ['superadmin', 'owner']);
-    }
-
-    public function isAdmin(): bool
-    {
-        return $this->role === 'admin';
+        return $this->role === 'superadmin';
     }
 
     public function isAgent(): bool
     {
         return $this->role === 'agent';
+    }
+
+    public function isStaff(): bool
+    {
+        return $this->role === 'agent';
+    }
+
+    // Backward compatibility aliases
+    public function isOwner(): bool
+    {
+        return $this->isSuperAdmin();
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->isSuperAdmin();
     }
 
     public function hasRole($roles): bool
@@ -79,7 +85,7 @@ class User extends Authenticatable
             return true;
         }
 
-        // Superadmin mewarisi semua hak akses owner & admin
+        // Superadmin mewarisi semua akses manajemen (owner, admin)
         if ($this->role === 'superadmin' && (in_array('owner', $allowed) || in_array('admin', $allowed))) {
             return true;
         }
@@ -89,16 +95,16 @@ class User extends Authenticatable
 
     public function canManageIntegrations(): bool
     {
-        return in_array($this->role, ['superadmin', 'owner', 'admin']);
+        return $this->isSuperAdmin();
     }
 
     public function canManageTeam(): bool
     {
-        return in_array($this->role, ['superadmin', 'owner', 'admin']);
+        return $this->isSuperAdmin();
     }
 
     public function canChangeRoles(): bool
     {
-        return in_array($this->role, ['superadmin', 'owner']);
+        return $this->isSuperAdmin();
     }
 }

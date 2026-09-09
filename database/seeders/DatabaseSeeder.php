@@ -33,25 +33,14 @@ class DatabaseSeeder extends Seeder
         // Bind tenant ke app container selama seeding
         app()->instance('current_tenant_id', $tenant->id);
 
-        // 2. CS Users with Hierarchical RBAC (Superadmin, Admin, Agent)
+        // 2. Akun Internal BeanTalk (2 Role: Superadmin & Staff/Agent)
         $superadmin = User::firstOrCreate(
-            ['tenant_id' => $tenant->id, 'email' => 'hendri@indraco.com'],
+            ['tenant_id' => $tenant->id, 'email' => 'superadmin@indraco.com'],
             [
-                'name'     => 'Hendri (Superadmin & Director)',
-                'username' => 'hendri',
+                'name'     => 'Superadmin',
+                'username' => 'superadmin',
                 'password' => Hash::make('password'),
                 'role'     => 'superadmin',
-                'status'   => 'online',
-            ]
-        );
-
-        $admin = User::firstOrCreate(
-            ['tenant_id' => $tenant->id, 'email' => 'admin@indraco.com'],
-            [
-                'name'     => 'System Admin',
-                'username' => 'admin',
-                'password' => Hash::make('password'),
-                'role'     => 'admin',
                 'status'   => 'online',
             ]
         );
@@ -59,7 +48,7 @@ class DatabaseSeeder extends Seeder
         $agentSarah = User::firstOrCreate(
             ['tenant_id' => $tenant->id, 'email' => 'sarah@indraco.com'],
             [
-                'name'     => 'Sarah (Customer Support)',
+                'name'     => 'Sarah (Staff CS)',
                 'username' => 'sarah',
                 'password' => Hash::make('password'),
                 'role'     => 'agent',
@@ -70,7 +59,7 @@ class DatabaseSeeder extends Seeder
         $agentBudi = User::firstOrCreate(
             ['tenant_id' => $tenant->id, 'email' => 'budi@indraco.com'],
             [
-                'name'     => 'Budi (B2B Specialist)',
+                'name'     => 'Budi (Staff CS)',
                 'username' => 'budi',
                 'password' => Hash::make('password'),
                 'role'     => 'agent',
@@ -252,30 +241,20 @@ class DatabaseSeeder extends Seeder
                 'user_id'     => $superadmin->id,
                 'user_name'   => $superadmin->name,
                 'user_role'   => 'superadmin',
-                'action'      => 'role.updated',
-                'description' => 'Menetapkan System Admin sebagai Administrator Operasional Toko',
-                'properties'  => ['target_user' => 'System Admin', 'assigned_role' => 'admin'],
-                'ip_address'  => '180.252.16.89',
-                'created_at'  => now()->subHours(5),
-            ],
-            [
-                'user_id'     => $admin->id,
-                'user_name'   => $admin->name,
-                'user_role'   => 'admin',
                 'action'      => 'integration.created',
                 'description' => 'Membuat integrasi channel website baru: Supresso Coffee (supresso.myshopify.com)',
                 'properties'  => ['domain' => 'supresso.myshopify.com', 'public_key' => 'pk_live_supresso_8819', 'color' => '#1E1E1E'],
-                'ip_address'  => '182.253.120.44',
+                'ip_address'  => '180.252.16.89',
                 'created_at'  => now()->subHours(4),
             ],
             [
-                'user_id'     => $admin->id,
-                'user_name'   => $admin->name,
-                'user_role'   => 'admin',
+                'user_id'     => $superadmin->id,
+                'user_name'   => $superadmin->name,
+                'user_role'   => 'superadmin',
                 'action'      => 'team.invited',
-                'description' => 'Menambahkan anggota tim baru: Sarah (sarah@indraco.com) sebagai CS Agent',
+                'description' => 'Menambahkan anggota tim baru: Sarah (sarah@indraco.com) sebagai CS Staff',
                 'properties'  => ['email' => 'sarah@indraco.com', 'role' => 'agent'],
-                'ip_address'  => '182.253.120.44',
+                'ip_address'  => '180.252.16.89',
                 'created_at'  => now()->subHours(3),
             ],
             [

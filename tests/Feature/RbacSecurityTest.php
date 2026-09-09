@@ -12,8 +12,7 @@ class RbacSecurityTest extends TestCase
     use DatabaseTransactions;
 
     protected $tenant;
-    protected $owner;
-    protected $admin;
+    protected $superadmin;
     protected $agent;
 
     protected function setUp(): void
@@ -21,29 +20,18 @@ class RbacSecurityTest extends TestCase
         parent::setUp();
 
         $this->tenant = Tenant::firstOrCreate(
-            ['slug' => 'test-tenant'],
-            ['name' => 'Test Tenant Corp', 'plan' => 'enterprise']
+            ['slug' => 'internal-test-tenant'],
+            ['name' => 'Internal BeanTalk Group', 'plan' => 'enterprise']
         );
 
-        $this->owner = User::firstOrCreate(
-            ['email' => 'test-owner@example.com'],
+        $this->superadmin = User::firstOrCreate(
+            ['email' => 'test-superadmin@example.com'],
             [
                 'tenant_id' => $this->tenant->id,
-                'name'      => 'Test Owner',
-                'username'  => 'test-owner',
+                'name'      => 'Test Superadmin',
+                'username'  => 'test-superadmin',
                 'password'  => bcrypt('secret123'),
-                'role'      => 'owner',
-            ]
-        );
-
-        $this->admin = User::firstOrCreate(
-            ['email' => 'test-admin@example.com'],
-            [
-                'tenant_id' => $this->tenant->id,
-                'name'      => 'Test Admin',
-                'username'  => 'test-admin',
-                'password'  => bcrypt('secret123'),
-                'role'      => 'admin',
+                'role'      => 'superadmin',
             ]
         );
 
@@ -51,7 +39,7 @@ class RbacSecurityTest extends TestCase
             ['email' => 'test-agent@example.com'],
             [
                 'tenant_id' => $this->tenant->id,
-                'name'      => 'Test Agent',
+                'name'      => 'Test Agent Staff',
                 'username'  => 'test-agent',
                 'password'  => bcrypt('secret123'),
                 'role'      => 'agent',
@@ -91,40 +79,24 @@ class RbacSecurityTest extends TestCase
     }
 
     /**
-     * Test 3: Admin CAN create integration (201 Created)
+     * Test 3: Superadmin CAN create integration (201 Created)
      */
-    public function testAdminCanCreateIntegration()
+    public function testSuperadminCanCreateIntegration()
     {
-        $response = $this->actingAs($this->admin)
+        $response = $this->actingAs($this->superadmin)
                          ->postJson('/api/v1/admin/integrations', [
-                             'name'          => 'Admin Official Store',
-                             'domain'        => 'adminstore.com',
-                             'primary_color' => '#3B82F6',
+                             'name'          => 'Master Official Store',
+                             'domain'        => 'masterstore.com',
+                             'primary_color' => '#C59B27',
                          ]);
 
         $response->assertStatus(201)
                  ->assertJsonPath('success', true)
-                 ->assertJsonPath('data.name', 'Admin Official Store');
+                 ->assertJsonPath('data.name', 'Master Official Store');
     }
 
     /**
-     * Test 4: Owner CAN create integration (201 Created)
-     */
-    public function testOwnerCanCreateIntegration()
-    {
-        $response = $this->actingAs($this->owner)
-                         ->postJson('/api/v1/admin/integrations', [
-                             'name'          => 'Owner Master Store',
-                             'domain'        => 'ownerstore.com',
-                             'primary_color' => '#10B981',
-                         ]);
-
-        $response->assertStatus(201)
-                 ->assertJsonPath('success', true);
-    }
-
-    /**
-     * Test 5: Agent CAN view team list and conversations
+     * Test 4: Agent CAN view team list and conversations
      */
     public function testAgentCanViewTeamAndConversations()
     {
@@ -143,7 +115,7 @@ class RbacSecurityTest extends TestCase
     }
 
     /**
-     * Test 6: Agent cannot invite new team members (403 Forbidden)
+     * Test 5: Agent cannot invite new team members (403 Forbidden)
      */
     public function testAgentCannotInviteTeamMembers()
     {
@@ -160,28 +132,46 @@ class RbacSecurityTest extends TestCase
     }
 
     /**
-     * Test 7: Owner CAN change team member role (200 OK)
+     * Test 6: Superadmin CAN invite new agent team member (201 Created)
      */
-    public function testOwnerCanChangeRole()
+    public function testSuperadminCanInviteTeamMember()
     {
-        $response = $this->actingAs($this->owner)
+        $response = $this->actingAs($this->superadmin)
+                         ->postJson('/api/v1/admin/team', [
+                             'name'     => 'Staff Baru',
+                             'username' => 'staff_baru',
+                             'email'    => 'staff_baru@example.com',
+                             'role'     => 'agent',
+                         ]);
+
+        $response->assertStatus(201)
+                 ->assertJsonPath('success', true)
+                 ->assertJsonPath('data.user.role', 'agent');
+    }
+
+    /**
+     * Test 7: Superadmin CAN promote agent to superadmin (200 OK)
+     */
+    public function testSuperadminCanChangeRole()
+    {
+        $response = $this->actingAs($this->superadmin)
                          ->putJson("/api/v1/admin/team/{$this->agent->id}/role", [
-                             'role' => 'admin',
+                             'role' => 'superadmin',
                          ]);
 
         $response->assertStatus(200)
                  ->assertJsonPath('success', true)
-                 ->assertJsonPath('data.user.role', 'admin');
+                 ->assertJsonPath('data.user.role', 'superadmin');
     }
 
     /**
-     * Test 8: Admin CANNOT change team member role (403 Forbidden)
+     * Test 8: Agent CANNOT change team member role (403 Forbidden)
      */
-    public function testAdminCannotChangeRole()
+    public function testAgentCannotChangeRole()
     {
-        $response = $this->actingAs($this->admin)
-                         ->putJson("/api/v1/admin/team/{$this->agent->id}/role", [
-                             'role' => 'owner',
+        $response = $this->actingAs($this->agent)
+                         ->putJson("/api/v1/admin/team/{$this->superadmin->id}/role", [
+                             'role' => 'agent',
                          ]);
 
         $response->assertStatus(403)

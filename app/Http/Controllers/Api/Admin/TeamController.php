@@ -44,8 +44,8 @@ class TeamController extends Controller
     {
         $currentUser = $request->user();
 
-        // Admin tidak dapat membuat Superadmin atau Admin lain; hanya Superadmin/Owner yang dapat membuat Admin/Superadmin
-        $allowedRoles = $currentUser && ($currentUser->isSuperAdmin() || $currentUser->isOwner()) ? 'superadmin,admin,agent' : 'agent';
+        // Aplikasi internal: 2 role saja (superadmin dan agent/staff)
+        $allowedRoles = $currentUser && $currentUser->isSuperAdmin() ? 'superadmin,agent' : 'agent';
 
         $request->validate([
             'name'     => 'required|string|max:100',
@@ -111,7 +111,7 @@ class TeamController extends Controller
         $currentUser = $request->user();
 
         $request->validate([
-            'role' => 'required|in:superadmin,owner,admin,agent',
+            'role' => 'required|in:superadmin,agent',
         ]);
 
         $tenantId = (app()->bound('current_tenant_id') ? app('current_tenant_id') : null) ?? ($currentUser ? $currentUser->tenant_id : Tenant::first()->id);
@@ -127,9 +127,9 @@ class TeamController extends Controller
             ], 404);
         }
 
-        // Prevent demoting self if sole superadmin/owner
-        if ($currentUser && $currentUser->id === $targetUser->id && !in_array($request->input('role'), ['superadmin', 'owner'])) {
-            $superadminCount = User::where('tenant_id', $tenantId)->whereIn('role', ['superadmin', 'owner'])->count();
+        // Prevent demoting self if sole superadmin
+        if ($currentUser && $currentUser->id === $targetUser->id && $request->input('role') !== 'superadmin') {
+            $superadminCount = User::where('tenant_id', $tenantId)->where('role', 'superadmin')->count();
             if ($superadminCount <= 1) {
                 return response()->json([
                     'success' => false,

@@ -13,7 +13,7 @@ class CreateActivityLogsTable extends Migration
             $table->unsignedBigInteger('tenant_id');
             $table->unsignedBigInteger('user_id')->nullable();
             $table->string('user_name', 100)->nullable();
-            $table->enum('user_role', ['superadmin', 'owner', 'admin', 'agent', 'visitor', 'system'])->default('system');
+            $table->enum('user_role', ['superadmin', 'agent', 'visitor', 'system'])->default('system');
             $table->string('action', 50); // e.g. integration.created, team.invited, role.updated, message.replied, chat.closed
             $table->text('description');
             $table->string('subject_type', 100)->nullable();

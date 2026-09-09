@@ -13,8 +13,7 @@ class ActivityLogTest extends TestCase
     use DatabaseTransactions;
 
     protected $tenant;
-    protected $owner;
-    protected $admin;
+    protected $superadmin;
     protected $agent;
 
     protected function setUp(): void
@@ -26,25 +25,14 @@ class ActivityLogTest extends TestCase
             ['name' => 'Audit Tenant Corp', 'plan' => 'enterprise']
         );
 
-        $this->owner = User::firstOrCreate(
-            ['email' => 'audit-owner@example.com'],
+        $this->superadmin = User::firstOrCreate(
+            ['email' => 'audit-superadmin@example.com'],
             [
                 'tenant_id' => $this->tenant->id,
-                'name'      => 'Audit Owner Hendri',
-                'username'  => 'audit-owner',
+                'name'      => 'Audit Superadmin',
+                'username'  => 'audit-superadmin',
                 'password'  => bcrypt('secret123'),
-                'role'      => 'owner',
-            ]
-        );
-
-        $this->admin = User::firstOrCreate(
-            ['email' => 'audit-admin@example.com'],
-            [
-                'tenant_id' => $this->tenant->id,
-                'name'      => 'Audit Admin Bob',
-                'username'  => 'audit-admin',
-                'password'  => bcrypt('secret123'),
-                'role'      => 'admin',
+                'role'      => 'superadmin',
             ]
         );
 
@@ -70,22 +58,22 @@ class ActivityLogTest extends TestCase
             'Sistem melakukan verifikasi integritas database',
             null,
             ['type' => 'automated_check'],
-            $this->owner
+            $this->superadmin
         );
 
         $this->assertDatabaseHas('activity_logs', [
             'id'        => $log->id,
-            'user_role' => 'owner',
+            'user_role' => 'superadmin',
             'action'    => 'system.maintenance',
         ]);
     }
 
     /**
-     * Test 2: Admin creating integration generates activity log
+     * Test 2: Superadmin creating integration generates activity log
      */
     public function testCreatingIntegrationLogsActivity()
     {
-        $response = $this->actingAs($this->admin)
+        $response = $this->actingAs($this->superadmin)
                          ->postJson('/api/v1/admin/integrations', [
                              'name'          => 'Audit Tested Store',
                              'domain'        => 'audittest.com',
@@ -96,8 +84,8 @@ class ActivityLogTest extends TestCase
 
         $this->assertDatabaseHas('activity_logs', [
             'tenant_id' => $this->tenant->id,
-            'user_id'   => $this->admin->id,
-            'user_role' => 'admin',
+            'user_id'   => $this->superadmin->id,
+            'user_role' => 'superadmin',
             'action'    => 'integration.created',
         ]);
     }
@@ -109,19 +97,20 @@ class ActivityLogTest extends TestCase
     {
         $email = 'new-recruit-' . uniqid() . '@example.com';
 
-        $response = $this->actingAs($this->owner)
+        $response = $this->actingAs($this->superadmin)
                          ->postJson('/api/v1/admin/team', [
-                             'name'  => 'New Agent Recruit',
-                             'email' => $email,
-                             'role'  => 'agent',
+                             'name'     => 'New Agent Recruit',
+                             'username' => 'agent_' . uniqid(),
+                             'email'    => $email,
+                             'role'     => 'agent',
                          ]);
 
         $response->assertStatus(201);
 
         $this->assertDatabaseHas('activity_logs', [
             'tenant_id' => $this->tenant->id,
-            'user_id'   => $this->owner->id,
-            'user_role' => 'owner',
+            'user_id'   => $this->superadmin->id,
+            'user_role' => 'superadmin',
             'action'    => 'team.invited',
         ]);
     }
@@ -131,17 +120,17 @@ class ActivityLogTest extends TestCase
      */
     public function testUpdatingRoleLogsActivity()
     {
-        $response = $this->actingAs($this->owner)
+        $response = $this->actingAs($this->superadmin)
                          ->putJson("/api/v1/admin/team/{$this->agent->id}/role", [
-                             'role' => 'admin',
+                             'role' => 'superadmin',
                          ]);
 
         $response->assertStatus(200);
 
         $this->assertDatabaseHas('activity_logs', [
             'tenant_id' => $this->tenant->id,
-            'user_id'   => $this->owner->id,
-            'user_role' => 'owner',
+            'user_id'   => $this->superadmin->id,
+            'user_role' => 'superadmin',
             'action'    => 'role.updated',
         ]);
     }
@@ -153,27 +142,27 @@ class ActivityLogTest extends TestCase
     {
         // Seed an agent activity
         ActivityLogger::log('chat.assigned', 'Agent Sarah ditugaskan tiket baru', null, [], $this->agent);
-        // Seed an owner activity
-        ActivityLogger::log('billing.upgrade', 'Owner Hendri mengupgrade kuota', null, [], $this->owner);
+        // Seed a superadmin activity
+        ActivityLogger::log('billing.upgrade', 'Superadmin mengupgrade kuota', null, [], $this->superadmin);
 
         // 1. Fetch all
-        $resAll = $this->actingAs($this->admin)->getJson('/api/v1/admin/activity-logs');
+        $resAll = $this->actingAs($this->superadmin)->getJson('/api/v1/admin/activity-logs');
         $resAll->assertStatus(200)
                ->assertJsonPath('success', true)
                ->assertJsonStructure(['data' => ['logs', 'pagination']]);
 
         // 2. Filter by role=agent
-        $resAgent = $this->actingAs($this->admin)->getJson('/api/v1/admin/activity-logs?role=agent');
+        $resAgent = $this->actingAs($this->superadmin)->getJson('/api/v1/admin/activity-logs?role=agent');
         $resAgent->assertStatus(200);
         foreach ($resAgent->json('data.logs') as $item) {
             $this->assertEquals('agent', $item['user_role']);
         }
 
-        // 3. Filter by role=owner
-        $resOwner = $this->actingAs($this->admin)->getJson('/api/v1/admin/activity-logs?role=owner');
-        $resOwner->assertStatus(200);
-        foreach ($resOwner->json('data.logs') as $item) {
-            $this->assertEquals('owner', $item['user_role']);
+        // 3. Filter by role=superadmin
+        $resSuperadmin = $this->actingAs($this->superadmin)->getJson('/api/v1/admin/activity-logs?role=superadmin');
+        $resSuperadmin->assertStatus(200);
+        foreach ($resSuperadmin->json('data.logs') as $item) {
+            $this->assertEquals('superadmin', $item['user_role']);
         }
     }
 }

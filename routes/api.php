@@ -45,13 +45,13 @@ Route::prefix('v1')->group(function () {
 
         // Multi-Site Integrations Hub
         Route::get('integrations', 'Api\Admin\IntegrationController@index');
-        Route::post('integrations', 'Api\Admin\IntegrationController@store')->middleware('role:owner,admin');
+        Route::post('integrations', 'Api\Admin\IntegrationController@store')->middleware('role:superadmin,owner,admin');
 
         // Team & RBAC Management
         Route::get('team', 'Api\Admin\TeamController@index');
-        Route::post('team', 'Api\Admin\TeamController@store')->middleware('role:owner,admin');
-        Route::put('team/{id}/role', 'Api\Admin\TeamController@updateRole')->middleware('role:owner');
-        Route::delete('team/{id}', 'Api\Admin\TeamController@destroy')->middleware('role:owner');
+        Route::post('team', 'Api\Admin\TeamController@store')->middleware('role:superadmin,owner,admin');
+        Route::put('team/{id}/role', 'Api\Admin\TeamController@updateRole')->middleware('role:superadmin,owner');
+        Route::delete('team/{id}', 'Api\Admin\TeamController@destroy')->middleware('role:superadmin,owner');
 
         // Audit Trail & Activity Logs
         Route::get('activity-logs', 'Api\Admin\ActivityLogController@index');
