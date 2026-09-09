@@ -1,0 +1,4224 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BeanTalk — Universal Customer Chat Platform</title>
+  <style>
+    /* ==========================================================================
+       1. DESIGN TOKENS (Anti-AI Slop: Clean Zinc Neutral & High Density)
+       ========================================================================== */
+    :root {
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+      /* Zinc Palettes */
+      --bg-canvas: #FAFAFA;
+      --bg-surface: #FFFFFF;
+      --bg-subtle: #F4F4F5;
+      --bg-muted: #E4E4E7;
+      
+      --border-hairline: #E4E4E7;
+      --border-hover: #D4D4D8;
+      
+      --text-main: #09090B;
+      --text-sub: #52525B;
+      --text-muted: #A1A1AA;
+      
+      --accent-primary: #0F172A;
+      --accent-hover: #1E293B;
+      
+      --status-green: #10B981;
+      --status-amber: #F59E0B;
+      --status-red: #EF4444;
+
+      /* Project Brand Colors (Shape Baku, Warna Core Dinamis) */
+      --color-supresso: #1E1E1E;
+      --color-indraco: #6F4E37;
+      --color-global: #0F2C59;
+      --color-sda: #D9230F;
+
+      /* Active Selected Widget Color */
+      --chat-primary: var(--color-supresso);
+      --chat-primary-text: #FFFFFF;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ==========================================================================
+       2. TOP PREVIEW TOOLBAR (Minimalist Sandbox Controller - ONLY for prototype demo)
+       ========================================================================== */
+    .preview-header {
+      height: 38px;
+      background: #09090B;
+      color: #FFFFFF;
+      border-bottom: 1px solid #27272A;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 1000;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-title .badge {
+      font-size: 10px;
+      padding: 2px 7px;
+      background: #27272A;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      color: #A1A1AA;
+      border: 1px solid #3F3F46;
+    }
+
+    .view-switcher {
+      display: flex;
+      background: #27272A;
+      padding: 2px;
+      border-radius: 6px;
+      gap: 2px;
+    }
+
+    .view-btn {
+      border: none;
+      background: transparent;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #A1A1AA;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .view-btn:hover {
+      color: #FFFFFF;
+    }
+
+    .view-btn.active {
+      background: #3F3F46;
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+
+    .color-switcher {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: #A1A1AA;
+    }
+
+    .color-pill {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.15s ease;
+    }
+
+    .color-pill:hover {
+      transform: scale(1.2);
+    }
+
+    .color-pill.active {
+      border-color: #FFFFFF;
+    }
+
+    /* ==========================================================================
+       RBAC (Role-Based Access Control) CONTROLS & BADGES
+       ========================================================================== */
+    .role-switcher {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: #18181B;
+      padding: 2px 4px;
+      border-radius: 6px;
+      border: 1px solid #27272A;
+    }
+
+    .role-btn {
+      border: none;
+      background: transparent;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #A1A1AA;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .role-btn:hover {
+      color: #FFFFFF;
+    }
+
+    .role-btn.active {
+      background: #27272A;
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+
+    .role-btn.active.role-owner {
+      background: #78350F;
+      color: #FDE68A;
+    }
+
+    .role-btn.active.role-admin {
+      background: #312E81;
+      color: #C7D2FE;
+    }
+
+    .role-btn.active.role-agent {
+      background: #064E3B;
+      color: #A7F3D0;
+    }
+
+    .role-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      line-height: 1.4;
+    }
+
+    .role-badge-owner {
+      background: #FEF3C7;
+      color: #92400E;
+      border: 1px solid #FDE68A;
+    }
+
+    .role-badge-admin {
+      background: #EEF2FF;
+      color: #4338CA;
+      border: 1px solid #C7D2FE;
+    }
+
+    .role-badge-agent {
+      background: #ECFDF5;
+      color: #065F46;
+      border: 1px solid #A7F3D0;
+    }
+
+    .rbac-notice-toast {
+      position: fixed;
+      top: 50px;
+      right: 20px;
+      background: #18181B;
+      color: #FFFFFF;
+      border: 1px solid #EF4444;
+      border-left: 4px solid #EF4444;
+      border-radius: 8px;
+      padding: 12px 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      z-index: 2100;
+      display: none;
+      max-width: 420px;
+      font-size: 12px;
+      line-height: 1.4;
+      animation: slideInRbac 0.2s ease;
+    }
+
+    @keyframes slideInRbac {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Team & RBAC Management View */
+    .team-rbac-view {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+      overflow-y: auto;
+      padding: 24px 32px;
+      background: var(--bg-canvas);
+    }
+
+    .team-rbac-view.active {
+      display: flex;
+    }
+
+    .team-table-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-hairline);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .team-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 12px;
+    }
+
+    .team-table th {
+      background: #F4F4F5;
+      padding: 10px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-sub);
+      border-bottom: 1px solid var(--border-hairline);
+    }
+
+    .team-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-hairline);
+      color: var(--text-main);
+      vertical-align: middle;
+    }
+
+    .team-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .role-select-sm {
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border-hairline);
+      background: #FFFFFF;
+      font-size: 11px;
+      font-family: inherit;
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    /* Activity Logs & Audit Trail View */
+    .logs-hub-view {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+      overflow-y: auto;
+      padding: 24px 32px;
+      background: var(--bg-canvas);
+    }
+
+    .logs-hub-view.active {
+      display: flex;
+    }
+
+    .log-filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .log-filter-chip {
+      border: 1px solid var(--border-hairline);
+      background: #FFFFFF;
+      color: var(--text-sub);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .log-filter-chip:hover {
+      border-color: #A1A1AA;
+      color: var(--text-main);
+    }
+
+    .log-filter-chip.active {
+      background: #18181B;
+      color: #FFFFFF;
+      border-color: #18181B;
+      font-weight: 600;
+    }
+
+    .log-action-tag {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #F4F4F5;
+      color: #3F3F46;
+      border: 1px solid #E4E4E7;
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .log-action-tag.owner { background: #FEF3C7; color: #92400E; border-color: #FDE68A; }
+    .log-action-tag.admin { background: #EEF2FF; color: #4338CA; border-color: #C7D2FE; }
+    .log-action-tag.agent { background: #ECFDF5; color: #065F46; border-color: #A7F3D0; }
+    .log-action-tag.visitor { background: #F3E8FF; color: #6B21A8; border-color: #E9D5FF; }
+    .log-action-tag.system { background: #F4F4F5; color: #52525B; border-color: #E4E4E7; }
+
+    /* ==========================================================================
+       REAL ADMIN TOPBAR (Linear / Vercel SaaS Style)
+       ========================================================================== */
+    /* ==========================================================================
+       AUTHENTIC ADMIN LAYOUT: COLLAPSIBLE SIDEBAR (BeanTalk Style)
+       ========================================================================== */
+    .admin-app-layout {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: row;
+      overflow: hidden;
+      background: var(--bg-surface);
+    }
+
+    /* Left Sidebar */
+    .admin-sidebar {
+      width: 220px;
+      height: 100%;
+      background: #FFFFFF;
+      border-right: 1px solid var(--border-hairline);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      flex-shrink: 0;
+      transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 100;
+      overflow-x: hidden;
+    }
+
+    .admin-sidebar.minimized {
+      width: 68px;
+    }
+
+    /* Sidebar Top Group */
+    .sidebar-top {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      height: 56px;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-hairline);
+      flex-shrink: 0;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text-main);
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .sidebar-brand-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366F1 0%, #4338CA 100%);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(99, 102, 241, 0.35);
+    }
+
+    .sidebar-brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+    }
+
+    .sidebar-toggle-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1px solid var(--border-hairline);
+      background: var(--bg-subtle);
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .sidebar-toggle-btn:hover {
+      background: var(--bg-muted);
+      color: var(--text-main);
+    }
+
+    .admin-sidebar.minimized .sidebar-toggle-btn svg {
+      transform: rotate(180deg);
+    }
+
+    .admin-sidebar.minimized .sidebar-header {
+      padding: 0;
+      justify-content: center;
+      gap: 0;
+    }
+
+    .admin-sidebar.minimized .sidebar-brand {
+      display: none;
+    }
+
+    /* Sidebar Navigation Links */
+    .sidebar-nav {
+      padding: 14px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow-y: auto;
+    }
+
+    .sidebar-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-sub);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      width: 100%;
+      text-align: left;
+      white-space: nowrap;
+      position: relative;
+    }
+
+    .sidebar-nav-item:hover {
+      background: #F4F4F5;
+      color: var(--text-main);
+    }
+
+    .sidebar-nav-item.active {
+      background: #EEF2FF;
+      color: #4F46E5;
+      font-weight: 600;
+    }
+
+    .sidebar-icon {
+      font-size: 16px;
+      width: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .sidebar-label {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .sidebar-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 10px;
+      background: #E0E7FF;
+      color: #4338CA;
+    }
+
+    .sidebar-nav-item:not(.active) .sidebar-badge {
+      background: var(--bg-muted);
+      color: var(--text-sub);
+    }
+
+    /* Minimized adjustments */
+    .admin-sidebar.minimized .sidebar-nav {
+      padding: 14px 6px;
+    }
+
+    .admin-sidebar.minimized .sidebar-nav-item {
+      justify-content: center;
+      padding: 10px 0;
+      gap: 0;
+    }
+
+    .admin-sidebar.minimized .sidebar-label,
+    .admin-sidebar.minimized .sidebar-badge {
+      display: none;
+    }
+
+    /* Sidebar Footer: Settings & Profile */
+    .sidebar-footer {
+      padding: 10px;
+      border-top: 1px solid var(--border-hairline);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .admin-sidebar.minimized .sidebar-footer {
+      padding: 10px 6px;
+    }
+
+    .sidebar-user-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .sidebar-user-profile:hover {
+      background: #F4F4F5;
+    }
+
+    .sidebar-user-info {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.25;
+      overflow: hidden;
+    }
+
+    .sidebar-user-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .sidebar-user-status {
+      font-size: 11px;
+      color: var(--status-green);
+      font-weight: 500;
+    }
+
+    .admin-sidebar.minimized .sidebar-user-profile {
+      justify-content: center;
+      padding: 8px 0;
+    }
+
+    .admin-sidebar.minimized .sidebar-user-info {
+      display: none;
+    }
+
+    /* Admin Main Content Area */
+    .admin-main-area {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      overflow: hidden;
+      background: var(--bg-surface);
+    }
+
+    .btn-create-integration {
+      height: 32px;
+      padding: 0 14px;
+      background: #09090B;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s ease, transform 0.05s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .btn-create-integration:hover {
+      background: #27272A;
+    }
+
+    .btn-create-integration:active {
+      transform: scale(0.98);
+    }
+
+    /* ==========================================================================
+       INTEGRATIONS HUB VIEW (Central Multi-Site Management)
+       ========================================================================== */
+    .integrations-hub {
+      flex: 1;
+      padding: 28px 36px;
+      background: var(--bg-canvas);
+      overflow-y: auto;
+      display: none;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .integrations-hub.active {
+      display: flex;
+    }
+
+    .hub-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border-hairline);
+    }
+
+    .hub-title-group h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hub-title-group p {
+      font-size: 13px;
+      color: var(--text-sub);
+    }
+
+    .hub-stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .hub-stat-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-hairline);
+      border-radius: 8px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .hub-stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .hub-stat-val {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .hub-stat-sub {
+      font-size: 11px;
+      color: var(--status-green);
+      font-weight: 500;
+    }
+
+    .hub-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 18px;
+    }
+
+    .integration-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-hairline);
+      border-radius: 10px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .integration-card:hover {
+      border-color: var(--border-hover);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .card-brand-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .brand-names {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-names-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .brand-names-domain {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: #ECFDF5;
+      color: #065F46;
+    }
+
+    .status-badge .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10B981;
+    }
+
+    .card-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      background: var(--bg-canvas);
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border-hairline);
+    }
+
+    .color-swatch-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .swatch-circle {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.15);
+    }
+
+    .card-snippet-box {
+      background: #18181B;
+      color: #A1A1AA;
+      border-radius: 6px;
+      padding: 9px 12px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .card-snippet-box span {
+      color: #38BDF8;
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    .btn-test-widget {
+      flex: 1;
+      padding: 7px 12px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.15s ease;
+    }
+
+    .btn-test-widget:hover {
+      background: var(--bg-subtle);
+    }
+
+    .btn-copy-code {
+      padding: 7px 12px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-hairline);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-sub);
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .btn-copy-code:hover {
+      background: var(--bg-subtle);
+      color: var(--text-main);
+    }
+
+    /* ==========================================================================
+       MODAL: CREATE NEW INTEGRATION
+       ========================================================================== */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(2px);
+      z-index: 200000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-box {
+      width: 480px;
+      background: #FFFFFF;
+      border-radius: 12px;
+      border: 1px solid var(--border-hairline);
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.05);
+      overflow: hidden;
+      animation: modalPop 0.15s ease-out;
+    }
+
+    @keyframes modalPop {
+      from { transform: scale(0.96); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-hairline);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header h3 {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .modal-close-btn {
+      border: none;
+      background: transparent;
+      font-size: 16px;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    .modal-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-sub);
+    }
+
+    .form-input {
+      padding: 8px 12px;
+      border: 1px solid var(--border-hairline);
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .form-input:focus {
+      border-color: #09090B;
+    }
+
+    .color-input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .color-input-picker {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--border-hairline);
+      border-radius: 6px;
+      cursor: pointer;
+      padding: 2px;
+      background: #FFF;
+    }
+
+    .modal-footer {
+      padding: 14px 20px;
+      background: var(--bg-canvas);
+      border-top: 1px solid var(--border-hairline);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .btn-secondary {
+      padding: 7px 14px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-hairline);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .snippet-preview-box {
+      background: #18181B;
+      color: #A1A1AA;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      word-break: break-all;
+      margin-top: 8px;
+    }
+
+    .snippet-preview-box span {
+      color: #34D399;
+    }
+    .viewport {
+      flex: 1;
+      display: flex;
+      height: calc(100vh - 52px);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .view-pane {
+      width: 100%;
+      height: 100%;
+      display: none;
+    }
+
+    .view-pane.active {
+      display: flex;
+    }
+
+    /* ==========================================================================
+       4. VIEW A: ADMIN DASHBOARD (3-COLUMN LINEAR STYLE)
+       ========================================================================== */
+    .admin-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      background: var(--bg-surface);
+    }
+
+    /* Column 1: Conversations List */
+    .col-conversations {
+      width: 320px;
+      border-right: 1px solid var(--border-hairline);
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-surface);
+      flex-shrink: 0;
+    }
+
+    .col-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-hairline);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .col-header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .col-header h2 {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .project-filter-select {
+      width: 100%;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-hairline);
+      background: var(--bg-subtle);
+      font-size: 12px;
+      font-family: inherit;
+      color: var(--text-main);
+      cursor: pointer;
+      outline: none;
+    }
+
+    .inbox-tabs {
+      display: flex;
+      gap: 4px;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--border-hairline);
+      background: var(--bg-canvas);
+    }
+
+    .inbox-tab {
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-sub);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .inbox-tab.active {
+      background: var(--bg-surface);
+      color: var(--text-main);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      font-weight: 600;
+    }
+
+    .conv-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .conv-card {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-hairline);
+      cursor: pointer;
+      transition: background 0.1s ease;
+      display: flex;
+      gap: 12px;
+    }
+
+    .conv-card:hover {
+      background: var(--bg-canvas);
+    }
+
+    .conv-card.active {
+      background: #F1F5F9;
+      border-left: 3px solid #0F172A;
+    }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-hairline);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .avatar-online-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--status-green);
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      border: 2px solid #FFFFFF;
+    }
+
+    .conv-meta {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .conv-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .conv-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .conv-time {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-feature-settings: "tnum";
+    }
+
+    .conv-project-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-bottom: 4px;
+    }
+
+    .tag-supresso { background: #E4E4E7; color: #1E1E1E; }
+    .tag-indraco  { background: #EFEBE9; color: #6F4E37; }
+    .tag-global   { background: #E0E7FF; color: #0F2C59; }
+    .tag-sda      { background: #FEE2E2; color: #D9230F; }
+
+    .conv-snippet {
+      font-size: 12px;
+      color: var(--text-sub);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Column 2: Active Chat Thread */
+    .col-chat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border-hairline);
+    }
+
+    .chat-header {
+      height: 57px;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--border-hairline);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-surface);
+    }
+
+    .chat-header-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .chat-header-info h3 {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .chat-header-info p {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    .chat-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-action {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--border-hairline);
+      background: var(--bg-surface);
+      color: var(--text-main);
+      transition: background 0.15s ease;
+    }
+
+    .btn-action:hover {
+      background: var(--bg-subtle);
+    }
+
+    .btn-close-chat {
+      background: var(--bg-subtle);
+      color: var(--status-red);
+      border-color: #FECACA;
+    }
+
+    .message-feed {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background: #FAFAFA;
+    }
+
+    .msg-group {
+      display: flex;
+      flex-direction: column;
+      max-width: 65%;
+    }
+
+    .msg-group.visitor {
+      align-self: flex-start;
+    }
+
+    .msg-group.agent {
+      align-self: flex-end;
+      align-items: flex-end;
+    }
+
+    .msg-sender-name {
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-muted);
+    }
+
+    .msg-bubble {
+      padding: 10px 14px;
+      font-size: 13px;
+      line-height: 1.45;
+      border-radius: 12px;
+      word-break: break-word;
+    }
+
+    .msg-group.visitor .msg-bubble {
+      background: #FFFFFF;
+      color: var(--text-main);
+      border: 1px solid var(--border-hairline);
+      border-bottom-left-radius: 2px;
+    }
+
+    .msg-group.agent .msg-bubble {
+      background: #0F172A;
+      color: #FFFFFF;
+      border-bottom-right-radius: 2px;
+    }
+
+    .msg-time {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-feature-settings: "tnum";
+    }
+
+    .admin-composer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border-hairline);
+      background: var(--bg-surface);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .composer-input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .composer-textarea {
+      flex: 1;
+      border: 1px solid var(--border-hairline);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-family: inherit;
+      resize: none;
+      height: 48px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .composer-textarea:focus {
+      border-color: #09090B;
+    }
+
+    .btn-send {
+      padding: 0 16px;
+      background: #0F172A;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+    }
+
+    .btn-send:hover {
+      opacity: 0.9;
+    }
+
+    .composer-hints {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Column 3: Customer Context */
+    .col-context {
+      width: 280px;
+      background: var(--bg-surface);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .context-section {
+      padding: 16px;
+      border-bottom: 1px solid var(--border-hairline);
+    }
+
+    .context-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .context-item {
+      margin-bottom: 10px;
+    }
+
+    .context-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .context-value {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-main);
+      word-break: break-all;
+    }
+
+    .context-value.empty {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* ==========================================================================
+       5. VIEW B: INTEGRATED CHAT WIDGET (SHOPIFY STORE SIMULATION)
+       ========================================================================== */
+    .store-simulation {
+      width: 100%;
+      height: 100%;
+      background: #F6F6F7;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-y: auto;
+    }
+
+    .store-navbar {
+      height: 60px;
+      background: #FFFFFF;
+      border-bottom: 1px solid #E5E5E5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+    }
+
+    .store-brand {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .store-nav-links {
+      display: flex;
+      gap: 24px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #555;
+    }
+
+    .store-product-hero {
+      max-width: 1000px;
+      margin: 40px auto;
+      background: #FFFFFF;
+      border-radius: 12px;
+      border: 1px solid #EAEAEA;
+      display: flex;
+      padding: 40px;
+      gap: 40px;
+    }
+
+    .product-img-box {
+      width: 360px;
+      height: 360px;
+      background: #F1F1F1;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #888;
+      font-size: 14px;
+      border: 1px dashed #DDD;
+    }
+
+    .product-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .product-badge {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #999;
+      margin-bottom: 8px;
+    }
+
+    .product-title {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .product-price {
+      font-size: 20px;
+      font-weight: 600;
+      color: #111;
+      margin-bottom: 20px;
+    }
+
+    .product-desc {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #666;
+      margin-bottom: 24px;
+    }
+
+    .btn-buy {
+      width: 220px;
+      padding: 14px;
+      background: #111;
+      color: #FFF;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* ==========================================================================
+       6. EMBEDDED WIDGET (SHADOW DOM SIMULATION)
+       ========================================================================== */
+    .widget-root {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 999999;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .widget-window {
+      width: 370px;
+      height: 570px;
+      background: #FFFFFF;
+      border-radius: 16px;
+      border: 1px solid rgba(0,0,0,0.08);
+      box-shadow: 0 12px 36px -4px rgba(0,0,0,0.14), 0 4px 12px -2px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      margin-bottom: 14px;
+      opacity: 0;
+      transform: translateY(12px) scale(0.97);
+      pointer-events: none;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+
+    .widget-window.open {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    /* Screen Transition Container */
+    .widget-screen {
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      background: #FFFFFF;
+    }
+
+    .widget-screen.active {
+      display: flex;
+    }
+
+    /* ---------------------------------------------------------
+       STAGE 1: HOME / WELCOME SCREEN (Halaman Awal)
+       --------------------------------------------------------- */
+    .widget-home-header {
+      background: linear-gradient(180deg, #4B5563 0%, #374151 55%, #1F2937 100%);
+      padding: 20px 20px 44px 20px;
+      color: #FFFFFF;
+      position: relative;
+      border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 20px;
+      transition: background 0.3s ease;
+    }
+
+    .widget-home-topbar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
+    }
+
+    .widget-home-close-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.16);
+      color: #FFFFFF;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s ease, transform 0.15s ease;
+    }
+
+    .widget-home-close-btn:hover {
+      background: rgba(255, 255, 255, 0.28);
+      transform: scale(1.05);
+    }
+
+    .widget-home-greeting {
+      font-size: 26px;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .widget-home-sub {
+      font-size: 13px;
+      line-height: 1.45;
+      color: rgba(255, 255, 255, 0.88);
+      margin: 0;
+    }
+
+    .widget-home-content {
+      flex: 1;
+      padding: 0 16px 14px 16px;
+      margin-top: -28px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .widget-card {
+      background: #FFFFFF;
+      border-radius: 12px;
+      border: 1px solid rgba(0, 0, 0, 0.07);
+      box-shadow: 0 8px 20px -4px rgba(0,0,0,0.08), 0 2px 6px -1px rgba(0,0,0,0.04);
+      padding: 14px 16px;
+    }
+
+    /* Card 1: Your Conversation */
+    .widget-conv-card {
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .widget-conv-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px -4px rgba(0,0,0,0.12), 0 4px 8px -2px rgba(0,0,0,0.06);
+      border-color: rgba(0, 0, 0, 0.14);
+    }
+
+    .widget-conv-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .widget-conv-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #111827;
+      letter-spacing: -0.01em;
+    }
+
+    .widget-live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #10B981;
+    }
+
+    .widget-live-pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10B981;
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      animation: livePulse 2s infinite;
+    }
+
+    @keyframes livePulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .widget-conv-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #F3F4F6;
+    }
+
+    .widget-conv-avatar-box {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #F3F4F6;
+      color: #4B5563;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .widget-conv-meta {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .widget-conv-brand-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .widget-conv-preview {
+      font-size: 12px;
+      color: #6B7280;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .widget-conv-arrow-btn {
+      color: #9CA3AF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s ease, transform 0.15s ease;
+    }
+
+    .widget-conv-card:hover .widget-conv-arrow-btn {
+      color: #111827;
+      transform: translateX(3px);
+    }
+
+    /* Card 2: Reach Us Anywhere Else */
+    .widget-social-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .widget-social-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #111827;
+      letter-spacing: -0.01em;
+    }
+
+    .widget-social-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .social-channel-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      text-decoration: none;
+      cursor: pointer;
+      position: relative;
+      border: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .social-channel-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+    }
+
+    .social-btn-wa {
+      background: #25D366;
+    }
+
+    .social-btn-fb {
+      background: #1877F2;
+    }
+
+    .social-btn-ig {
+      background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+    }
+
+    /* Home Screen Subtle Footer */
+    .widget-home-footer {
+      padding: 10px 16px 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #9CA3AF;
+      font-weight: 500;
+      background: #FFFFFF;
+    }
+
+    .widget-home-footer svg {
+      color: #9CA3AF;
+    }
+
+    /* ---------------------------------------------------------
+       STAGE 2: ACTIVE CHAT SCREEN (Chat Utama)
+       --------------------------------------------------------- */
+    .widget-header {
+      background: #FFFFFF;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-hairline);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 60px;
+      box-sizing: border-box;
+    }
+
+    .widget-header-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .widget-back-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s ease;
+      margin-right: 2px;
+    }
+
+    .widget-back-btn:hover {
+      background: var(--bg-subtle);
+    }
+
+    .widget-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--chat-primary);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .widget-header-text h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 2px;
+    }
+
+    .widget-status {
+      font-size: 11px;
+      color: var(--status-green);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .widget-status::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--status-green);
+    }
+
+    .widget-close-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bg-subtle);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-sub);
+      transition: background 0.15s ease;
+    }
+
+    .widget-close-btn:hover {
+      background: #E4E4E7;
+      color: var(--text-main);
+    }
+
+    .widget-body {
+      flex: 1;
+      background: #FAFAFA;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .widget-bubble {
+      padding: 10px 14px;
+      font-size: 13px;
+      line-height: 1.45;
+      border-radius: 14px;
+      max-width: 80%;
+      word-break: break-word;
+    }
+
+    .widget-bubble.agent {
+      align-self: flex-start;
+      background: #F4F4F5;
+      color: #09090B;
+      border-bottom-left-radius: 3px;
+    }
+
+    .widget-bubble.visitor {
+      align-self: flex-end;
+      background: var(--chat-primary);
+      color: var(--chat-primary-text);
+      border-bottom-right-radius: 3px;
+      transition: background 0.2s ease;
+    }
+
+    .widget-composer {
+      padding: 12px 14px;
+      background: #FFFFFF;
+      border-top: 1px solid var(--border-hairline);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* Product Context Card (Page Context Auto-Detection) */
+    .product-context-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-hairline);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    .product-context-thumb {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      background: #F4F4F5;
+      border: 1px solid var(--border-hairline);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .product-context-meta {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .product-context-tag {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 2px;
+    }
+
+    .product-context-link {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      text-decoration: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .product-context-link:hover {
+      text-decoration: underline;
+    }
+
+    .product-context-url {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .widget-attach-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--border-hairline);
+      background: #F4F4F5;
+      color: #555;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .widget-attach-btn:hover {
+      background: #E4E4E7;
+    }
+
+    .widget-input {
+      flex: 1;
+      border: 1px solid var(--border-hairline);
+      border-radius: 20px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .widget-input:focus {
+      border-color: var(--chat-primary);
+    }
+
+    .widget-send-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--chat-primary);
+      color: var(--chat-primary-text);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: background 0.2s ease;
+    }
+
+    .widget-launcher {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--chat-primary);
+      color: var(--chat-primary-text);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.16);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.15s ease, background 0.2s ease;
+    }
+
+    .widget-launcher:hover {
+      transform: scale(1.06);
+    }
+
+    .widget-unread-badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      background: var(--status-red);
+      color: #FFF;
+      font-size: 11px;
+      font-weight: 700;
+      width: 19px;
+      height: 19px;
+      border-radius: 50%;
+      border: 2px solid #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Dual View Splitter */
+    .dual-pane {
+      width: 100%;
+      height: 100%;
+      display: flex;
+    }
+
+    .dual-left {
+      width: 45%;
+      border-right: 2px solid var(--border-hairline);
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dual-right {
+      width: 55%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================================================
+       TOP CONTROLLER NAVBAR (Sandbox Simulation Toolbar - NOT in real production)
+       ======================================================================== -->
+  <header class="preview-header">
+    <div class="brand-title">
+      BeanTalk
+      <span class="badge">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px; margin-right:3px;"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"></path><line x1="8.5" y1="2" x2="15.5" y2="2"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
+        Sandbox Demo (Prototype)
+      </span>
+    </div>
+
+    <!-- View Switcher -->
+    <div class="view-switcher">
+      <button class="view-btn active" onclick="switchView('admin', this)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        Admin Dashboard
+      </button>
+      <button class="view-btn" onclick="switchView('store', this)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+        Website Toko + Widget
+      </button>
+      <button class="view-btn" onclick="switchView('dual', this)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+        Live Simulation (Side-by-Side)
+      </button>
+    </div>
+
+    <!-- RBAC Role Switcher (Simulasi Hak Akses Sandbox) -->
+    <div class="role-switcher">
+      <span style="font-size: 11px; color: #A1A1AA; display: flex; align-items: center; gap: 4px; padding-left: 2px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Peran:
+      </span>
+      <button class="role-btn active role-owner" id="role-btn-owner" onclick="setSimulatedRole('owner')" title="Owner: Akses penuh termasuk Tim, Billing, & Integrasi">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l3 6 6 1-4.5 4.5L18 20l-6-3-6 3 1.5-6.5L3 9l6-1z"/></svg>
+        Owner
+      </button>
+      <button class="role-btn" id="role-btn-admin" onclick="setSimulatedRole('admin')" title="Admin: Kelola Integrasi Website & Operasional CS">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Admin
+      </button>
+      <button class="role-btn" id="role-btn-agent" onclick="setSimulatedRole('agent')" title="Agent: Khusus melayani dan membalas percakapan">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+        Agent
+      </button>
+    </div>
+
+    <!-- Dynamic Theme Color Switcher -->
+    <div class="color-switcher">
+      <span style="font-size: 11px; color: #A1A1AA;">Aksen Widget:</span>
+      <div class="color-pill active" style="background: #1E1E1E;" title="Supresso Shopify (Dark Gold)" onclick="setCoreColor('#1E1E1E', this, 'Supresso Shopify')"></div>
+      <div class="color-pill" style="background: #6F4E37;" title="Indraco Store (Coffee Brown)" onclick="setCoreColor('#6F4E37', this, 'Indraco Store')"></div>
+      <div class="color-pill" style="background: #0F2C59;" title="Indraco Global (Navy B2B)" onclick="setCoreColor('#0F2C59', this, 'Indraco Global')"></div>
+      <div class="color-pill" style="background: #D9230F;" title="SDA Store (Retail Red)" onclick="setCoreColor('#D9230F', this, 'SDA Store')"></div>
+    </div>
+  </header>
+
+  <!-- Toast Notifikasi RBAC -->
+  <div class="rbac-notice-toast" id="rbac-notice-toast">
+    <div style="font-weight: 700; font-size: 12px; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+      <span id="rbac-toast-title">Akses Ditolak</span>
+    </div>
+    <div id="rbac-toast-body" style="color: #D4D4D8; font-size: 11.5px;"></div>
+  </div>
+
+  <!-- ========================================================================
+       VIEWPORT CONTENT
+       ======================================================================== -->
+  <main class="viewport">
+
+    <!-- ====================================================================
+         PANE 1: ADMIN DASHBOARD (3-COLUMNS + INTEGRATIONS HUB)
+         ==================================================================== -->
+    <section id="pane-admin" class="view-pane active">
+      <div class="admin-app-layout">
+        <!-- Collapsible Left Sidebar (BeanTalk Style - Minimizable) -->
+        <aside class="admin-sidebar" id="admin-sidebar">
+          <div class="sidebar-top">
+            <!-- Brand & Minimize Button -->
+            <div class="sidebar-header">
+              <div class="sidebar-brand">
+                <div class="sidebar-brand-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                </div>
+                <span class="sidebar-brand-title">BeanTalk</span>
+              </div>
+              <button class="sidebar-toggle-btn" id="sidebar-toggle-btn" onclick="toggleAdminSidebar()" title="Minimize / Expand Menu Samping">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+              </button>
+            </div>
+
+            <!-- Navigation Links with Pure Vector SVG Icons -->
+            <nav class="sidebar-nav">
+              <button class="sidebar-nav-item active" id="side-tab-inbox" onclick="switchAdminSubView('inbox')" title="Inbox (3 percakapan)">
+                <span class="sidebar-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>
+                </span>
+                <span class="sidebar-label">Inbox</span>
+                <span class="sidebar-badge">3</span>
+              </button>
+              <button class="sidebar-nav-item" id="side-tab-integrations" onclick="switchAdminSubView('integrations')" title="Integrations / Channels (4 website)">
+                <span class="sidebar-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                </span>
+                <span class="sidebar-label">Integrations</span>
+                <span class="sidebar-badge" id="side-project-count">4</span>
+              </button>
+              <button class="sidebar-nav-item" id="side-tab-team" onclick="switchAdminSubView('team')" title="Team & Hak Akses (RBAC)">
+                <span class="sidebar-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                </span>
+                <span class="sidebar-label">Team & RBAC</span>
+                <span class="sidebar-badge" style="background:#FEF3C7; color:#92400E; font-size:9px;">4</span>
+              </button>
+              <button class="sidebar-nav-item" id="side-tab-logs" onclick="switchAdminSubView('logs')" title="Activity Logs & Audit Trail">
+                <span class="sidebar-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                </span>
+                <span class="sidebar-label">Activity Logs</span>
+                <span class="sidebar-badge" style="background:#EEF2FF; color:#4338CA; font-size:9px;">Live</span>
+              </button>
+              <button class="sidebar-nav-item" onclick="alert('Menu Archive: Percakapan tersimpan')" title="Archive">
+                <span class="sidebar-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
+                </span>
+                <span class="sidebar-label">Archive</span>
+              </button>
+              <button class="sidebar-nav-item" onclick="alert('Menu Tags: Kategori & label pelanggan')" title="Tags">
+                <span class="sidebar-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+                </span>
+                <span class="sidebar-label">Tags</span>
+              </button>
+              <button class="sidebar-nav-item" onclick="alert('Menu Analytics: Laporan performa CS & traffic web')" title="Analytics">
+                <span class="sidebar-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                </span>
+                <span class="sidebar-label">Analytics</span>
+              </button>
+            </nav>
+          </div>
+
+          <!-- Bottom: Settings & Profile -->
+          <div class="sidebar-footer">
+            <button class="sidebar-nav-item" onclick="alert('Menu Settings: Jam kerja CS & Webhook')" title="Settings">
+              <span class="sidebar-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              </span>
+              <span class="sidebar-label">Settings</span>
+            </button>
+            <div class="sidebar-user-profile" id="sidebar-user-card" title="Profil Pengguna Aktif">
+              <div class="avatar" id="sidebar-user-avatar" style="width:30px; height:30px; font-size:11px; background:#FEF3C7; color:#92400E; font-weight:700;">
+                HD
+                <div class="avatar-online-dot"></div>
+              </div>
+              <div class="sidebar-user-info" style="display:flex; flex-direction:column; gap:2px;">
+                <span class="sidebar-user-name" id="sidebar-user-name">Hendri (Owner)</span>
+                <div style="display:flex; align-items:center; gap:5px;">
+                  <span class="role-badge role-badge-owner" id="sidebar-user-role-badge">Owner</span>
+                  <span class="sidebar-user-status">Online</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Admin Main Content Area -->
+        <div class="admin-main-area">
+          <div class="admin-container" id="admin-view-inbox">
+            <!-- Column 1: Conversations List -->
+            <aside class="col-conversations">
+              <div class="col-header">
+                <div class="col-header-top">
+                  <h2 style="font-size: 16px; font-weight: 700;">Inbox</h2>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="badge" id="admin-unread-total">3 Aktif</span>
+                    <button class="btn-create-integration" id="btn-add-integration-inbox" style="height:26px; padding:0 8px; font-size:11px;" onclick="triggerAddIntegration()" title="Tambah Integrasi Website Baru">+ Web</button>
+                  </div>
+                </div>
+                <div class="admin-search-box" style="width: 100%; box-sizing: border-box;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted); flex-shrink:0;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  <input type="text" placeholder="Search conversations..." style="border:none; background:transparent; font-size:12px; outline:none; width:100%; font-family:inherit; color:var(--text-main);">
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: 2px;">
+                  <div class="inbox-tab active" style="background: #EEF2FF; color: #4F46E5; border-radius: 6px; font-weight: 600; padding: 4px 10px;">All 3</div>
+                  <div class="inbox-tab" style="padding: 4px 10px;">Unassigned</div>
+                  <div class="inbox-tab" style="padding: 4px 10px;">Mine</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-muted); padding-top: 4px; border-top: 1px solid var(--border-hairline);">
+                  <select class="project-filter-select" id="project-filter-dropdown" onchange="filterProject(this.value)" style="flex:1; border:none; background:transparent; font-weight:600; color:var(--text-sub); padding:0; font-size:11px;">
+                    <option value="all">Sort by: Latest (Semua Web)</option>
+                    <option value="supresso">supresso.myshopify.com</option>
+                    <option value="indraco">indracostore.com</option>
+                    <option value="global">indracoglobal.com</option>
+                    <option value="sda">sdastore.id</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="conv-list" id="conv-list-container">
+            <!-- Card 1 (Active) -->
+            <div class="conv-card active" onclick="selectConversation('jane')">
+              <div class="avatar">
+                JD
+                <div class="avatar-online-dot"></div>
+              </div>
+              <div class="conv-meta">
+                <div class="conv-title-row">
+                  <span class="conv-name">Jane Doe</span>
+                  <span class="conv-time">14:32</span>
+                </div>
+                <div><span class="conv-project-tag tag-supresso">supresso shopify</span></div>
+                <div class="conv-snippet">Kopi ini profil roasting-nya apa ya?</div>
+              </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="conv-card" onclick="selectConversation('tan')">
+              <div class="avatar">
+                MT
+                <div class="avatar-online-dot"></div>
+              </div>
+              <div class="conv-meta">
+                <div class="conv-title-row">
+                  <span class="conv-name">Mr. Tan (SG)</span>
+                  <span class="conv-time">14:15</span>
+                </div>
+                <div><span class="conv-project-tag tag-global">indracoglobal</span></div>
+                <div class="conv-snippet">Inquiring about 20ft container green beans MOQ</div>
+              </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="conv-card" onclick="selectConversation('budi')">
+              <div class="avatar">
+                BS
+              </div>
+              <div class="conv-meta">
+                <div class="conv-title-row">
+                  <span class="conv-name">Budi Santoso</span>
+                  <span class="conv-time">13:40</span>
+                </div>
+                <div><span class="conv-project-tag tag-indraco">indracostore</span></div>
+                <div class="conv-snippet">Voucher promo sachet tidak bisa dipakai</div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Column 2: Active Chat Feed -->
+        <section class="col-chat">
+          <div class="chat-header">
+            <div class="chat-header-info">
+              <div class="avatar" id="active-chat-avatar">JD</div>
+              <div>
+                <h3 id="active-chat-name">Jane Doe</h3>
+                <p id="active-chat-sub">Online via supresso.myshopify.com • Ditugaskan ke: Sarah (CS)</p>
+              </div>
+            </div>
+            <div class="chat-actions">
+              <button class="btn-action">Assign Agent</button>
+              <button class="btn-action btn-close-chat" onclick="alert('Percakapan diselesaikan!')">Tutup Chat</button>
+            </div>
+          </div>
+
+          <div class="message-feed" id="admin-message-feed">
+            <!-- Product Context Card Auto-Detected from Visitor's Current Page -->
+            <div class="product-context-card" id="admin-ctx-card">
+              <div class="product-context-thumb">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+              </div>
+              <div class="product-context-meta">
+                <span class="product-context-tag">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px; margin-right:3px;"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                  Sedang Dilihat Pengunjung (supresso shopify):
+                </span>
+                <a href="#product" class="product-context-link">Supresso Sumatra Mandheling Capsule (Rp 95.000) ↗</a>
+                <span class="product-context-url">/products/sumatra-capsule</span>
+              </div>
+            </div>
+
+            <div class="msg-group visitor">
+              <span class="msg-sender-name">Jane Doe (Visitor)</span>
+              <div class="msg-bubble">
+                Halo, saya sedang lihat kapsul kopi Sumatra Mandheling. Profil roasting-nya apa ya?
+              </div>
+              <span class="msg-time">14:32</span>
+            </div>
+
+            <div class="msg-group agent">
+              <span class="msg-sender-name">Sarah (Support)</span>
+              <div class="msg-bubble">
+                Halo Kak Jane! Profil roasting-nya Medium-Dark dengan tasting notes cokelat hitam dan rempah halus. Cocok untuk mesin Nespresso original line!
+              </div>
+              <span class="msg-time">14:33 • Terkirim</span>
+            </div>
+          </div>
+
+          <div class="admin-composer">
+            <div class="composer-input-row">
+              <textarea 
+                id="admin-reply-input" 
+                class="composer-textarea" 
+                placeholder="Tulis balasan untuk Jane Doe..."
+                onkeydown="handleAdminKey(event)"
+              ></textarea>
+              <button class="btn-send" onclick="sendAdminReply()">Kirim (Enter)</button>
+            </div>
+            <div class="composer-hints">
+              <span>Tekan <strong>Enter</strong> untuk mengirim, <strong>Shift + Enter</strong> untuk baris baru</span>
+              <span>Gunakan <strong>/</strong> untuk balasan cepat (Canned Response)</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Column 3: Customer Context Panel -->
+        <aside class="col-context">
+          <div class="context-section">
+            <div class="context-section-title">Profil Pelanggan</div>
+            <div class="context-item">
+              <div class="context-label">Nama</div>
+              <div class="context-value" id="ctx-name">Jane Doe</div>
+            </div>
+            <div class="context-item">
+              <div class="context-label">Email</div>
+              <div class="context-value" id="ctx-email">jane.doe@gmail.com</div>
+            </div>
+            <div class="context-item">
+              <div class="context-label">Visitor ID</div>
+              <div class="context-value" style="font-family: var(--font-mono); font-size: 11px;">#vis_c4b8b409</div>
+            </div>
+            <div class="context-item">
+              <div class="context-label">Telepon</div>
+              <div class="context-value empty">Not available</div>
+            </div>
+          </div>
+
+          <div class="context-section">
+            <div class="context-section-title">Konteks Halaman Aktif</div>
+            <div class="context-item">
+              <div class="context-label">Asal Website</div>
+              <div class="context-value" id="ctx-source">supresso.myshopify.com</div>
+            </div>
+            <div class="context-item">
+              <div class="context-label">Produk yang Dilihat</div>
+              <div class="context-value" id="ctx-product">Supresso Sumatra Mandheling Capsule</div>
+            </div>
+            <div class="context-item">
+              <div class="context-label">URL Halaman</div>
+              <div class="context-value" id="ctx-url">/products/sumatra-capsule</div>
+            </div>
+            <div class="context-item">
+              <div class="context-label">Mata Uang</div>
+              <div class="context-value">IDR (Rp 95.000)</div>
+            </div>
+          </div>
+
+          <div class="context-section">
+            <div class="context-section-title">Perangkat & Jaringan</div>
+            <div class="context-item">
+              <div class="context-label">Device</div>
+              <div class="context-value">Mobile (Apple iPhone 15)</div>
+            </div>
+            <div class="context-item">
+              <div class="context-label">Browser / OS</div>
+              <div class="context-value">Safari 17.4 / iOS</div>
+            </div>
+            <div class="context-item">
+              <div class="context-label">Lokasi / IP</div>
+              <div class="context-value">Surabaya, Indonesia (180.252.16.89)</div>
+            </div>
+          </div>
+        </aside>
+
+        </div> <!-- /.admin-container (id="admin-view-inbox") -->
+
+        <!-- Integrations Hub View (Central Multi-Site Management) -->
+        <div class="integrations-hub" id="admin-view-integrations">
+          <div class="hub-header">
+            <div class="hub-title-group">
+              <h2>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                Web Integrations & Channels
+              </h2>
+              <p>Hub satu pintu untuk membuat integrasi website baru, kustomisasi warna core UI, dan dapatkan 1-baris kode embed.</p>
+            </div>
+            <button class="btn-create-integration" id="btn-add-integration-hub" onclick="triggerAddIntegration()">
+              <span style="font-size:14px;">+</span> Tambah Integrasi Web Baru
+            </button>
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="hub-stats-row">
+            <div class="hub-stat-card">
+              <div class="hub-stat-label">Total Website Terhubung</div>
+              <div class="hub-stat-val" id="hub-total-sites">4 Website</div>
+              <div class="hub-stat-sub">✓ 100% Online & Aktif</div>
+            </div>
+            <div class="hub-stat-card">
+              <div class="hub-stat-label">Universal Core API</div>
+              <div class="hub-stat-val">1 Backend</div>
+              <div class="hub-stat-sub">Centralized MySQL Laravel</div>
+            </div>
+            <div class="hub-stat-card">
+              <div class="hub-stat-label">Beban Server Host</div>
+              <div class="hub-stat-val">0% Beban</div>
+              <div class="hub-stat-sub">Non-blocking async CDN</div>
+            </div>
+            <div class="hub-stat-card">
+              <div class="hub-stat-label">Multi-Tenancy Scoping</div>
+              <div class="hub-stat-val">Strictly Isolated</div>
+              <div class="hub-stat-sub">Project Key & Domain Whitelist</div>
+            </div>
+          </div>
+
+          <!-- Integrations Card Grid -->
+          <div class="hub-grid" id="integrations-cards-grid">
+            <!-- Card 1: Supresso -->
+            <div class="integration-card">
+              <div class="card-top">
+                <div class="card-brand-info">
+                  <div class="brand-icon" style="background: #1E1E1E;">S</div>
+                  <div class="brand-names">
+                    <div class="brand-names-title">Supresso Coffee</div>
+                    <div class="brand-names-domain">supresso.myshopify.com</div>
+                  </div>
+                </div>
+                <div class="status-badge"><span class="dot"></span> Active</div>
+              </div>
+              <div class="card-meta-row">
+                <span style="color: var(--text-muted);">Platform: <strong>Shopify Theme App</strong></span>
+                <div class="color-swatch-badge">
+                  <span class="swatch-circle" style="background: #1E1E1E;"></span>
+                  <span>#1E1E1E</span>
+                </div>
+              </div>
+              <div class="card-snippet-box">
+                &lt;script src="https://chat.indraco.com/widget.js" data-key="<span>pk_live_supresso_8819</span>" async&gt;&lt;/script&gt;
+              </div>
+              <div class="card-actions">
+                <button class="btn-test-widget" onclick="testWebsiteWidget('supresso', 'Supresso Shopify', '#1E1E1E', 'supresso.myshopify.com')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  Uji Live di Toko
+                </button>
+                <button class="btn-copy-code" onclick="copySnippetDirect('pk_live_supresso_8819')">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  Salin
+                </button>
+              </div>
+            </div>
+
+            <!-- Card 2: Indraco Store -->
+            <div class="integration-card">
+              <div class="card-top">
+                <div class="card-brand-info">
+                  <div class="brand-icon" style="background: #6F4E37;">IS</div>
+                  <div class="brand-names">
+                    <div class="brand-names-title">Indraco Store</div>
+                    <div class="brand-names-domain">indracostore.com</div>
+                  </div>
+                </div>
+                <div class="status-badge"><span class="dot"></span> Active</div>
+              </div>
+              <div class="card-meta-row">
+                <span style="color: var(--text-muted);">Platform: <strong>WooCommerce / Retail</strong></span>
+                <div class="color-swatch-badge">
+                  <span class="swatch-circle" style="background: #6F4E37;"></span>
+                  <span>#6F4E37</span>
+                </div>
+              </div>
+              <div class="card-snippet-box">
+                &lt;script src="https://chat.indraco.com/widget.js" data-key="<span>pk_live_indraco_5521</span>" async&gt;&lt;/script&gt;
+              </div>
+              <div class="card-actions">
+                <button class="btn-test-widget" onclick="testWebsiteWidget('indraco', 'Indraco Store', '#6F4E37', 'indracostore.com')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  Uji Live di Toko
+                </button>
+                <button class="btn-copy-code" onclick="copySnippetDirect('pk_live_indraco_5521')">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  Salin
+                </button>
+              </div>
+            </div>
+
+            <!-- Card 3: Indraco Global -->
+            <div class="integration-card">
+              <div class="card-top">
+                <div class="card-brand-info">
+                  <div class="brand-icon" style="background: #0F2C59;">IG</div>
+                  <div class="brand-names">
+                    <div class="brand-names-title">Indraco Global B2B</div>
+                    <div class="brand-names-domain">indracoglobal.com</div>
+                  </div>
+                </div>
+                <div class="status-badge"><span class="dot"></span> Active</div>
+              </div>
+              <div class="card-meta-row">
+                <span style="color: var(--text-muted);">Platform: <strong>Custom Web / B2B Export</strong></span>
+                <div class="color-swatch-badge">
+                  <span class="swatch-circle" style="background: #0F2C59;"></span>
+                  <span>#0F2C59</span>
+                </div>
+              </div>
+              <div class="card-snippet-box">
+                &lt;script src="https://chat.indraco.com/widget.js" data-key="<span>pk_live_global_3309</span>" async&gt;&lt;/script&gt;
+              </div>
+              <div class="card-actions">
+                <button class="btn-test-widget" onclick="testWebsiteWidget('global', 'Indraco Global', '#0F2C59', 'indracoglobal.com')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  Uji Live di Toko
+                </button>
+                <button class="btn-copy-code" onclick="copySnippetDirect('pk_live_global_3309')">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  Salin
+                </button>
+              </div>
+            </div>
+
+            <!-- Card 4: SDA Store -->
+            <div class="integration-card">
+              <div class="card-top">
+                <div class="card-brand-info">
+                  <div class="brand-icon" style="background: #D9230F;">SD</div>
+                  <div class="brand-names">
+                    <div class="brand-names-title">SDA Store Surabaya</div>
+                    <div class="brand-names-domain">sdastore.id</div>
+                  </div>
+                </div>
+                <div class="status-badge"><span class="dot"></span> Active</div>
+              </div>
+              <div class="card-meta-row">
+                <span style="color: var(--text-muted);">Platform: <strong>Next.js / Headless</strong></span>
+                <div class="color-swatch-badge">
+                  <span class="swatch-circle" style="background: #D9230F;"></span>
+                  <span>#D9230F</span>
+                </div>
+              </div>
+              <div class="card-snippet-box">
+                &lt;script src="https://chat.indraco.com/widget.js" data-key="<span>pk_live_sda_1190</span>" async&gt;&lt;/script&gt;
+              </div>
+              <div class="card-actions">
+                <button class="btn-test-widget" onclick="testWebsiteWidget('sda', 'SDA Store', '#D9230F', 'sdastore.id')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  Uji Live di Toko
+                </button>
+                <button class="btn-copy-code" onclick="copySnippetDirect('pk_live_sda_1190')">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  Salin
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Team & RBAC Management View -->
+        <div class="team-rbac-view" id="admin-view-team">
+          <div class="hub-header">
+            <div class="hub-title-group">
+              <h2>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Team & Role-Based Access Control (RBAC)
+              </h2>
+              <p>Kelola staf customer support, penugasan hak akses, dan tingkat otorisasi tenant secara aman sesuai standar Staff Engineer.</p>
+            </div>
+            <button class="btn-create-integration" onclick="triggerInviteTeam()">
+              <span style="font-size:14px;">+</span> Tambah Anggota Tim
+            </button>
+          </div>
+
+          <!-- RBAC Stats Row -->
+          <div class="hub-stats-row">
+            <div class="hub-stat-card">
+              <div class="hub-stat-label">Total Staf Aktif</div>
+              <div class="hub-stat-val">4 Staf</div>
+              <div class="hub-stat-sub">1 Owner • 1 Admin • 2 Agents</div>
+            </div>
+            <div class="hub-stat-card">
+              <div class="hub-stat-label">Peran Aktif Saat Ini</div>
+              <div class="hub-stat-val" id="team-stat-role-val" style="color: #B45309;">Owner</div>
+              <div class="hub-stat-sub" id="team-stat-role-desc">Hak akses penuh (Super Admin)</div>
+            </div>
+            <div class="hub-stat-card">
+              <div class="hub-stat-label">Isolasi Multi-Tenant</div>
+              <div class="hub-stat-val">Strict 100%</div>
+              <div class="hub-stat-sub">Tenant Scope (Global Scope BelongsToTenant)</div>
+            </div>
+            <div class="hub-stat-card">
+              <div class="hub-stat-label">Middleware Guard</div>
+              <div class="hub-stat-val">CheckRole:403</div>
+              <div class="hub-stat-sub">Validasi server-side di routes/api.php</div>
+            </div>
+          </div>
+
+          <!-- Team Member Table -->
+          <div class="team-table-card">
+            <div style="padding: 14px 18px; border-bottom: 1px solid var(--border-hairline); display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <h3 style="font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 2px;">Daftar Anggota Tim & Izin Akses</h3>
+                <p style="font-size: 11px; color: var(--text-sub);">Hanya pengguna dengan peran <strong>Owner</strong> yang berhak mengubah hak akses (role) staf lain.</p>
+              </div>
+              <span class="badge" style="background:#F4F4F5; color:#52525B; font-family:var(--font-mono); font-size:10px;">tenant_id: indraco</span>
+            </div>
+            <table class="team-table">
+              <thead>
+                <tr>
+                  <th>NAMA & EMAIL</th>
+                  <th>PERAN (ROLE)</th>
+                  <th>STATUS</th>
+                  <th>HAK AKSES UTAMA</th>
+                  <th>UBAH ROLE (DEMO RBAC)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <div class="avatar" style="width: 28px; height: 28px; font-size: 11px; background: #FEF3C7; color: #92400E; font-weight: 700;">HD</div>
+                      <div>
+                        <div style="font-weight: 600; color: var(--text-main);">Hendri (Director)</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">owner@indraco.com</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="role-badge role-badge-owner">Owner</span></td>
+                  <td><span style="color: #10B981; font-weight: 600; font-size: 11px;">● Online</span></td>
+                  <td style="font-size: 11px; color: var(--text-sub);">Semua Fitur, Billing, Integrasi, Kelola Tim</td>
+                  <td>
+                    <select class="role-select-sm" disabled title="Role Owner utama tidak dapat diubah">
+                      <option selected>Owner (Terkunci)</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <div class="avatar" style="width: 28px; height: 28px; font-size: 11px; background: #EEF2FF; color: #4338CA; font-weight: 700;">SA</div>
+                      <div>
+                        <div style="font-weight: 600; color: var(--text-main);">System Admin</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">admin@indraco.com</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="role-badge role-badge-admin" id="table-badge-admin">Admin</span></td>
+                  <td><span style="color: #10B981; font-weight: 600; font-size: 11px;">● Online</span></td>
+                  <td style="font-size: 11px; color: var(--text-sub);">Kelola Integrasi, Widget, CS Chat, Tambah Staf</td>
+                  <td>
+                    <select class="role-select-sm" id="select-role-admin" onchange="handleRoleChangeDemo('System Admin', this.value, 'admin')">
+                      <option value="admin" selected>Admin</option>
+                      <option value="agent">Turunkan ke Agent</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <div class="avatar" style="width: 28px; height: 28px; font-size: 11px; background: #ECFDF5; color: #065F46; font-weight: 700;">SC</div>
+                      <div>
+                        <div style="font-weight: 600; color: var(--text-main);">Sarah (Customer Support)</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">sarah@indraco.com</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="role-badge role-badge-agent" id="table-badge-sarah">Agent</span></td>
+                  <td><span style="color: #10B981; font-weight: 600; font-size: 11px;">● Online</span></td>
+                  <td style="font-size: 11px; color: var(--text-sub);">Balas Percakapan, Penugasan Tiket CS</td>
+                  <td>
+                    <select class="role-select-sm" id="select-role-sarah" onchange="handleRoleChangeDemo('Sarah (Customer Support)', this.value, 'sarah')">
+                      <option value="agent" selected>Agent</option>
+                      <option value="admin">Promosikan ke Admin</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <div class="avatar" style="width: 28px; height: 28px; font-size: 11px; background: #ECFDF5; color: #065F46; font-weight: 700;">BS</div>
+                      <div>
+                        <div style="font-weight: 600; color: var(--text-main);">Budi (B2B Specialist)</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">budi@indraco.com</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="role-badge role-badge-agent">Agent</span></td>
+                  <td><span style="color: #10B981; font-weight: 600; font-size: 11px;">● Online</span></td>
+                  <td style="font-size: 11px; color: var(--text-sub);">Balas Percakapan B2B & Wholesale</td>
+                  <td>
+                    <select class="role-select-sm" id="select-role-budi" onchange="handleRoleChangeDemo('Budi (B2B Specialist)', this.value, 'budi')">
+                      <option value="agent" selected>Agent</option>
+                      <option value="admin">Promosikan ke Admin</option>
+                    </select>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Matriks Otorisasi RBAC (Hierarchical Matrix) -->
+          <div class="team-table-card" style="margin-top: 20px;">
+            <div style="padding: 14px 18px; border-bottom: 1px solid var(--border-hairline);">
+              <h3 style="font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 2px;">Matriks Otorisasi Hak Akses (RBAC Matrix)</h3>
+              <p style="font-size: 11px; color: var(--text-sub);">Kontrak izin hak akses yang ditegakkan oleh middleware <code>CheckRole</code> pada REST API v1.</p>
+            </div>
+            <table class="team-table">
+              <thead>
+                <tr>
+                  <th>KAPABILITAS SISTEM</th>
+                  <th style="text-align: center;">OWNER</th>
+                  <th style="text-align: center;">ADMIN</th>
+                  <th style="text-align: center;">AGENT</th>
+                  <th>ENDPOINT REST API V1</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Balas Percakapan & Update Status Chat</td>
+                  <td style="text-align: center; color: #10B981; font-weight: 700;">✓</td>
+                  <td style="text-align: center; color: #10B981; font-weight: 700;">✓</td>
+                  <td style="text-align: center; color: #10B981; font-weight: 700;">✓</td>
+                  <td><code>POST /api/v1/admin/conversations/{id}/reply</code></td>
+                </tr>
+                <tr>
+                  <td>Melihat Daftar Integrasi Website</td>
+                  <td style="text-align: center; color: #10B981; font-weight: 700;">✓</td>
+                  <td style="text-align: center; color: #10B981; font-weight: 700;">✓</td>
+                  <td style="text-align: center; color: #10B981; font-weight: 700;">✓</td>
+                  <td><code>GET /api/v1/admin/integrations</code></td>
+                </tr>
+                <tr>
+                  <td>Membuat Integrasi Baru & Whitelist Domain</td>
+                  <td style="text-align: center; color: #10B981; font-weight: 700;">✓</td>
+                  <td style="text-align: center; color: #10B981; font-weight: 700;">✓</td>
+                  <td style="text-align: center; color: #EF4444; font-weight: 700;">✕</td>
+                  <td><code>POST /api/v1/admin/integrations</code> (role:owner,admin)</td>
+                </tr>
+                <tr>
+                  <td>Mengundang / Menambah Staf Baru</td>
+                  <td style="text-align: center; color: #10B981; font-weight: 700;">✓</td>
+                  <td style="text-align: center; color: #10B981; font-weight: 700;">✓</td>
+                  <td style="text-align: center; color: #EF4444; font-weight: 700;">✕</td>
+                  <td><code>POST /api/v1/admin/team</code> (role:owner,admin)</td>
+                </tr>
+                <tr>
+                  <td>Mengubah Role / Promosi Anggota Tim</td>
+                  <td style="text-align: center; color: #10B981; font-weight: 700;">✓</td>
+                  <td style="text-align: center; color: #EF4444; font-weight: 700;">✕</td>
+                  <td style="text-align: center; color: #EF4444; font-weight: 700;">✕</td>
+                  <td><code>PUT /api/v1/admin/team/{id}/role</code> (role:owner)</td>
+                </tr>
+                <tr>
+                  <td>Menghapus Anggota Tim</td>
+                  <td style="text-align: center; color: #10B981; font-weight: 700;">✓</td>
+                  <td style="text-align: center; color: #EF4444; font-weight: 700;">✕</td>
+                  <td style="text-align: center; color: #EF4444; font-weight: 700;">✕</td>
+                  <td><code>DELETE /api/v1/admin/team/{id}</code> (role:owner)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Activity Logs & Audit Trail View -->
+        <div class="logs-hub-view" id="admin-view-logs">
+          <div class="hub-header">
+            <div class="hub-title-group">
+              <h2>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                Audit Trail & Activity Logs
+              </h2>
+              <p>Rekam jejak transparansi seluruh aktivitas tenant: aksi Owner, Admin, Agent, dan Pengunjung tercatat secara aman dan permanen.</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="badge" style="background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; font-size:11px; padding:4px 10px;">
+                ● Live Streaming Log
+              </span>
+            </div>
+          </div>
+
+          <!-- Log Stats Grid -->
+          <div class="hub-stats-row">
+            <div class="hub-stat-card">
+              <div class="hub-stat-label">Total Aktivitas Tercatat</div>
+              <div class="hub-stat-val" id="log-total-count">7 Log</div>
+              <div class="hub-stat-sub">100% Tercatat ke MySQL Database</div>
+            </div>
+            <div class="hub-stat-card">
+              <div class="hub-stat-label">Aktivitas Terakhir</div>
+              <div class="hub-stat-val" style="color: #10B981;">Barusan</div>
+              <div class="hub-stat-sub">Real-time audit trigger active</div>
+            </div>
+            <div class="hub-stat-card">
+              <div class="hub-stat-label">Cakupan Pengguna</div>
+              <div class="hub-stat-val">Semua Peran</div>
+              <div class="hub-stat-sub">Owner • Admin • Agent • Visitor</div>
+            </div>
+            <div class="hub-stat-card">
+              <div class="hub-stat-label">Isolasi Keamanan</div>
+              <div class="hub-stat-val">Strict Scoped</div>
+              <div class="hub-stat-sub">Immutable audit record (Read-Only)</div>
+            </div>
+          </div>
+
+          <!-- Filter Chips -->
+          <div class="log-filter-bar">
+            <span style="font-size: 11.5px; font-weight: 600; color: var(--text-sub); margin-right: 4px;">Filter Peran:</span>
+            <button class="log-filter-chip active" id="filter-role-all" onclick="filterLogs('all', this)">Semua (All)</button>
+            <button class="log-filter-chip" id="filter-role-owner" onclick="filterLogs('owner', this)">
+              <span class="role-badge role-badge-owner" style="font-size:9px; padding:0 4px;">Owner</span>
+            </button>
+            <button class="log-filter-chip" id="filter-role-admin" onclick="filterLogs('admin', this)">
+              <span class="role-badge role-badge-admin" style="font-size:9px; padding:0 4px;">Admin</span>
+            </button>
+            <button class="log-filter-chip" id="filter-role-agent" onclick="filterLogs('agent', this)">
+              <span class="role-badge role-badge-agent" style="font-size:9px; padding:0 4px;">Agent</span>
+            </button>
+            <button class="log-filter-chip" id="filter-role-visitor" onclick="filterLogs('visitor', this)">
+              <span class="role-badge" style="background:#F3E8FF; color:#6B21A8; font-size:9px; padding:0 4px;">Visitor / System</span>
+            </button>
+          </div>
+
+          <!-- Logs Table Card -->
+          <div class="team-table-card" style="margin-top: 14px;">
+            <table class="team-table">
+              <thead>
+                <tr>
+                  <th style="width: 140px;">WAKTU</th>
+                  <th style="width: 220px;">PENGGUNA & ROLE</th>
+                  <th style="width: 170px;">AKSI / EVENT</th>
+                  <th>DESKRIPSI AKTIVITAS</th>
+                  <th style="width: 150px;">IP / PERANGKAT</th>
+                </tr>
+              </thead>
+              <tbody id="activity-logs-tbody">
+                <tr data-role="agent">
+                  <td style="font-size: 11px; color: var(--text-muted); font-feature-settings: 'tnum';">15 menit lalu</td>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <div class="avatar" style="width: 24px; height: 24px; font-size: 10px; background: #ECFDF5; color: #065F46; font-weight: 700;">BS</div>
+                      <div>
+                        <div style="font-weight: 600; font-size: 11.5px;">Budi (B2B Specialist)</div>
+                        <span class="role-badge role-badge-agent">Agent</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="log-action-tag agent">message.replied</span></td>
+                  <td>Membalas inquiry ekspor kontainer green beans 20ft FOB Tanjung Perak ke Mr. Tan (SG)</td>
+                  <td style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">182.253.120.44</td>
+                </tr>
+                <tr data-role="agent">
+                  <td style="font-size: 11px; color: var(--text-muted); font-feature-settings: 'tnum';">30 menit lalu</td>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <div class="avatar" style="width: 24px; height: 24px; font-size: 10px; background: #ECFDF5; color: #065F46; font-weight: 700;">SC</div>
+                      <div>
+                        <div style="font-weight: 600; font-size: 11.5px;">Sarah (Customer Support)</div>
+                        <span class="role-badge role-badge-agent">Agent</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="log-action-tag agent">message.replied</span></td>
+                  <td>Membalas pesan tiket #1 (Jane Doe) seputar profil roasting kapsul kopi Supresso</td>
+                  <td style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">182.253.120.44</td>
+                </tr>
+                <tr data-role="visitor">
+                  <td style="font-size: 11px; color: var(--text-muted); font-feature-settings: 'tnum';">45 menit lalu</td>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <div class="avatar" style="width: 24px; height: 24px; font-size: 10px; background: #F3E8FF; color: #6B21A8; font-weight: 700;">JD</div>
+                      <div>
+                        <div style="font-weight: 600; font-size: 11.5px;">Jane Doe (Visitor)</div>
+                        <span class="role-badge" style="background:#F3E8FF; color:#6B21A8;">Visitor</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="log-action-tag visitor">session.init</span></td>
+                  <td>Pengunjung menginisialisasi sesi chat dari halaman produk: Supresso Sumatra Mandheling Capsule</td>
+                  <td style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">180.252.16.89 (iOS Safari)</td>
+                </tr>
+                <tr data-role="admin">
+                  <td style="font-size: 11px; color: var(--text-muted); font-feature-settings: 'tnum';">3 jam lalu</td>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <div class="avatar" style="width: 24px; height: 24px; font-size: 10px; background: #EEF2FF; color: #4338CA; font-weight: 700;">SA</div>
+                      <div>
+                        <div style="font-weight: 600; font-size: 11.5px;">System Admin</div>
+                        <span class="role-badge role-badge-admin">Admin</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="log-action-tag admin">team.invited</span></td>
+                  <td>Menambahkan anggota tim baru: Sarah (sarah@indraco.com) sebagai CS Agent</td>
+                  <td style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">182.253.120.44</td>
+                </tr>
+                <tr data-role="admin">
+                  <td style="font-size: 11px; color: var(--text-muted); font-feature-settings: 'tnum';">4 jam lalu</td>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <div class="avatar" style="width: 24px; height: 24px; font-size: 10px; background: #EEF2FF; color: #4338CA; font-weight: 700;">SA</div>
+                      <div>
+                        <div style="font-weight: 600; font-size: 11.5px;">System Admin</div>
+                        <span class="role-badge role-badge-admin">Admin</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="log-action-tag admin">integration.created</span></td>
+                  <td>Membuat integrasi channel website baru: Supresso Coffee (supresso.myshopify.com)</td>
+                  <td style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">182.253.120.44</td>
+                </tr>
+                <tr data-role="owner">
+                  <td style="font-size: 11px; color: var(--text-muted); font-feature-settings: 'tnum';">5 jam lalu</td>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <div class="avatar" style="width: 24px; height: 24px; font-size: 10px; background: #FEF3C7; color: #92400E; font-weight: 700;">HD</div>
+                      <div>
+                        <div style="font-weight: 600; font-size: 11.5px;">Hendri (Owner & Director)</div>
+                        <span class="role-badge role-badge-owner">Owner</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="log-action-tag owner">role.updated</span></td>
+                  <td>Menetapkan System Admin sebagai Administrator Operasional Toko</td>
+                  <td style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">180.252.16.89</td>
+                </tr>
+                <tr data-role="owner">
+                  <td style="font-size: 11px; color: var(--text-muted); font-feature-settings: 'tnum';">6 jam lalu</td>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <div class="avatar" style="width: 24px; height: 24px; font-size: 10px; background: #FEF3C7; color: #92400E; font-weight: 700;">HD</div>
+                      <div>
+                        <div style="font-weight: 600; font-size: 11.5px;">Hendri (Owner & Director)</div>
+                        <span class="role-badge role-badge-owner">Owner</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="log-action-tag owner">billing.upgrade</span></td>
+                  <td>Mengupgrade paket subscription tenant ke Enterprise Multi-Tenant (Unlimited Sites & Agents)</td>
+                  <td style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">180.252.16.89</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        </div> <!-- /.admin-main-area -->
+      </div> <!-- /.admin-app-layout -->
+    </section>
+
+    <!-- ====================================================================
+         PANE 2: STORE WEBSITE + FLOATING CHAT WIDGET
+         ==================================================================== -->
+    <section id="pane-store" class="view-pane">
+      <div class="store-simulation" id="store-bg">
+        <!-- Store Navigation -->
+        <nav class="store-navbar">
+          <div class="store-brand" id="store-brand-text">SUPRESSO COFFEE</div>
+          <div class="store-nav-links">
+            <span>Coffee Capsules</span>
+            <span>Single Origin</span>
+            <span>Espresso Blends</span>
+            <span>Accessories</span>
+          </div>
+          <div style="font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+            Cart (1)
+          </div>
+        </nav>
+
+        <!-- Product Hero Card -->
+        <div class="store-product-hero">
+          <div class="product-img-box">
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#71717A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 8px;"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+            <strong>Coffee Capsule Box</strong>
+            <span style="font-size: 11px; color: #999;">10 Aluminium Capsules</span>
+          </div>
+          <div class="product-details">
+            <span class="product-badge" id="product-cat">Specialty Origin Series</span>
+            <h1 class="product-title" id="product-title-text">Supresso Sumatra Mandheling Capsule</h1>
+            <div class="product-price">Rp 95.000</div>
+            <p class="product-desc">
+              100% Kopi Arabika Sumatra Mandheling dalam kapsul aluminium kedap udara. Rasa cokelat hitam pekat dengan rempah alami yang eksotis. Kompatibel dengan seluruh mesin Nespresso original.
+            </p>
+            <button class="btn-buy" onclick="alert('Barang dimasukkan ke keranjang!')">Tambah ke Keranjang</button>
+          </div>
+        </div>
+
+        <!-- FLOATING CHAT WIDGET (Simulasi Shadow DOM - 2-Stage Navigation) -->
+        <div class="widget-root">
+          <!-- Widget Window -->
+          <div class="widget-window" id="chat-window">
+
+            <!-- ========================================================
+                 STAGE 1: HOME / WELCOME SCREEN (Halaman Awal Chat)
+                 ======================================================== -->
+            <div class="widget-screen active" id="widget-screen-home">
+              <div class="widget-home-header" id="widget-home-header-bg">
+                <div class="widget-home-topbar">
+                  <button class="widget-home-close-btn" onclick="toggleWidget()" title="Tutup Chat Widget">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
+                </div>
+                <h2 class="widget-home-greeting">Hallo!</h2>
+                <p class="widget-home-sub">Apakah ada yang bisa kami bantu? Tanyakan informasi apapun di sini!</p>
+              </div>
+
+              <div class="widget-home-content">
+                <!-- Card 1: Your Conversation (Clickable -> Opens Stage 2) -->
+                <div class="widget-card widget-conv-card" onclick="openWidgetScreen('chat')" title="Buka Percakapan Chat Utama">
+                  <div class="widget-conv-header">
+                    <span class="widget-conv-title">Your Conversation</span>
+                    <span class="widget-live-badge">
+                      <span class="widget-live-pulse"></span>
+                      Live Chat Available
+                    </span>
+                  </div>
+                  <div class="widget-conv-item">
+                    <div class="widget-conv-avatar-box" id="home-conv-avatar">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    </div>
+                    <div class="widget-conv-meta">
+                      <div class="widget-conv-brand-name" id="home-store-name">Supresso Support</div>
+                      <div class="widget-conv-preview" id="home-last-msg">Halo! Ada yang bisa kami bantu seputar...</div>
+                    </div>
+                    <div class="widget-conv-arrow-btn">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Card 2: Reach Us Anywhere Else (Social Media Fallbacks) -->
+                <div class="widget-card widget-social-card">
+                  <div class="widget-social-title">Reach Us Anywhere Else</div>
+                  <div class="widget-social-row">
+                    <!-- WhatsApp -->
+                    <button class="social-channel-btn social-btn-wa" onclick="openSocialChannel('WhatsApp')" title="Hubungi via WhatsApp">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2ZM12.05 20.15C10.57 20.15 9.12 19.76 7.85 19.01L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 14.99 3.8 13.47 3.8 11.91C3.8 7.37 7.5 3.67 12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.05 20.15ZM16.57 14.39C16.32 14.27 15.11 13.67 14.88 13.58C14.65 13.5 14.49 13.46 14.32 13.7C14.16 13.95 13.69 14.51 13.54 14.67C13.4 14.84 13.25 14.86 13 14.74C12.75 14.61 11.96 14.35 11.02 13.51C10.28 12.86 9.78 12.05 9.64 11.8C9.5 11.55 9.62 11.42 9.75 11.3C9.86 11.18 10 11.02 10.12 10.88C10.25 10.74 10.29 10.63 10.37 10.47C10.45 10.31 10.41 10.17 10.35 10.04C10.29 9.92 9.8 8.72 9.6 8.22C9.4 7.74 9.2 7.8 9.05 7.79C8.91 7.79 8.75 7.79 8.58 7.79C8.42 7.79 8.16 7.85 7.93 8.1C7.71 8.35 7.08 8.94 7.08 10.15C7.08 11.36 7.96 12.52 8.08 12.69C8.2 12.85 9.81 15.34 12.28 16.4C12.87 16.65 13.33 16.8 13.69 16.91C14.28 17.1 14.82 17.07 15.25 17.01C15.73 16.94 16.72 16.41 16.93 15.83C17.13 15.26 17.13 14.77 17.07 14.67C17.01 14.56 16.82 14.51 16.57 14.39Z"/></svg>
+                    </button>
+                    <!-- Facebook Messenger -->
+                    <button class="social-channel-btn social-btn-fb" onclick="openSocialChannel('Facebook')" title="Hubungi via Facebook Messenger">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.145 2 11.258C2 14.17 3.433 16.737 5.674 18.39V22L9.123 20.104C10.045 20.36 11.01 20.516 12 20.516C17.523 20.516 22 16.371 22 11.258C22 6.145 17.523 2 12 2ZM13.111 14.474L10.556 11.737L5.556 14.474L11.056 8.632L13.667 11.368L18.611 8.632L13.111 14.474Z"/></svg>
+                    </button>
+                    <!-- Instagram -->
+                    <button class="social-channel-btn social-btn-ig" onclick="openSocialChannel('Instagram')" title="Hubungi via Instagram DM">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Footer -->
+              <div class="widget-home-footer">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <span>Powered by BeanTalk</span>
+              </div>
+            </div>
+
+            <!-- ========================================================
+                 STAGE 2: MAIN CONVERSATION SCREEN (Chat Utama)
+                 ======================================================== -->
+            <div class="widget-screen" id="widget-screen-chat">
+              <div class="widget-header">
+                <div class="widget-header-brand">
+                  <!-- Back button to return to Stage 1 (Halaman Awal) -->
+                  <button class="widget-back-btn" onclick="openWidgetScreen('home')" title="Kembali ke Halaman Awal">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                  </button>
+                  <div class="widget-avatar" id="chat-header-avatar">S</div>
+                  <div class="widget-header-text">
+                    <h4 id="widget-store-name">Supresso Support</h4>
+                    <div class="widget-status">Online</div>
+                  </div>
+                </div>
+                <button class="widget-close-btn" onclick="toggleWidget()" title="Tutup Chat Widget">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
+
+              <div class="widget-body" id="widget-messages">
+                <!-- Mini Page Context Card in Widget -->
+                <div class="product-context-card" style="margin-bottom: 8px;">
+                  <div class="product-context-thumb">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                  </div>
+                  <div class="product-context-meta">
+                    <span class="product-context-tag">Pertanyaan mengenai produk ini:</span>
+                    <span class="product-context-link" id="widget-ctx-title">Supresso Sumatra Mandheling Capsule</span>
+                  </div>
+                </div>
+
+                <div class="widget-bubble agent">
+                  Halo! Ada yang bisa kami bantu seputar kopi Supresso hari ini?
+                </div>
+                <div class="widget-bubble visitor">
+                  Halo, saya sedang lihat kapsul kopi Sumatra Mandheling. Profil roasting-nya apa ya?
+                </div>
+                <div class="widget-bubble agent">
+                  Halo Kak Jane! Profil roasting-nya Medium-Dark dengan tasting notes cokelat hitam dan rempah halus. Cocok untuk mesin Nespresso original line!
+                </div>
+              </div>
+
+              <!-- Upload compression status indicator banner -->
+              <div id="compression-banner" style="display: none; padding: 6px 14px; background: #ECFDF5; border-top: 1px solid #A7F3D0; font-size: 11px; color: #065F46; font-weight: 500;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px; margin-right:4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                Foto dikompresi lokal: <strong>8.4 MB ➔ 210 KB (-97.5%)</strong> dalam 140ms!
+              </div>
+
+              <div class="widget-composer">
+                <!-- Attach Button with Pure SVG -->
+                <button class="widget-attach-btn" title="Kirim Foto (Auto Compress)" onclick="simulateAttachPhoto()">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                </button>
+                <input 
+                  type="text" 
+                  id="widget-user-input" 
+                  class="widget-input" 
+                  placeholder="Ketik pesan ke CS..."
+                  onkeydown="handleWidgetKey(event)"
+                >
+                <!-- Send Button with Pure SVG -->
+                <button class="widget-send-btn" onclick="sendWidgetMessage()" title="Kirim Pesan">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Floating Button Launcher with Crisp Vector SVG -->
+          <div class="widget-launcher" onclick="toggleWidget()" id="widget-launcher-btn" title="Buka / Tutup Chat Widget">
+            <svg id="launcher-svg-chat" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+            <svg id="launcher-svg-close" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <div class="widget-unread-badge" id="launcher-badge">1</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         PANE 3: SIDE-BY-SIDE DUAL SIMULATION
+         ==================================================================== -->
+    <section id="pane-dual" class="view-pane">
+      <div class="dual-pane">
+        <div class="dual-left" id="dual-left-container">
+          <!-- Cloning store preview dynamically -->
+        </div>
+        <div class="dual-right" id="dual-right-container">
+          <!-- Cloning admin preview dynamically -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================================
+       CLIENT-SIDE PREVIEW CONTROLLER SCRIPT
+       ======================================================================== -->
+  <script>
+    let isWidgetOpen = true;
+    let currentWidgetScreen = 'home'; // 'home' or 'chat'
+
+    function toggleWidget() {
+      const win = document.getElementById('chat-window');
+      const badge = document.getElementById('launcher-badge');
+      const iconChat = document.getElementById('launcher-svg-chat');
+      const iconClose = document.getElementById('launcher-svg-close');
+      
+      isWidgetOpen = !isWidgetOpen;
+      if (isWidgetOpen) {
+        win.classList.add('open');
+        if (iconChat) iconChat.style.display = 'none';
+        if (iconClose) iconClose.style.display = 'block';
+        if (badge) badge.style.display = 'none';
+      } else {
+        win.classList.remove('open');
+        if (iconChat) iconChat.style.display = 'block';
+        if (iconClose) iconClose.style.display = 'none';
+      }
+    }
+
+    function openWidgetScreen(screen) {
+      currentWidgetScreen = screen;
+      const screenHome = document.getElementById('widget-screen-home');
+      const screenChat = document.getElementById('widget-screen-chat');
+      
+      if (screen === 'chat') {
+        if (screenHome) screenHome.classList.remove('active');
+        if (screenChat) screenChat.classList.add('active');
+        setTimeout(() => {
+          const input = document.getElementById('widget-user-input');
+          if (input) input.focus();
+        }, 120);
+      } else {
+        if (screenChat) screenChat.classList.remove('active');
+        if (screenHome) screenHome.classList.add('active');
+      }
+    }
+
+    function openSocialChannel(channelName) {
+      alert('Membuka direct channel: ' + channelName + ' CS resmi (Omni Fallback).\n\nPelanggan dapat melanjutkan obrolan via ' + channelName + ' jika meninggalkan browser web!');
+    }
+
+    function switchView(viewName, btn) {
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
+      
+      if (viewName === 'admin') {
+        document.getElementById('pane-admin').classList.add('active');
+      } else if (viewName === 'store') {
+        document.getElementById('pane-store').classList.add('active');
+        // Pastikan widget terbuka
+        document.getElementById('chat-window').classList.add('open');
+        isWidgetOpen = true;
+        const iconChat = document.getElementById('launcher-svg-chat');
+        const iconClose = document.getElementById('launcher-svg-close');
+        if (iconChat) iconChat.style.display = 'none';
+        if (iconClose) iconClose.style.display = 'block';
+      } else if (viewName === 'dual') {
+        document.getElementById('pane-dual').classList.add('active');
+        setupDualView();
+      }
+    }
+
+    function setCoreColor(colorHex, el, brandName) {
+      document.querySelectorAll('.color-pill').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+
+      document.documentElement.style.setProperty('--chat-primary', colorHex);
+
+      // Update widget styling
+      document.querySelectorAll('.widget-launcher, .widget-send-btn, .widget-avatar').forEach(node => {
+        node.style.background = colorHex;
+      });
+
+      // Update Home Screen Top Gradient
+      const homeHeader = document.getElementById('widget-home-header-bg');
+      if (homeHeader) {
+        homeHeader.style.background = `linear-gradient(180deg, ${colorHex} 0%, #1F2937 100%)`;
+      }
+
+      document.querySelectorAll('.widget-bubble.visitor').forEach(bubble => {
+        bubble.style.background = colorHex;
+      });
+
+      // Update brand text in store simulation & widget screens
+      const brandMap = {
+        'Supresso Shopify': { name: 'SUPRESSO COFFEE', title: 'Supresso Sumatra Mandheling Capsule', cat: 'Specialty Origin', initials: 'SC' },
+        'Indraco Store': { name: 'INDRACO STORE', title: 'Kopi Jahe Kental 10 Sachet', cat: 'Daily Retail B2C', initials: 'IS' },
+        'Indraco Global': { name: 'INDRACO GLOBAL B2B', title: 'Sumatra Green Beans Grade 1 (Container 20ft)', cat: 'Export Wholesale', initials: 'IG' },
+        'SDA Store': { name: 'SDA STORE SURABAYA', title: 'Paket Kopi Retail Cabang SDA', cat: 'Branch Outlet', initials: 'SD' }
+      };
+
+      if (brandMap[brandName]) {
+        document.getElementById('store-brand-text').textContent = brandMap[brandName].name;
+        document.getElementById('product-title-text').textContent = brandMap[brandName].title;
+        document.getElementById('product-cat').textContent = brandMap[brandName].cat;
+        document.getElementById('widget-store-name').textContent = brandName + ' Support';
+
+        // Update Stage 1 (Home) Brand Name & Avatar Box
+        const homeStore = document.getElementById('home-store-name');
+        if (homeStore) homeStore.textContent = brandName + ' Support';
+        const homeAvatar = document.getElementById('home-conv-avatar');
+        if (homeAvatar) {
+          homeAvatar.innerHTML = `<span style="font-weight:700; font-size:13px; color: ${colorHex};">${brandMap[brandName].initials}</span>`;
+        }
+        const chatAvatar = document.getElementById('chat-header-avatar');
+        if (chatAvatar) {
+          chatAvatar.textContent = brandMap[brandName].initials[0] || 'S';
+        }
+      }
+    }
+
+    function sendWidgetMessage() {
+      const input = document.getElementById('widget-user-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      // 1. Append ke widget pengunjung
+      const widgetBody = document.getElementById('widget-messages');
+      const visitorBubble = document.createElement('div');
+      visitorBubble.className = 'widget-bubble visitor';
+      visitorBubble.style.background = getComputedStyle(document.documentElement).getPropertyValue('--chat-primary');
+      visitorBubble.textContent = text;
+      widgetBody.appendChild(visitorBubble);
+      widgetBody.scrollTop = widgetBody.scrollHeight;
+      input.value = '';
+
+      // Update snippet di Halaman Awal Card 1
+      const homeLastMsg = document.getElementById('home-last-msg');
+      if (homeLastMsg) homeLastMsg.textContent = text;
+
+      // 2. Simulasikan langsung masuk ke Inbox Admin
+      const adminFeed = document.getElementById('admin-message-feed');
+      const adminMsg = document.createElement('div');
+      adminMsg.className = 'msg-group visitor';
+      adminMsg.innerHTML = `
+        <span class="msg-sender-name">Jane Doe (Visitor)</span>
+        <div class="msg-bubble">${escapeHtml(text)}</div>
+        <span class="msg-time">Baru saja</span>
+      `;
+      adminFeed.appendChild(adminMsg);
+      adminFeed.scrollTop = adminFeed.scrollHeight;
+
+      // Highlight card di admin
+      document.querySelector('.conv-snippet').textContent = text;
+    }
+
+    function handleWidgetKey(e) {
+      if (e.key === 'Enter') {
+        sendWidgetMessage();
+      }
+    }
+
+    function sendAdminReply() {
+      const input = document.getElementById('admin-reply-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      // 1. Append ke feed admin
+      const adminFeed = document.getElementById('admin-message-feed');
+      const agentMsg = document.createElement('div');
+      agentMsg.className = 'msg-group agent';
+      agentMsg.innerHTML = `
+        <span class="msg-sender-name">Sarah (Support)</span>
+        <div class="msg-bubble">${escapeHtml(text)}</div>
+        <span class="msg-time">Baru saja • Terkirim</span>
+      `;
+      adminFeed.appendChild(agentMsg);
+      input.value = '';
+
+      // Catat audit activity log
+      appendLiveActivityLog(
+        'agent',
+        'role-badge-agent',
+        'Sarah (Customer Support)',
+        'SC',
+        'message.replied',
+        `Membalas pesan tiket #1 (Jane Doe): "${text.substring(0, 45)}${text.length > 45 ? '...' : ''}"`
+      );
+
+      // 2. Simulasikan tersinkronisasi kembali ke widget visitor (Polling)
+      setTimeout(() => {
+        const widgetBody = document.getElementById('widget-messages');
+        const agentBubble = document.createElement('div');
+        agentBubble.className = 'widget-bubble agent';
+        agentBubble.textContent = text;
+        widgetBody.appendChild(agentBubble);
+        widgetBody.scrollTop = widgetBody.scrollHeight;
+
+        // Update snippet di Halaman Awal Card 1
+        const homeLastMsg = document.getElementById('home-last-msg');
+        if (homeLastMsg) homeLastMsg.textContent = text;
+      }, 400);
+    }
+
+    function handleAdminKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendAdminReply();
+      }
+    }
+
+    function escapeHtml(string) {
+      return String(string).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function filterProject(projectKey) {
+      const cards = document.querySelectorAll('.conv-card');
+      cards.forEach(card => {
+        if (projectKey === 'all') {
+          card.style.display = 'flex';
+        } else if (projectKey === 'supresso' && card.innerHTML.includes('supresso')) {
+          card.style.display = 'flex';
+        } else if (projectKey === 'indraco' && card.innerHTML.includes('indracostore')) {
+          card.style.display = 'flex';
+        } else if (projectKey === 'global' && card.innerHTML.includes('indracoglobal')) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    function selectConversation(person) {
+      document.querySelectorAll('.conv-card').forEach(c => c.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+
+      if (person === 'tan') {
+        document.getElementById('active-chat-name').textContent = 'Mr. Tan (SG)';
+        document.getElementById('active-chat-avatar').textContent = 'MT';
+        document.getElementById('active-chat-sub').textContent = 'Online via indracoglobal.com • Ditugaskan ke: Budi (B2B)';
+        document.getElementById('ctx-name').textContent = 'Mr. Tan';
+        document.getElementById('ctx-email').textContent = 'tan@singapore-cafe.sg';
+        document.getElementById('ctx-source').textContent = 'indracoglobal.com';
+        document.getElementById('ctx-product').textContent = 'Sumatra Green Beans Grade 1 (20ft)';
+        document.getElementById('ctx-url').textContent = '/export/green-beans';
+      } else if (person === 'budi') {
+        document.getElementById('active-chat-name').textContent = 'Budi Santoso';
+        document.getElementById('active-chat-avatar').textContent = 'BS';
+        document.getElementById('active-chat-sub').textContent = 'Online via indracostore.com • Ditugaskan ke: Sarah (CS)';
+        document.getElementById('ctx-name').textContent = 'Budi Santoso';
+        document.getElementById('ctx-email').textContent = 'budi.santoso@yahoo.com';
+        document.getElementById('ctx-source').textContent = 'indracostore.com';
+        document.getElementById('ctx-product').textContent = 'Kopi Jahe Kental 10 Sachet';
+        document.getElementById('ctx-url').textContent = '/promo/kopi-jahe';
+      } else {
+        document.getElementById('active-chat-name').textContent = 'Jane Doe';
+        document.getElementById('active-chat-avatar').textContent = 'JD';
+        document.getElementById('active-chat-sub').textContent = 'Online via supresso.myshopify.com • Ditugaskan ke: Sarah (CS)';
+        document.getElementById('ctx-name').textContent = 'Jane Doe';
+        document.getElementById('ctx-email').textContent = 'jane.doe@gmail.com';
+        document.getElementById('ctx-source').textContent = 'supresso.myshopify.com';
+        document.getElementById('ctx-product').textContent = 'Supresso Sumatra Mandheling Capsule';
+        document.getElementById('ctx-url').textContent = '/products/sumatra-capsule';
+      }
+    }
+
+    function setupDualView() {
+      const dualLeft = document.getElementById('dual-left-container');
+      const dualRight = document.getElementById('dual-right-container');
+      
+      dualLeft.innerHTML = `
+        <div style="background: #FFF; padding: 12px 20px; border-bottom: 1px solid #DDD; font-size: 12px; font-weight: 600; display:flex; align-items:center; gap:6px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+          TAMPILAN PELANGGAN (Situs Toko Shopify + 2-Stage Chat Widget)
+        </div>
+      ` + document.getElementById('store-bg').outerHTML;
+
+      dualRight.innerHTML = `
+        <div style="background: #FFF; padding: 12px 20px; border-bottom: 1px solid #DDD; font-size: 12px; font-weight: 600; display:flex; align-items:center; gap:6px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          TAMPILAN TIM CS (Admin Dashboard 3-Kolom)
+        </div>
+      ` + document.querySelector('.admin-container').outerHTML;
+    }
+
+    function simulateAttachPhoto() {
+      const banner = document.getElementById('compression-banner');
+      banner.style.display = 'block';
+      banner.innerHTML = `
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px; margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <strong>Mengompres foto di browser (Canvas API)...</strong> 8.4 MB (Raw iPhone) ➔ Resolusi 1600px...
+      `;
+
+      setTimeout(() => {
+        banner.innerHTML = `
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px; margin-right:4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          <strong>Selesai terkompresi lokal!</strong> 8.4 MB ➔ <strong>210 KB (-97.5%)</strong> dalam 140ms. Terkirim instan!
+        `;
+        
+        // 1. Tambah foto ke chat widget
+        const widgetBody = document.getElementById('widget-messages');
+        const photoBubble = document.createElement('div');
+        photoBubble.className = 'widget-bubble visitor';
+        photoBubble.style.background = getComputedStyle(document.documentElement).getPropertyValue('--chat-primary');
+        photoBubble.innerHTML = `
+          <div style="background: rgba(0,0,0,0.18); border-radius: 8px; padding: 10px; margin-bottom: 6px; text-align: center;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:4px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            <div style="font-size: 11px; font-weight: 600;">foto_kemasan_kopi.jpg</div>
+            <div style="font-size: 10px; opacity: 0.85;">210 KB (Dikompres dari 8.4 MB)</div>
+          </div>
+          Apakah stok kemasan box ini ready 10 box kak?
+        `;
+        widgetBody.appendChild(photoBubble);
+        widgetBody.scrollTop = widgetBody.scrollHeight;
+
+        // 2. Tembuskan seketika ke Admin Inbox CS
+        const adminFeed = document.getElementById('admin-message-feed');
+        const adminMsg = document.createElement('div');
+        adminMsg.className = 'msg-group visitor';
+        adminMsg.innerHTML = `
+          <span class="msg-sender-name">Jane Doe (Visitor)</span>
+          <div class="msg-bubble" style="background: #FFF; border: 1px solid #DDD;">
+            <div style="background: #F4F4F5; border-radius: 6px; padding: 8px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4B5563" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+              <div>
+                <div style="font-size: 12px; font-weight: 600;">foto_kemasan_kopi.jpg</div>
+                <div style="font-size: 10px; color: #10B981; font-weight: 600;">✓ Terkompresi: 210 KB (Original: 8.4 MB)</div>
+              </div>
+            </div>
+            Apakah stok kemasan box ini ready 10 box kak?
+          </div>
+          <span class="msg-time">Baru saja</span>
+        `;
+        adminFeed.appendChild(adminMsg);
+        adminFeed.scrollTop = adminFeed.scrollHeight;
+
+        // Hilangkan banner setelah 4 detik
+        setTimeout(() => {
+          banner.style.display = 'none';
+        }, 4000);
+      }, 350);
+    }
+
+    function toggleAdminSidebar() {
+      const sidebar = document.getElementById('admin-sidebar');
+      sidebar.classList.toggle('minimized');
+      const isMin = sidebar.classList.contains('minimized');
+      const btn = document.getElementById('sidebar-toggle-btn');
+      if (btn) btn.title = isMin ? 'Expand Menu Samping' : 'Minimize Menu Samping';
+    }
+
+    // ========================================================================
+    // RBAC SIMULATION ENGINE (Owner, Admin, Agent Sandbox)
+    // ========================================================================
+    let currentSimulatedRole = 'owner';
+
+    const simulatedProfiles = {
+      owner: {
+        name: 'Hendri (Owner & Director)',
+        initials: 'HD',
+        role: 'owner',
+        roleLabel: 'Owner',
+        color: '#92400E',
+        bg: '#FEF3C7',
+        badgeClass: 'role-badge-owner',
+        canManageIntegrations: true,
+        canManageTeam: true,
+        canChangeRole: true
+      },
+      admin: {
+        name: 'System Admin',
+        initials: 'SA',
+        role: 'admin',
+        roleLabel: 'Admin',
+        color: '#4338CA',
+        bg: '#EEF2FF',
+        badgeClass: 'role-badge-admin',
+        canManageIntegrations: true,
+        canManageTeam: true,
+        canChangeRole: false
+      },
+      agent: {
+        name: 'Sarah (Customer Support)',
+        initials: 'SC',
+        role: 'agent',
+        roleLabel: 'Agent',
+        color: '#065F46',
+        bg: '#ECFDF5',
+        badgeClass: 'role-badge-agent',
+        canManageIntegrations: false,
+        canManageTeam: false,
+        canChangeRole: false
+      }
+    };
+
+    function setSimulatedRole(role) {
+      currentSimulatedRole = role;
+      const profile = simulatedProfiles[role];
+      if (!profile) return;
+
+      // 1. Update Preview Header buttons
+      document.querySelectorAll('.role-btn').forEach(btn => {
+        btn.classList.remove('active', 'role-owner', 'role-admin', 'role-agent');
+      });
+      const activeBtn = document.getElementById('role-btn-' + role);
+      if (activeBtn) {
+        activeBtn.classList.add('active', 'role-' + role);
+      }
+
+      // 2. Update Sidebar Profile Card
+      const userAvatar = document.getElementById('sidebar-user-avatar');
+      const userName = document.getElementById('sidebar-user-name');
+      const userBadge = document.getElementById('sidebar-user-role-badge');
+      if (userAvatar) {
+        userAvatar.textContent = profile.initials;
+        userAvatar.style.background = profile.bg;
+        userAvatar.style.color = profile.color;
+      }
+      if (userName) userName.textContent = profile.name.split(' ')[0] + ` (${profile.roleLabel})`;
+      if (userBadge) {
+        userBadge.className = 'role-badge ' + profile.badgeClass;
+        userBadge.textContent = profile.roleLabel;
+      }
+
+      // 3. Update Team Stats
+      const statRoleVal = document.getElementById('team-stat-role-val');
+      const statRoleDesc = document.getElementById('team-stat-role-desc');
+      if (statRoleVal) {
+        statRoleVal.textContent = profile.roleLabel;
+        statRoleVal.style.color = profile.color;
+      }
+      if (statRoleDesc) {
+        if (role === 'owner') statRoleDesc.textContent = 'Hak akses penuh (Super Admin & Billing)';
+        else if (role === 'admin') statRoleDesc.textContent = 'Kelola integrasi, widget, & CS chat';
+        else statRoleDesc.textContent = 'Akses terbatas: Khusus balas percakapan';
+      }
+
+      // 4. Update UI Cues for Add Integration buttons
+      const btnHub = document.getElementById('btn-add-integration-hub');
+      const btnInbox = document.getElementById('btn-add-integration-inbox');
+      if (role === 'agent') {
+        if (btnHub) {
+          btnHub.style.opacity = '0.55';
+          btnHub.title = 'Akses Terbatas: Hanya Owner & Admin yang dapat membuat integrasi baru.';
+        }
+        if (btnInbox) {
+          btnInbox.style.opacity = '0.55';
+          btnInbox.title = 'Akses Terbatas: Hanya Owner & Admin yang dapat membuat integrasi baru.';
+        }
+      } else {
+        if (btnHub) {
+          btnHub.style.opacity = '1';
+          btnHub.title = 'Tambah Integrasi Website Baru';
+        }
+        if (btnInbox) {
+          btnInbox.style.opacity = '1';
+          btnInbox.title = 'Tambah Integrasi Website Baru';
+        }
+      }
+
+      showRbacNotice(
+        `Peran Aktif: ${profile.roleLabel}`,
+        `Anda sedang menguji dashboard sebagai ${profile.name}. Hak akses API & UI kini disesuaikan.`,
+        '#10B981'
+      );
+    }
+
+    function showRbacNotice(title, message, accentColor = '#EF4444') {
+      const toast = document.getElementById('rbac-notice-toast');
+      const toastTitle = document.getElementById('rbac-toast-title');
+      const toastBody = document.getElementById('rbac-toast-body');
+      if (!toast) return;
+
+      toast.style.borderColor = accentColor;
+      toast.style.borderLeftColor = accentColor;
+      if (toastTitle) toastTitle.textContent = title;
+      if (toastBody) toastBody.textContent = message;
+
+      toast.style.display = 'block';
+      if (window._rbacTimer) clearTimeout(window._rbacTimer);
+      window._rbacTimer = setTimeout(() => {
+        toast.style.display = 'none';
+      }, 4500);
+    }
+
+    function triggerAddIntegration() {
+      if (currentSimulatedRole === 'agent') {
+        showRbacNotice(
+          'HTTP 403 Forbidden',
+          "Akses Ditolak: Peran 'Agent' hanya diizinkan membalas chat. Pembuatan integrasi web baru memerlukan hak akses 'Owner' atau 'Admin'.",
+          '#EF4444'
+        );
+        return;
+      }
+      openCreateIntegrationModal();
+    }
+
+    function triggerInviteTeam() {
+      if (currentSimulatedRole === 'agent') {
+        showRbacNotice(
+          'HTTP 403 Forbidden',
+          "Akses Ditolak: Peran 'Agent' tidak berhak mengundang staf baru ke dalam sistem.",
+          '#EF4444'
+        );
+        return;
+      }
+      const name = prompt('Masukkan Nama Lengkap Anggota Tim Baru:');
+      if (!name) return;
+      const email = prompt('Masukkan Email Anggota Tim:');
+      if (!email) return;
+      const role = currentSimulatedRole === 'owner' ? prompt("Pilih Role ('admin' atau 'agent'):", 'agent') : 'agent';
+      
+      showRbacNotice(
+        'HTTP 201 Created',
+        `Berhasil! ${name} (${email}) berhasil ditambahkan ke tim sebagai role: ${role}.`,
+        '#10B981'
+      );
+    }
+
+    function handleRoleChangeDemo(userName, newRole, targetId) {
+      if (currentSimulatedRole !== 'owner') {
+        showRbacNotice(
+          'HTTP 403 Forbidden',
+          `Akses Ditolak: Peran '${currentSimulatedRole.toUpperCase()}' tidak berhak mengubah role anggota tim. Hanya 'Owner' yang memiliki wewenang ini.`,
+          '#EF4444'
+        );
+        // Reset select back
+        const sel = document.getElementById('select-role-' + targetId);
+        if (sel) sel.value = targetId === 'admin' ? 'admin' : 'agent';
+        return;
+      }
+
+      // Owner is permitted
+      const badge = document.getElementById('table-badge-' + targetId);
+      if (badge) {
+        badge.className = 'role-badge ' + (newRole === 'admin' ? 'role-badge-admin' : 'role-badge-agent');
+        badge.textContent = newRole.toUpperCase();
+      }
+
+      appendLiveActivityLog(
+        'owner',
+        'role-badge-owner',
+        'Hendri (Owner & Director)',
+        'HD',
+        'role.updated',
+        `Mengubah role ${userName} menjadi ${newRole.toUpperCase()} (Audit Confirmed)`
+      );
+
+      showRbacNotice(
+        'HTTP 200 OK — Role Updated',
+        `Role ${userName} berhasil diubah menjadi ${newRole.toUpperCase()}. Perubahan tersimpan ke database.`,
+        '#10B981'
+      );
+    }
+
+    function switchAdminSubView(subView) {
+      const inboxView = document.getElementById('admin-view-inbox');
+      const integrationsView = document.getElementById('admin-view-integrations');
+      const teamView = document.getElementById('admin-view-team');
+      const logsView = document.getElementById('admin-view-logs');
+      const tabInbox = document.getElementById('side-tab-inbox');
+      const tabIntegrations = document.getElementById('side-tab-integrations');
+      const tabTeam = document.getElementById('side-tab-team');
+      const tabLogs = document.getElementById('side-tab-logs');
+
+      // Reset all views
+      inboxView.style.display = 'none';
+      integrationsView.classList.remove('active');
+      if (teamView) teamView.classList.remove('active');
+      if (logsView) logsView.classList.remove('active');
+      if (tabInbox) tabInbox.classList.remove('active');
+      if (tabIntegrations) tabIntegrations.classList.remove('active');
+      if (tabTeam) tabTeam.classList.remove('active');
+      if (tabLogs) tabLogs.classList.remove('active');
+
+      if (subView === 'inbox') {
+        inboxView.style.display = 'flex';
+        if (tabInbox) tabInbox.classList.add('active');
+      } else if (subView === 'integrations') {
+        integrationsView.classList.add('active');
+        if (tabIntegrations) tabIntegrations.classList.add('active');
+      } else if (subView === 'team') {
+        if (teamView) teamView.classList.add('active');
+        if (tabTeam) tabTeam.classList.add('active');
+      } else if (subView === 'logs') {
+        if (logsView) logsView.classList.add('active');
+        if (tabLogs) tabLogs.classList.add('active');
+      }
+    }
+
+    function filterLogs(role, btn) {
+      document.querySelectorAll('.log-filter-chip').forEach(c => c.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      const rows = document.querySelectorAll('#activity-logs-tbody tr');
+      rows.forEach(row => {
+        if (role === 'all' || row.getAttribute('data-role') === role) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    let logCounter = 7;
+    function appendLiveActivityLog(role, roleBadgeClass, performerName, initials, action, description, ip = '180.252.16.89') {
+      const tbody = document.getElementById('activity-logs-tbody');
+      if (!tbody) return;
+
+      logCounter++;
+      const counterElem = document.getElementById('log-total-count');
+      if (counterElem) counterElem.textContent = logCounter + ' Log';
+
+      const tr = document.createElement('tr');
+      tr.setAttribute('data-role', role);
+      tr.style.background = '#FEFCE8';
+      tr.style.transition = 'background 1.5s ease';
+
+      tr.innerHTML = `
+        <td style="font-size: 11px; color: #10B981; font-weight:600; font-feature-settings: 'tnum';">Baru saja (Live)</td>
+        <td>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="avatar" style="width: 24px; height: 24px; font-size: 10px;">${escapeHtml(initials)}</div>
+            <div>
+              <div style="font-weight: 600; font-size: 11.5px;">${escapeHtml(performerName)}</div>
+              <span class="role-badge ${roleBadgeClass}">${role.toUpperCase()}</span>
+            </div>
+          </div>
+        </td>
+        <td><span class="log-action-tag ${role}">${escapeHtml(action)}</span></td>
+        <td>${escapeHtml(description)}</td>
+        <td style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">${ip}</td>
+      `;
+
+      tbody.insertBefore(tr, tbody.firstChild);
+
+      setTimeout(() => {
+        tr.style.background = 'transparent';
+      }, 2500);
+    }
+
+    function testWebsiteWidget(keySlug, name, colorHex, domain) {
+      // 1. Set widget color
+      document.documentElement.style.setProperty('--chat-primary', colorHex);
+      document.querySelectorAll('.widget-launcher, .widget-send-btn, .widget-avatar').forEach(node => {
+        node.style.background = colorHex;
+      });
+      const homeHeader = document.getElementById('widget-home-header-bg');
+      if (homeHeader) {
+        homeHeader.style.background = `linear-gradient(180deg, ${colorHex} 0%, #1F2937 100%)`;
+      }
+      document.querySelectorAll('.widget-bubble.visitor').forEach(bubble => {
+        bubble.style.background = colorHex;
+      });
+
+      // 2. Set store brand info
+      document.getElementById('store-brand-text').textContent = name.toUpperCase();
+      document.getElementById('product-title-text').textContent = 'Koleksi Produk — ' + name;
+      document.getElementById('product-cat').textContent = domain;
+      document.getElementById('widget-store-name').textContent = name + ' Support';
+      const homeStore = document.getElementById('home-store-name');
+      if (homeStore) homeStore.textContent = name + ' Support';
+      const initials = name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+      const homeAvatar = document.getElementById('home-conv-avatar');
+      if (homeAvatar) {
+        homeAvatar.innerHTML = `<span style="font-weight:700; font-size:13px; color: ${colorHex};">${initials}</span>`;
+      }
+      const chatAvatar = document.getElementById('chat-header-avatar');
+      if (chatAvatar) chatAvatar.textContent = initials[0] || 'S';
+
+      // 3. Switch to store view, buka widget di Stage 1 Halaman Awal
+      openWidgetScreen('home');
+      document.getElementById('chat-window').classList.add('open');
+      isWidgetOpen = true;
+      const iconChat = document.getElementById('launcher-svg-chat');
+      const iconClose = document.getElementById('launcher-svg-close');
+      if (iconChat) iconChat.style.display = 'none';
+      if (iconClose) iconClose.style.display = 'block';
+
+      const storeBtn = document.querySelectorAll('.view-btn')[1];
+      switchView('store', storeBtn);
+    }
+
+    function copySnippetDirect(key) {
+      const code = `<script src="https://chat.indraco.com/widget.js" data-key="${key}" async><\/script>`;
+      navigator.clipboard.writeText(code).then(() => {
+        alert('Kode script berhasil disalin ke clipboard!\n\nTempelkan sebelum tag </body> di website Anda:\n' + code);
+      });
+    }
+
+    function openCreateIntegrationModal() {
+      document.getElementById('create-modal-backdrop').classList.add('open');
+      document.getElementById('modal-form-view').style.display = 'flex';
+      document.getElementById('modal-result-view').style.display = 'none';
+      document.getElementById('btn-save-integration').style.display = 'inline-flex';
+      document.getElementById('btn-save-integration').textContent = 'Generate & Simpan';
+    }
+
+    function closeCreateIntegrationModal() {
+      document.getElementById('create-modal-backdrop').classList.remove('open');
+    }
+
+    let generatedKey = '';
+    let siteCount = 4;
+
+    function saveNewIntegration() {
+      const name = document.getElementById('modal-proj-name').value.trim() || 'Custom Store';
+      const domain = document.getElementById('modal-proj-domain').value.trim() || 'customsite.com';
+      const color = document.getElementById('modal-proj-color-hex').value.trim() || '#7C3AED';
+      const keySlug = domain.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      generatedKey = 'pk_live_' + keySlug + '_' + Math.floor(1000 + Math.random() * 9000);
+
+      // 1. Tampilkan tampilan hasil (snippet code)
+      document.getElementById('modal-form-view').style.display = 'none';
+      document.getElementById('modal-result-view').style.display = 'flex';
+      document.getElementById('btn-save-integration').style.display = 'none';
+
+      document.getElementById('modal-generated-snippet').innerHTML = 
+        `&lt;script src="https://chat.indraco.com/widget.js" data-key="<span>${generatedKey}</span>" async&gt;&lt;/script&gt;`;
+
+      // 2. Tambah opsi baru ke dropdown filter proyek di inbox admin
+      const select = document.getElementById('project-filter-dropdown');
+      const newOpt = document.createElement('option');
+      newOpt.value = keySlug;
+      newOpt.textContent = domain + ' (' + name + ')';
+      select.appendChild(newOpt);
+
+      // 3. Tambahkan color pill baru di toolbar preview
+      const colorSwitcher = document.querySelector('.color-switcher');
+      const newPill = document.createElement('div');
+      newPill.className = 'color-pill active';
+      newPill.style.background = color;
+      newPill.title = name + ' (' + color + ')';
+      newPill.onclick = () => setCoreColor(color, newPill, name);
+      colorSwitcher.appendChild(newPill);
+
+      // 4. Tambahkan Card Baru ke Hub Integrations!
+      const hubGrid = document.getElementById('integrations-cards-grid');
+      const newCard = document.createElement('div');
+      newCard.className = 'integration-card';
+      newCard.style.borderColor = color;
+      newCard.innerHTML = `
+        <div class="card-top">
+          <div class="card-brand-info">
+            <div class="brand-icon" style="background: ${color};">${escapeHtml(name.substring(0, 2).toUpperCase())}</div>
+            <div class="brand-names">
+              <div class="brand-names-title">${escapeHtml(name)}</div>
+              <div class="brand-names-domain">${escapeHtml(domain)}</div>
+            </div>
+          </div>
+          <div class="status-badge"><span class="dot"></span> Baru Dibuat</div>
+        </div>
+        <div class="card-meta-row">
+          <span style="color: var(--text-muted);">Platform: <strong>Web Custom / Any</strong></span>
+          <div class="color-swatch-badge">
+            <span class="swatch-circle" style="background: ${color};"></span>
+            <span>${color}</span>
+          </div>
+        </div>
+        <div class="card-snippet-box">
+          &lt;script src="https://chat.indraco.com/widget.js" data-key="<span>${generatedKey}</span>" async&gt;&lt;/script&gt;
+        </div>
+        <div class="card-actions">
+          <button class="btn-test-widget" onclick="testWebsiteWidget('${keySlug}', '${escapeHtml(name)}', '${color}', '${escapeHtml(domain)}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            Uji Live di Toko
+          </button>
+          <button class="btn-copy-code" onclick="copySnippetDirect('${generatedKey}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            Salin
+          </button>
+        </div>
+      `;
+      hubGrid.appendChild(newCard);
+
+      // 5. Update count badge & stats
+      siteCount++;
+      const sideBadge = document.getElementById('side-project-count');
+      if (sideBadge) sideBadge.textContent = siteCount;
+      const navBadge = document.getElementById('nav-project-count');
+      if (navBadge) navBadge.textContent = siteCount;
+      const hubTotal = document.getElementById('hub-total-sites');
+      if (hubTotal) hubTotal.textContent = siteCount + ' Website';
+
+      // 6. Langsung aktifkan warna baru ke widget
+      setCoreColor(color, newPill, name);
+
+      // 7. Catat audit activity log
+      appendLiveActivityLog(
+        currentSimulatedRole,
+        'role-badge-' + currentSimulatedRole,
+        simulatedProfiles[currentSimulatedRole].name,
+        simulatedProfiles[currentSimulatedRole].initials,
+        'integration.created',
+        `Membuat integrasi channel website baru: ${name} (${domain}) dengan warna ${color}`
+      );
+    }
+
+    function copyGeneratedSnippet() {
+      const code = `<script src="https://chat.indraco.com/widget.js" data-key="${generatedKey}" async><\/script>`;
+      navigator.clipboard.writeText(code).then(() => {
+        alert('Kode script berhasil disalin ke clipboard!\n\nTempelkan sebelum tag </body> di website ' + document.getElementById('modal-proj-domain').value);
+      });
+    }
+
+    // Default init open
+    window.addEventListener('load', () => {
+      document.getElementById('chat-window').classList.add('open');
+    });
+  </script>
+
+  <!-- MODAL: CREATE NEW INTEGRATION -->
+  <div class="modal-backdrop" id="create-modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="display: flex; align-items: center; gap: 8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          Create New Website Integration
+        </h3>
+        <button class="modal-close-btn" onclick="closeCreateIntegrationModal()">✕</button>
+      </div>
+      
+      <div class="modal-body" id="modal-form-view">
+        <div class="form-group">
+          <label class="form-label">Nama Proyek / Toko</label>
+          <input type="text" id="modal-proj-name" class="form-input" placeholder="misal: Toko Baru Kopi / My Brand" value="Toko Kopi Baru">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Domain Website (Whitelist Asal)</label>
+          <input type="text" id="modal-proj-domain" class="form-input" placeholder="misal: tokobarukopi.com" value="tokobarukopi.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pilih Warna Core Brand UI</label>
+          <div class="color-input-row">
+            <input type="color" id="modal-proj-color-picker" class="color-input-picker" value="#7C3AED" onchange="document.getElementById('modal-proj-color-hex').value = this.value">
+            <input type="text" id="modal-proj-color-hex" class="form-input" style="width: 100px; font-family: var(--font-mono); font-size:12px;" value="#7C3AED" onchange="document.getElementById('modal-proj-color-picker').value = this.value">
+            <span style="font-size: 11px; color: var(--text-muted);">Bentuk tetap baku, warna ini jadi aksen.</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pesan Sambutan (Greeting)</label>
+          <input type="text" id="modal-proj-greeting" class="form-input" value="Halo! Ada yang bisa kami bantu seputar produk kami?">
+        </div>
+      </div>
+
+      <!-- Result View (Generated Code Snippet) -->
+      <div class="modal-body" id="modal-result-view" style="display: none;">
+        <div style="font-size: 13px; font-weight: 600; color: #10B981; display: flex; align-items: center; gap: 6px;">
+          ✓ Integrasi Berhasil Dibuat!
+        </div>
+        <p style="font-size: 12px; color: var(--text-sub);">
+          Salin 1 baris kode script berikut dan tempelkan sebelum tag <code>&lt;/body&gt;</code> di website Anda:
+        </p>
+        <div class="snippet-preview-box" id="modal-generated-snippet">
+          &lt;script src="https://chat.indraco.com/widget.js" data-key="pk_live_..." async&gt;&lt;/script&gt;
+        </div>
+        <button class="btn-action" style="align-self: flex-start; margin-top: 6px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;" onclick="copyGeneratedSnippet()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          Salin Kode Script
+        </button>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeCreateIntegrationModal()">Tutup</button>
+        <button class="btn-create-integration" id="btn-save-integration" onclick="saveNewIntegration()">Generate & Simpan</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

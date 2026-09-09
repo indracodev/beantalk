@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supresso Coffee — Premium Coffee Capsules & Beans (Widget Live Test)</title>
+  <style>
+    /* Host Store Aggressive Styling to test Shadow DOM Immunity */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: #FDFBF7;
+      color: #2D2522;
+      line-height: 1.6;
+    }
+
+    /* Top Notice Bar */
+    .top-bar {
+      background: #1E1E1E;
+      color: #FFFFFF;
+      text-align: center;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+    }
+
+    /* Store Header */
+    header {
+      background: #FFFFFF;
+      border-bottom: 1px solid #EADBCE;
+      padding: 18px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .store-logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #1E1E1E;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .store-logo span {
+      background: #6F4E37;
+      color: #FFF;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    nav {
+      display: flex;
+      gap: 28px;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: #5A4A42;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+
+    nav a:hover {
+      color: #6F4E37;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .btn-test {
+      background: #6F4E37;
+      color: #FFFFFF;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-test:hover {
+      background: #573C29;
+    }
+
+    /* Hero Banner */
+    .hero-section {
+      padding: 64px 48px;
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      align-items: center;
+      gap: 48px;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: #F3ECE6;
+      color: #6F4E37;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 16px;
+    }
+
+    .hero-title {
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1.15;
+      color: #1E1E1E;
+      margin-bottom: 18px;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-desc {
+      font-size: 16px;
+      color: #6A5B53;
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+
+    .hero-box {
+      background: #FFFFFF;
+      border: 1px solid #EADBCE;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(111, 78, 55, 0.06);
+    }
+
+    .hero-box h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #1E1E1E;
+    }
+
+    .hero-box p {
+      font-size: 13px;
+      color: #6A5B53;
+      margin-bottom: 16px;
+    }
+
+    .code-snippet {
+      background: #1E1E1E;
+      color: #A7F3D0;
+      padding: 14px 16px;
+      border-radius: 8px;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      overflow-x: auto;
+      margin-bottom: 16px;
+    }
+
+    /* Product Grid */
+    .products-section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 48px 64px 48px;
+    }
+
+    .section-title {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 24px;
+      color: #1E1E1E;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .card {
+      background: #FFFFFF;
+      border: 1px solid #EADBCE;
+      border-radius: 12px;
+      padding: 20px;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(111, 78, 55, 0.08);
+    }
+
+    .card-tag {
+      font-size: 11px;
+      font-weight: 700;
+      color: #6F4E37;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .card h4 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #1E1E1E;
+    }
+
+    .card p {
+      font-size: 13px;
+      color: #6A5B53;
+      margin-bottom: 16px;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid #F3ECE6;
+      padding-top: 14px;
+    }
+
+    .price {
+      font-size: 15px;
+      font-weight: 800;
+      color: #1E1E1E;
+    }
+
+    .btn-ask {
+      background: #F3ECE6;
+      color: #6F4E37;
+      border: 1px solid #EADBCE;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-ask:hover {
+      background: #EADBCE;
+    }
+
+    /* Sticky Test Controller (Top Right Floating) */
+    .sdk-tester-dock {
+      position: fixed;
+      top: 90px;
+      right: 24px;
+      background: #18181B;
+      color: #FAFAFA;
+      padding: 14px 18px;
+      border-radius: 12px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+      z-index: 999;
+      font-size: 12px;
+      max-width: 280px;
+      border: 1px solid #27272A;
+    }
+
+    .sdk-tester-dock h5 {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #10B981;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sdk-btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .sdk-btn {
+      background: #27272A;
+      color: #FAFAFA;
+      border: 1px solid #3F3F46;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .sdk-btn:hover {
+      background: #3F3F46;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    FREE ONGKIR SELURUH INDONESIA UNTUK PEMBELIAN MINIMAL RP 250.000
+  </div>
+
+  <header>
+    <div class="store-logo">
+      SUPRESSO <span>OFFICIAL</span>
+    </div>
+    <nav>
+      <a href="#capsules">Coffee Capsules</a>
+      <a href="#beans">Whole Beans</a>
+      <a href="#machines">Machines</a>
+      <a href="#promo">Promo</a>
+    </nav>
+    <div class="header-actions">
+      <button class="btn-test" onclick="triggerAskProduct('Halo, saya ingin tanya seputar promo kopi Supresso!')">
+        Hubungi Customer Support
+      </button>
+    </div>
+  </header>
+
+  <section class="hero-section">
+    <div>
+      <span class="hero-badge">100% ARABICA INDONESIA</span>
+      <h1 class="hero-title">Experience Pure Heritage Coffee in Every Cup.</h1>
+      <p class="hero-desc">
+        Koleksi kapsul kopi premium dan biji kopi pilihan dari perkebunan terbaik Nusantara: Sumatra Mandheling, Bali Kintamani, Toraja Kalosi, dan Java Preanger.
+      </p>
+    </div>
+
+    <div class="hero-box">
+      <h3>Pengujian Widget BeanTalk Chat SDK</h3>
+      <p>Halaman ini menyematkan widget chat via 1 baris tag script:</p>
+      <div class="code-snippet">&lt;script src="/chat-widget.js" data-project-key="pk_live_supresso_8819" data-store-name="Supresso Coffee"&gt;&lt;/script&gt;</div>
+      <p style="font-size: 12px; color: #78716C;">
+        Klik tombol pemicu di sudut kanan bawah untuk menguji alur <strong>Stage 1 (Welcome Hub)</strong> ➔ <strong>Stage 2 (Chat Utama)</strong> dengan isolasi Shadow DOM penuh.
+      </p>
+    </div>
+  </section>
+
+  <section class="products-section">
+    <h2 class="section-title">Katalog Produk Pilihan</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="card-tag">Aluminum Capsule</div>
+        <h4>Sumatra Mandheling (10 Caps)</h4>
+        <p>Medium-Dark Roast dengan cita rasa dark chocolate & earthy notes yang pekat.</p>
+        <div class="card-footer">
+          <span class="price">Rp 89.000</span>
+          <button class="btn-ask" onclick="triggerAskProduct('Halo, apakah stok Kapsul Sumatra Mandheling masih tersedia?')">Tanya CS</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-tag">Aluminum Capsule</div>
+        <h4>Bali Kintamani (10 Caps)</h4>
+        <p>Medium Roast dengan aroma fruity citrus segar dan aftertaste karamel manis.</p>
+        <div class="card-footer">
+          <span class="price">Rp 89.000</span>
+          <button class="btn-ask" onclick="triggerAskProduct('Halo, apakah kapsul Bali Kintamani cocok untuk Americano?')">Tanya CS</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-tag">Whole Beans 250g</div>
+        <h4>Toraja Kalosi Single Origin</h4>
+        <p>Biji kopi Arabica pilihan dengan aroma floral rempah dan keasaman seimbang.</p>
+        <div class="card-footer">
+          <span class="price">Rp 115.000</span>
+          <button class="btn-ask" onclick="triggerAskProduct('Biji kopi Toraja Kalosi roasting date-nya kapan ya kak?')">Tanya CS</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SDK Control Dock for Verification -->
+  <div class="sdk-tester-dock">
+    <h5>● BeanTalk SDK Live Control</h5>
+    <div style="font-size: 11px; opacity: 0.8; margin-bottom: 6px;">Uji fungsi programatik JavaScript SDK:</div>
+    <div class="sdk-btn-row">
+      <button class="sdk-btn" onclick="window.ChatWidget && window.ChatWidget.open()">ChatWidget.open()</button>
+      <button class="sdk-btn" onclick="window.ChatWidget && window.ChatWidget.close()">ChatWidget.close()</button>
+      <button class="sdk-btn" onclick="window.ChatWidget && window.ChatWidget.toggle()">ChatWidget.toggle()</button>
+    </div>
+  </div>
+
+  <script>
+    function triggerAskProduct(text) {
+      if (window.ChatWidget) {
+        window.ChatWidget.open();
+        // Automatically prefill / send message if ChatWidget instance is ready
+        setTimeout(function() {
+          var instance = window.ChatWidget.getInstance();
+          if (instance) {
+            instance.sendMessage(text);
+          }
+        }, 300);
+      }
+    }
+  </script>
+
+  <!-- BeanTalk Chat SDK Embed Tag -->
+  <script 
+    src="/chat-widget.js" 
+    data-project-key="pk_live_supresso_8819" 
+    data-store-name="Supresso Coffee"
+    data-color="#1E1E1E">
+  </script>
+
+</body>
+</html>

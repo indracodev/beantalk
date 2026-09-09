@@ -1,0 +1,23 @@
+{
+  "name": "@beantalk/sdk",
+  "version": "1.0.0",
+  "description": "BeanTalk — Universal Customer Chat SDK & Embeddable Shadow DOM Widget",
+  "main": "dist/chat-widget.js",
+  "scripts": {
+    "build": "node build.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "chat",
+    "widget",
+    "sdk",
+    "shadow-dom",
+    "customer-support"
+  ],
+  "author": "Antigravity Team",
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.25.12",
+    "typescript": "^5.9.3"
+  }
+}
