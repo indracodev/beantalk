@@ -151,7 +151,7 @@ class AuthTest extends TestCase
             'password' => 'password123',
         ]);
 
-        $response->assertRedirect('/preview.html');
+        $response->assertRedirect(route('admin.inbox'));
         $this->assertAuthenticatedAs($this->user);
     }
 
@@ -165,7 +165,7 @@ class AuthTest extends TestCase
             'password' => 'password123',
         ]);
 
-        $response->assertRedirect('/preview.html');
+        $response->assertRedirect(route('admin.inbox'));
         $this->assertAuthenticatedAs($this->user);
     }
 
