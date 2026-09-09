@@ -63,7 +63,8 @@ docs/
 │
 ├── admin-dashboard/                       # Dashboard Admin Laravel
 │   ├── 01-inbox-layout.md                 # 3-Kolom inbox, responsive drawer & realtime
-│   └── 02-project-and-widget-settings.md  # Live preview studio & connection verifier
+│   ├── 02-project-and-widget-settings.md  # Live preview studio & connection verifier
+│   └── 03-pages-and-routing.md            # Arsitektur 4 Halaman Blade, Asset Publik & Routing
 │
 ├── integrations/                          # Panduan Integrasi Platform Host
 │   ├── 01-html-and-frameworks.md          # HTML, WordPress, Laravel Blade & React/Vue/Next
@@ -80,6 +81,20 @@ docs/
     ├── 01-implementation-phases.md        # Urutan 8 fase pengerjaan (Phase 1-8)
     └── 02-definition-of-done.md           # Kriteria DoD & checklist pengujian end-to-end
 ```
+
+---
+
+## 🏛️ Arsitektur Aplikasi Internal & Konfigurasi Branch
+
+1. **Branch `main` (Aplikasi Internal Perusahaan)**:
+   - **2 Peran Inti (RBAC)**: **`superadmin`** (akses penuh & kelola staf) dan **`agent`** (staf operasional CS).
+   - **Otentikasi Ganda**: Mendukung login via **Email** atau **Username** (`superadmin`, `sarah`, `budi`).
+   - **Default 100% Light Theme**: Tampilan bawaan bersih bernuansa light dengan aksen brand emas (`#C59B27`) dan tombol toggle manual Dark Mode.
+   - **4 Halaman Admin Blade Interaktif**: Live Inbox (`/admin/inbox`), Integrasi Multi-Website (`/admin/integrations`), Manajemen Tim CS (`/admin/team`), dan Activity Logs (`/admin/logs`).
+   - **Struktur Layouting & Asset Publik**: Aset CSS/JS terpusat di `public/css/` dan `public/js/`, layout Blade modular dengan parsial `layouts/partials/sidebar.blade.php`.
+2. **Branch `saas-version` (Pencadangan SaaS Multi-Tenant)**:
+   - Menyimpan versi multi-tenant 3-role hirarkis (`owner`/`superadmin`, `admin`, `agent`).
+
 
 ---
 

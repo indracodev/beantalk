@@ -74,21 +74,35 @@ Pada endpoint public visitor (yang tidak memiliki sesi auth pengguna Laravel):
 
 ---
 
-## 4. Authorization Matrix (RBAC)
+## 4. Authorization Matrix (Internal App RBAC: 2 Roles)
 
-| Resource / Aksi | Owner | Admin | Agent |
-|---|:---:|:---:|:---:|
-| Baca/Balas Chat Inbox | ✅ | ✅ | ✅ |
-| Assign Conversation | ✅ | ✅ | ✅ |
-| Tutup/Buka Conversation | ✅ | ✅ | ✅ |
-| Kelola Widget Settings | ✅ | ✅ | ❌ |
-| Kelola Domain & API Keys | ✅ | ✅ | ❌ |
-| Tambah/Hapus Agent | ✅ | ✅ | ❌ |
-| Billing & Tenant Settings | ✅ | ❌ | ❌ |
+Untuk deployment internal perusahaan (pada branch `main`), sistem membatasi perizinan menjadi **2 peran**: **`superadmin`** dan **`agent`**:
+
+| Resource / Aksi | Superadmin | Agent (Staff CS) |
+|---|:---:|:---:|
+| Baca/Balas Live Chat Inbox | ✅ | ✅ |
+| Filter & Pencarian Percakapan | ✅ | ✅ |
+| Tutup/Buka Conversation | ✅ | ✅ |
+| Lihat Integrasi & Salin Script Embed | ✅ | ✅ |
+| Manajemen Tim & Staff CS (`/admin/team`) | ✅ | ❌ *(403 Forbidden)* |
+| Tambah / Hapus Akun Staf | ✅ | ❌ *(403 Forbidden)* |
+| Lihat Activity Logs & Audit Trail | ✅ | ✅ |
+| Pengaturan Global Tenant & API Key | ✅ | ❌ |
+
+> **Catatan Versi SaaS (3 Roles)**:  
+> Skema 3-role SaaS (`owner`, `admin`, `agent`) diabadikan dan tersimpan pada branch git **`saas-version`**.
 
 ---
 
-## 5. Ponytail Pragmatic Notes
+## 5. Autentikasi Pengguna (Email atau Username)
+
+Aplikasi mendukung login fleksibel menggunakan **Email ATAU Username** unik:
+- Format username berupa slug alfanumerik tanpa spasi (`superadmin`, `sarah`, `budi`).
+- Controller otentikasi ([`AuthController.php`](file:///c:/laragon/www/chat-me/app/Http/Controllers/Api/Auth/AuthController.php) dan [`LoginController.php`](file:///c:/laragon/www/chat-me/app/Http/Controllers/Auth/LoginController.php)) mendeteksi secara otomatis via `filter_var($input, FILTER_VALIDATE_EMAIL)`.
+
+---
+
+## 6. Ponytail Pragmatic Notes
 
 > **# ponytail: Mengapa Bukan Multi-Database (DB per Tenant)?**
 >
