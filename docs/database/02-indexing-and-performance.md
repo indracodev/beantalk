@@ -52,6 +52,36 @@ INDEX idx_msg_idempotent (conversation_id, client_message_id);
 
 ---
 
+### 1.4 Eliminasi N+1 Query pada Live Workspace 3-Kolom
+
+Untuk merender workspace Live Inbox dengan puluhan percakapan dan thread pesan tanpa degradasi performa:
+
+1. **Eager Loading Relasi Komposit**:
+   ```php
+   Conversation::where('tenant_id', $tenantId)
+       ->with(['visitor', 'project.widgetSetting', 'assignedUser', 'latestMessage'])
+       ->orderBy('last_message_at', 'desc');
+   ```
+   - Menghindari N query ke tabel `widget_settings` untuk dot color badge channel.
+   - Menghindari N query untuk snippet pesan terakhir via `latestOfMany()`.
+   - Mengambil data pengunjung dalam 1 query `WHERE id IN (...)`.
+
+2. **Konsolidasi Counter Status Menjadi 1 Query Agregasi**:
+   Alih-alih melakukan 4 kali roundtrip `count()`, seluruh counter tab (`Semua`, `Open`, `Closed`, `Tugas Saya`) dieksekusi dalam 1 query SQL tunggal:
+   ```sql
+   SELECT 
+       COUNT(*) as total_all,
+       SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END) as total_open,
+       SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as total_closed,
+       SUM(CASE WHEN assigned_user_id = ? THEN 1 ELSE 0 END) as total_mine
+   FROM conversations WHERE tenant_id = ? LIMIT 1;
+   ```
+
+3. **Reuse In-Memory Active Conversation**:
+   Jika percakapan aktif yang dipilih sudah terdapat di koleksi `$conversations`, model yang ada di memori langsung digunakan kembali dan hanya melakukan `$activeConversation->load(['messages.user'])`, memangkas 5 query redundan.
+
+---
+
 ## 2. Table Pruning & Data Retention
 
 Di lingkungan shared hosting dengan kuota disk terbatas, data transien harus dipangkas secara otomatis tanpa membebani server saat jam kerja aktif.
