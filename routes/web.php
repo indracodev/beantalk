@@ -43,3 +43,20 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('logs', 'Admin\DashboardController@logs')->name('logs');
 });
 
+// Public CDN Endpoint for Embed Widget (Fallback if not directly intercepted by web server)
+Route::get('{file}.js', function ($file) {
+    $target = public_path($file . '.js');
+    if (!file_exists($target)) {
+        $target = public_path('chat-widget.js');
+    }
+    if (file_exists($target)) {
+        return response()->file($target, [
+            'Content-Type' => 'application/javascript; charset=utf-8',
+            'Access-Control-Allow-Origin' => '*',
+            'Cache-Control' => 'public, max-age=3600',
+        ]);
+    }
+    abort(404);
+})->where('file', 'chat|widget|chat-widget');
+
+

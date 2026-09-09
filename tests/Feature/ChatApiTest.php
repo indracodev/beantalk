@@ -134,4 +134,22 @@ class ChatApiTest extends TestCase
                  ->assertJsonPath('success', true)
                  ->assertJsonPath('data.sender_type', 'agent');
     }
+
+    /**
+     * Test 7: Public CDN JS endpoints are directly accessible
+     */
+    public function testPublicWidgetScriptsAreAccessible()
+    {
+        $this->get('/chat-widget.js')
+            ->assertStatus(200)
+            ->assertHeader('Content-Type', 'application/javascript; charset=utf-8');
+
+        $this->get('/chat.js')
+            ->assertStatus(200)
+            ->assertHeader('Content-Type', 'application/javascript; charset=utf-8');
+
+        $this->get('/widget.js')
+            ->assertStatus(200)
+            ->assertHeader('Content-Type', 'application/javascript; charset=utf-8');
+    }
 }
