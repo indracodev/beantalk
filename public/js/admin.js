@@ -72,6 +72,19 @@ function copyToClipboard(text, btn) {
     }
 }
 
+// ======================================================================
+// MODAL DIALOG UTILITIES
+// ======================================================================
+function openModal(modalId) {
+    const el = document.getElementById(modalId);
+    if (el) el.style.display = 'flex';
+}
+
+function closeModal(modalId) {
+    const el = document.getElementById(modalId);
+    if (el) el.style.display = 'none';
+}
+
 // Jalankan inisialisasi tema segera sebelum render selesai
 applyTheme(localStorage.getItem('beantalk_theme') === 'dark' ? 'dark' : 'light');
 
@@ -79,3 +92,4 @@ applyTheme(localStorage.getItem('beantalk_theme') === 'dark' ? 'dark' : 'light')
 document.addEventListener('DOMContentLoaded', () => {
     initSidebar();
 });
+

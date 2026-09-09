@@ -49,8 +49,17 @@ Semua rute admin berada di bawah grup middleware `auth` dan prefix `admin`:
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', 'Admin\DashboardController@inbox')->name('dashboard');
     Route::get('inbox/{id?}', 'Admin\DashboardController@inbox')->name('inbox');
+    Route::post('inbox/{id}/reply', 'Admin\DashboardController@reply')->name('inbox.reply');
+    Route::get('inbox/{id}/messages', 'Admin\DashboardController@messages')->name('inbox.messages');
+    Route::put('inbox/{id}/status', 'Admin\DashboardController@updateStatus')->name('inbox.status');
+    Route::put('inbox/{id}/assign', 'Admin\DashboardController@assign')->name('inbox.assign');
+
     Route::get('integrations', 'Admin\DashboardController@integrations')->name('integrations');
+    Route::post('integrations', 'Admin\DashboardController@storeIntegration')->name('integrations.store');
+
     Route::get('team', 'Admin\DashboardController@team')->name('team');
+    Route::post('team', 'Admin\DashboardController@storeTeam')->name('team.store');
+
     Route::get('logs', 'Admin\DashboardController@logs')->name('logs');
 });
 ```
@@ -62,17 +71,21 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 ### 4.1. Live Inbox (`/admin/inbox` atau `/admin/inbox/{id}`)
 - **Layout 3-Kolom**:
   - **Kolom 1 (Daftar Percakapan)**: Dropdown filter toko/proyek, pencarian nama/email, tab filter status (`Semua`, `Open`, `Tugas Saya`, `Selesai`), avatar pengunjung, badge channel, snippet pesan terakhir, dan timestamp.
-  - **Kolom 2 (Active Thread)**: Header percakapan, drawer status tiket, alur pesan (bubble putih customer vs bubble emas agen), composer textarea, dan tombol balas instan.
+  - **Kolom 2 (Active Thread)**: Header percakapan interaktif dengan dropdown penugasan CS (`assign`), tombol toggle status tiket (`Tutup Tiket` / `Buka Kembali`), stream pesan (bubble putih customer vs bubble emas agen), composer textarea, dan tombol balas instan.
   - **Kolom 3 (Detail Konteks Pelanggan)**: Kartu informasi detail pengunjung (Nama, email, channel website, IP address, user-agent browser, halaman yang sedang dibuka).
-- **Interaksi Tanpa Reload**: Pesan dibalas langsung melalui endpoint REST API `POST /api/v1/admin/conversations/{id}/reply`.
+- **Interaksi Tanpa Reload**: 
+  - Balasan CS dikirim asinkronus ke `POST /admin/inbox/{id}/reply` dengan optimistic UI render.
+  - **Adaptive HTTP Polling**: Polling berkala `GET /admin/inbox/{id}/messages?after_id=...` (interval 3 detik saat aktif, 15 detik saat tab idle/hidden) memastikan pesan baru dari pengunjung muncul secara otomatis tanpa reload halaman.
 
 ### 4.2. Integrasi Multi-Website (`/admin/integrations`)
 - **Hub Multi-Site**: Menampilkan kartu semua website toko yang terhubung (*Supresso, Indraco Store, SDA Store, Indraco Global*).
+- **Modal Tambah Integrasi**: Form modal interaktif untuk mendaftarkan website baru, menentukan domain, pemilih warna aksen (color picker + hex sync), judul sapaan, dan auto-generate public API key `pk_live_...`.
 - **Embed Code Generator**: Menampilkan Public API Key (`pk_live_xxxx`) dan tag `<script>` embed widget siap salin dengan 1 klik.
 - **Demo Toko**: Tautan langsung ke `/demo-store.html` untuk memverifikasi fungsionalitas widget pada website host simulasi.
 
 ### 4.3. Manajemen Tim CS (`/admin/team`)
 - **Otorisasi Ketat**: Hanya dapat diakses oleh akun dengan role **`superadmin`**. Pengguna dengan peran `agent` akan menerima respon `403 Forbidden`.
+- **Modal Daftarkan Staf Baru**: Modal dialog untuk menambahkan anggota CS baru (`agent` atau `superadmin`) dengan validasi unik email/username dan enkripsi password bcrypt.
 - **Daftar Staf**: Tabel informasi nama staf, `@username`, email, role badge (`superadmin` / `agent`), indikator status online/offline, dan counter jumlah tiket percakapan yang sedang ditangani.
 
 ### 4.4. Activity Logs & Audit Trail (`/admin/logs`)

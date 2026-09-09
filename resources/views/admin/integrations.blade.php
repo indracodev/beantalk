@@ -9,8 +9,15 @@
             <h1 class="page-title">Integrasi Multi-Website</h1>
             <p class="page-desc">Kelola saluran toko online Anda, sesuaikan warna aksen widget, dan pasang kode sematan di website host.</p>
         </div>
-        <div>
-            <a href="/demo-store.html" target="_blank" class="btn-copy" style="background: var(--accent); color: #FFFFFF; border: none; padding: 10px 16px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <button type="button" class="btn-primary" onclick="openModal('modalNewIntegration')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Tambah Integrasi Baru</span>
+            </button>
+            <a href="/demo-store.html" target="_blank" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 6px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                     <polyline points="15 3 21 3 21 9"></polyline>
@@ -71,6 +78,57 @@
                 </div>
             </div>
         @endforeach
+    </div>
+</div>
+
+<!-- MODAL TAMBAH INTEGRASI BARU -->
+<div class="modal-backdrop" id="modalNewIntegration" onclick="if(event.target===this) closeModal('modalNewIntegration')">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h3 class="modal-title">Tambah Saluran / Website Baru</h3>
+            <button type="button" class="modal-close-btn" onclick="closeModal('modalNewIntegration')">&times;</button>
+        </div>
+        <form action="{{ route('admin.integrations.store') }}" method="POST">
+            @csrf
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="integName">Nama Website / Toko</label>
+                    <input type="text" id="integName" name="name" class="form-control" placeholder="Contoh: Kopi Kenangan Store" required>
+                    <span class="form-hint">Nama pengenal saluran yang akan tampil di Inbox CS.</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="integDomain">Domain Toko</label>
+                    <input type="text" id="integDomain" name="domain" class="form-control" placeholder="kopikenangan.com atau staging.toko.id" required>
+                    <span class="form-hint">Domain tempat widget akan dipasang (tanpa http://).</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Warna Aksen Chat Widget</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="color" id="integColorPicker" value="#C59B27" style="width: 44px; height: 38px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; background: transparent;" onchange="document.getElementById('integColorHex').value = this.value">
+                        <input type="text" id="integColorHex" name="primary_color" class="form-control" value="#C59B27" style="width: 110px; font-family: monospace;" oninput="document.getElementById('integColorPicker').value = this.value">
+                    </div>
+                    <span class="form-hint">Warna dominan untuk tombol peluncur, bubble balasan, dan header widget.</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="greetingTitle">Judul Sapaan (Greeting Title)</label>
+                    <input type="text" id="greetingTitle" name="greeting_title" class="form-control" value="Hallo!">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="greetingSubtitle">Sub-judul Sapaan</label>
+                    <input type="text" id="greetingSubtitle" name="greeting_subtitle" class="form-control" value="Ada yang bisa kami bantu? Tanyakan informasi apapun di sini!">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal('modalNewIntegration')">Batal</button>
+                <button type="submit" class="btn-primary">
+                    <span>Simpan &amp; Generate Script</span>
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 @endsection

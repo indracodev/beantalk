@@ -206,4 +206,241 @@ class AdminDashboardTest extends TestCase
         // yaitu 11 query terindeks untuk merender seluruh 3-kolom inbox, terlepas dari berapapun jumlah pesan.
         $this->assertLessThanOrEqual(12, $queryCount, "Terdeteksi potensi N+1 query: Total {$queryCount} query dieksekusi.");
     }
+
+    /**
+     * Test Admin can reply to a conversation via web endpoint
+     */
+    public function testAdminCanReplyToConversation()
+    {
+        $visitor = Visitor::create([
+            'tenant_id'    => $this->tenant->id,
+            'project_id'   => $this->project->id,
+            'visitor_uuid' => 'vis-reply-test-' . uniqid(),
+            'name'         => 'Visitor Reply Test',
+        ]);
+
+        $conv = Conversation::create([
+            'tenant_id'  => $this->tenant->id,
+            'project_id' => $this->project->id,
+            'visitor_id' => $visitor->id,
+            'status'     => 'open',
+            'channel'    => 'widget',
+        ]);
+
+        $response = $this->actingAs($this->agent)->postJson("/admin/inbox/{$conv->id}/reply", [
+            'content' => 'Halo ini balasan resmi CS dari admin inbox!',
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'success' => true,
+                'data'    => [
+                    'sender_type' => 'agent',
+                    'sender_name' => $this->agent->name,
+                    'content'     => 'Halo ini balasan resmi CS dari admin inbox!',
+                ]
+            ]);
+
+        $this->assertDatabaseHas('messages', [
+            'conversation_id' => $conv->id,
+            'sender_type'     => 'agent',
+            'content'         => 'Halo ini balasan resmi CS dari admin inbox!',
+        ]);
+    }
+
+    /**
+     * Test Admin can poll new messages via adaptive polling endpoint
+     */
+    public function testAdminCanPollNewMessages()
+    {
+        $visitor = Visitor::create([
+            'tenant_id'    => $this->tenant->id,
+            'project_id'   => $this->project->id,
+            'visitor_uuid' => 'vis-poll-test-' . uniqid(),
+            'name'         => 'Visitor Poll Test',
+        ]);
+
+        $conv = Conversation::create([
+            'tenant_id'  => $this->tenant->id,
+            'project_id' => $this->project->id,
+            'visitor_id' => $visitor->id,
+            'status'     => 'open',
+            'channel'    => 'widget',
+        ]);
+
+        $msg1 = \App\Models\Message::create([
+            'conversation_id' => $conv->id,
+            'tenant_id'       => $this->tenant->id,
+            'sender_type'     => 'visitor',
+            'sender_name'     => 'Visitor Poll Test',
+            'content'         => 'Pesan awal sebelum polling',
+            'status'          => 'delivered',
+        ]);
+
+        $msg2 = \App\Models\Message::create([
+            'conversation_id' => $conv->id,
+            'tenant_id'       => $this->tenant->id,
+            'sender_type'     => 'visitor',
+            'sender_name'     => 'Visitor Poll Test',
+            'content'         => 'Pesan baru pengunjung yang di-poll',
+            'status'          => 'delivered',
+        ]);
+
+        $response = $this->actingAs($this->agent)->getJson("/admin/inbox/{$conv->id}/messages?after_id={$msg1->id}");
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'data'    => [
+                    'last_id' => $msg2->id,
+                ]
+            ]);
+
+        $this->assertCount(1, $response->json('data.messages'));
+        $this->assertEquals('Pesan baru pengunjung yang di-poll', $response->json('data.messages.0.content'));
+    }
+
+    /**
+     * Test Admin can toggle conversation status (open / closed)
+     */
+    public function testAdminCanToggleConversationStatus()
+    {
+        $visitor = Visitor::create([
+            'tenant_id'    => $this->tenant->id,
+            'project_id'   => $this->project->id,
+            'visitor_uuid' => 'vis-status-test-' . uniqid(),
+        ]);
+
+        $conv = Conversation::create([
+            'tenant_id'  => $this->tenant->id,
+            'project_id' => $this->project->id,
+            'visitor_id' => $visitor->id,
+            'status'     => 'open',
+            'channel'    => 'widget',
+        ]);
+
+        // Toggle to closed
+        $response = $this->actingAs($this->agent)->putJson("/admin/inbox/{$conv->id}/status");
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'data'    => ['status' => 'closed']
+            ]);
+
+        $this->assertEquals('closed', $conv->fresh()->status);
+
+        // Toggle back to open
+        $response2 = $this->actingAs($this->agent)->putJson("/admin/inbox/{$conv->id}/status");
+
+        $response2->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'data'    => ['status' => 'open']
+            ]);
+
+        $this->assertEquals('open', $conv->fresh()->status);
+    }
+
+    /**
+     * Test Admin can assign conversation to staff CS
+     */
+    public function testAdminCanAssignConversationToStaff()
+    {
+        $visitor = Visitor::create([
+            'tenant_id'    => $this->tenant->id,
+            'project_id'   => $this->project->id,
+            'visitor_uuid' => 'vis-assign-test-' . uniqid(),
+        ]);
+
+        $conv = Conversation::create([
+            'tenant_id'  => $this->tenant->id,
+            'project_id' => $this->project->id,
+            'visitor_id' => $visitor->id,
+            'status'     => 'open',
+            'channel'    => 'widget',
+        ]);
+
+        $response = $this->actingAs($this->superadmin)->putJson("/admin/inbox/{$conv->id}/assign", [
+            'assigned_user_id' => $this->agent->id,
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'data'    => [
+                    'assigned_user_id'   => $this->agent->id,
+                    'assigned_user_name' => $this->agent->name,
+                ]
+            ]);
+
+        $this->assertEquals($this->agent->id, $conv->fresh()->assigned_user_id);
+    }
+
+    /**
+     * Test Admin can store new integration project
+     */
+    public function testAdminCanStoreNewIntegration()
+    {
+        $response = $this->actingAs($this->superadmin)->post('/admin/integrations', [
+            'name'              => 'Toko Cabang Surabaya',
+            'domain'            => 'surabaya.tokokita.com',
+            'primary_color'     => '#3B82F6',
+            'greeting_title'    => 'Selamat Datang!',
+            'greeting_subtitle' => 'Customer Service Surabaya siap melayani Anda.',
+        ]);
+
+        $response->assertRedirect(route('admin.integrations'));
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('projects', [
+            'tenant_id' => $this->tenant->id,
+            'name'      => 'Toko Cabang Surabaya',
+        ]);
+
+        $this->assertDatabaseHas('project_domains', [
+            'domain' => 'surabaya.tokokita.com',
+        ]);
+
+        $this->assertDatabaseHas('widget_settings', [
+            'primary_color' => '#3B82F6',
+        ]);
+    }
+
+    /**
+     * Test Superadmin can store new team member
+     */
+    public function testSuperadminCanStoreNewTeamMember()
+    {
+        $response = $this->actingAs($this->superadmin)->post('/admin/team', [
+            'name'     => 'CS Budi Santoso',
+            'username' => 'budi_cs_' . uniqid(),
+            'email'    => 'budi_' . uniqid() . '@indraco.com',
+            'role'     => 'agent',
+            'password' => 'secret123',
+        ]);
+
+        $response->assertRedirect(route('admin.team'));
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('users', [
+            'name' => 'CS Budi Santoso',
+            'role' => 'agent',
+        ]);
+    }
+
+    /**
+     * Test Agent cannot store new team member (403 Forbidden)
+     */
+    public function testAgentCannotStoreNewTeamMember()
+    {
+        $response = $this->actingAs($this->agent)->post('/admin/team', [
+            'name'     => 'CS Hacker',
+            'email'    => 'hacker@indraco.com',
+            'role'     => 'superadmin',
+            'password' => 'secret123',
+        ]);
+
+        $response->assertStatus(403);
+    }
 }

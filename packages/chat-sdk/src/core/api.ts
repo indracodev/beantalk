@@ -51,6 +51,8 @@ export class ApiClient {
       body: JSON.stringify({
         visitor_uuid: visitorUuid,
         project_key: this.projectKey,
+        page_url: window.location.href,
+        page_title: document.title,
         client_url: window.location.href,
         metadata: {
           referrer: document.referrer,

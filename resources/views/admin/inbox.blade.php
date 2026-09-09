@@ -97,7 +97,7 @@
             <div class="thread-header">
                 <div class="thread-header-info">
                     <div class="thread-customer-name">{{ $activeConversation->visitor->name ?? 'Pengunjung Web' }}</div>
-                    <span class="thread-status-badge {{ $activeConversation->status === 'open' ? 'status-open' : 'status-closed' }}">
+                    <span id="threadStatusBadge" class="thread-status-badge {{ $activeConversation->status === 'open' ? 'status-open' : 'status-closed' }}">
                         ● {{ $activeConversation->status }}
                     </span>
                     <div class="conv-project-pill">
@@ -107,15 +107,27 @@
                 </div>
 
                 <div class="thread-actions">
-                    <span style="font-size: 12px; color: var(--text-muted);">Ditugaskan:</span>
-                    <strong style="font-size: 12px;">{{ $activeConversation->assignedUser->name ?? 'Belum Ditugaskan' }}</strong>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Tugaskan:</span>
+                        <select id="assignCsSelect" class="filter-select" onchange="handleAssign(this.value)">
+                            <option value="">-- Belum Ditugaskan --</option>
+                            @foreach($staffMembers as $staff)
+                                <option value="{{ $staff->id }}" {{ $activeConversation->assigned_user_id == $staff->id ? 'selected' : '' }}>
+                                    {{ $staff->name }} ({{ $staff->role }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <button type="button" class="btn-action" id="btnToggleStatus" onclick="handleToggleStatus()">
+                        {{ $activeConversation->status === 'open' ? 'Tutup Tiket' : 'Buka Kembali' }}
+                    </button>
                 </div>
             </div>
 
             <!-- Pesan Percakapan -->
             <div class="thread-body" id="chatThreadBody">
                 @forelse($activeConversation->messages as $msg)
-                    <div class="msg-row {{ $msg->sender_type === 'visitor' ? 'msg-visitor' : 'msg-agent' }}">
+                    <div class="msg-row {{ $msg->sender_type === 'visitor' ? 'msg-visitor' : 'msg-agent' }}" data-id="{{ $msg->id }}">
                         <span class="msg-sender">
                             {{ $msg->sender_type === 'visitor' ? ($activeConversation->visitor->name ?? 'Pengunjung') : ($msg->sender_name ?? $msg->user->name ?? 'Staff CS') }}
                         </span>
@@ -230,6 +242,8 @@
 <script>
     const activeConversationId = {{ $activeConversation ? $activeConversation->id : 'null' }};
     const currentUserName = "{{ Auth::user()->name }}";
+    let initialLastMessageId = {{ ($activeConversation && $activeConversation->messages->isNotEmpty()) ? $activeConversation->messages->last()->id : 0 }};
+    let conversationStatus = "{{ $activeConversation ? $activeConversation->status : 'open' }}";
 </script>
 <script src="{{ asset('js/inbox.js') }}"></script>
 @endpush
