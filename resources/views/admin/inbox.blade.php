@@ -61,7 +61,7 @@
 
         <div class="conv-list">
             @forelse($conversations as $conv)
-                <a href="{{ route('admin.inbox.show', $conv->id) }}" class="conv-item {{ $activeConversation && $activeConversation->id === $conv->id ? 'active' : '' }}">
+                <a href="{{ route('admin.inbox', $conv->id) }}" class="conv-item {{ $activeConversation && $activeConversation->id === $conv->id ? 'active' : '' }}">
                     <div class="conv-avatar">
                         {{ strtoupper(substr($conv->visitor->name ?? 'Pengunjung', 0, 2)) }}
                     </div>
@@ -75,7 +75,7 @@
                             <span>{{ $conv->project->name ?? 'Website' }}</span>
                         </div>
                         <div class="conv-snippet">
-                            {{ $conv->latestMessage->content ?? 'Percakapan baru diinisialisasi...' }}
+                            {{ $conv->last_message_preview ?? ($conv->latestMessage->content ?? 'Percakapan baru diinisialisasi...') }}
                         </div>
                     </div>
                 </a>
@@ -117,7 +117,7 @@
                 @forelse($activeConversation->messages as $msg)
                     <div class="msg-row {{ $msg->sender_type === 'visitor' ? 'msg-visitor' : 'msg-agent' }}">
                         <span class="msg-sender">
-                            {{ $msg->sender_type === 'visitor' ? ($activeConversation->visitor->name ?? 'Pengunjung') : ($msg->user->name ?? 'Staff CS') }}
+                            {{ $msg->sender_type === 'visitor' ? ($activeConversation->visitor->name ?? 'Pengunjung') : ($msg->sender_name ?? $msg->user->name ?? 'Staff CS') }}
                         </span>
                         <div class="msg-bubble">
                             {{ $msg->content }}

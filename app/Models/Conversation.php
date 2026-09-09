@@ -64,4 +64,9 @@ class Conversation extends Model
     {
         return $this->hasMany(Message::class)->orderBy('id', 'asc');
     }
+
+    public function latestMessage()
+    {
+        return $this->hasOne(Message::class)->latestOfMany();
+    }
 }

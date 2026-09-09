@@ -23,9 +23,9 @@ class DashboardController extends Controller
         // Ambil semua project milik tenant
         $projects = Project::where('tenant_id', $tenantId)->orderBy('name', 'asc')->get();
 
-        // Query percakapan dengan filter
+        // Query percakapan dengan filter (eager load semua relasi untuk menghindari N+1 query)
         $query = Conversation::where('tenant_id', $tenantId)
-            ->with(['visitor', 'project', 'assignedUser', 'latestMessage'])
+            ->with(['visitor', 'project.widgetSetting', 'assignedUser', 'latestMessage'])
             ->orderBy('last_message_at', 'desc');
 
         if ($request->filled('project_id')) {
@@ -50,33 +50,40 @@ class DashboardController extends Controller
 
         $conversations = $query->get();
 
-        // Tentukan percakapan aktif yang sedang dibuka
+        // Tentukan percakapan aktif yang sedang dibuka (reuse instance memori jika sudah dimuat)
         $activeConversation = null;
         if ($id) {
-            $activeConversation = Conversation::where('tenant_id', $tenantId)
-                ->with(['visitor', 'project.widgetSetting', 'assignedUser', 'messages' => function ($q) {
-                    $q->orderBy('id', 'asc');
-                }])
-                ->find($id);
-        }
-
-        if (!$activeConversation && $conversations->isNotEmpty()) {
-            $activeConversation = Conversation::where('tenant_id', $tenantId)
-                ->with(['visitor', 'project.widgetSetting', 'assignedUser', 'messages' => function ($q) {
-                    $q->orderBy('id', 'asc');
-                }])
-                ->find($conversations->first()->id);
+            $activeConversation = $conversations->firstWhere('id', (int) $id);
+            if ($activeConversation) {
+                $activeConversation->load(['messages.user']);
+            } else {
+                $activeConversation = Conversation::where('tenant_id', $tenantId)
+                    ->with(['visitor', 'project.widgetSetting', 'assignedUser', 'messages.user'])
+                    ->find($id);
+            }
+        } elseif ($conversations->isNotEmpty()) {
+            $activeConversation = $conversations->first();
+            $activeConversation->load(['messages.user']);
         }
 
         // Ambil daftar agen/staff untuk penugasan
         $staffMembers = User::where('tenant_id', $tenantId)->orderBy('name', 'asc')->get();
 
-        // Statistik ringkas
+        // Statistik ringkas dalam 1 query agregasi tunggal (menghindari multiple roundtrip counts)
+        $statusCounts = Conversation::where('tenant_id', $tenantId)
+            ->selectRaw("
+                COUNT(*) as total_all,
+                SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END) as total_open,
+                SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as total_closed,
+                SUM(CASE WHEN assigned_user_id = ? THEN 1 ELSE 0 END) as total_mine
+            ", [$request->user()->id])
+            ->first();
+
         $counts = [
-            'all'    => Conversation::where('tenant_id', $tenantId)->count(),
-            'open'   => Conversation::where('tenant_id', $tenantId)->where('status', 'open')->count(),
-            'closed' => Conversation::where('tenant_id', $tenantId)->where('status', 'closed')->count(),
-            'mine'   => Conversation::where('tenant_id', $tenantId)->where('assigned_user_id', $request->user()->id)->count(),
+            'all'    => (int) ($statusCounts->total_all ?? 0),
+            'open'   => (int) ($statusCounts->total_open ?? 0),
+            'closed' => (int) ($statusCounts->total_closed ?? 0),
+            'mine'   => (int) ($statusCounts->total_mine ?? 0),
         ];
 
         return view('admin.inbox', compact(
@@ -134,7 +141,7 @@ class DashboardController extends Controller
     {
         $tenantId = $request->user()->tenant_id;
 
-        $query = ActivityLog::where('tenant_id', $tenantId)->orderBy('id', 'desc');
+        $query = ActivityLog::where('tenant_id', $tenantId)->with('user')->orderBy('id', 'desc');
 
         if ($request->filled('role')) {
             $query->where('user_role', $request->input('role'));

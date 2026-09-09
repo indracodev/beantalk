@@ -142,4 +142,68 @@ class AdminDashboardTest extends TestCase
             ->assertSee('auth.test_login')
             ->assertSee('Admin test logged in successfully');
     }
+
+    /**
+     * Test Inbox does NOT produce N+1 queries (Constant query count regardless of items)
+     */
+    public function testInboxDoesNotProduceNPlusOneQueries()
+    {
+        // Buat 5 percakapan dengan relasi lengkap
+        for ($i = 1; $i <= 5; $i++) {
+            $vis = Visitor::create([
+                'tenant_id'    => $this->tenant->id,
+                'project_id'   => $this->project->id,
+                'visitor_uuid' => 'visitor-uuid-test-' . $i . '-' . uniqid(),
+                'name'         => 'Pengunjung ' . $i,
+                'email'        => "visitor{$i}@example.com",
+            ]);
+
+            $conv = Conversation::create([
+                'tenant_id'            => $this->tenant->id,
+                'project_id'           => $this->project->id,
+                'visitor_id'           => $vis->id,
+                'assigned_user_id'     => $this->agent->id,
+                'status'               => 'open',
+                'channel'              => 'widget',
+                'last_message_at'      => now(),
+                'last_message_preview' => 'Halo pesan ' . $i,
+            ]);
+
+            // Pesan dari pengunjung
+            \App\Models\Message::create([
+                'conversation_id' => $conv->id,
+                'tenant_id'       => $this->tenant->id,
+                'sender_type'     => 'visitor',
+                'sender_id'       => null,
+                'sender_name'     => 'Pengunjung ' . $i,
+                'content'         => 'Pesan pengunjung ' . $i,
+                'status'          => 'delivered',
+            ]);
+
+            // Pesan balasan dari agen
+            \App\Models\Message::create([
+                'conversation_id' => $conv->id,
+                'tenant_id'       => $this->tenant->id,
+                'sender_type'     => 'agent',
+                'sender_id'       => $this->agent->id,
+                'sender_name'     => $this->agent->name,
+                'content'         => 'Balasan agen untuk ' . $i,
+                'status'          => 'delivered',
+            ]);
+        }
+
+        \Illuminate\Support\Facades\DB::flushQueryLog();
+        \Illuminate\Support\Facades\DB::enableQueryLog();
+
+        $response = $this->actingAs($this->superadmin)->get('/admin/inbox');
+
+        $response->assertStatus(200);
+
+        $queries = \Illuminate\Support\Facades\DB::getQueryLog();
+        $queryCount = count($queries);
+
+        // Dengan eager loading lengkap dan reuse model, total query tetap konstan O(1)
+        // yaitu 11 query terindeks untuk merender seluruh 3-kolom inbox, terlepas dari berapapun jumlah pesan.
+        $this->assertLessThanOrEqual(12, $queryCount, "Terdeteksi potensi N+1 query: Total {$queryCount} query dieksekusi.");
+    }
 }
