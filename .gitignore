@@ -1,16 +1,54 @@
+# ==============================================================================
+# DEPENDENCIES (Install via composer di server, Node.js hanya di lokal)
+# ==============================================================================
+/vendor
 /node_modules
+packages/**/node_modules
+
+# ==============================================================================
+# LOCAL CONFIGURATION & ENVIRONMENT
+# ==============================================================================
+.env
+.env.backup
+.env.production
+Homestead.json
+Homestead.yaml
+
+# ==============================================================================
+# STORAGE, RUNTIME & LOGS
+# ==============================================================================
 /public/hot
 /public/storage
 /storage/*.key
-/vendor
-.env
-.env.backup
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ==============================================================================
+# TESTING & CACHE
+# ==============================================================================
 .phpunit.result.cache
 .phpunit.cache/
-Homestead.json
-Homestead.yaml
-npm-debug.log
-yarn-error.log
-packages/**/node_modules
+
+# ==============================================================================
+# OS & IDE JUNK
+# ==============================================================================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ==============================================================================
+# DEVELOPMENT PACKAGES (Kompilasi lokal)
+# ==============================================================================
 packages/**/dist
 
+# ==============================================================================
+# PRE-COMPILED PRODUCTION ASSETS (Wajib di-commit untuk server tanpa Node.js)
+# ==============================================================================
+!/public/chat-widget.js
+!/public/chat.js
+!/public/widget.js
+!/public/vendor/chat/
+!/public/css/
+!/public/js/
