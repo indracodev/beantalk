@@ -72,7 +72,7 @@
                         <span>Universal Embed Script</span>
                         <span class="font-mono text-[9.5px]">Public Key: {{ $publicKey }}</span>
                     </div>
-                    <div class="bg-[#1C1C1E] text-neutral-200 font-mono text-[10.5px] p-2.5 rounded-lg break-all select-all leading-relaxed" id="snippet_{{ $p->id }}">&lt;script src="{{ url('/chat-widget.js') }}" data-project-key="{{ $publicKey }}" async&gt;&lt;/script&gt;</div>
+                    <div class="bg-[#1C1C1E] text-neutral-200 font-mono text-[10.5px] p-2.5 rounded-lg break-all select-all leading-relaxed" id="snippet_{{ $p->id }}">&lt;script src="{{ url('/chat-widget.js') }}" data-project-key="{{ $publicKey }}" data-api-url="{{ url('/') }}" async&gt;&lt;/script&gt;</div>
                 </div>
 
                 <!-- Card Actions -->

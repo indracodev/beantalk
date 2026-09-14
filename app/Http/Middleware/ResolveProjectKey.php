@@ -53,10 +53,14 @@ class ResolveProjectKey
             $isLocal = in_array($host, ['localhost', '127.0.0.1', 'chat-me.test']) || empty($host);
             
             if (!$isLocal) {
-                $isAllowed = $project->domains->contains(function ($item) use ($host) {
+                $cleanHost = preg_replace('/^www\./i', '', $host);
+                $isAllowed = $project->domains->contains(function ($item) use ($host, $cleanHost) {
+                    $cleanItemDomain = preg_replace('/^www\./i', '', $item->domain);
                     return $item->is_verified && (
-                        strcasecmp($item->domain, $host) === 0 || 
-                        str_ends_with(strtolower($host), '.' . strtolower($item->domain))
+                        strcasecmp($item->domain, $host) === 0 ||
+                        strcasecmp($cleanItemDomain, $cleanHost) === 0 ||
+                        str_ends_with(strtolower($host), '.' . strtolower($cleanItemDomain)) ||
+                        str_ends_with(strtolower($cleanHost), '.' . strtolower($cleanItemDomain))
                     );
                 });
 
