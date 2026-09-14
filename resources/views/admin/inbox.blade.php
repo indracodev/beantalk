@@ -576,5 +576,5 @@
             }
         }
     </script>
-    <script src="{{ asset('js/inbox.js') }}"></script>
+    <script src="{{ asset('js/inbox.js') }}?v={{ file_exists(public_path('js/inbox.js')) ? filemtime(public_path('js/inbox.js')) : time() }}"></script>
 @endpush

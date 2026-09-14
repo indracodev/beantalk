@@ -1096,4 +1096,46 @@ class DashboardController extends Controller
 
         return redirect()->route('admin.team')->with('success', "Kembali ke akun asli ({$originalUser->name}).");
     }
+
+    /**
+     * Otomatis mengonsolidasi percakapan duplikat dari customer yang sama
+     */
+    protected function consolidateDuplicateConversations(int $tenantId): void
+    {
+        try {
+            $duplicateVisitorIds = Conversation::where('tenant_id', $tenantId)
+                ->whereIn('status', ['open', 'pending'])
+                ->select('visitor_id')
+                ->groupBy('visitor_id')
+                ->havingRaw('COUNT(*) > 1')
+                ->pluck('visitor_id');
+
+            foreach ($duplicateVisitorIds as $visitorId) {
+                if (!$visitorId) continue;
+                $convs = Conversation::where('tenant_id', $tenantId)
+                    ->where('visitor_id', $visitorId)
+                    ->whereIn('status', ['open', 'pending'])
+                    ->orderBy('id', 'asc')
+                    ->get();
+
+                if ($convs->count() > 1) {
+                    $primary = $convs->first();
+                    $otherIds = $convs->slice(1)->pluck('id')->toArray();
+                    $otherUnreadSum = $convs->slice(1)->sum('unread_agent_count');
+
+                    Message::whereIn('conversation_id', $otherIds)->update(['conversation_id' => $primary->id]);
+
+                    $primary->update([
+                        'unread_agent_count'   => $primary->unread_agent_count + $otherUnreadSum,
+                        'last_message_at'      => $convs->max('last_message_at') ?: now(),
+                        'last_message_preview' => $convs->sortByDesc('last_message_at')->first()->last_message_preview,
+                    ]);
+
+                    Conversation::whereIn('id', $otherIds)->delete();
+                }
+            }
+        } catch (\Throwable $e) {
+            // Silently recover if query fails
+        }
+    }
 }
