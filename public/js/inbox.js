@@ -159,14 +159,29 @@ window.onGlobalFeedUpdate = function(data) {
         }
 
         data.conversations.forEach(conv => {
-            let item = container.querySelector(`[data-conv-id="${conv.id}"]`);
-            const isCurrentActive = typeof activeConversationId !== 'undefined' && activeConversationId === conv.id;
+            // Temukan semua DOM item dengan ID / Visitor ID yang sama dan bersihkan duplikasi jika ada
+            const selector = `[data-conv-id="${conv.id}"], #card-conv-${conv.id}` + (conv.visitor_id ? `, [data-visitor-id="${conv.visitor_id}"]` : '');
+            const existingItems = container.querySelectorAll(selector);
+            if (existingItems.length > 1) {
+                for (let i = 1; i < existingItems.length; i++) {
+                    existingItems[i].remove();
+                }
+            }
+            let item = existingItems[0] || null;
+            const isCurrentActive = typeof activeConversationId !== 'undefined' && (activeConversationId === conv.id || (item && item.getAttribute('data-conv-id') === String(activeConversationId)));
 
             if (!item) {
                 // Percakapan BARU Masuk!
                 item = document.createElement('a');
                 item.href = `/admin/inbox/${conv.id}`;
                 item.id = `card-conv-${conv.id}`;
+                item.setAttribute('data-conv-id', conv.id);
+                if (conv.visitor_id) {
+                    item.setAttribute('data-visitor-id', conv.visitor_id);
+                }
+                if (conv.project_id) {
+                    item.setAttribute('data-site', conv.project_id);
+                }
                 item.className = `conv-row conv-item no-loader w-full block px-2.5 py-2 rounded-lg transition ${isCurrentActive ? 'text-apple-textPrimary bg-white border border-apple-border/60 shadow-apple-sm font-medium' : 'text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 font-normal border border-transparent'}`;
                 
                 const initials = escapeHtml(conv.initials || (conv.customer_name ? conv.customer_name.substring(0, 2).toUpperCase() : 'TM'));
@@ -209,6 +224,10 @@ window.onGlobalFeedUpdate = function(data) {
                 container.prepend(item);
             } else {
                 // Update item yang sudah ada
+                item.setAttribute('data-conv-id', conv.id);
+                if (conv.visitor_id) {
+                    item.setAttribute('data-visitor-id', conv.visitor_id);
+                }
                 const snippet = item.querySelector('.conv-snippet');
                 if (snippet) snippet.textContent = conv.last_message_preview;
 

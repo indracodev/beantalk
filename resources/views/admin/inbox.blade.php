@@ -100,6 +100,7 @@
                             : '-';
                     @endphp
                     <a href="{{ route('admin.inbox', $conv->id) }}" data-conv-id="{{ $conv->id }}"
+                        data-visitor-id="{{ $conv->visitor_id }}"
                         data-site="{{ $conv->project_id }}" id="card-conv-{{ $conv->id }}"
                         class="conv-row conv-item no-loader w-full block px-2.5 py-2 rounded-lg transition {{ $isConvActive ? 'text-apple-textPrimary bg-white border border-apple-border/60 shadow-apple-sm font-medium' : 'text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 font-normal border border-transparent' }}">
                         <div class="flex gap-2.5 items-start">

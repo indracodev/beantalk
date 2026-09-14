@@ -606,6 +606,8 @@ class DashboardController extends Controller
         $formatted = $conversations->map(function ($conv) {
             return [
                 'id'                   => $conv->id,
+                'project_id'           => $conv->project_id,
+                'visitor_id'           => $conv->visitor_id,
                 'customer_name'        => $conv->visitor ? $conv->visitor->display_name : 'Tamu',
                 'customer_code'        => $conv->visitor ? $conv->visitor->customer_code : null,
                 'initials'             => $conv->visitor ? $conv->visitor->initials : 'TM',
