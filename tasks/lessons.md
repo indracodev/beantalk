@@ -100,7 +100,41 @@ Dokumen ini mencatat koreksi, pola desain, dan aturan teknis yang dipelajari sel
   1. **Tentukan Baseline Platform**: Selalu tambahkan `"config": { "platform": { "php": "8.1.0" } }` di `composer.json` agar Composer menyelesaikan dependensi ke versi LTS (seperti Symfony 6.4) yang didukung resmi oleh target minimum server (PHP 8.1 s/d 8.4).
   2. **Verifikasi `platform_check.php`**: Pastikan baris `PHP_VERSION_ID >= 80100` di `vendor/composer/platform_check.php` sehingga berjalan mulus di PHP 8.1.x lokal maupun server produksi tanpa hambatan.
 
+### 15. Kustomisasi Saluran Tambahan ("Find Us Somewhere Else") & Route Cache
+- **Pelajaran**: Tombol saluran sosial dan marketplace pada Stage 1 (Welcome Screen) widget sangat krusial bagi pengunjung website, namun setiap toko memiliki channel resmi yang berbeda-beda (ada yang hanya memakai WhatsApp & Shopee, ada yang memakai Instagram & Tokopedia). Selain itu, saat mendaftarkan route baru di Laravel dengan route caching aktif (`bootstrap/cache/routes-v7.php`), route baru tidak akan terbaca sebelum cache diperbarui.
+- **Pola**:
+  1. **Dynamic Social Channels Schema**: Simpan konfigurasi saluran dalam kolom JSON `social_channels` dan teks judul kustom `find_us_title` pada tabel `widget_settings`.
+  2. **Normalisasi Otomatis**: Normalisasi nomor telepon WhatsApp menjadi URL standar `https://wa.me/62...`, username Instagram menjadi `https://instagram.com/...`, dan Telegram menjadi `https://t.me/...` di backend secara transparan.
+  3. **Conditional Rendering di SDK**: Widget hanya merender saluran yang dicentang aktif dan memiliki URL valid. Jika tidak ada saluran yang diaktifkan, kartu saluran disembunyikan secara otomatis agar tampilan tetap bersih.
+  4. **Route Optimization Hygiene**: Selalu jalankan `php artisan optimize` / `php artisan route:clear` segera setelah mendaftarkan route web baru untuk memastikan route terdaftar pada cache aplikasi.
 
+### 16. Alur Multi-Stage Widget (Welcome -> Identity Screen -> Active Chat) & Custom Support Title
+- **Pelajaran**: Menampilkan form nama langsung di Welcome Hub bersamaan dengan kartu chat dan saluran media sosial membuat tampilan penuh sesak. Pengunjung website lebih menyukai alur interaksi terpandu (*step-by-step onboarding*): klik tombol obrolan ➔ perkenalan nama ➔ masuk ruang obrolan.
+- **Pola**:
+  1. **3-Stage Navigation State**: Pisahkan tampilan widget menjadi `stage-welcome`, `stage-identity`, dan `stage-chat`.
+  2. **Interlocking Triggers**: Klik kartu dukungan di `stage-welcome` memicu `goToStage('identity')`. Tombol *"Lanjut"* atau tombol Enter pada keyboard menyimpan nama dan beralih ke `goToStage('chat')`.
+  3. **Customizable Support Title**: Sediakan opsi `support_title` di database dan admin dashboard sehingga pemilik website bebas memberi nama tombol layanan (misal: "Customer Support", "Live Support", "Layanan Pelanggan").
 
+### 17. Handshake Polling & Pencegahan Notifikasi Palsu untuk Pesan yang Sudah Dibaca
+- **Pelajaran**: Saat melakukan polling realtime di dashboard, jika endpoint `/admin/inbox/feed/updates` tidak membedakan antara *koneksi pertama (handshake baseline sync)* dan *polling berkala*, server akan mengambil seluruh pesan riwayat masa lalu dan menganggapnya sebagai pesan masuk baru (`has_new_incoming: true`). Akibatnya, setiap kali admin membuka/me-refresh halaman apa pun, notifikasi toast dan suara chime berbunyi berulang-ulang untuk chat lama yang sebenarnya sudah dibaca.
+- **Pola**:
+  1. **Handshake vs Polling**: Periksa keberadaan parameter `$request->has('since_message_id')`. Jika parameter tidak ada (koneksi awal), kembalikan `has_new_incoming: false` dan jadikan `max_message_id` sebagai baseline.
+  2. **Gating Percakapan Belum Dibaca**: Saat mencari pesan baru (`id > since_message_id`), tambahkan kondisi `whereHas('conversation', fn($q) => $q->where('unread_agent_count', '>', 0))`. Jika tiket chat sudah dibuka atau dibaca oleh CS (`unread_agent_count == 0`), jangan pernah membunyikan chime atau memunculkan toast popup!
+  3. **Client-side Deduplication**: Simpan `lastNotifiedMsgId` di `sessionStorage` agar ID pesan yang sama tidak pernah memicu notifikasi lebih dari satu kali meskipun terjadi *network retry*.
+
+### 18. Standar Terminologi Platform Web Universal (Non-Store Centric)
+- **Pelajaran**: Platform BeanTalk dirancang sebagai *Universal Customer Chat* untuk segala jenis situs (SaaS, profil perusahaan, portal edukasi, organisasi, maupun web app), bukan hanya toko online e-commerce. Penggunaan kata "toko", "store", "Store Support", atau "pelanggan toko" membingungkan pengguna non-e-commerce.
+- **Pola**:
+  1. **Universal Vocabulary**: Gunakan istilah "Website", "Halaman Utama", "Customer Support", "Live Support", atau "Pengunjung", bukan "Toko", "Beranda Toko", atau "Store Support".
+  2. **Script Attribute Aliasing**: Dukung atribut sematan universal seperti `data-brand-name` dan `data-support-title` dengan tetap mempertahankan fallback backward-compatible `data-store-name`.
+  3. **Default Label Netral**: Gunakan `'Customer Support'` sebagai default teks layanan di seluruh migration, model, view, dan SDK.
+
+### 19. Scoping Global Swiss Loader (Navigasi Utama vs Workspace Internal)
+- **Pelajaran**: Pemisahan eksekusi loader global Swiss antara navigasi utama (menu Sidebar/Bottom-Nav Inbox, Websites, Team, Logs) dan workspace interaktif internal (klik kartu percakapan chat, ganti filter scope status `Semua/Open/Mine/Selesai`, pencarian tiket) harus dilakukan berdasarkan *asal klik (click origin)*, bukan pemblokiran rute URL secara membabi-buta (`href.includes('/admin/inbox')`). Jika diblokir berdasarkan rute, klik menu "Inbox" dari sidebar/bottom-nav tidak akan menampilkan loader sama sekali.
+- **Pola**:
+  1. **Capture Phase Click Interceptor**: Pasang listener `document.addEventListener('click', handler, true)` (capture phase) pada `admin.js` agar klik navigasi menu utama tidak terblokir oleh `stopPropagation` elemen anak.
+  2. **Navigasi Utama Prioritas Tinggi**: Deteksi klik menu utama (`link.closest('#main-sidebar')`, `link.closest('#mobile-bottom-nav')`, `#navItemInbox`, `#bottomNavItemInbox`, `.sidebar-item`) dan panggil `BeanTalkLoader.show('Memuat Inbox...')`.
+  3. **Pengecualian Khusus Workspace Internal**: Jika klik berasal dari dalam workspace obrolan (`#inboxWorkspace`, `#convListContainer`, `#pane-conv-list`, `.conv-item`, `.conv-row`, `.inbox-scope-btn`, `[data-conv-id]`, `.no-loader`), hapus flag `sessionStorage` dan jangan panggil loader, sehingga perpindahan antar ruang chat terasa instan seperti SPA tanpa kedip.
+  4. **Asset Versioning**: Selalu sertakan query string timestamp `?v={{ filemtime(...) }}` pada pemanggilan file CSS dan JS di layout blade agar perbaikan logika loader langsung diterapkan browser tanpa tertahan browser cache.
 
 

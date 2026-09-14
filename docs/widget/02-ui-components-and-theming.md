@@ -22,10 +22,11 @@ Widget menggunakan sistem navigasi **2-Stage Flow** (Halaman Awal ➔ Chat Utama
 │   "Halo! Ada yang bisa kami bantu seputar..."          │
 │   (Klik kartu ➔ Navigasi ke Stage 2: Chat Utama)       │
 │                                                        │
-│ [Card 2: Reach Us Anywhere Else (Social Fallback)]     │
-│   (WA) WhatsApp  •  (FB) Messenger  •  (IG) Instagram │
+│ [Card 2: Customer Identity] (Kenalan Dulu Yuk!)        │
+│   "Kami boleh memanggil Anda siapa?"                   │
+│   [Input nama panggilan...] [Simpan]                   │
 │                                                        │
-│ [Footer] [Logo] Powered by chat-me                     │
+│ [Footer] [Logo] Powered by BeanTalk                    │
 └──────────────────────────┬─────────────────────────────┘
                            │ Klik Card 1
                            ▼
@@ -34,6 +35,7 @@ Widget menggunakan sistem navigasi **2-Stage Flow** (Halaman Awal ➔ Chat Utama
 ├────────────────────────────────────────────────────────┤
 │ [Header] [← Back] [Avatar] Support • Online        [✕] │
 ├────────────────────────────────────────────────────────┤
+│ [Customer Identity Pill] Halo, Budi! [Ganti]           │
 │ [Product Context Card] Auto-detected page context      │
 │                                                        │
 │  Agent (Sarah)                                         │
@@ -41,7 +43,7 @@ Widget menggunakan sistem navigasi **2-Stage Flow** (Halaman Awal ➔ Chat Utama
 │  │ Halo! Ada yang bisa kami bantu hari ini?     │      │
 │  └──────────────────────────────────────────────┘      │
 │                                                        │
-│                                  Visitor               │
+│                                  Visitor (Budi)        │
 │                   ┌─────────────────────────────┐      │
 │                   │ Apakah stok produk ini ada? │      │
 │                   └─────────────────────────────┘      │
@@ -66,10 +68,11 @@ Widget menggunakan sistem navigasi **2-Stage Flow** (Halaman Awal ➔ Chat Utama
   - Header kartu: Judul "Your Conversation" dengan indikator denyut hijau animasi (`@keyframes livePulse`) bertuliskan "Live Chat Available".
   - Baris percakapan: Avatar brand/tim, nama toko aktif, cuplikan pesan terbaru, dan tombol panah `>` SVG.
   - Interaksi: Mengklik kartu ini akan memicu transisi mulus ke Stage 2 (Chat Utama).
-- **Card 2 (Reach Us Anywhere Else)**:
-  - Menyediakan tombol akses cepat ke saluran pesan resmi brand (WhatsApp `#25D366`, Facebook Messenger `#1877F2`, dan Instagram DM).
-  - Berfungsi sebagai omnichannel fallback agar pelanggan tetap dapat terhubung saat meninggalkan website.
-- **Branding Footer**: Teks netral `Powered by chat-me` dengan logo SVG subtle di bagian bawah.
+- **Card 2 (Customer Identity — Kenalan Dulu Yuk!)**:
+  - Menyediakan form input nama panggilan: *"Kami boleh memanggil Anda siapa?"*.
+  - Customer dapat mengisi nama mereka (misal: "Budi") yang akan langsung tersimpan di `localStorage` dan tersinkron ke backend server via `POST /api/v1/client/session/profile`.
+  - Jika belum diisi, sistem menggunakan fallback informatif `Tamu · CUS-XXXX` (bebas dari label generik "Pengunjung Web").
+- **Branding Footer**: Teks netral `Powered by BeanTalk` dengan logo SVG subtle di bagian bawah.
 
 ### 2.3 Stage 2: Chat Header & Navigation
 - **Tombol Back (`←` SVG)**: Terletak di kiri header chat untuk kembali ke Halaman Awal tanpa memutuskan koneksi WebSocket/Polling atau mereset state percakapan.

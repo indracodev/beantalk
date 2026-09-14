@@ -193,3 +193,77 @@ Endpoint polling realtime dashboard admin untuk memperbarui daftar inbox dan bad
   }
 }
 ```
+
+---
+
+## 7. GET /admin/inbox/feed/updates
+
+Polling real-time daftar percakapan di Inbox admin. Mendukung deteksi percakapan baru, pesan visitor yang baru masuk, dan update badge notifikasi total unread.
+
+- **Query Params**:
+  - `since_message_id`: ID pesan tertinggi di tenant yang sudah diterima admin
+  - `project_id`: opsional filter website/toko
+  - `status`: `all` | `open` | `mine` | `closed`
+  - `search`: filter pencarian kata kunci / customer code
+- **Interval**: 3.000 ms saat tab aktif, 12.000 ms saat tab idle / di latar belakang.
+
+### Response (`200 OK`)
+```json
+{
+  "success": true,
+  "data": {
+    "conversations": [
+      {
+        "id": 403,
+        "customer_name": "Budi Santoso",
+        "customer_code": "CUS-8F21",
+        "initials": "BU",
+        "channel_label": "Web Chat",
+        "project_name": "Supresso Coffee",
+        "last_message_preview": "Halo Pak, apakah promo masih berlaku?",
+        "last_message_time": "2 minutes ago",
+        "unread_agent_count": 1,
+        "is_unread": true,
+        "status": "open",
+        "assigned_user_id": 2
+      }
+    ],
+    "unread_total": 3,
+    "max_message_id": 1826,
+    "has_new_incoming": true,
+    "new_incoming_count": 1,
+    "latest_incoming": {
+      "conversation_id": 403,
+      "sender_name": "Budi Santoso",
+      "content": "Halo Pak, apakah promo masih berlaku?"
+    }
+  }
+}
+```
+
+---
+
+## 8. PUT /admin/inbox/{id}/customer
+
+Memperbarui nama display customer dari panel konteks drawer atau header thread CS.
+
+### Request Body
+```json
+{
+  "name": "Budi Sudarsono"
+}
+```
+
+### Response (`200 OK`)
+```json
+{
+  "success": true,
+  "data": {
+    "id": 8102,
+    "name": "Budi Sudarsono",
+    "customer_code": "CUS-8F21",
+    "display_name": "Budi Sudarsono"
+  }
+}
+```
+

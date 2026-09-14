@@ -193,17 +193,27 @@ sudo chmod -R 775 /var/www/beantalk/storage /var/www/beantalk/bootstrap/cache
 
 ---
 
-### Langkah 9: Optimasi Cache Laravel Produksi
+### Langkah 9: Optimasi Cache & Build Aset Produksi
 
-Untuk kecepatan respon API di bawah 50ms, cache konfigurasi, routing, dan view:
+Untuk memastikan seluruh cache bersih dan teroptimasi penuh dalam satu perintah cepat:
 
 ```bash
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+# Opsi Tercepat: 1 Perintah untuk optimize:clear + config, route, view, event cache
+php artisan opt
+# atau alias:
+php artisan cc
 ```
 
-> *Tip: Jika di kemudian hari Anda mengubah file `.env`, jalankan `php artisan config:clear && php artisan config:cache`.*
+Jika Anda ingin mengompilasi ulang bundle Universal Chat SDK & Shadow DOM Widget:
+```bash
+# Menggunakan Artisan:
+php artisan build
+
+# Atau menggunakan NPM:
+npm run build
+```
+
+> *Tip: Jika di kemudian hari Anda hanya ingin membersihkan cache tanpa re-cache (misal saat debugging aktif), gunakan `php artisan opt --clear-only`.*
 
 ---
 

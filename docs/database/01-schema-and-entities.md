@@ -138,6 +138,8 @@ CREATE TABLE visitors (
     tenant_id BIGINT UNSIGNED NOT NULL,
     project_id BIGINT UNSIGNED NOT NULL,
     visitor_uuid VARCHAR(64) NOT NULL,
+    customer_code VARCHAR(20) NULL,              -- Secondary identifier e.g. "CUS-8F21"
+    name VARCHAR(100) NULL,                      -- Display name e.g. "Budi"
     contact_id BIGINT UNSIGNED NULL,
     current_page VARCHAR(1000) NULL,
     source VARCHAR(100) DEFAULT 'website',       -- 'shopify', 'wordpress', 'website'
@@ -150,6 +152,7 @@ CREATE TABLE visitors (
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
     FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE SET NULL,
     UNIQUE KEY uk_proj_visitor (project_id, visitor_uuid),
+    INDEX idx_visitor_customer_code (customer_code),
     INDEX idx_visitor_seen (project_id, last_seen_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```

@@ -201,26 +201,36 @@ Endpoint inti untuk polling sinkronisasi pesan baru dan event.
 
 ---
 
-## 6. POST /api/v1/attachments
+## 7. POST /api/v1/client/session/profile
 
-Mengunggah lampiran gambar atau dokumen sebelum pesan dikirim.
+Memperbarui nama pengunjung (customer display name) dari widget Web Chat saat mengisi kartu *"Kenalan Dulu Yuk / Kami boleh memanggil Anda siapa?"*.
 
-- **Content-Type**: `multipart/form-data`
-- **Form Fields**:
-  - `file`: binary file (Maksimal 5MB, format: jpg, jpeg, png, webp, pdf)
-  - `visitor_id`: `8102`
-- **Rate Limit**: 10 req/min per IP
+- **Headers**:
+  - `X-Project-Key`: `pk_live_xxxxx`
+  - `Content-Type`: `application/json`
+- **Rate Limit**: 20 req/min per IP
 
-### Response (`201 Created`)
+### Request Body
+```json
+{
+  "visitor_uuid": "e5b8a1c9-72f1-4db5-9e63-47029517fa91",
+  "name": "Budi Santoso"
+}
+```
+
+### Response (`200 OK`)
 ```json
 {
   "success": true,
   "data": {
-    "id": 108,
-    "original_name": "receipt.pdf",
-    "mime_type": "application/pdf",
-    "file_size": 348120,
-    "url": "https://chat.domain.com/storage/attachments/2026/09/hash_name.pdf"
+    "visitor": {
+      "uuid": "e5b8a1c9-72f1-4db5-9e63-47029517fa91",
+      "name": "Budi Santoso",
+      "customer_code": "CUS-8F21",
+      "display_name": "Budi Santoso"
+    }
   }
 }
 ```
+*Catatan: Jika customer belum mengisi nama, `display_name` otomatis menggunakan fallback informatif `Tamu · CUS-XXXX` (tidak ada lagi display default `Pengunjung Web`).*
+
