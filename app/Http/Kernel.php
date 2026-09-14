@@ -40,7 +40,8 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
-            'throttle:60,1',
+            // Throttle diatur per-route di api.php, bukan di sini.
+            // Global throttle dihapus agar tidak double-stack dengan per-route limit.
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];

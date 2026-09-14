@@ -34,6 +34,20 @@ class Conversation extends Model
         'unread_visitor_count' => 'integer',
     ];
 
+    protected $appends = [
+        'channel_label',
+    ];
+
+    public function getChannelLabelAttribute(): string
+    {
+        switch ($this->channel) {
+            case 'whatsapp': return 'WhatsApp';
+            case 'instagram': return 'Instagram';
+            case 'facebook': return 'Messenger';
+            default: return 'Web Chat';
+        }
+    }
+
     public function project()
     {
         return $this->belongsTo(Project::class);

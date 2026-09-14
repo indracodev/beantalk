@@ -9,12 +9,20 @@ class EnforceTenantScope
 {
     public function handle(Request $request, Closure $next)
     {
-        $user = $request->user() ?: ($request->header('X-User-Id') ? \App\Models\User::find($request->header('X-User-Id')) : null);
+        // ponytail: hanya ambil user dari session auth, JANGAN PERNAH trust X-User-Id header dari client
+        $user = $request->user();
 
-        if ($user && !$request->user()) {
-            $request->setUserResolver(function () use ($user) {
-                return $user;
-            });
+        // ponytail: Untuk endpoint API Admin, autentikasi user tenant wajib ada
+        if ($request->is('api/v1/admin*')) {
+            if (!$user || !$user->tenant_id) {
+                return response()->json([
+                    'success' => false,
+                    'error' => [
+                        'code'    => 'UNAUTHENTICATED',
+                        'message' => 'Autentikasi admin/staff diperlukan untuk mengakses endpoint ini.',
+                    ]
+                ], 401);
+            }
         }
 
         if ($user && $user->tenant_id) {
@@ -25,3 +33,4 @@ class EnforceTenantScope
         return $next($request);
     }
 }
+

@@ -11,6 +11,8 @@ class Visitor extends Model
     protected $fillable = [
         'project_id',
         'contact_id',
+        'name',
+        'customer_code',
         'visitor_uuid',
         'ip_address',
         'user_agent',
@@ -20,6 +22,24 @@ class Visitor extends Model
     protected $casts = [
         'last_seen_at' => 'datetime',
     ];
+
+    protected $appends = [
+        'display_name',
+        'customer_code_formatted',
+    ];
+
+    public function getCustomerCodeFormattedAttribute(): string
+    {
+        return $this->customer_code ?: ('CUS-' . strtoupper(substr(md5(($this->visitor_uuid ?? 'visitor') . $this->id), 0, 4)));
+    }
+
+    public function getDisplayNameAttribute(): string
+    {
+        if (!empty($this->name)) {
+            return $this->name;
+        }
+        return 'Tamu · ' . $this->customer_code_formatted;
+    }
 
     public function project()
     {

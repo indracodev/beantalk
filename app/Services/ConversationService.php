@@ -11,21 +11,46 @@ use Illuminate\Support\Facades\DB;
 class ConversationService
 {
     /**
+     * Generates a unique, short, human-friendly customer code (e.g. CUS-8F21)
+     */
+    public function generateCustomerCode(?string $seed = null): string
+    {
+        $hash = strtoupper(substr(md5($seed ?? \Illuminate\Support\Str::uuid()), 0, 4));
+        return 'CUS-' . $hash;
+    }
+
+    /**
      * Resolves an existing visitor or creates a new one based on client UUID
      */
-    public function getOrCreateVisitor(Project $project, string $visitorUuid, ?string $ip = null, ?string $userAgent = null): Visitor
+    public function getOrCreateVisitor(Project $project, string $visitorUuid, ?string $ip = null, ?string $userAgent = null, ?string $name = null): Visitor
     {
-        return Visitor::firstOrCreate(
-            [
-                'project_id' => $project->id,
-                'visitor_uuid' => $visitorUuid,
-            ],
-            [
-                'ip_address' => $ip,
-                'user_agent' => $userAgent,
+        $visitor = Visitor::where('project_id', $project->id)
+            ->where('visitor_uuid', $visitorUuid)
+            ->first();
+
+        if ($visitor) {
+            $updates = [
                 'last_seen_at' => now(),
-            ]
-        );
+            ];
+            if ($name && (empty($visitor->name) || $visitor->name !== $name)) {
+                $updates['name'] = strip_tags($name);
+            }
+            if (empty($visitor->customer_code)) {
+                $updates['customer_code'] = $this->generateCustomerCode($visitorUuid . $project->id);
+            }
+            $visitor->update($updates);
+            return $visitor;
+        }
+
+        return Visitor::create([
+            'project_id'    => $project->id,
+            'visitor_uuid'  => $visitorUuid,
+            'customer_code' => $this->generateCustomerCode($visitorUuid . $project->id),
+            'name'          => $name ? strip_tags($name) : null,
+            'ip_address'    => $ip,
+            'user_agent'    => $userAgent,
+            'last_seen_at'  => now(),
+        ]);
     }
 
     /**
@@ -106,12 +131,14 @@ class ConversationService
             // 3. Update preview dan unread counter di parent conversation
             $snippet = mb_substr(strip_tags($payload['content']), 0, 120);
             $isVisitor = ($payload['sender_type'] ?? 'visitor') === 'visitor';
+            $currentAgentUnread = (int) ($conversation->unread_agent_count ?? 0);
+            $currentVisitorUnread = (int) ($conversation->unread_visitor_count ?? 0);
 
             $conversation->update([
                 'last_message_at' => now(),
                 'last_message_preview' => $snippet,
-                'unread_agent_count' => $isVisitor ? ($conversation->unread_agent_count + 1) : 0,
-                'unread_visitor_count' => !$isVisitor ? ($conversation->unread_visitor_count + 1) : $conversation->unread_visitor_count,
+                'unread_agent_count' => $isVisitor ? ($currentAgentUnread + 1) : 0,
+                'unread_visitor_count' => !$isVisitor ? ($currentVisitorUnread + 1) : $currentVisitorUnread,
             ]);
 
             return [

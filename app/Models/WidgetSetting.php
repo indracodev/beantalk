@@ -15,12 +15,16 @@ class WidgetSetting extends Model
         'position',
         'greeting_title',
         'greeting_subtitle',
+        'support_title',
         'is_online',
         'auto_reply_offline',
+        'find_us_title',
+        'social_channels',
     ];
 
     protected $casts = [
-        'is_online' => 'boolean',
+        'is_online'       => 'boolean',
+        'social_channels' => 'array',
     ];
 
     public function project()

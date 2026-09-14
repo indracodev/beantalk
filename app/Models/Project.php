@@ -32,6 +32,11 @@ class Project extends Model
         return $this->hasMany(ApiKey::class);
     }
 
+    public function activeApiKey()
+    {
+        return $this->hasOne(ApiKey::class)->where('is_active', true)->latest('id');
+    }
+
     public function widgetSetting()
     {
         return $this->hasOne(WidgetSetting::class);
