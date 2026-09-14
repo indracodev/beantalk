@@ -217,26 +217,25 @@ export const UniversalChatMe = BeanTalk;
 // Global Export
 let instance: BeanTalk | null = null;
 
-export const ChatWidget = {
-  init(options: WidgetInitOptions): BeanTalk {
-    if (!instance) {
-      instance = new BeanTalk(options);
-    }
-    return instance;
-  },
-  open(): void { instance?.open(); },
-  close(): void { instance?.close(); },
-  toggle(): void { instance?.toggle(); },
-  on(event: string, handler: (data?: any) => void): void { instance?.on(event, handler); },
-  sendMessage(text: string): void { instance?.sendMessage(text); },
-  getInstance(): BeanTalk | null { return instance; },
-};
+export const init = (options: WidgetInitOptions) => ChatWidget.init(options);
+export const open = () => ChatWidget.open();
+export const close = () => ChatWidget.close();
+export const toggle = () => ChatWidget.toggle();
+export const on = (event: string, handler: (data?: any) => void) => ChatWidget.on(event, handler);
+export const sendMessage = (text: string) => ChatWidget.sendMessage(text);
+export const getInstance = () => ChatWidget.getInstance();
 
 // Expose to window
 if (typeof window !== 'undefined') {
-  (window as any).BeanTalk = ChatWidget;
   (window as any).ChatWidget = ChatWidget;
   (window as any).UniversalChatMe = BeanTalk;
+  setTimeout(() => {
+    try {
+      if ((window as any).BeanTalk) {
+        Object.assign((window as any).BeanTalk, ChatWidget);
+      }
+    } catch (e) {}
+  }, 0);
 
   // Auto-boot if <script data-project-key="..."> is present
   function autoBootWidget() {
