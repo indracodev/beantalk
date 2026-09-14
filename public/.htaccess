@@ -5,27 +5,36 @@
 
     RewriteEngine On
 
-    # Handle Authorization Header (Bearer Tokens)
+    # 1. Forward Authorization Header for Bearer Token Auth
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # Redirect Trailing Slashes If Not A Folder...
+    # 2. Block Malicious Request Methods
+    RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK)
+    RewriteRule .* - [F,L]
+
+    # 3. Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
-    # Send Requests To Front Controller...
+    # 4. Send Requests To Laravel Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
 
-# Allow CORS for Universal Chat Widget & Static Assets
+# Security Headers & Hardening
 <IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Allow CORS for Universal Chat Widget & Static Assets across any storefront
     <FilesMatch "\.(js|css|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|webp|ico)$">
         Header set Access-Control-Allow-Origin "*"
         Header set Access-Control-Allow-Methods "GET, OPTIONS"
-        Header set Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept"
+        Header set Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization"
     </FilesMatch>
 </IfModule>
 
