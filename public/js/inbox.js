@@ -310,13 +310,25 @@ async function pollNewMessages() {
                         // Cek jika elemen dengan data-id ini sudah ada di DOM
                         const existing = document.querySelector(`[data-id="${msg.id}"]`);
                         if (!existing && thread) {
+                            const isVisitor = msg.sender_type === 'visitor';
                             const row = document.createElement('div');
-                            row.className = `msg-row ${msg.sender_type === 'visitor' ? 'msg-visitor' : 'msg-agent'}`;
+                            row.className = isVisitor
+                                ? 'flex flex-col items-start max-w-[85%] sm:max-w-[70%]'
+                                : 'flex flex-col items-end self-end max-w-[85%] sm:max-w-[70%]';
                             row.setAttribute('data-id', msg.id);
+
+                            const senderName = escapeHtml(msg.sender_name || (isVisitor ? 'Pengunjung' : 'Staff CS'));
+                            const senderLabel = isVisitor ? `${senderName} (Visitor)` : senderName;
+                            const alignPad = isVisitor ? 'pl-1' : 'pr-1';
+                            const bubbleClass = isVisitor
+                                ? 'bubble-visitor bg-white border border-apple-border/80 text-apple-textPrimary px-3 py-2 text-[12.5px] shadow-apple-sm leading-relaxed'
+                                : 'bubble-agent bg-apple-blue text-white px-3 py-2 text-[12.5px] shadow-apple-sm leading-relaxed';
+                            const timeText = escapeHtml(msg.created_at || '-') + (isVisitor ? '' : ' • Sent');
+
                             row.innerHTML = `
-                                <span class="msg-sender">${escapeHtml(msg.sender_name)}</span>
-                                <div class="msg-bubble">${escapeHtml(msg.content)}</div>
-                                <span class="msg-time">${escapeHtml(msg.created_at)}</span>
+                                <span class="text-[10.5px] text-apple-textTertiary mb-0.5 ${alignPad}">${senderLabel}</span>
+                                <div class="${bubbleClass}">${escapeHtml(msg.content)}</div>
+                                <span class="text-[9.5px] text-apple-textTertiary mt-0.5 ${alignPad} font-mono">${timeText}</span>
                             `;
                             thread.appendChild(row);
                             hasNewRendered = true;
@@ -391,13 +403,13 @@ async function handleSendReply(e) {
     let tempDiv = null;
     if (thread) {
         tempDiv = document.createElement('div');
-        tempDiv.className = 'msg-row msg-agent';
+        tempDiv.className = 'flex flex-col items-end self-end max-w-[85%] sm:max-w-[70%]';
         tempDiv.style.opacity = '0.7';
-        const senderName = typeof currentUserName !== 'undefined' ? currentUserName : 'CS Agent';
+        const senderName = typeof currentUserName !== 'undefined' ? currentUserName : 'Staff CS';
         tempDiv.innerHTML = `
-            <span class="msg-sender">${escapeHtml(senderName)}</span>
-            <div class="msg-bubble">${escapeHtml(text)}</div>
-            <span class="msg-time">Mengirim...</span>
+            <span class="text-[10.5px] text-apple-textTertiary mb-0.5 pr-1">${escapeHtml(senderName)}</span>
+            <div class="bubble-agent bg-apple-blue text-white px-3 py-2 text-[12.5px] shadow-apple-sm leading-relaxed">${escapeHtml(text)}</div>
+            <span class="text-[9.5px] text-apple-textTertiary mt-0.5 pr-1 font-mono msg-time">Mengirim...</span>
         `;
         thread.appendChild(tempDiv);
         scrollToBottom();
@@ -421,7 +433,7 @@ async function handleSendReply(e) {
                 tempDiv.style.opacity = '1';
                 tempDiv.setAttribute('data-id', json.data.id);
                 const timeSpan = tempDiv.querySelector('.msg-time');
-                if (timeSpan) timeSpan.textContent = json.data.created_at;
+                if (timeSpan) timeSpan.textContent = `${json.data.created_at || 'Baru saja'} • Sent`;
             }
             if (json.data.id > lastMessageId) {
                 lastMessageId = json.data.id;
