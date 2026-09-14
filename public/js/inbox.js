@@ -1,14 +1,88 @@
 /**
  * BEANTALK LIVE INBOX — JAVASCRIPT
- * Real-time adaptive polling, instant optimistic replies, ticket assignment, and lifecycle management.
- * Pure Vanilla JavaScript with Zero Dependencies.
+ * Real-time adaptive polling, instant optimistic replies, live conversation feed,
+ * Web Audio chime notification, ticket assignment, and lifecycle management.
+ * Pure Vanilla JavaScript with Zero External Dependencies.
  */
 
 let lastMessageId = typeof initialLastMessageId !== 'undefined' ? initialLastMessageId : 0;
-let isPolling = false;
+let maxTenantMessageId = typeof initialMaxTenantMessageId !== 'undefined' ? initialMaxTenantMessageId : 0;
+let isPollingMessages = false;
+let isPollingFeed = false;
 let pollTimer = null;
-let pollInterval = 3000; // 3 detik saat aktif
+let pollInterval = 2000; // 2 detik saat aktif
 
+// ======================================================================
+// 0. AUDIO CHIME & DESKTOP / VISUAL NOTIFICATIONS
+// ======================================================================
+let audioCtx = null;
+let originalDocumentTitle = document.title;
+let titleBlinkTimer = null;
+
+function unlockAudio() {
+    try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        if (!audioCtx) {
+            audioCtx = new AudioContextClass();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    } catch (e) {
+        console.warn('[AudioContext] Unlock warning:', e);
+    }
+}
+document.addEventListener('click', unlockAudio, { once: false });
+document.addEventListener('keydown', unlockAudio, { once: false });
+
+/**
+ * Plays a pleasant, crisp harmonic dual-tone chime (E5 -> A5 glide + C#6 harmonic)
+ * 100% native synthesized Web Audio API (Zero audio files, Zero 404 risk)
+ */
+function playNotificationSound() {
+    try {
+        unlockAudio();
+        if (!audioCtx) return;
+
+        const now = audioCtx.currentTime;
+
+        // Tone 1: High crisp ping
+        const osc1 = audioCtx.createOscillator();
+        const gain1 = audioCtx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(659.25, now); // E5
+        osc1.frequency.exponentialRampToValueAtTime(880, now + 0.08); // Glide to A5
+        gain1.gain.setValueAtTime(0, now);
+        gain1.gain.linearRampToValueAtTime(0.3, now + 0.02);
+        gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+        osc1.connect(gain1);
+        gain1.connect(audioCtx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.35);
+
+        // Tone 2: Harmonic pleasant chime
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(1108.73, now + 0.09); // C#6
+        gain2.gain.setValueAtTime(0, now + 0.09);
+        gain2.gain.linearRampToValueAtTime(0.25, now + 0.12);
+        gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+        osc2.start(now + 0.09);
+        osc2.stop(now + 0.55);
+    } catch (err) {
+        console.warn('[BeanTalk Sound] Audio playback warning:', err);
+    }
+}
+
+
+
+// ======================================================================
+// 1. HELPERS & CSRF
+// ======================================================================
 function scrollToBottom() {
     const body = document.getElementById('chatThreadBody');
     if (body) {
@@ -31,15 +105,169 @@ function getCsrfToken() {
     return meta ? meta.getAttribute('content') : '';
 }
 
+function updateUnreadBadges(total) {
+    if (typeof window.updateGlobalSidebarBadge === 'function') {
+        window.updateGlobalSidebarBadge(total);
+    }
+    const sidebarBadge = document.getElementById('sidebarUnreadBadge');
+    const listBadge = document.getElementById('inboxListUnreadBadge');
+    const mobileBottomBadge = document.getElementById('mobileBottomUnreadBadge');
+    const text = total > 99 ? '99+' : String(total);
+
+    if (sidebarBadge) {
+        sidebarBadge.textContent = text;
+        sidebarBadge.style.display = total > 0 ? '' : 'none';
+    }
+    if (listBadge) {
+        listBadge.textContent = text;
+        listBadge.style.display = total > 0 ? 'inline-flex' : 'none';
+    }
+    if (mobileBottomBadge) {
+        mobileBottomBadge.textContent = total > 9 ? '9+' : String(total);
+        if (total > 0) {
+            mobileBottomBadge.classList.remove('hidden');
+            mobileBottomBadge.classList.add('inline-block');
+        } else {
+            mobileBottomBadge.classList.add('hidden');
+            mobileBottomBadge.classList.remove('inline-block');
+        }
+    }
+}
+
 // ======================================================================
-// 1. ADAPTIVE POLLING (AFTER_ID RANGE SCAN)
+// 2. REAL-TIME CONVERSATION FEED HANDLER (DRIVEN BY GLOBAL ENGINE)
+// ======================================================================
+window.onGlobalFeedUpdate = function(data) {
+    if (!data) return;
+
+    // 1. Update unread counter badges
+    if (typeof data.unread_total === 'number') {
+        updateUnreadBadges(data.unread_total);
+    }
+
+    if (data.max_message_id > maxTenantMessageId) {
+        maxTenantMessageId = data.max_message_id;
+    }
+
+    // 2. Update Conversation List in DOM
+    const container = document.getElementById('convListContainer');
+    if (container && Array.isArray(data.conversations)) {
+        // Hapus empty state jika ada
+        const emptyState = container.querySelector('.empty-state');
+        if (emptyState && data.conversations.length > 0) {
+            emptyState.remove();
+        }
+
+        data.conversations.forEach(conv => {
+            let item = container.querySelector(`[data-conv-id="${conv.id}"]`);
+            const isCurrentActive = typeof activeConversationId !== 'undefined' && activeConversationId === conv.id;
+
+            if (!item) {
+                // Percakapan BARU Masuk!
+                item = document.createElement('a');
+                item.href = `/admin/inbox/${conv.id}`;
+                item.id = `card-conv-${conv.id}`;
+                item.className = `conv-row conv-item no-loader w-full block px-2.5 py-2 rounded-lg transition ${isCurrentActive ? 'text-apple-textPrimary bg-white border border-apple-border/60 shadow-apple-sm font-medium' : 'text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 font-normal border border-transparent'}`;
+                
+                const initials = escapeHtml(conv.initials || (conv.customer_name ? conv.customer_name.substring(0, 2).toUpperCase() : 'TM'));
+                const custName = escapeHtml(conv.customer_name || 'Tamu');
+                const siteName = escapeHtml(conv.project_name || 'Website');
+                const custCode = escapeHtml(conv.customer_code || 'CUS-0000');
+                const timeText = escapeHtml(conv.last_message_time || '-');
+                const lastPreview = escapeHtml(conv.last_message_preview || 'Percakapan baru...');
+                const unreadCount = conv.unread_agent_count || 0;
+                const badgeText = unreadCount > 9 ? '9+' : String(unreadCount);
+
+                item.innerHTML = `
+                    <div class="flex gap-2.5 items-start">
+                        <div class="relative shrink-0">
+                            <div class="conv-avatar w-8 h-8 rounded-full bg-[#E5E5EA] text-apple-textPrimary font-semibold text-[11px] flex items-center justify-center border border-black/5">
+                                ${initials}
+                            </div>
+                            <span class="w-2 h-2 rounded-full bg-apple-green absolute bottom-0 right-0 ring-1 ring-white"></span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between mb-0.5">
+                                <span class="conv-name font-semibold text-apple-textPrimary truncate text-[12.5px]" title="${custName}">
+                                    ${custName}
+                                </span>
+                                <span class="conv-time text-[10.5px] text-apple-textTertiary font-mono">${timeText}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 mb-1">
+                                <span class="conv-site text-[9px] font-medium tracking-tight uppercase px-1.5 py-0.2 rounded bg-neutral-200/70 text-neutral-800 truncate max-w-[110px]">
+                                    ${siteName}
+                                </span>
+                                <span class="conv-cust-code text-[10px] text-apple-textTertiary font-mono">${custCode}</span>
+                                ${conv.is_unread ? `<span class="unread-badge ml-auto text-[9.5px] font-bold px-1.5 py-0.2 rounded-full bg-apple-blue text-white">${badgeText}</span>` : ''}
+                            </div>
+                            <p class="conv-snippet text-[11.5px] text-apple-textSecondary truncate">
+                                ${lastPreview}
+                            </p>
+                        </div>
+                    </div>
+                `;
+                container.prepend(item);
+            } else {
+                // Update item yang sudah ada
+                const snippet = item.querySelector('.conv-snippet');
+                if (snippet) snippet.textContent = conv.last_message_preview;
+
+                const time = item.querySelector('.conv-time');
+                if (time) time.textContent = conv.last_message_time;
+
+                const name = item.querySelector('.conv-name');
+                if (name) {
+                    name.textContent = conv.customer_name;
+                    name.setAttribute('title', conv.customer_name);
+                }
+
+                const avatar = item.querySelector('.conv-avatar');
+                if (avatar && conv.initials) {
+                    avatar.textContent = conv.initials;
+                }
+
+                if (conv.is_unread && !isCurrentActive) {
+                    item.classList.add('conv-unread');
+                    let badge = item.querySelector('.unread-badge');
+                    const badgeText = conv.unread_agent_count > 9 ? '9+' : String(conv.unread_agent_count);
+                    if (!badge) {
+                        const metaRow = item.querySelector('.flex.items-center.gap-1.5.mb-1');
+                        if (metaRow) {
+                            badge = document.createElement('span');
+                            badge.className = 'unread-badge ml-auto text-[9.5px] font-bold px-1.5 py-0.2 rounded-full bg-apple-blue text-white';
+                            metaRow.appendChild(badge);
+                        }
+                    }
+                    if (badge) badge.textContent = badgeText;
+                } else if (isCurrentActive) {
+                    item.classList.remove('conv-unread');
+                    const badge = item.querySelector('.unread-badge');
+                    if (badge) badge.remove();
+                }
+
+                // Jika percakapan mendapatkan pesan baru dan bukan di urutan pertama, pindahkan ke paling atas
+                if (container.firstElementChild !== item && conv.is_unread) {
+                    container.prepend(item);
+                }
+            }
+        });
+    }
+};
+
+function pollConversationFeed() {
+    // Driven seamlessly by admin.js initGlobalNotificationEngine
+}
+
+
+// ======================================================================
+// 3. ACTIVE CONVERSATION THREAD POLLING
 // ======================================================================
 async function pollNewMessages() {
-    if (typeof activeConversationId === 'undefined' || !activeConversationId || isPolling) {
+    if (typeof activeConversationId === 'undefined' || !activeConversationId || isPollingMessages) {
         return;
     }
 
-    isPolling = true;
+    isPollingMessages = true;
 
     try {
         const url = `/admin/inbox/${activeConversationId}/messages?after_id=${lastMessageId}`;
@@ -52,63 +280,100 @@ async function pollNewMessages() {
 
         if (res.ok) {
             const json = await res.json();
-            if (json.success && json.data && json.data.messages && json.data.messages.length > 0) {
-                const thread = document.getElementById('chatThreadBody');
-                let hasNewRendered = false;
+            if (json.success && json.data) {
+                if (typeof json.data.unread_total === 'number') {
+                    updateUnreadBadges(json.data.unread_total);
+                }
 
-                json.data.messages.forEach(msg => {
-                    if (msg.id > lastMessageId) {
-                        lastMessageId = msg.id;
+                // Tandai item percakapan aktif sebagai terbaca di UI
+                const activeItem = document.querySelector(`[data-conv-id="${activeConversationId}"]`);
+                if (activeItem) {
+                    activeItem.classList.remove('conv-unread');
+                    const unreadBadge = activeItem.querySelector('.unread-badge');
+                    if (unreadBadge) unreadBadge.remove();
+                }
+
+                if (json.data.messages && json.data.messages.length > 0) {
+                    const thread = document.getElementById('chatThreadBody');
+                    let hasNewRendered = false;
+                    let hasNewVisitor = false;
+
+                    json.data.messages.forEach(msg => {
+                        if (msg.id > lastMessageId) {
+                            lastMessageId = msg.id;
+                        }
+
+                        if (msg.sender_type === 'visitor') {
+                            hasNewVisitor = true;
+                        }
+
+                        // Cek jika elemen dengan data-id ini sudah ada di DOM
+                        const existing = document.querySelector(`[data-id="${msg.id}"]`);
+                        if (!existing && thread) {
+                            const row = document.createElement('div');
+                            row.className = `msg-row ${msg.sender_type === 'visitor' ? 'msg-visitor' : 'msg-agent'}`;
+                            row.setAttribute('data-id', msg.id);
+                            row.innerHTML = `
+                                <span class="msg-sender">${escapeHtml(msg.sender_name)}</span>
+                                <div class="msg-bubble">${escapeHtml(msg.content)}</div>
+                                <span class="msg-time">${escapeHtml(msg.created_at)}</span>
+                            `;
+                            thread.appendChild(row);
+                            hasNewRendered = true;
+                        }
+                    });
+
+                    if (hasNewVisitor) {
+                        playNotificationSound();
                     }
 
-                    // Cek jika elemen dengan data-id ini sudah ada di DOM (menghindari duplikasi dengan optimistik)
-                    const existing = document.querySelector(`[data-id="${msg.id}"]`);
-                    if (!existing && thread) {
-                        const row = document.createElement('div');
-                        row.className = `msg-row ${msg.sender_type === 'visitor' ? 'msg-visitor' : 'msg-agent'}`;
-                        row.setAttribute('data-id', msg.id);
-                        row.innerHTML = `
-                            <span class="msg-sender">${escapeHtml(msg.sender_name)}</span>
-                            <div class="msg-bubble">${escapeHtml(msg.content)}</div>
-                            <span class="msg-time">${escapeHtml(msg.created_at)}</span>
-                        `;
-                        thread.appendChild(row);
-                        hasNewRendered = true;
+                    if (activeItem) {
+                        const lastMsg = json.data.messages[json.data.messages.length - 1];
+                        const snippet = activeItem.querySelector('.conv-snippet');
+                        if (snippet) snippet.textContent = lastMsg.content;
+                        const time = activeItem.querySelector('.conv-time');
+                        if (time) time.textContent = lastMsg.created_at;
                     }
-                });
 
-                if (hasNewRendered) {
-                    scrollToBottom();
+                    if (hasNewRendered) {
+                        scrollToBottom();
+                    }
                 }
             }
         }
     } catch (err) {
-        console.warn('[Inbox Poll] Warning:', err);
+        console.warn('[Inbox Thread Poll] Warning:', err);
     } finally {
-        isPolling = false;
+        isPollingMessages = false;
+    }
+}
+
+// Master Polling Loop
+function runScheduledPoll() {
+    pollConversationFeed();
+    if (typeof activeConversationId !== 'undefined' && activeConversationId) {
+        pollNewMessages();
     }
 }
 
 function startPollingSchedule() {
     if (pollTimer) clearInterval(pollTimer);
-    if (typeof activeConversationId !== 'undefined' && activeConversationId) {
-        pollTimer = setInterval(pollNewMessages, pollInterval);
-    }
+    pollTimer = setInterval(runScheduledPoll, pollInterval);
 }
 
 // Adaptive Interval: Turunkan frekuensi saat tab diminimalkan / background
 document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-        pollInterval = 15000; // 15 detik saat tab idle
+        pollInterval = 10000; // 10 detik saat tab idle
     } else {
-        pollInterval = 3000;  // 3 detik saat tab aktif
-        pollNewMessages();    // Segera refresh saat kembali fokus
+        pollInterval = 2000;  // 2 detik saat tab aktif
+        runScheduledPoll();   // Segera refresh saat kembali fokus
     }
     startPollingSchedule();
 });
 
 // ======================================================================
-// 2. SEND CS REPLY (OPTIMISTIC UI + ASYNC PERSISTENCE)
+// 4. SEND CS REPLY (OPTIMISTIC UI + ASYNC PERSISTENCE)
 // ======================================================================
 async function handleSendReply(e) {
     if (e) e.preventDefault();
@@ -161,6 +426,18 @@ async function handleSendReply(e) {
             if (json.data.id > lastMessageId) {
                 lastMessageId = json.data.id;
             }
+            if (json.data.id > maxTenantMessageId) {
+                maxTenantMessageId = json.data.id;
+            }
+            // Immediate re-poll to catch echo for visitor widget
+            setTimeout(runScheduledPoll, 300);
+            // Sinkronkan dropdown penugasan jika tiket otomatis di-assign ke agen ini
+            if (json.data.assigned_user_id) {
+                const assignSelect = document.getElementById('assignCsSelect');
+                if (assignSelect && !assignSelect.value) {
+                    assignSelect.value = json.data.assigned_user_id;
+                }
+            }
         } else {
             if (tempDiv) tempDiv.remove();
             alert('Gagal mengirim balasan: ' + (json.error?.message || 'Terjadi kesalahan server.'));
@@ -172,7 +449,7 @@ async function handleSendReply(e) {
 }
 
 // ======================================================================
-// 3. TICKET CONTROLS: ASSIGN CS AGENT
+// 5. TICKET CONTROLS: ASSIGN CS AGENT
 // ======================================================================
 async function handleAssign(userId) {
     if (typeof activeConversationId === 'undefined' || !activeConversationId) return;
@@ -201,7 +478,7 @@ async function handleAssign(userId) {
 }
 
 // ======================================================================
-// 4. TICKET CONTROLS: TOGGLE OPEN / CLOSED
+// 6. TICKET CONTROLS: TOGGLE OPEN / CLOSED
 // ======================================================================
 async function handleToggleStatus() {
     if (typeof activeConversationId === 'undefined' || !activeConversationId) return;
@@ -229,11 +506,97 @@ async function handleToggleStatus() {
             }
 
             if (btn) {
-                btn.textContent = newStatus === 'open' ? 'Tutup Tiket' : 'Buka Kembali';
+                if (newStatus === 'open') {
+                    btn.innerHTML = `
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        <span>Tutup Tiket</span>
+                    `;
+                } else {
+                    btn.innerHTML = `
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"></path><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                        <span>Buka Kembali</span>
+                    `;
+                }
             }
         }
     } catch (err) {
         console.error('Error toggle status:', err);
+    }
+}
+
+// ======================================================================
+// 7. TICKET CONTROLS: EDIT CUSTOMER DISPLAY NAME
+// ======================================================================
+async function promptEditCustomerName() {
+    if (typeof activeConversationId === 'undefined' || !activeConversationId) return;
+
+    const currentNameEl = document.getElementById('contextCustomerName');
+    const currentName = currentNameEl ? currentNameEl.textContent.trim() : '';
+
+    const newName = prompt('Ubah atau lengkapi nama customer untuk percakapan ini:', currentName);
+    if (!newName || newName.trim() === '' || newName.trim() === currentName) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`/admin/inbox/${activeConversationId}/customer`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': getCsrfToken(),
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ name: newName.trim() })
+        });
+
+        const json = await res.json();
+        if (json.success && json.data) {
+            const displayName = json.data.display_name || json.data.name;
+
+            // Update thread header
+            const threadName = document.getElementById('threadCustomerName');
+            if (threadName) {
+                threadName.textContent = displayName;
+                threadName.setAttribute('title', displayName);
+            }
+            const threadAvatar = document.getElementById('threadCustomerAvatar');
+            if (threadAvatar) {
+                threadAvatar.textContent = (displayName || 'TA').substring(0, 2).toUpperCase();
+            }
+
+            // Update context drawer
+            if (currentNameEl) currentNameEl.textContent = displayName;
+            const detailName = document.getElementById('contextDetailName');
+            if (detailName) detailName.textContent = displayName;
+            const contextAvatarLg = document.getElementById('contextAvatarLg');
+            if (contextAvatarLg) {
+                contextAvatarLg.textContent = (displayName || 'TA').substring(0, 2).toUpperCase();
+            }
+
+            // Update active item in conversation list
+            const activeItem = document.querySelector(`[data-conv-id="${activeConversationId}"]`);
+            if (activeItem) {
+                const convName = activeItem.querySelector('.conv-name');
+                if (convName) {
+                    convName.textContent = displayName;
+                    convName.setAttribute('title', displayName);
+                }
+                const convAvatar = activeItem.querySelector('.conv-avatar');
+                if (convAvatar) {
+                    convAvatar.textContent = (displayName || 'TA').substring(0, 2).toUpperCase();
+                }
+            }
+
+            const replyInput = document.getElementById('replyInput');
+            if (replyInput) {
+                replyInput.setAttribute('placeholder', `Ketik balasan untuk ${displayName}... (Tekan Enter untuk kirim)`);
+            }
+        } else {
+            alert('Gagal mengubah nama customer: ' + (json.error?.message || 'Error'));
+        }
+    } catch (err) {
+        console.error('Error rename customer:', err);
     }
 }
 

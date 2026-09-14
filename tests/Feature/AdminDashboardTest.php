@@ -72,6 +72,20 @@ class AdminDashboardTest extends TestCase
     }
 
     /**
+     * Test Authenticated User can view Executive Dashboard page
+     */
+    public function testAuthenticatedUserCanViewExecutiveDashboard()
+    {
+        $response = $this->actingAs($this->superadmin)->get('/admin');
+
+        $response->assertStatus(200)
+            ->assertSee('Executive Dashboard')
+            ->assertSee('4 Sites Streaming')
+            ->assertSee('Total Conversations')
+            ->assertSee('Volume &amp; Resolution Velocity', false);
+    }
+
+    /**
      * Test Authenticated User can view Live Inbox page
      */
     public function testAuthenticatedUserCanViewInbox()
@@ -80,7 +94,7 @@ class AdminDashboardTest extends TestCase
 
         $response->assertStatus(200)
             ->assertSee('Live Inbox')
-            ->assertSee('Inbox Percakapan');
+            ->assertSee('Inbox');
     }
 
     /**
@@ -443,4 +457,241 @@ class AdminDashboardTest extends TestCase
 
         $response->assertStatus(403);
     }
+
+    /**
+     * Test Admin can update customer display name from info drawer
+     */
+    public function testAdminCanUpdateCustomerName()
+    {
+        $visitor = Visitor::create([
+            'tenant_id'     => $this->tenant->id,
+            'project_id'    => $this->project->id,
+            'visitor_uuid'  => 'vis-name-update-' . uniqid(),
+            'customer_code' => 'CUS-TEST',
+            'name'          => 'Initial Name',
+        ]);
+
+        $conv = Conversation::create([
+            'tenant_id'  => $this->tenant->id,
+            'project_id' => $this->project->id,
+            'visitor_id' => $visitor->id,
+            'status'     => 'open',
+            'channel'    => 'widget',
+        ]);
+
+        $response = $this->actingAs($this->agent)->putJson("/admin/inbox/{$conv->id}/customer", [
+            'name' => 'Budi Sudarsono',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.name', 'Budi Sudarsono')
+            ->assertJsonPath('data.display_name', 'Budi Sudarsono');
+
+        $this->assertDatabaseHas('visitors', [
+            'id'   => $visitor->id,
+            'name' => 'Budi Sudarsono',
+        ]);
+    }
+
+    /**
+     * Test Admin can search inbox by customer code
+     */
+    public function testSearchByCustomerCode()
+    {
+        $code = 'CUS-SRCH99';
+        $visitor = Visitor::create([
+            'tenant_id'     => $this->tenant->id,
+            'project_id'    => $this->project->id,
+            'visitor_uuid'  => 'vis-srch-' . uniqid(),
+            'customer_code' => $code,
+            'name'          => 'Customer Search Target',
+        ]);
+
+        $conv = Conversation::create([
+            'tenant_id'  => $this->tenant->id,
+            'project_id' => $this->project->id,
+            'visitor_id' => $visitor->id,
+            'status'     => 'open',
+            'channel'    => 'widget',
+        ]);
+
+        \App\Models\Message::create([
+            'conversation_id' => $conv->id,
+            'tenant_id'       => $this->tenant->id,
+            'sender_type'     => 'visitor',
+            'sender_name'     => 'Customer Search Target',
+            'content'         => 'Test search target message',
+            'status'          => 'delivered',
+        ]);
+
+        $response = $this->actingAs($this->agent)->get("/admin/inbox?search={$code}");
+        $response->assertStatus(200)
+            ->assertSee($code);
+    }
+
+    /**
+     * Test Admin can poll live conversation feed updates
+     */
+    public function testAdminCanPollConversationFeedUpdates()
+    {
+        // 1. Initial handshake with since_message_id=0 must NEVER trigger false positive incoming notifications
+        $response = $this->actingAs($this->agent)->getJson('/admin/inbox/feed/updates?since_message_id=0');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.has_new_incoming', false)
+            ->assertJsonStructure([
+                'success',
+                'data' => [
+                    'conversations',
+                    'unread_total',
+                    'max_message_id',
+                    'has_new_incoming',
+                ]
+            ]);
+
+        $baselineMaxId = $response->json('data.max_message_id');
+
+        // 2. Create new visitor message on an UNREAD conversation
+        $visitor = Visitor::create([
+            'tenant_id'    => $this->tenant->id,
+            'project_id'   => $this->project->id,
+            'visitor_uuid' => 'vis-unread-' . uniqid(),
+            'name'         => 'Jane Unread',
+        ]);
+
+        $conv = Conversation::create([
+            'tenant_id'          => $this->tenant->id,
+            'project_id'         => $this->project->id,
+            'visitor_id'         => $visitor->id,
+            'status'             => 'open',
+            'channel'            => 'widget',
+            'unread_agent_count' => 1,
+        ]);
+
+        $msg = \App\Models\Message::create([
+            'conversation_id' => $conv->id,
+            'tenant_id'       => $this->tenant->id,
+            'sender_type'     => 'visitor',
+            'sender_name'     => 'Jane Unread',
+            'content'         => 'Halo min, tolong bantuan',
+            'status'          => 'delivered',
+        ]);
+
+        // Polling with since_message_id = baselineMaxId should detect the incoming unread chat!
+        $pollRes = $this->actingAs($this->agent)->getJson("/admin/inbox/feed/updates?since_message_id={$baselineMaxId}");
+        $pollRes->assertStatus(200)
+            ->assertJsonPath('data.has_new_incoming', true)
+            ->assertJsonPath('data.latest_incoming.message_id', $msg->id)
+            ->assertJsonPath('data.latest_incoming.conversation_id', $conv->id);
+
+        // 3. Mark conversation as READ (unread_agent_count = 0)
+        $conv->update(['unread_agent_count' => 0]);
+
+        // Polling again should NOT trigger notification because conversation is now already read!
+        $readPollRes = $this->actingAs($this->agent)->getJson("/admin/inbox/feed/updates?since_message_id={$baselineMaxId}");
+        $readPollRes->assertStatus(200)
+            ->assertJsonPath('data.has_new_incoming', false);
+    }
+
+    /**
+     * Test Superadmin can impersonate (Login As) an agent
+     */
+    public function testSuperadminCanImpersonateAgent()
+    {
+        $response = $this->actingAs($this->superadmin)
+            ->post("/admin/team/{$this->agent->id}/impersonate");
+
+        $response->assertRedirect('/admin/inbox');
+        $this->assertEquals($this->agent->id, auth()->id());
+        $this->assertEquals($this->superadmin->id, session('impersonator_id'));
+    }
+
+    /**
+     * Test Impersonated session can leave and return to original superadmin
+     */
+    public function testImpersonatedUserCanLeaveImpersonation()
+    {
+        // Masuk sebagai agent terlebih dahulu
+        $this->actingAs($this->superadmin)
+            ->post("/admin/team/{$this->agent->id}/impersonate");
+
+        $this->assertEquals($this->agent->id, auth()->id());
+
+        // Kembali ke akun superadmin asli
+        $response = $this->post('/admin/impersonate/leave');
+
+        $response->assertRedirect('/admin/team');
+        $this->assertEquals($this->superadmin->id, auth()->id());
+        $this->assertFalse(session()->has('impersonator_id'));
+    }
+
+    /**
+     * Test Agent cannot impersonate other users (403 Forbidden)
+     */
+    public function testAgentCannotImpersonate()
+    {
+        $response = $this->actingAs($this->agent)
+            ->post("/admin/team/{$this->superadmin->id}/impersonate");
+
+        $response->assertStatus(403);
+    }
+
+    /**
+     * Test Admin can update widget settings including Find Us Somewhere Else social channels
+     */
+    public function testAdminCanUpdateWidgetAndSocialChannelSettings()
+    {
+        $payload = [
+            'primary_color'       => '#8a2332',
+            'greeting_title'      => 'Halo Pelanggan Setia!',
+            'greeting_subtitle'   => 'Ada yang bisa kami bantu?',
+            'support_title'       => 'Customer Care Indraco',
+            'find_us_title'       => 'Temukan Kami di Platform Lain',
+            'channels'            => [
+                'whatsapp'  => ['enabled' => '1', 'url' => '0812-3456-7890'],
+                'instagram' => ['enabled' => '1', 'url' => '@indraco_coffee'],
+                'telegram'  => ['enabled' => '1', 'url' => 'indracocare'],
+                'shopee'    => ['enabled' => '1', 'url' => 'https://shopee.co.id/indraco'],
+            ],
+        ];
+
+        $response = $this->actingAs($this->superadmin)
+            ->put("/admin/integrations/{$this->project->id}/settings", $payload);
+
+        $response->assertSessionHas('success');
+
+        $setting = \App\Models\WidgetSetting::where('project_id', $this->project->id)->first();
+        $this->assertNotNull($setting);
+        $this->assertEquals('#8a2332', $setting->primary_color);
+        $this->assertEquals('Customer Care Indraco', $setting->support_title);
+        $this->assertEquals('Temukan Kami di Platform Lain', $setting->find_us_title);
+
+        $channels = $setting->social_channels;
+        $this->assertIsArray($channels);
+        $this->assertCount(6, $channels);
+
+        $activeChannels = array_filter($channels, fn($c) => !empty($c['enabled']));
+        $this->assertCount(4, $activeChannels);
+
+        // Check WA formatted with wa.me and cleaned country code
+        $wa = collect($channels)->firstWhere('id', 'whatsapp');
+        $this->assertNotNull($wa);
+        $this->assertTrue($wa['enabled']);
+        $this->assertEquals('https://wa.me/6281234567890', $wa['url']);
+
+        // Check IG formatted with instagram.com
+        $ig = collect($channels)->firstWhere('id', 'instagram');
+        $this->assertNotNull($ig);
+        $this->assertTrue($ig['enabled']);
+        $this->assertEquals('https://instagram.com/indraco_coffee', $ig['url']);
+
+        // Check TG formatted with t.me
+        $tg = collect($channels)->firstWhere('id', 'telegram');
+        $this->assertNotNull($tg);
+        $this->assertTrue($tg['enabled']);
+        $this->assertEquals('https://t.me/indracocare', $tg['url']);
+    }
 }
+
