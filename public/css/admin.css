@@ -1,62 +1,175 @@
 /* ==========================================================================
-   BEANTALK ADMIN DESIGN SYSTEM TOKENS — DEFAULT LIGHT THEME (BUKAN SYSTEM)
+   BEANTALK APPLE / macOS DESIGN SYSTEM TOKENS
    ========================================================================== */
-:root, html.theme-light {
-    --bg-canvas: #F8FAFC;
-    --bg-surface: #FFFFFF;
-    --bg-sidebar: #FFFFFF;
-    --bg-subtle: #F1F5F9;
-    --bg-active: #E2E8F0;
-    --border: #E2E8F0;
-    --border-hover: #CBD5E1;
-    --border-focus: #C59B27;
-    --accent: #C59B27;
-    --accent-hover: #AF851A;
-    --text-main: #0F172A;
-    --text-sub: #475569;
-    --text-muted: #94A3B8;
-    --status-online: #10B981;
-    --status-busy: #F59E0B;
-    --status-offline: #94A3B8;
-    --badge-bg: #E2E8F0;
-    --badge-text: #0F172A;
-    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    --header-border: #E2E8F0;
+:root {
+    --apple-canvas: #F5F5F7;
+    --apple-surface: #FFFFFF;
+    --apple-sidebar: #F2F2F7;
+    --apple-border: rgba(0, 0, 0, 0.08);
+    --apple-subtle-border: rgba(0, 0, 0, 0.04);
+    --apple-divider: #E5E5EA;
+    --apple-text-primary: #1D1D1F;
+    --apple-text-secondary: #6E6E73;
+    --apple-text-tertiary: #86868B;
+    --apple-blue: #0071E3;
+    --apple-blue-hover: #0077ED;
+    --apple-green: #34C759;
+    --apple-orange: #FF9500;
+    --apple-red: #FF3B30;
 }
 
-html.theme-dark {
-    --bg-canvas: #0B0F17;
-    --bg-surface: #111827;
-    --bg-sidebar: #0F172A;
-    --bg-subtle: #1E293B;
-    --bg-active: #334155;
-    --border: #1F2937;
-    --border-hover: #374151;
-    --border-focus: #C59B27;
-    --accent: #C59B27;
-    --accent-hover: #D4AF37;
-    --text-main: #F8FAFC;
-    --text-sub: #94A3B8;
-    --text-muted: #64748B;
-    --status-online: #10B981;
-    --status-busy: #F59E0B;
-    --status-offline: #64748B;
-    --badge-bg: #1E293B;
-    --badge-text: #F8FAFC;
-    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    --header-border: #1F2937;
+/* Native macOS Scrollbar */
+::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
 }
 
-/* ==========================================================================
-   GLOBAL RESET & TYPOGRAPHY
-   ========================================================================== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    -webkit-font-smoothing: antialiased;
+::-webkit-scrollbar-track {
+    background: transparent;
 }
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.16);
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.28);
+}
+
+.glass-acrylic {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.glass-sidebar {
+    background: #F8F8FA;
+}
+
+/* Sidebar Minimized Styles */
+.sidebar-collapsed,
+html.sidebar-is-collapsed #main-sidebar {
+    width: 64px !important;
+}
+
+.sidebar-collapsed .sidebar-text,
+.sidebar-collapsed .sidebar-badge,
+.sidebar-collapsed .sidebar-subtext,
+html.sidebar-is-collapsed #main-sidebar .sidebar-text,
+html.sidebar-is-collapsed #main-sidebar .sidebar-badge,
+html.sidebar-is-collapsed #main-sidebar .sidebar-subtext {
+    display: none !important;
+}
+
+.sidebar-collapsed .sidebar-item,
+html.sidebar-is-collapsed #main-sidebar .sidebar-item {
+    justify-content: center !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.sidebar-collapsed .workspace-box,
+html.sidebar-is-collapsed #main-sidebar .workspace-box {
+    justify-content: center !important;
+    padding: 6px !important;
+}
+
+.sidebar-collapsed .profile-box,
+html.sidebar-is-collapsed #main-sidebar .profile-box {
+    justify-content: center !important;
+    padding: 8px 0 !important;
+}
+
+/* Mobile Sidebar Off-Canvas Drawer Styles */
+@media (max-width: 768px) {
+    #main-sidebar {
+        position: fixed !important;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 50 !important;
+        transform: translateX(-100%);
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+    }
+    #main-sidebar.open-mobile {
+        transform: translateX(0) !important;
+    }
+}
+
+/* Mobile & Tablet Customer Context Inspector Drawer Styles (< 1024px) */
+@media (max-width: 1023px) {
+    #pane-context-inspector {
+        position: fixed !important;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        z-index: 50 !important;
+        width: 320px !important;
+        max-width: 85vw !important;
+        transform: translateX(100%);
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15) !important;
+    }
+    #pane-context-inspector.open-mobile {
+        transform: translateX(0) !important;
+        display: flex !important;
+    }
+}
+
+/* Message Bubbles */
+.bubble-visitor {
+    border-radius: 18px 18px 18px 4px;
+}
+
+.bubble-agent {
+    border-radius: 18px 18px 4px 18px;
+}
+
+/* Draggable Splitter Handle */
+.panel-resizer {
+    width: 5px;
+    margin: 0 -2px;
+    z-index: 25;
+    cursor: col-resize;
+    transition: background 0.15s ease;
+    position: relative;
+}
+
+.panel-resizer:hover,
+.panel-resizer.is-dragging {
+    background: rgba(0, 113, 227, 0.35);
+}
+
+.panel-resizer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 2px;
+    width: 1px;
+    background: rgba(0, 0, 0, 0.08);
+}
+
+/* Context Inspector Minimized Styles */
+.inspector-collapsed,
+html.inspector-is-collapsed #pane-context-inspector {
+    width: 48px !important;
+    min-width: 48px !important;
+    max-width: 48px !important;
+}
+
+.inspector-collapsed .inspector-full-content,
+html.inspector-is-collapsed #pane-context-inspector .inspector-full-content {
+    display: none !important;
+}
+
+.inspector-collapsed .inspector-compact-rail,
+html.inspector-is-collapsed #pane-context-inspector .inspector-compact-rail {
+    display: flex !important;
+}
+
 
 body {
     background-color: var(--bg-canvas);
@@ -507,6 +620,17 @@ body {
     background: var(--bg-subtle);
     color: var(--text-main);
     border: 1px solid var(--border);
+}
+
+.action-code.action-error {
+    background: #fef2f2;
+    color: #dc2626;
+    border-color: #fca5a5;
+}
+.theme-dark .action-code.action-error {
+    background: rgba(220, 38, 38, 0.15);
+    color: #f87171;
+    border-color: rgba(220, 38, 38, 0.35);
 }
 
 .desc-text {
@@ -1024,3 +1148,726 @@ body {
     border-color: var(--border-hover);
 }
 
+/* ==========================================================================
+   ACCENT NAV BADGE (UNREAD INDICATOR)
+   ========================================================================== */
+.nav-badge-accent {
+    background: var(--accent);
+    color: #FFFFFF;
+    animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* ==========================================================================
+   DRAG STATE: PREVENT TEXT SELECTION DURING PANEL RESIZE
+   ========================================================================== */
+body.resizing {
+    cursor: col-resize !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}
+
+body.resizing * {
+    cursor: col-resize !important;
+}
+
+/* ==========================================================================
+   SIDEBAR RESIZE HANDLE (DESKTOP)
+   ========================================================================== */
+.resize-handle-sidebar {
+    width: 6px;
+    cursor: col-resize;
+    background: transparent;
+    position: relative;
+    flex-shrink: 0;
+    z-index: 25;
+    transition: background 0.15s;
+    margin-left: -3px;
+    margin-right: -3px;
+}
+
+.resize-handle-sidebar:hover,
+.resize-handle-sidebar.active {
+    background: var(--accent);
+    opacity: 0.4;
+}
+
+body.resizing .sidebar {
+    transition: none !important;
+}
+
+.sidebar.collapsed + .resize-handle-sidebar {
+    display: none;
+}
+
+/* ==========================================================================
+   MOBILE TOP BAR & BACKDROP OVERLAY
+   ========================================================================== */
+.mobile-top-bar {
+    display: none;
+}
+
+.sidebar-backdrop {
+    display: none;
+}
+
+/* ==========================================================================
+   RESPONSIVE BREAKPOINTS
+   ========================================================================== */
+
+/* Tablet & Laptop Sedang (769px – 1024px): Sidebar auto-collapse ke icon mode */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .sidebar:not(.force-expanded) {
+        width: 68px !important;
+    }
+    .sidebar:not(.force-expanded) .nav-text,
+    .sidebar:not(.force-expanded) .nav-label,
+    .sidebar:not(.force-expanded) .brand-logo-text,
+    .sidebar:not(.force-expanded) .user-info {
+        display: none;
+    }
+    .sidebar:not(.force-expanded) .sidebar-toggle-btn {
+        position: absolute;
+        right: 20px;
+        transform: rotate(180deg);
+    }
+    .sidebar:not(.force-expanded) .footer-actions {
+        flex-direction: column;
+    }
+    .sidebar:not(.force-expanded) .footer-btn span {
+        display: none;
+    }
+    .sidebar:not(.force-expanded) .nav-badge {
+        position: absolute;
+        top: 4px;
+        right: 6px;
+        padding: 2px 5px;
+        font-size: 10px;
+    }
+    .resize-handle-sidebar {
+        display: none;
+    }
+    .page-container {
+        padding: 24px 20px;
+    }
+}
+
+/* Mobile Devices (<= 768px): Sidebar Off-Canvas Drawer + Sticky Mobile Top Bar */
+@media (max-width: 768px) {
+    .mobile-top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 52px;
+        padding: 0 16px;
+        background: var(--bg-surface);
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        z-index: 35;
+    }
+
+    .btn-hamburger, .btn-theme-mobile {
+        background: var(--bg-subtle);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 6px;
+        color: var(--text-main);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s ease;
+    }
+
+    .btn-hamburger:hover, .btn-theme-mobile:hover {
+        background: var(--bg-canvas);
+        border-color: var(--border-hover);
+    }
+
+    .mobile-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        color: var(--text-main);
+    }
+
+    .mobile-brand-name {
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+    }
+
+    .mobile-top-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .mobile-unread-pill {
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+    /* Sidebar Drawer */
+    .sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 270px !important;
+        max-width: 82vw !important;
+        z-index: 100 !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .sidebar.open-mobile {
+        transform: translateX(0) !important;
+    }
+
+    .sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(2px);
+        z-index: 90;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+    }
+
+    .sidebar-backdrop.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .resize-handle-sidebar {
+        display: none !important;
+    }
+
+    .page-container {
+        padding: 16px 14px;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .projects-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================================================
+   IMPERSONATION (LOGIN AS) BANNER & CONTROLS
+   ========================================================================== */
+.impersonation-banner {
+    background: linear-gradient(135deg, #F59E0B, #D97706);
+    color: #FFFFFF;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    font-size: 13px;
+    box-shadow: 0 2px 6px rgba(217, 119, 6, 0.25);
+    flex-shrink: 0;
+    z-index: 50;
+    animation: slideDownFade 0.2s ease;
+}
+
+@keyframes slideDownFade {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.impersonation-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+}
+
+.impersonation-info svg {
+    flex-shrink: 0;
+}
+
+.impersonate-role-tag {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.2);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-impersonate-leave {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #0F172A;
+    color: #F8FAFC;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.btn-impersonate-leave:hover {
+    background: #1E293B;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.btn-login-as {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 11px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg-surface);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-login-as:hover {
+    border-color: var(--accent);
+    background: var(--bg-subtle);
+    transform: translateY(-1px);
+}
+
+.current-user-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* ======================================================================
+   GLOBAL REAL-TIME CHAT TOAST & SIDEBAR BADGE PULSE
+   ====================================================================== */
+#beantalkToastContainer {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+    max-width: 360px;
+}
+
+.beantalk-toast {
+    pointer-events: auto;
+    background: var(--bg-surface, #ffffff);
+    color: var(--text-main, #0f172a);
+    border: 1px solid var(--accent, #0284c7);
+    border-radius: 12px;
+    padding: 12px 14px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.18), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.25s ease;
+    user-select: none;
+}
+
+.beantalk-toast:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px -5px rgba(0, 0, 0, 0.24);
+    border-color: #EF4444;
+}
+
+.toast-avatar-box {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.12);
+    color: #EF4444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.toast-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.toast-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 2px;
+}
+
+.toast-sender {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-main, #0f172a);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.toast-hint {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--accent, #0284c7);
+    white-space: nowrap;
+}
+
+.toast-msg {
+    font-size: 12px;
+    color: var(--text-sub, #475569);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.toast-close-btn {
+    border: none;
+    background: none;
+    color: var(--text-muted, #94a3b8);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0 4px;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+}
+
+.toast-close-btn:hover {
+    color: var(--text-main);
+    background: var(--bg-subtle);
+}
+
+@keyframes toastSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* SIDEBAR UNREAD BADGE & PULSE ANIMATIONS */
+.sidebar-badge.pulse,
+#sidebarUnreadBadge.pulse,
+#sidebar-inbox-count.pulse,
+.nav-badge.pulse,
+.nav-badge-accent.pulse {
+    background: #FF3B30 !important;
+    color: #FFFFFF !important;
+    animation: badgePulse 1.8s infinite cubic-bezier(0.4, 0, 0.6, 1);
+    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.6);
+}
+
+@keyframes badgePulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 0 6px rgba(255, 59, 48, 0);
+        transform: scale(1.08);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 59, 48, 0);
+        transform: scale(1);
+    }
+}
+
+.sidebar-item.has-unread svg,
+.nav-item.has-unread .nav-icon {
+    animation: iconPulse 2s infinite ease-in-out;
+    color: #FF3B30 !important;
+}
+
+@keyframes iconPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.15);
+    }
+}
+
+.nav-item.has-unread,
+.sidebar-item.has-unread {
+    position: relative;
+}
+
+/* GLOBAL TOAST NOTIFICATION CONTAINER & CARD */
+#beantalkToastContainer {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.beantalk-toast {
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.16), 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 320px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: toastSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.beantalk-toast:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.2);
+}
+
+.toast-avatar-box {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: #0071E3;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.toast-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.toast-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+
+.toast-sender {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1D1D1F;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.toast-hint {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #0071E3;
+    white-space: nowrap;
+}
+
+.toast-msg {
+    font-size: 11.5px;
+    color: #6E6E73;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+}
+
+.toast-close-btn {
+    background: none;
+    border: none;
+    color: #86868B;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.toast-close-btn:hover {
+    color: #1D1D1F;
+}
+
+@keyframes toastSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ==========================================================================
+   BEANTALK APPLE / macOS GLOBAL LOADER SYSTEM
+   ========================================================================== */
+
+/* 1. Top Loading Progress Bar (Apple Blue Glow) */
+#beantalk-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 2.5px;
+    background: linear-gradient(90deg, #0071E3 0%, #00C7BE 50%, #0071E3 100%);
+    z-index: 99999;
+    width: 0%;
+    transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+    box-shadow: 0 0 10px rgba(0, 113, 227, 0.5);
+    pointer-events: none;
+}
+
+/* 2. Full Page Action Loading Overlay (Apple Blur Overlay) */
+#beantalk-loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(245, 245, 247, 0.65);
+    backdrop-filter: blur(6px) saturate(180%);
+    -webkit-backdrop-filter: blur(6px) saturate(180%);
+    z-index: 99998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.22s ease, visibility 0.22s ease;
+    pointer-events: none;
+}
+
+/* 3. Anti-Flicker Persistence Rule */
+html.beantalk-loader-active #beantalk-loading-overlay,
+#beantalk-loading-overlay.show {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+html.beantalk-loader-active #beantalk-progress-bar {
+    width: 75% !important;
+    opacity: 1 !important;
+}
+
+/* 4. Apple Glass Loader Card & Minimal Spinner */
+.beantalk-loader-card {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    padding: 0.85rem 1.35rem;
+    box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.06);
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    transform: scale(0.96);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#beantalk-loading-overlay.show .beantalk-loader-card,
+html.beantalk-loader-active .beantalk-loader-card {
+    transform: scale(1);
+}
+
+.beantalk-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2.5px solid rgba(0, 113, 227, 0.18);
+    border-top-color: #0071E3;
+    border-radius: 50%;
+    animation: beantalk-spin 0.65s linear infinite;
+    flex-shrink: 0;
+}
+
+.beantalk-loader-text {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #1D1D1F;
+    letter-spacing: -0.01em;
+}
+
+@keyframes beantalk-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 5. Mobile Viewport 100dvh & Zero-Overflow Rules */
+html, body {
+    height: 100%;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    -webkit-text-size-adjust: 100%;
+}
+
+#inboxWorkspace, 
+#pane-conv-list, 
+#pane-chat-thread, 
+#chatThreadBody,
+.main-viewport {
+    min-height: 0;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
