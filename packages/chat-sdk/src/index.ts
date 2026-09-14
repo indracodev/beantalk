@@ -22,6 +22,13 @@ function resolveScriptOrigin(): string {
   return '';
 }
 
+// Initial startup banner
+if (typeof window !== 'undefined') {
+  try {
+    console.log('%c[BeanTalk]%c Universal Chat Widget Started', 'background: #0071E3; color: #ffffff; padding: 2px 6px; border-radius: 4px; font-weight: bold;', 'color: inherit; font-weight: 500;');
+  } catch (e) {}
+}
+
 export class BeanTalk {
   private options: WidgetInitOptions;
   private emitter: EventEmitter;
@@ -38,6 +45,8 @@ export class BeanTalk {
   constructor(options: WidgetInitOptions) {
     this.options = options;
     this.emitter = new EventEmitter();
+
+    console.log('[BeanTalk] Initializing widget instance for project:', options.projectKey);
 
     // 1. Initialize API Client with auto-detected server origin
     const detectedOrigin = resolveScriptOrigin();
@@ -167,6 +176,11 @@ export class BeanTalk {
         }
 
         this.initialized = true;
+        console.log('[BeanTalk] Session established successfully:', {
+          brand: response.data.project?.name,
+          customerCode: (response.data.visitor as any)?.customer_code,
+          conversationId: response.data.conversation?.id || 'New Thread',
+        });
         this.emitter.emit('ready', response.data);
       } else {
         console.warn('[BeanTalk] Init session warning:', response.error?.message);
@@ -178,10 +192,12 @@ export class BeanTalk {
 
   // Public SDK Methods
   open(): void {
+    console.log('[BeanTalk] Opening chat widget window');
     this.ui.open();
   }
 
   close(): void {
+    console.log('[BeanTalk] Closing chat widget window');
     this.ui.close();
   }
 
@@ -225,6 +241,28 @@ export const on = (event: string, handler: (data?: any) => void) => ChatWidget.o
 export const sendMessage = (text: string) => ChatWidget.sendMessage(text);
 export const getInstance = () => ChatWidget.getInstance();
 
+export const ChatWidget = {
+  init(options: WidgetInitOptions): BeanTalk {
+    if (!instance) {
+      console.log('[BeanTalk] Creating singleton widget instance');
+      instance = new BeanTalk(options);
+    }
+    return instance;
+  },
+  open(): void { 
+    if (instance) {
+      instance.open(); 
+    } else {
+      console.warn('[BeanTalk] Widget instance not yet initialized');
+    }
+  },
+  close(): void { instance?.close(); },
+  toggle(): void { instance?.toggle(); },
+  on(event: string, handler: (data?: any) => void): void { instance?.on(event, handler); },
+  sendMessage(text: string): void { instance?.sendMessage(text); },
+  getInstance(): BeanTalk | null { return instance; },
+};
+
 // Expose to window
 if (typeof window !== 'undefined') {
   (window as any).ChatWidget = ChatWidget;
@@ -251,6 +289,8 @@ if (typeof window !== 'undefined') {
       const color = script.getAttribute('data-color') || undefined;
       const brandName = script.getAttribute('data-brand-name') || script.getAttribute('data-store-name') || undefined;
       const supportTitle = script.getAttribute('data-support-title') || undefined;
+
+      console.log('[BeanTalk] Found embed tag on page:', { projectKey, apiUrl, brandName });
 
       if (projectKey && !instance) {
         ChatWidget.init({
