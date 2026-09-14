@@ -24,7 +24,7 @@ class RbacSecurityTest extends TestCase
             ['name' => 'Internal BeanTalk Group', 'plan' => 'enterprise']
         );
 
-        $this->superadmin = User::firstOrCreate(
+        $this->superadmin = User::updateOrCreate(
             ['email' => 'test-superadmin@example.com'],
             [
                 'tenant_id' => $this->tenant->id,
@@ -35,11 +35,11 @@ class RbacSecurityTest extends TestCase
             ]
         );
 
-        $this->agent = User::firstOrCreate(
+        $this->agent = User::updateOrCreate(
             ['email' => 'test-agent@example.com'],
             [
                 'tenant_id' => $this->tenant->id,
-                'name'      => 'Test Agent Staff',
+                'name'      => 'Test Agent',
                 'username'  => 'test-agent',
                 'password'  => bcrypt('secret123'),
                 'role'      => 'agent',
@@ -136,11 +136,12 @@ class RbacSecurityTest extends TestCase
      */
     public function testSuperadminCanInviteTeamMember()
     {
+        $unique = uniqid();
         $response = $this->actingAs($this->superadmin)
                          ->postJson('/api/v1/admin/team', [
                              'name'     => 'Staff Baru',
-                             'username' => 'staff_baru',
-                             'email'    => 'staff_baru@example.com',
+                             'username' => 'staff_' . $unique,
+                             'email'    => 'staff_' . $unique . '@example.com',
                              'role'     => 'agent',
                          ]);
 
@@ -169,6 +170,8 @@ class RbacSecurityTest extends TestCase
      */
     public function testAgentCannotChangeRole()
     {
+        $this->agent->update(['role' => 'agent']);
+
         $response = $this->actingAs($this->agent)
                          ->putJson("/api/v1/admin/team/{$this->superadmin->id}/role", [
                              'role' => 'agent',

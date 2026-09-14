@@ -14,8 +14,14 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
-        if (config('database.default') === 'sqlite' && !static::$migrated) {
-            \Illuminate\Support\Facades\Artisan::call('migrate');
+        config([
+            'database.default' => 'sqlite',
+            'database.connections.sqlite.database' => database_path('testing.sqlite'),
+        ]);
+        \Illuminate\Support\Facades\DB::purge();
+
+        if (!static::$migrated) {
+            \Illuminate\Support\Facades\Artisan::call('migrate', ['--database' => 'sqlite', '--force' => true]);
             static::$migrated = true;
         }
 

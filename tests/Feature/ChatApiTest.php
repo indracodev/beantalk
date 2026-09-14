@@ -167,7 +167,20 @@ class ChatApiTest extends TestCase
     public function testAdminReplyConversation()
     {
         $admin = \App\Models\User::first();
-        $response = $this->actingAs($admin)->postJson('/api/v1/admin/conversations/1/reply', [
+        $conv = \App\Models\Conversation::where('tenant_id', $admin->tenant_id)->first();
+        if (!$conv) {
+            $project = \App\Models\Project::where('tenant_id', $admin->tenant_id)->first() ?? \App\Models\Project::first();
+            $visitor = \App\Models\Visitor::first();
+            $conv = \App\Models\Conversation::create([
+                'tenant_id' => $admin->tenant_id,
+                'project_id' => $project->id,
+                'visitor_id' => $visitor->id,
+                'channel_type' => 'widget',
+                'status' => 'open',
+            ]);
+        }
+
+        $response = $this->actingAs($admin)->postJson("/api/v1/admin/conversations/{$conv->id}/reply", [
             'content' => 'Tentu kak, seluruh kapsul Supresso 100% aluminium daur ulang.',
         ]);
 
