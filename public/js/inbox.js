@@ -193,7 +193,7 @@ window.onGlobalFeedUpdate = function(data) {
                                 </span>
                                 <span class="conv-time text-[10.5px] text-apple-textTertiary font-mono">${timeText}</span>
                             </div>
-                            <div class="flex items-center gap-1.5 mb-1">
+                            <div class="conv-meta-row flex items-center gap-1.5 mb-1" data-conv-meta>
                                 <span class="conv-site text-[9px] font-medium tracking-tight uppercase px-1.5 py-0.2 rounded bg-neutral-200/70 text-neutral-800 truncate max-w-[110px]">
                                     ${siteName}
                                 </span>
@@ -231,7 +231,7 @@ window.onGlobalFeedUpdate = function(data) {
                     let badge = item.querySelector('.unread-badge');
                     const badgeText = conv.unread_agent_count > 9 ? '9+' : String(conv.unread_agent_count);
                     if (!badge) {
-                        const metaRow = item.querySelector('.flex.items-center.gap-1.5.mb-1');
+                        const metaRow = item.querySelector('.conv-meta-row') || item.querySelector('[data-conv-meta]');
                         if (metaRow) {
                             badge = document.createElement('span');
                             badge.className = 'unread-badge ml-auto text-[9.5px] font-bold px-1.5 py-0.2 rounded-full bg-apple-blue text-white';
@@ -239,7 +239,7 @@ window.onGlobalFeedUpdate = function(data) {
                         }
                     }
                     if (badge) badge.textContent = badgeText;
-                } else if (isCurrentActive) {
+                } else {
                     item.classList.remove('conv-unread');
                     const badge = item.querySelector('.unread-badge');
                     if (badge) badge.remove();

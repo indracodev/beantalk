@@ -281,7 +281,7 @@ class DashboardController extends Controller
             });
         }
 
-        $conversations = $query->get();
+        $conversations = $query->get()->unique('visitor_id')->values();
 
         // Tentukan percakapan aktif yang sedang dibuka (reuse instance memori jika sudah dimuat)
         $activeConversation = null;
@@ -294,14 +294,13 @@ class DashboardController extends Controller
                     ->with(['visitor', 'project.widgetSetting', 'assignedUser', 'messages.user'])
                     ->find($id);
             }
+            // Tandai tiket aktif sudah dibaca HANYA saat agen secara eksplisit membuka ID chat tersebut
+            if ($activeConversation && $activeConversation->unread_agent_count > 0) {
+                $activeConversation->update(['unread_agent_count' => 0]);
+            }
         } elseif ($conversations->isNotEmpty()) {
             $activeConversation = $conversations->first();
             $activeConversation->load(['messages.user']);
-        }
-
-        // Tandai tiket aktif sudah dibaca saat agen membuka percakapan
-        if ($activeConversation && $activeConversation->unread_agent_count > 0) {
-            $activeConversation->update(['unread_agent_count' => 0]);
         }
 
         // Ambil daftar agen/staff untuk penugasan
@@ -602,7 +601,7 @@ class DashboardController extends Controller
             });
         }
 
-        $conversations = $query->take(50)->get();
+        $conversations = $query->take(50)->get()->unique('visitor_id')->values();
 
         $formatted = $conversations->map(function ($conv) {
             return [
@@ -622,6 +621,7 @@ class DashboardController extends Controller
         });
 
         $totalUnread = Conversation::where('tenant_id', $tenantId)
+            ->whereHas('messages')
             ->where('unread_agent_count', '>', 0)
             ->count();
 

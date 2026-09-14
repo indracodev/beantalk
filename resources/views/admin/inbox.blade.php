@@ -120,7 +120,7 @@
                                     <span
                                         class="conv-time text-[10.5px] text-apple-textTertiary font-mono">{{ $timeHuman }}</span>
                                 </div>
-                                <div class="flex items-center gap-1.5 mb-1">
+                                <div class="conv-meta-row flex items-center gap-1.5 mb-1" data-conv-meta>
                                     <span
                                         class="conv-site text-[9px] font-medium tracking-tight uppercase px-1.5 py-0.2 rounded bg-neutral-200/70 text-neutral-800 truncate max-w-[110px]">
                                         {{ $siteName }}

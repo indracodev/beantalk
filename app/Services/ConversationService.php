@@ -58,21 +58,6 @@ class ConversationService
      */
     public function getActiveConversation(Project $project, Visitor $visitor): ?Conversation
     {
-        return Conversation::where('project_id', $project->id)
-            ->where('visitor_id', $visitor->id)
-            ->whereIn('status', ['open', 'pending'])
-            ->whereHas('messages')
-            ->with(['latestMessage'])
-            ->latest('id')
-            ->first();
-    }
-
-    /**
-     * Gets the active conversation for a visitor or creates a new thread on first customer message
-     */
-    public function getOrCreateConversation(Project $project, Visitor $visitor, array $context = []): Conversation
-    {
-        // Cari percakapan aktif yang belum di-close/resolved
         $conversation = Conversation::where('project_id', $project->id)
             ->where('visitor_id', $visitor->id)
             ->whereIn('status', ['open', 'pending'])
@@ -80,27 +65,63 @@ class ConversationService
             ->first();
 
         if ($conversation) {
-            // Update page context jika berganti URL
-            if (!empty($context['page_url']) && $conversation->page_url !== $context['page_url']) {
-                $conversation->update([
-                    'page_url' => $context['page_url'],
-                    'page_title' => $context['page_title'] ?? $conversation->page_title,
-                ]);
-            }
             return $conversation;
         }
 
-        // Buat percakapan baru saat pesan pertama dikirim
-        return Conversation::create([
-            'tenant_id' => $project->tenant_id,
-            'project_id' => $project->id,
-            'visitor_id' => $visitor->id,
-            'status' => 'open',
-            'channel' => 'widget',
-            'page_url' => $context['page_url'] ?? null,
-            'page_title' => $context['page_title'] ?? null,
-            'last_message_at' => now(),
-        ]);
+        return Conversation::where('project_id', $project->id)
+            ->where('visitor_id', $visitor->id)
+            ->whereHas('messages')
+            ->latest('id')
+            ->first();
+    }
+
+    /**
+     * Gets the active conversation for a visitor or creates a new thread on first customer message
+     * Guarantees 1 single consolidated conversation per customer
+     */
+    public function getOrCreateConversation(Project $project, Visitor $visitor, array $context = []): Conversation
+    {
+        return DB::transaction(function () use ($project, $visitor, $context) {
+            // 1. Ambil semua percakapan terbuka/aktif milik visitor ini
+            $conversations = Conversation::where('project_id', $project->id)
+                ->where('visitor_id', $visitor->id)
+                ->whereIn('status', ['open', 'pending'])
+                ->orderBy('id', 'asc')
+                ->lockForUpdate()
+                ->get();
+
+            if ($conversations->isNotEmpty()) {
+                $primaryConv = $conversations->first();
+
+                // Konsolidasi pesan jika sebelumnya sempat terbuat lebih dari 1 thread untuk customer yang sama
+                if ($conversations->count() > 1) {
+                    $otherIds = $conversations->slice(1)->pluck('id')->toArray();
+                    Message::whereIn('conversation_id', $otherIds)->update(['conversation_id' => $primaryConv->id]);
+                    Conversation::whereIn('id', $otherIds)->delete();
+                }
+
+                // Update page context jika berganti URL
+                if (!empty($context['page_url']) && $primaryConv->page_url !== $context['page_url']) {
+                    $primaryConv->update([
+                        'page_url' => $context['page_url'],
+                        'page_title' => $context['page_title'] ?? $primaryConv->page_title,
+                    ]);
+                }
+                return $primaryConv;
+            }
+
+            // 2. Buat percakapan baru saat pesan pertama dikirim
+            return Conversation::create([
+                'tenant_id' => $project->tenant_id,
+                'project_id' => $project->id,
+                'visitor_id' => $visitor->id,
+                'status' => 'open',
+                'channel' => 'widget',
+                'page_url' => $context['page_url'] ?? null,
+                'page_title' => $context['page_title'] ?? null,
+                'last_message_at' => now(),
+            ]);
+        });
     }
 
     /**
