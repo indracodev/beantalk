@@ -111,9 +111,19 @@ class MessageController extends Controller
             ], 404);
         }
 
+        $rawSenderName = strip_tags(trim($request->input('sender_name', '')));
+        if ($rawSenderName && !in_array(strtolower($rawSenderName), ['pengunjung', 'visitor', 'anda', 'guest'])) {
+            if ($conversation->visitor && empty($conversation->visitor->name)) {
+                $conversation->visitor->update(['name' => $rawSenderName]);
+            }
+            $finalSenderName = $rawSenderName;
+        } else {
+            $finalSenderName = $conversation->visitor->name ?: ($conversation->visitor->display_name ?? 'Tamu');
+        }
+
         $result = $this->conversationService->appendMessage($conversation, [
             'sender_type'       => 'visitor',
-            'sender_name'       => 'Pengunjung',
+            'sender_name'       => $finalSenderName,
             'content'           => $request->input('content'),
             'client_message_id' => $request->input('client_message_id'),
             'content_type'      => $request->input('content_type', 'text'),

@@ -24,14 +24,17 @@ Route::prefix('v1')->group(function () {
     // ========================================================================
     Route::prefix('client')->middleware(['project.key'])->group(function () {
         // Session initialization & widget theme handshake
-        Route::post('session/init', 'Api\Client\SessionController@init');
+        Route::post('session/init', 'Api\Client\SessionController@init')->middleware('throttle:100,1');
+        Route::post('session/profile', 'Api\Client\SessionController@updateProfile')->middleware('throttle:100,1');
 
-        // Message polling & sending
-        Route::get('conversations/{id}/messages', 'Api\Client\MessageController@index');
-        Route::post('conversations/{id}/messages', 'Api\Client\MessageController@store');
+        // Message polling: 300/min per IP (safety net, normal usage ~24 req/min)
+        Route::get('conversations/{id}/messages', 'Api\Client\MessageController@index')->middleware('throttle:300,1');
+
+        // Send message: 120/min per IP
+        Route::post('conversations/{id}/messages', 'Api\Client\MessageController@store')->middleware('throttle:120,1');
 
         // Compressed media uploads
-        Route::post('conversations/{id}/upload', 'Api\Client\UploadController@upload');
+        Route::post('conversations/{id}/upload', 'Api\Client\UploadController@upload')->middleware('throttle:100,1');
     });
 
     // ========================================================================
@@ -56,5 +59,4 @@ Route::prefix('v1')->group(function () {
         // Audit Trail & Activity Logs
         Route::get('activity-logs', 'Api\Admin\ActivityLogController@index');
     });
-
 });
