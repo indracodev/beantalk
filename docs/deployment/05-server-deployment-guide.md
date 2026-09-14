@@ -155,15 +155,13 @@ php artisan migrate --seed --force
 
 **Data Bawaan yang Terbentuk Otomatis:**
 - **Tenant**: Indraco Group (`tenant_id = 1`)
-- **Pengguna Internal (2 Role: Superadmin & Staff/Agent CS)**:
-  - **Superadmin**: Username: `superadmin` | Email: `superadmin@indraco.com` | Password: `password`
-  - **Staff CS 1**: Username: `sarah` | Email: `sarah@indraco.com` | Password: `password`
-  - **Staff CS 2**: Username: `budi` | Email: `budi@indraco.com` | Password: `password`
-- **4 Proyek Multi-Web**:
-  1. **Supresso Coffee**: Public API Key: `pk_live_supresso_8819`
-  2. **Indraco Store**: Public API Key: `pk_live_indraco_5521`
-  3. **Indraco Global B2B**: Public API Key: `pk_live_global_3309`
-  4. **SDA Store Surabaya**: Public API Key: `pk_live_sda_1190`
+- **Akun Superadmin Utama**:
+  - **Username**: `superadmin`
+  - **Email**: `superadmin@indraco.com`
+  - **Password**: `password`
+  - **Role**: `superadmin`
+
+*(Integrasi Website Toko dan Akun Staff CS dapat ditambahkan langsung secara dinamis melalui menu Admin Dashboard)*
 
 ---
 

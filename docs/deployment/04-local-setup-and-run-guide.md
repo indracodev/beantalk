@@ -68,12 +68,12 @@ Eksekusi migrasi 9 tabel multi-tenant dan isi database dengan data realistis 4 w
 php artisan migrate:fresh --seed
 ```
 
-**Kredensial Akun Internal Bawaan (Bisa Login via Username ATAU Email):**
+**Kredensial Akun Superadmin Bawaan (Bisa Login via Username ATAU Email):**
 | Role | Username | Email | Password |
 |---|---|---|---|
 | **Superadmin** | `superadmin` | `superadmin@indraco.com` | `password` |
-| **Staff CS 1** | `sarah` | `sarah@indraco.com` | `password` |
-| **Staff CS 2** | `budi` | `budi@indraco.com` | `password` |
+
+*(Akun Staff/Agent tambahan dan website toko dapat ditambahkan melalui menu Admin Dashboard)*
 
 Halaman login tersedia di: **`http://chat-me.test/login`** atau **`http://127.0.0.1:8000/login`**.
 
