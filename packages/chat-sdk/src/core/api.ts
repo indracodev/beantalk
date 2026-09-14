@@ -45,11 +45,12 @@ export class ApiClient {
     }
   }
 
-  async initSession(visitorUuid: string, metadata?: Record<string, any>): Promise<ApiResponse<SessionInitData>> {
+  async initSession(visitorUuid: string, metadata?: Record<string, any>, name?: string): Promise<ApiResponse<SessionInitData>> {
     return this.request<SessionInitData>('/api/v1/client/session/init', {
       method: 'POST',
       body: JSON.stringify({
         visitor_uuid: visitorUuid,
+        name: name,
         project_key: this.projectKey,
         page_url: window.location.href,
         page_title: document.title,
@@ -60,6 +61,16 @@ export class ApiClient {
           title: document.title,
           ...metadata,
         },
+      }),
+    });
+  }
+
+  async updateProfile(visitorUuid: string, name: string): Promise<ApiResponse<{ visitor: any }>> {
+    return this.request<{ visitor: any }>('/api/v1/client/session/profile', {
+      method: 'POST',
+      body: JSON.stringify({
+        visitor_uuid: visitorUuid,
+        name: name,
       }),
     });
   }

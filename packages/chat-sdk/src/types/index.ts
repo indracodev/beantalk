@@ -6,6 +6,8 @@ export interface WidgetInitOptions {
   greetingTitle?: string;
   greetingSubtitle?: string;
   storeName?: string;
+  brandName?: string;
+  supportTitle?: string;
   position?: 'bottom-right' | 'bottom-left';
   whatsappNumber?: string;
   instagramHandle?: string;
@@ -22,11 +24,26 @@ export interface ApiResponse<T = any> {
   };
 }
 
+export interface SocialChannel {
+  id: string;
+  name: string;
+  enabled: boolean;
+  url: string;
+  icon?: string;
+}
+
 export interface WidgetSettings {
   primary_color: string;
-  header_title: string;
-  greeting_text: string;
-  position: string;
+  accent_color?: string;
+  header_title?: string;
+  greeting_text?: string;
+  greeting_title?: string;
+  greeting_subtitle?: string;
+  support_title?: string;
+  position?: string;
+  is_online?: boolean;
+  find_us_title?: string;
+  social_channels?: SocialChannel[];
   channel_whatsapp?: string;
   channel_messenger?: string;
   channel_instagram?: string;
@@ -35,13 +52,15 @@ export interface WidgetSettings {
 export interface ProjectInfo {
   id: number;
   name: string;
-  slug: string;
+  slug?: string;
 }
 
 export interface VisitorInfo {
-  id: number;
+  id?: number;
   uuid: string;
   name?: string;
+  customer_code?: string;
+  display_name?: string;
 }
 
 export interface Message {
@@ -59,9 +78,9 @@ export interface Message {
 
 export interface Conversation {
   id: number;
-  project_id: number;
-  visitor_id: number;
-  status: 'open' | 'closed' | 'assigned';
+  project_id?: number;
+  visitor_id?: number;
+  status: 'open' | 'closed' | 'assigned' | 'pending';
   last_message_snippet?: string;
   last_message_at?: string;
   unread_count?: number;
@@ -71,6 +90,7 @@ export interface Conversation {
 export interface SessionInitData {
   visitor: VisitorInfo;
   project: ProjectInfo;
-  widget_settings: WidgetSettings;
+  widget?: WidgetSettings;
+  widget_settings?: WidgetSettings;
   conversation: Conversation;
 }

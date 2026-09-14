@@ -1,9 +1,26 @@
 import { WidgetInitOptions, SessionInitData, Message } from './types';
 import { EventEmitter } from './core/emitter';
 import { ApiClient } from './core/api';
-import { getOrCreateVisitorUuid, setLastConversationId, generateClientMessageId } from './core/storage';
+import { getOrCreateVisitorUuid, setLastConversationId, generateClientMessageId, getStoredCustomerName } from './core/storage';
 import { PollingTransport } from './transport/polling-transport';
 import { ChatWidgetUi } from './ui/widget';
+
+function resolveScriptOrigin(): string {
+  if (typeof document === 'undefined') return '';
+  const current = document.currentScript as HTMLScriptElement;
+  if (current && current.src) {
+    try { return new URL(current.src, window.location.href).origin; } catch (e) {}
+  }
+  const scriptWithKey = document.querySelector('script[data-project-key]') as HTMLScriptElement;
+  if (scriptWithKey && scriptWithKey.src) {
+    try { return new URL(scriptWithKey.src, window.location.href).origin; } catch (e) {}
+  }
+  const scriptWithWidget = document.querySelector('script[src*="chat-widget.js"], script[src*="widget.js"]') as HTMLScriptElement;
+  if (scriptWithWidget && scriptWithWidget.src) {
+    try { return new URL(scriptWithWidget.src, window.location.href).origin; } catch (e) {}
+  }
+  return '';
+}
 
 export class BeanTalk {
   private options: WidgetInitOptions;
@@ -22,8 +39,9 @@ export class BeanTalk {
     this.options = options;
     this.emitter = new EventEmitter();
 
-    // 1. Initialize API Client
-    const apiUrl = options.apiUrl || window.location.origin;
+    // 1. Initialize API Client with auto-detected server origin
+    const detectedOrigin = resolveScriptOrigin();
+    const apiUrl = options.apiUrl || detectedOrigin || (typeof window !== 'undefined' ? window.location.origin : '');
     this.api = new ApiClient(options.projectKey, apiUrl);
 
     // 2. Initialize UI (Shadow DOM)
@@ -39,28 +57,55 @@ export class BeanTalk {
     this.bootstrap();
   }
 
-  private bindEvents(): void {
-    // UI Outgoing Message -> Send via API
-    this.emitter.on('ui:send', async (msg: Message) => {
+  // Serial message queue to prevent race conditions during rapid typing
+  private sendQueue: Message[] = [];
+  private isSending: boolean = false;
+
+  private async processSendQueue(): Promise<void> {
+    if (this.isSending || this.sendQueue.length === 0) return;
+    this.isSending = true;
+
+    while (this.sendQueue.length > 0) {
+      const msg = this.sendQueue.shift()!;
       if (!this.sessionData?.conversation?.id) {
         console.error('[BeanTalk] Percakapan belum diinisialisasi.');
-        return;
+        continue;
       }
 
       try {
         const res = await this.api.sendMessage(this.sessionData.conversation.id, {
           client_message_id: msg.client_message_id || generateClientMessageId(),
           message: msg.content || msg.message || '',
-          sender_name: 'Visitor',
+          sender_name: msg.sender_name || 'Tamu',
         });
 
         if (res.success && res.data) {
           this.emitter.emit('message:sent', res.data);
-          // Poll immediately after sending message
-          this.transport.pollNow();
         }
       } catch (err) {
         console.error('[BeanTalk] Gagal mengirim pesan:', err);
+      }
+    }
+
+    this.isSending = false;
+    // Poll once after entire queue is drained
+    this.transport.pollNow();
+  }
+
+  private bindEvents(): void {
+    // UI Outgoing Message -> Enqueue for serial processing
+    this.emitter.on('ui:send', (msg: Message) => {
+      this.sendQueue.push(msg);
+      this.processSendQueue();
+    });
+
+    // Customer Name Update -> Sync with backend
+    this.emitter.on('customer:rename', async (name: string) => {
+      const visitorUuid = this.options.visitorUuid || getOrCreateVisitorUuid();
+      try {
+        await this.api.updateProfile(visitorUuid, name);
+      } catch (e) {
+        console.warn('[BeanTalk] Gagal update nama profil pengunjung:', e);
       }
     });
 
@@ -83,9 +128,10 @@ export class BeanTalk {
 
   private async bootstrap(): Promise<void> {
     const visitorUuid = this.options.visitorUuid || getOrCreateVisitorUuid();
+    const storedName = getStoredCustomerName();
 
     try {
-      const response = await this.api.initSession(visitorUuid);
+      const response = await this.api.initSession(visitorUuid, undefined, storedName || undefined);
 
       if (response.success && response.data) {
         this.sessionData = response.data;
@@ -178,25 +224,38 @@ if (typeof window !== 'undefined') {
   (window as any).UniversalChatMe = BeanTalk;
 
   // Auto-boot if <script data-project-key="..."> is present
-  document.addEventListener('DOMContentLoaded', () => {
+  function autoBootWidget() {
     const scripts = document.querySelectorAll('script[data-project-key]');
     if (scripts.length > 0) {
       const script = scripts[0] as HTMLScriptElement;
       const projectKey = script.getAttribute('data-project-key');
-      const apiUrl = script.getAttribute('data-api-url') || undefined;
+      let scriptOrigin = '';
+      if (script.src) {
+        try { scriptOrigin = new URL(script.src, window.location.href).origin; } catch (e) {}
+      }
+      const apiUrl = script.getAttribute('data-api-url') || scriptOrigin || undefined;
       const color = script.getAttribute('data-color') || undefined;
-      const storeName = script.getAttribute('data-store-name') || undefined;
+      const brandName = script.getAttribute('data-brand-name') || script.getAttribute('data-store-name') || undefined;
+      const supportTitle = script.getAttribute('data-support-title') || undefined;
 
       if (projectKey && !instance) {
         ChatWidget.init({
           projectKey,
           apiUrl,
           accentColor: color,
-          storeName,
+          brandName,
+          storeName: brandName,
+          supportTitle,
         });
       }
     }
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', autoBootWidget);
+  } else {
+    autoBootWidget();
+  }
 }
 
 export default ChatWidget;

@@ -55,3 +55,13 @@ export function getLastConversationId(): number | null {
 export function setLastConversationId(id: number): void {
   safeSet(STORAGE_KEY_CONV, id.toString());
 }
+
+const STORAGE_KEY_NAME = 'beantalk_customer_name';
+
+export function getStoredCustomerName(): string | null {
+  return safeGet(STORAGE_KEY_NAME);
+}
+
+export function setStoredCustomerName(name: string): void {
+  safeSet(STORAGE_KEY_NAME, name);
+}

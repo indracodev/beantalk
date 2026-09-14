@@ -168,7 +168,7 @@ export function generateWidgetCss(primaryColor: string = '#1E1E1E'): string {
       background: var(--chat-primary);
       color: var(--chat-primary-text);
       padding: 24px 20px 36px 20px;
-      position: relative;
+      /* position: relative; */
     }
 
     .welcome-header-top {
@@ -319,68 +319,293 @@ export function generateWidgetCss(primaryColor: string = '#1E1E1E'): string {
       align-items: center;
     }
 
-    /* CARD 2: SOCIAL REACH US */
-    .card-social-reach {
+    /* ==========================================================================
+       STAGE 1.5: FORM PEMANGGILAN NAMA (KENALAN DULU)
+       ========================================================================== */
+    .stage-identity {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: #F8FAFC;
+    }
+
+    .identity-stage-header {
+      background: var(--chat-primary);
+      color: var(--chat-primary-text);
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .identity-back-btn {
+      background: none;
+      border: none;
+      color: var(--chat-primary-text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border-radius: 8px;
+      transition: background 0.15s ease;
+    }
+
+    .identity-back-btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .identity-stage-header-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .identity-stage-body {
+      flex: 1;
+      padding: 24px 20px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      overflow-y: auto;
+    }
+
+    .identity-hero-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--chat-primary);
+      color: var(--chat-primary-text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .identity-hero-avatar svg {
+      width: 30px;
+      height: 30px;
+    }
+
+    .identity-code-pill {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: #E2E8F0;
+      color: #334155;
+      margin-bottom: 10px;
+      border: 1px solid #CBD5E1;
+    }
+
+    .identity-stage-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0F172A;
+      margin: 0 0 6px 0;
+    }
+
+    .identity-stage-subtitle {
+      font-size: 13px;
+      color: #64748B;
+      line-height: 1.45;
+      margin: 0 0 18px 0;
+      max-width: 290px;
+    }
+
+    .identity-form-box {
+      width: 100%;
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-align: left;
+      box-sizing: border-box;
+    }
+
+    .identity-form-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #334155;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .identity-name-input {
+      width: 100%;
+      padding: 11px 14px;
+      font-size: 13px;
+      border: 1.5px solid #CBD5E1;
+      border-radius: 9px;
+      color: #0F172A;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .identity-name-input:focus {
+      border-color: var(--chat-primary);
+      box-shadow: 0 0 0 3px rgba(197, 155, 39, 0.18);
+    }
+
+    .identity-continue-btn {
+      width: 100%;
+      padding: 11px 18px;
+      background: var(--chat-primary);
+      color: var(--chat-primary-text);
+      border: none;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .identity-continue-btn:hover {
+      opacity: 0.94;
+      transform: translateY(-1px);
+      box-shadow: 0 5px 14px rgba(0, 0, 0, 0.14);
+    }
+
+    .identity-continue-btn:active {
+      transform: translateY(1px);
+    }
+
+    .identity-continue-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* CARD 3: REACH US ANYWHERE ELSE (SOCIAL CHANNELS) */
+    .card-social-channels {
       background: #FFFFFF;
       border-radius: 14px;
       padding: 14px 16px;
       border: 1px solid #E2E8F0;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
     }
 
-    .social-reach-title {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: #94A3B8;
+    .social-channels-header {
       margin-bottom: 10px;
     }
 
-    .social-channel-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+    .social-channels-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #94A3B8;
     }
 
-    .social-channel-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 10px;
-      border-radius: 8px;
-      text-decoration: none;
-      background: #F8FAFC;
-      border: 1px solid #EDF2F7;
-      color: #1E293B;
-      font-size: 12px;
-      font-weight: 500;
-      transition: background 0.15s, border-color 0.15s;
-    }
-
-    .social-channel-item:hover {
-      background: #F1F5F9;
-      border-color: #CBD5E1;
-    }
-
-    .social-left {
+    .social-channels-row {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
-    .social-icon-box {
-      width: 24px;
-      height: 24px;
-      border-radius: 6px;
-      display: flex;
+    .social-channel-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
+      text-decoration: none;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+      cursor: pointer;
+      border: none;
+      color: #FFFFFF;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      flex-shrink: 0;
+    }
+
+    .social-channel-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .social-channel-btn:hover {
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+      filter: brightness(1.05);
+    }
+
+    .social-btn-whatsapp {
+      background: linear-gradient(135deg, #25D366, #128C7E);
       color: #FFFFFF;
     }
 
-    .social-icon-box.whatsapp { background: #25D366; }
-    .social-icon-box.messenger { background: #0084FF; }
-    .social-icon-box.instagram { background: linear-gradient(45deg, #F09433 0%, #E6683C 25%, #DC2743 50%, #CC2366 75%, #BC1888 100%); }
+    .social-btn-instagram {
+      background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+      color: #FFFFFF;
+    }
+
+    .social-btn-messenger {
+      background: linear-gradient(135deg, #00B2FF, #006AFF);
+      color: #FFFFFF;
+    }
+
+    .social-btn-telegram {
+      background: linear-gradient(135deg, #2AABEE, #229ED9);
+      color: #FFFFFF;
+    }
+
+    .social-btn-shopee {
+      background: linear-gradient(135deg, #EE4D2D, #FF5722);
+      color: #FFFFFF;
+    }
+
+    .social-btn-tokopedia {
+      background: linear-gradient(135deg, #03AC0E, #00880B);
+      color: #FFFFFF;
+    }
+
+    .chat-identity-banner {
+      padding: 8px 12px;
+      background: #F8FAFC;
+      border-bottom: 1px solid #E2E8F0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 11px;
+      color: #475569;
+      flex-shrink: 0;
+    }
+
+    .chat-identity-banner input {
+      flex: 1;
+      padding: 4px 8px;
+      font-size: 11px;
+      border: 1px solid #CBD5E1;
+      border-radius: 6px;
+      outline: none;
+    }
+
+    .chat-identity-banner button {
+      padding: 4px 8px;
+      background: var(--chat-primary);
+      color: var(--chat-primary-text);
+      border: none;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
 
     .welcome-footer {
       text-align: center;

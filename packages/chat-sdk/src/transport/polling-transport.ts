@@ -14,12 +14,17 @@ export class PollingTransport {
   private lastMessageId: number = 0;
   private isRunning: boolean = false;
   private isPolling: boolean = false;
+  private pollQueued: boolean = false;
   private timer: any = null;
   private activeIntervalMs: number;
   private idleIntervalMs: number;
   private isWindowVisible: boolean = true;
   private isOnline: boolean = true;
   private isWidgetOpen: boolean = false;
+
+  // Burst mode: rapid polls right after sending messages
+  private burstRemaining: number = 0;
+  private burstIntervalMs: number = 1200;
 
   constructor(api: ApiClient, emitter: EventEmitter, options: PollingOptions = {}) {
     this.api = api;
@@ -88,24 +93,37 @@ export class PollingTransport {
     }
   }
 
+  private getInterval(): number {
+    // Burst mode: rapid follow-up polls after a send
+    if (this.burstRemaining > 0) {
+      return this.burstIntervalMs;
+    }
+    // Adaptive interval:
+    // Window visible AND widget open -> fast (1.5s)
+    // Otherwise -> idle (15s)
+    return (this.isWindowVisible && this.isWidgetOpen)
+      ? this.activeIntervalMs
+      : this.idleIntervalMs;
+  }
+
   private reschedule(): void {
     this.clearTimer();
     if (!this.isRunning || !this.isOnline) return;
 
-    // Adaptive interval logic:
-    // If window is visible AND widget is open -> active fast poll (2.5s)
-    // If window is hidden OR widget is closed -> idle slow poll (15s)
-    const interval = (this.isWindowVisible && this.isWidgetOpen)
-      ? this.activeIntervalMs
-      : this.idleIntervalMs;
-
     this.timer = setTimeout(() => {
       this.executePoll();
-    }, interval);
+    }, this.getInterval());
   }
 
   async pollNow(): Promise<void> {
+    // If already polling, queue a follow-up instead of dropping
+    if (this.isPolling) {
+      this.pollQueued = true;
+      return;
+    }
     this.clearTimer();
+    // Activate burst mode: 3 rapid polls to catch server-side echo fast
+    this.burstRemaining = 3;
     await this.executePoll();
   }
 
@@ -143,7 +161,22 @@ export class PollingTransport {
       this.emitter.emit('poll:error', err);
     } finally {
       this.isPolling = false;
-      this.reschedule();
+
+      // Decrement burst counter
+      if (this.burstRemaining > 0) {
+        this.burstRemaining--;
+      }
+
+      // Process queued poll if one was requested during this cycle
+      if (this.pollQueued) {
+        this.pollQueued = false;
+        this.burstRemaining = 2;
+        // Immediate re-poll with tiny delay to let event loop breathe
+        this.clearTimer();
+        this.timer = setTimeout(() => this.executePoll(), 100);
+      } else {
+        this.reschedule();
+      }
     }
   }
 }

@@ -1,4 +1,4 @@
-"use strict";var BeanTalk=(()=>{var b=Object.defineProperty;var M=Object.getOwnPropertyDescriptor;var T=Object.getOwnPropertyNames;var C=Object.prototype.hasOwnProperty;var F=(s,e)=>{for(var t in e)b(s,t,{get:e[t],enumerable:!0})},A=(s,e,t,i)=>{if(e&&typeof e=="object"||typeof e=="function")for(let a of T(e))!C.call(s,a)&&a!==t&&b(s,a,{get:()=>e[a],enumerable:!(i=M(e,a))||i.enumerable});return s};var I=s=>A(b({},"__esModule",{value:!0}),s);var j={};F(j,{BeanTalk:()=>d,ChatWidget:()=>h,UniversalChatMe:()=>H,default:()=>D});var g=class{constructor(){this.events={}}on(e,t){return this.events[e]||(this.events[e]=[]),this.events[e].push(t),this}off(e,t){return this.events[e]?(this.events[e]=this.events[e].filter(i=>i!==t),this):this}emit(e,t){this.events[e]&&this.events[e].forEach(i=>{try{i(t)}catch(a){console.error(`[BeanTalk] Error in event handler for "${e}":`,a)}})}};var m=class{constructor(e,t=""){this.projectKey=e,this.baseUrl=t.replace(/\/+$/,"")}async request(e,t={}){let i=`${this.baseUrl}${e}`,a={Accept:"application/json","Content-Type":"application/json","X-Project-Key":this.projectKey,...t.headers||{}},n=new AbortController,l=setTimeout(()=>n.abort(),12e3);try{let c=await fetch(i,{...t,headers:a,signal:n.signal});return clearTimeout(l),await c.json()}catch(c){return clearTimeout(l),{success:!1,error:{code:c.name==="AbortError"?"TIMEOUT":"NETWORK_ERROR",message:c.message||"Gagal terhubung ke server chat."}}}}async initSession(e,t){return this.request("/api/v1/client/session/init",{method:"POST",body:JSON.stringify({visitor_uuid:e,project_key:this.projectKey,page_url:window.location.href,page_title:document.title,client_url:window.location.href,metadata:{referrer:document.referrer,userAgent:navigator.userAgent,title:document.title,...t}})})}async pollMessages(e,t=0){return this.request(`/api/v1/client/conversations/${e}/messages?after_id=${t}`,{method:"GET"})}async sendMessage(e,t){return this.request(`/api/v1/client/conversations/${e}/messages`,{method:"POST",body:JSON.stringify({client_message_id:t.client_message_id,content:t.message,message:t.message,sender_name:t.sender_name})})}};var y="beantalk_visitor_uuid",B="beantalk_last_conv_id",w={};function R(s){try{return window.localStorage.getItem(s)}catch{return w[s]||null}}function E(s,e){try{window.localStorage.setItem(s,e)}catch{w[s]=e}}function _(){return typeof crypto<"u"&&typeof crypto.randomUUID=="function"?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,s=>{let e=Math.random()*16|0;return(s==="x"?e:e&3|8).toString(16)})}function p(){return"msg_"+Date.now().toString(36)+"_"+Math.random().toString(36).substring(2,9)}function k(){let s=R(y);return s||(s=_(),E(y,s)),s}function S(s){E(B,s.toString())}var u=class{constructor(e,t,i={}){this.conversationId=null;this.lastMessageId=0;this.isRunning=!1;this.isPolling=!1;this.timer=null;this.isWindowVisible=!0;this.isOnline=!0;this.isWidgetOpen=!1;this.api=e,this.emitter=t,this.activeIntervalMs=i.activeIntervalMs||2500,this.idleIntervalMs=i.idleIntervalMs||15e3,this.setupListeners()}setupListeners(){typeof document<"u"&&document.addEventListener("visibilitychange",()=>{let e=document.visibilityState==="visible";this.isWindowVisible=e,e&&this.isRunning&&this.pollNow()}),typeof window<"u"&&(window.addEventListener("online",()=>{this.isOnline=!0,this.isRunning&&this.pollNow()}),window.addEventListener("offline",()=>{this.isOnline=!1,this.clearTimer()}))}setConversation(e,t=0){this.conversationId=e,t>this.lastMessageId&&(this.lastMessageId=t)}setWidgetOpen(e){this.isWidgetOpen=e,this.isRunning&&this.reschedule()}start(e,t=0){this.conversationId=e,this.lastMessageId=Math.max(this.lastMessageId,t),this.isRunning=!0,this.reschedule()}stop(){this.isRunning=!1,this.clearTimer()}clearTimer(){this.timer&&(clearTimeout(this.timer),this.timer=null)}reschedule(){if(this.clearTimer(),!this.isRunning||!this.isOnline)return;let e=this.isWindowVisible&&this.isWidgetOpen?this.activeIntervalMs:this.idleIntervalMs;this.timer=setTimeout(()=>{this.executePoll()},e)}async pollNow(){this.clearTimer(),await this.executePoll()}async executePoll(){if(!this.isRunning||!this.conversationId||!this.isOnline||this.isPolling){this.reschedule();return}this.isPolling=!0;try{let e=await this.api.pollMessages(this.conversationId,this.lastMessageId);if(e.success&&e.data){let{messages:t,last_id:i}=e.data;if(Array.isArray(t)&&t.length>0){let a=t.filter(n=>n.id>this.lastMessageId);a.length>0&&a.forEach(n=>{this.emitter.emit("message:received",n)}),i&&i>this.lastMessageId&&(this.lastMessageId=i)}}}catch(e){this.emitter.emit("poll:error",e)}finally{this.isPolling=!1,this.reschedule()}}};var o={chat:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+"use strict";var BeanTalk=(()=>{var S=Object.defineProperty;var $=Object.getOwnPropertyDescriptor;var G=Object.getOwnPropertyNames;var V=Object.prototype.hasOwnProperty;var K=(n,e)=>{for(var t in e)S(n,t,{get:e[t],enumerable:!0})},Y=(n,e,t,i)=>{if(e&&typeof e=="object"||typeof e=="function")for(let s of G(e))!V.call(n,s)&&s!==t&&S(n,s,{get:()=>e[s],enumerable:!(i=$(e,s))||i.enumerable});return n};var Q=n=>Y(S({},"__esModule",{value:!0}),n);var ae={};K(ae,{BeanTalk:()=>h,ChatWidget:()=>x,UniversalChatMe:()=>ie,default:()=>ne});var v=class{constructor(){this.events={}}on(e,t){return this.events[e]||(this.events[e]=[]),this.events[e].push(t),this}off(e,t){return this.events[e]?(this.events[e]=this.events[e].filter(i=>i!==t),this):this}emit(e,t){this.events[e]&&this.events[e].forEach(i=>{try{i(t)}catch(s){console.error(`[BeanTalk] Error in event handler for "${e}":`,s)}})}};var b=class{constructor(e,t=""){this.projectKey=e,this.baseUrl=t.replace(/\/+$/,"")}async request(e,t={}){let i=`${this.baseUrl}${e}`,s={Accept:"application/json","Content-Type":"application/json","X-Project-Key":this.projectKey,...t.headers||{}},o=new AbortController,a=setTimeout(()=>o.abort(),12e3);try{let l=await fetch(i,{...t,headers:s,signal:o.signal});return clearTimeout(a),await l.json()}catch(l){return clearTimeout(a),{success:!1,error:{code:l.name==="AbortError"?"TIMEOUT":"NETWORK_ERROR",message:l.message||"Gagal terhubung ke server chat."}}}}async initSession(e,t,i){return this.request("/api/v1/client/session/init",{method:"POST",body:JSON.stringify({visitor_uuid:e,name:i,project_key:this.projectKey,page_url:window.location.href,page_title:document.title,client_url:window.location.href,metadata:{referrer:document.referrer,userAgent:navigator.userAgent,title:document.title,...t}})})}async updateProfile(e,t){return this.request("/api/v1/client/session/profile",{method:"POST",body:JSON.stringify({visitor_uuid:e,name:t})})}async pollMessages(e,t=0){return this.request(`/api/v1/client/conversations/${e}/messages?after_id=${t}`,{method:"GET"})}async sendMessage(e,t){return this.request(`/api/v1/client/conversations/${e}/messages`,{method:"POST",body:JSON.stringify({client_message_id:t.client_message_id,content:t.message,message:t.message,sender_name:t.sender_name})})}};var _="beantalk_visitor_uuid",J="beantalk_last_conv_id",H={};function O(n){try{return window.localStorage.getItem(n)}catch{return H[n]||null}}function I(n,e){try{window.localStorage.setItem(n,e)}catch{H[n]=e}}function X(){return typeof crypto<"u"&&typeof crypto.randomUUID=="function"?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,n=>{let e=Math.random()*16|0;return(n==="x"?e:e&3|8).toString(16)})}function g(){return"msg_"+Date.now().toString(36)+"_"+Math.random().toString(36).substring(2,9)}function F(){let n=O(_);return n||(n=X(),I(_,n)),n}function j(n){I(J,n.toString())}var D="beantalk_customer_name";function m(){return O(D)}function z(n){I(D,n)}var y=class{constructor(e,t,i={}){this.conversationId=null;this.lastMessageId=0;this.isRunning=!1;this.isPolling=!1;this.pollQueued=!1;this.timer=null;this.isWindowVisible=!0;this.isOnline=!0;this.isWidgetOpen=!1;this.burstRemaining=0;this.burstIntervalMs=1200;this.api=e,this.emitter=t,this.activeIntervalMs=i.activeIntervalMs||2500,this.idleIntervalMs=i.idleIntervalMs||15e3,this.setupListeners()}setupListeners(){typeof document<"u"&&document.addEventListener("visibilitychange",()=>{let e=document.visibilityState==="visible";this.isWindowVisible=e,e&&this.isRunning&&this.pollNow()}),typeof window<"u"&&(window.addEventListener("online",()=>{this.isOnline=!0,this.isRunning&&this.pollNow()}),window.addEventListener("offline",()=>{this.isOnline=!1,this.clearTimer()}))}setConversation(e,t=0){this.conversationId=e,t>this.lastMessageId&&(this.lastMessageId=t)}setWidgetOpen(e){this.isWidgetOpen=e,this.isRunning&&this.reschedule()}start(e,t=0){this.conversationId=e,this.lastMessageId=Math.max(this.lastMessageId,t),this.isRunning=!0,this.reschedule()}stop(){this.isRunning=!1,this.clearTimer()}clearTimer(){this.timer&&(clearTimeout(this.timer),this.timer=null)}getInterval(){return this.burstRemaining>0?this.burstIntervalMs:this.isWindowVisible&&this.isWidgetOpen?this.activeIntervalMs:this.idleIntervalMs}reschedule(){this.clearTimer(),!(!this.isRunning||!this.isOnline)&&(this.timer=setTimeout(()=>{this.executePoll()},this.getInterval()))}async pollNow(){if(this.isPolling){this.pollQueued=!0;return}this.clearTimer(),this.burstRemaining=3,await this.executePoll()}async executePoll(){if(!this.isRunning||!this.conversationId||!this.isOnline||this.isPolling){this.reschedule();return}this.isPolling=!0;try{let e=await this.api.pollMessages(this.conversationId,this.lastMessageId);if(e.success&&e.data){let{messages:t,last_id:i}=e.data;if(Array.isArray(t)&&t.length>0){let s=t.filter(o=>o.id>this.lastMessageId);s.length>0&&s.forEach(o=>{this.emitter.emit("message:received",o)}),i&&i>this.lastMessageId&&(this.lastMessageId=i)}}}catch(e){this.emitter.emit("poll:error",e)}finally{this.isPolling=!1,this.burstRemaining>0&&this.burstRemaining--,this.pollQueued?(this.pollQueued=!1,this.burstRemaining=2,this.clearTimer(),this.timer=setTimeout(()=>this.executePoll(),100)):this.reschedule()}}};var r={chat:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
   </svg>`,close:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -26,10 +26,20 @@
     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
   </svg>`,check:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
     <polyline points="20 6 9 17 4 12"></polyline>
+  </svg>`,telegram:`<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .37z"/>
+  </svg>`,shopee:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="9" cy="21" r="1"></circle>
+    <circle cx="20" cy="21" r="1"></circle>
+    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+  </svg>`,tokopedia:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+    <line x1="3" y1="6" x2="21" y2="6"></line>
+    <path d="M16 10a4 4 0 0 1-8 0"></path>
   </svg>`,agentAvatar:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
     <circle cx="12" cy="7" r="4"></circle>
-  </svg>`};function f(s="#1E1E1E"){return`
+  </svg>`};function M(n="#1E1E1E"){return`
     :host {
       all: initial;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -38,8 +48,8 @@
       color: #0F172A;
       box-sizing: border-box;
       -webkit-font-smoothing: antialiased;
-      --chat-primary: ${s};
-      --chat-primary-hover: ${L(s,-15)};
+      --chat-primary: ${n};
+      --chat-primary-hover: ${Z(n,-15)};
       --chat-primary-text: #FFFFFF;
       --chat-bg: #FFFFFF;
       --chat-surface: #F8FAFC;
@@ -198,7 +208,7 @@
       background: var(--chat-primary);
       color: var(--chat-primary-text);
       padding: 24px 20px 36px 20px;
-      position: relative;
+      /* position: relative; */
     }
 
     .welcome-header-top {
@@ -349,68 +359,293 @@
       align-items: center;
     }
 
-    /* CARD 2: SOCIAL REACH US */
-    .card-social-reach {
+    /* ==========================================================================
+       STAGE 1.5: FORM PEMANGGILAN NAMA (KENALAN DULU)
+       ========================================================================== */
+    .stage-identity {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: #F8FAFC;
+    }
+
+    .identity-stage-header {
+      background: var(--chat-primary);
+      color: var(--chat-primary-text);
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .identity-back-btn {
+      background: none;
+      border: none;
+      color: var(--chat-primary-text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border-radius: 8px;
+      transition: background 0.15s ease;
+    }
+
+    .identity-back-btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .identity-stage-header-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .identity-stage-body {
+      flex: 1;
+      padding: 24px 20px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      overflow-y: auto;
+    }
+
+    .identity-hero-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--chat-primary);
+      color: var(--chat-primary-text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .identity-hero-avatar svg {
+      width: 30px;
+      height: 30px;
+    }
+
+    .identity-code-pill {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: #E2E8F0;
+      color: #334155;
+      margin-bottom: 10px;
+      border: 1px solid #CBD5E1;
+    }
+
+    .identity-stage-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0F172A;
+      margin: 0 0 6px 0;
+    }
+
+    .identity-stage-subtitle {
+      font-size: 13px;
+      color: #64748B;
+      line-height: 1.45;
+      margin: 0 0 18px 0;
+      max-width: 290px;
+    }
+
+    .identity-form-box {
+      width: 100%;
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-align: left;
+      box-sizing: border-box;
+    }
+
+    .identity-form-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #334155;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .identity-name-input {
+      width: 100%;
+      padding: 11px 14px;
+      font-size: 13px;
+      border: 1.5px solid #CBD5E1;
+      border-radius: 9px;
+      color: #0F172A;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .identity-name-input:focus {
+      border-color: var(--chat-primary);
+      box-shadow: 0 0 0 3px rgba(197, 155, 39, 0.18);
+    }
+
+    .identity-continue-btn {
+      width: 100%;
+      padding: 11px 18px;
+      background: var(--chat-primary);
+      color: var(--chat-primary-text);
+      border: none;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .identity-continue-btn:hover {
+      opacity: 0.94;
+      transform: translateY(-1px);
+      box-shadow: 0 5px 14px rgba(0, 0, 0, 0.14);
+    }
+
+    .identity-continue-btn:active {
+      transform: translateY(1px);
+    }
+
+    .identity-continue-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* CARD 3: REACH US ANYWHERE ELSE (SOCIAL CHANNELS) */
+    .card-social-channels {
       background: #FFFFFF;
       border-radius: 14px;
       padding: 14px 16px;
       border: 1px solid #E2E8F0;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
     }
 
-    .social-reach-title {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: #94A3B8;
+    .social-channels-header {
       margin-bottom: 10px;
     }
 
-    .social-channel-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+    .social-channels-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #94A3B8;
     }
 
-    .social-channel-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 10px;
-      border-radius: 8px;
-      text-decoration: none;
-      background: #F8FAFC;
-      border: 1px solid #EDF2F7;
-      color: #1E293B;
-      font-size: 12px;
-      font-weight: 500;
-      transition: background 0.15s, border-color 0.15s;
-    }
-
-    .social-channel-item:hover {
-      background: #F1F5F9;
-      border-color: #CBD5E1;
-    }
-
-    .social-left {
+    .social-channels-row {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
-    .social-icon-box {
-      width: 24px;
-      height: 24px;
-      border-radius: 6px;
-      display: flex;
+    .social-channel-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
+      text-decoration: none;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+      cursor: pointer;
+      border: none;
+      color: #FFFFFF;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      flex-shrink: 0;
+    }
+
+    .social-channel-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .social-channel-btn:hover {
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+      filter: brightness(1.05);
+    }
+
+    .social-btn-whatsapp {
+      background: linear-gradient(135deg, #25D366, #128C7E);
       color: #FFFFFF;
     }
 
-    .social-icon-box.whatsapp { background: #25D366; }
-    .social-icon-box.messenger { background: #0084FF; }
-    .social-icon-box.instagram { background: linear-gradient(45deg, #F09433 0%, #E6683C 25%, #DC2743 50%, #CC2366 75%, #BC1888 100%); }
+    .social-btn-instagram {
+      background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+      color: #FFFFFF;
+    }
+
+    .social-btn-messenger {
+      background: linear-gradient(135deg, #00B2FF, #006AFF);
+      color: #FFFFFF;
+    }
+
+    .social-btn-telegram {
+      background: linear-gradient(135deg, #2AABEE, #229ED9);
+      color: #FFFFFF;
+    }
+
+    .social-btn-shopee {
+      background: linear-gradient(135deg, #EE4D2D, #FF5722);
+      color: #FFFFFF;
+    }
+
+    .social-btn-tokopedia {
+      background: linear-gradient(135deg, #03AC0E, #00880B);
+      color: #FFFFFF;
+    }
+
+    .chat-identity-banner {
+      padding: 8px 12px;
+      background: #F8FAFC;
+      border-bottom: 1px solid #E2E8F0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 11px;
+      color: #475569;
+      flex-shrink: 0;
+    }
+
+    .chat-identity-banner input {
+      flex: 1;
+      padding: 4px 8px;
+      font-size: 11px;
+      border: 1px solid #CBD5E1;
+      border-radius: 6px;
+      outline: none;
+    }
+
+    .chat-identity-banner button {
+      padding: 4px 8px;
+      background: var(--chat-primary);
+      color: var(--chat-primary-text);
+      border: none;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
 
     .welcome-footer {
       text-align: center;
@@ -680,7 +915,7 @@
         display: none;
       }
     }
-  `}function L(s,e){let t=parseInt(s.replace("#",""),16),i=(t>>16)+e,a=(t>>8&255)+e,n=(t&255)+e;return i=Math.min(255,Math.max(0,i)),a=Math.min(255,Math.max(0,a)),n=Math.min(255,Math.max(0,n)),"#"+(a|n<<8|i<<16).toString(16).padStart(6,"0")}var v=class{constructor(e,t){this.isOpen=!1;this.currentStage="welcome";this.unreadCount=0;this.messages=[];this.sessionData=null;this.options=e,this.emitter=t;let i=document.getElementById("beantalk-chat-root")||document.getElementById("universal-chat-root");i||(i=document.createElement("div"),i.id="beantalk-chat-root",document.body.appendChild(i)),this.shadowRoot=i.attachShadow({mode:"open"}),this.styleEl=document.createElement("style"),this.styleEl.textContent=f(e.accentColor||"#1E1E1E"),this.shadowRoot.appendChild(this.styleEl),this.renderSkeleton(),this.bindEvents()}updateTheming(e){this.styleEl&&(this.styleEl.textContent=f(e))}setSessionData(e){this.sessionData=e;let t=e.widget||e.widget_settings||{};t.primary_color&&this.updateTheming(t.primary_color);let i=t.greeting_title||t.header_title||e.project?.name||"Chat Support",a=t.greeting_subtitle||t.greeting_text||"Hallo! Ada yang bisa kami bantu? Tanyakan apapun di sini.",n=this.shadowRoot.querySelector(".welcome-title");n&&(n.textContent=i);let l=this.shadowRoot.querySelector(".welcome-subtitle");l&&(l.textContent=a);let c=this.shadowRoot.querySelector(".chat-header-title");c&&(c.textContent=e.project?.name||"Store Support");let x=this.shadowRoot.querySelector(".welcome-brand-badge");x&&(x.textContent=e.project?.name||"Live Support"),e.conversation?.messages&&e.conversation.messages.length>0&&this.setMessages(e.conversation.messages)}renderSkeleton(){let e=this.options.storeName||"Store Support",t=this.options.greetingTitle||"Hallo!",i=this.options.greetingSubtitle||"Apakah ada yang bisa kami bantu? Tanyakan informasi apapun di sini.",n=`
+  `}function Z(n,e){let t=parseInt(n.replace("#",""),16),i=(t>>16)+e,s=(t>>8&255)+e,o=(t&255)+e;return i=Math.min(255,Math.max(0,i)),s=Math.min(255,Math.max(0,s)),o=Math.min(255,Math.max(0,o)),"#"+(s|o<<8|i<<16).toString(16).padStart(6,"0")}var f=class{constructor(e,t){this.isOpen=!1;this.currentStage="welcome";this.unreadCount=0;this.messages=[];this.sessionData=null;this.customerName="";this.customerCode="";this.audioCtx=null;this.options=e,this.emitter=t;let i=document.getElementById("beantalk-chat-root")||document.getElementById("universal-chat-root");i||(i=document.createElement("div"),i.id="beantalk-chat-root",document.body.appendChild(i)),this.shadowRoot=i.attachShadow({mode:"open"}),this.styleEl=document.createElement("style"),this.styleEl.textContent=M(e.accentColor||"#1E1E1E"),this.shadowRoot.appendChild(this.styleEl),this.renderSkeleton(),this.bindEvents();let s=m();s&&this.applyCustomerName(s,!1)}updateTheming(e){this.styleEl&&(this.styleEl.textContent=M(e))}setSessionData(e){this.sessionData=e;let t=e.widget||e.widget_settings||{};t.primary_color&&this.updateTheming(t.primary_color);let i=t.greeting_title||t.header_title||e.project?.name||"Chat Support",s=t.greeting_subtitle||t.greeting_text||"Hallo! Ada yang bisa kami bantu? Tanyakan apapun di sini.",o=this.shadowRoot.querySelector(".welcome-title");o&&(o.textContent=i);let a=this.shadowRoot.querySelector(".welcome-subtitle");a&&(a.textContent=s);let l=t.support_title||this.options.supportTitle||this.options.brandName||this.options.storeName||e.project?.name||"Customer Support",u=this.shadowRoot.querySelector("#cardChatName");u&&(u.textContent=l),this.identitySupportTag&&(this.identitySupportTag.textContent=l);let w=this.shadowRoot.querySelector(".chat-header-title");w&&(w.textContent=l);let A=this.shadowRoot.querySelector(".welcome-brand-badge");A&&(A.textContent=e.project?.name||"Live Support");let E=e.visitor||{},k=E.customer_code||E.customer_code_formatted;k&&(this.customerCode=k,this.identityCustCode&&(this.identityCustCode.textContent=k));let U=E.name,W=m(),B=U||W;B?this.applyCustomerName(B,!1):this.chatInlineIdentityBanner&&(this.chatInlineIdentityBanner.style.display="flex"),e.conversation?.messages&&e.conversation.messages.length>0&&this.setMessages(e.conversation.messages);let C=this.shadowRoot.querySelector("#socialChannelsCard"),R=this.shadowRoot.querySelector("#socialChannelsTitle"),T=this.shadowRoot.querySelector("#socialChannelsRow"),L=t.social_channels||[],q=t.find_us_title||"Reach Us Anywhere Else";if(R&&(R.textContent=q),C&&T){let N=Array.isArray(L)?L.filter(c=>c.enabled&&c.url):[];N.length>0?(T.innerHTML="",N.forEach(c=>{let p=document.createElement("a");p.className=`social-channel-btn social-btn-${c.id}`,p.href=c.url,p.target="_blank",p.rel="noopener noreferrer",p.title=`Hubungi via ${c.name}`;let P=r[c.icon||c.id]||r.chat;p.innerHTML=P,T.appendChild(p)}),C.style.display="block"):C.style.display="none"}}applyCustomerName(e,t=!0){let i=e.trim();i&&(this.customerName=i,t&&(z(i),this.emitter.emit("customer:rename",i)),this.identityNameInput&&(this.identityNameInput.value=i),this.chatInlineIdentityBanner&&(this.chatInlineIdentityBanner.style.display="none"),this.composerInput&&(this.composerInput.placeholder=`Tulis pesan sebagai ${i}...`))}renderSkeleton(){let e=this.options.brandName||this.options.storeName||"Customer Support",t=this.options.supportTitle||e||"Customer Support",i=this.options.greetingTitle||"Hallo!",s=this.options.greetingSubtitle||"Apakah ada yang bisa kami bantu? Tanyakan informasi apapun di sini.",a=`
       <div class="chat-wrapper ${this.options.position==="bottom-left"?"pos-bottom-left":""}">
         <!-- WIDGET WINDOW -->
         <div class="chat-window">
@@ -690,64 +925,86 @@
             <div class="welcome-header">
               <div class="welcome-header-top">
                 <span class="welcome-brand-badge">${e}</span>
-                <button type="button" class="welcome-close-btn" aria-label="Tutup">${o.close}</button>
+                <button type="button" class="welcome-close-btn" aria-label="Tutup">${r.close}</button>
               </div>
-              <h2 class="welcome-title">${t}</h2>
-              <p class="welcome-subtitle">${i}</p>
+              <h2 class="welcome-title">${i}</h2>
+              <p class="welcome-subtitle">${s}</p>
             </div>
 
             <div class="welcome-body">
-              <!-- CARD 1: ACTIVE CHAT -->
-              <div class="card-active-chat">
+              <!-- CARD 1: STORE SUPPORT (ACTIVE CHAT TRIGGER) -->
+              <div class="card-active-chat" id="cardActiveChat">
                 <div class="card-live-indicator">
                   <span class="live-dot"></span>
                   <span>Live Chat Available</span>
                 </div>
                 <div class="card-chat-row">
                   <div class="card-chat-avatar">
-                    ${o.agentAvatar}
+                    ${r.agentAvatar}
                   </div>
                   <div class="card-chat-info">
-                    <div class="card-chat-name">${e}</div>
-                    <div class="card-chat-snippet" id="card-snippet">Mulai obrolan baru dengan agen kami...</div>
+                    <div class="card-chat-name" id="cardChatName">${t}</div>
+                    <div class="card-chat-snippet" id="card-snippet">Mulai obrolan baru dengan tim kami...</div>
                   </div>
                   <div class="card-chat-chevron">
-                    ${o.chevronRight}
+                    ${r.chevronRight}
                   </div>
                 </div>
               </div>
 
-              <!-- CARD 2: REACH US ELSEWHERE -->
-              <div class="card-social-reach">
-                <div class="social-reach-title">Atau Hubungi Kami Lewat</div>
-                <div class="social-channel-list">
-                  <a href="${this.options.whatsappNumber?"https://wa.me/"+this.options.whatsappNumber:"#"}" target="_blank" class="social-channel-item">
-                    <div class="social-left">
-                      <div class="social-icon-box whatsapp">${o.whatsapp}</div>
-                      <span>WhatsApp CS Resmi</span>
-                    </div>
-                    <span style="color:#94A3B8;">${o.chevronRight}</span>
-                  </a>
-                  <a href="${this.options.instagramHandle?"https://instagram.com/"+this.options.instagramHandle:"#"}" target="_blank" class="social-channel-item">
-                    <div class="social-left">
-                      <div class="social-icon-box instagram">${o.instagram}</div>
-                      <span>Instagram Direct</span>
-                    </div>
-                    <span style="color:#94A3B8;">${o.chevronRight}</span>
-                  </a>
-                  <a href="${this.options.messengerUrl||"#"}" target="_blank" class="social-channel-item">
-                    <div class="social-left">
-                      <div class="social-icon-box messenger">${o.messenger}</div>
-                      <span>Facebook Messenger</span>
-                    </div>
-                    <span style="color:#94A3B8;">${o.chevronRight}</span>
-                  </a>
+              <!-- CARD 2: REACH US ANYWHERE ELSE / FIND US SOMEWHERE ELSE -->
+              <div class="card-social-channels" id="socialChannelsCard" style="display: none;">
+                <div class="social-channels-header">
+                  <span class="social-channels-title" id="socialChannelsTitle">Reach Us Anywhere Else</span>
+                </div>
+                <div class="social-channels-row" id="socialChannelsRow">
+                  <!-- Populated dynamically from server settings -->
                 </div>
               </div>
             </div>
 
             <div class="welcome-footer">
-              ${o.sparkles} <span>Powered by BeanTalk</span>
+              ${r.sparkles} <span>Powered by BeanTalk \u2022 Web Chat</span>
+            </div>
+          </div>
+
+          <!-- ================= STAGE 1.5: FORM PEMANGGILAN NAMA ================= -->
+          <div class="stage-identity" style="display: none;">
+            <div class="identity-stage-header">
+              <button type="button" class="identity-back-btn" id="identityBackBtn" aria-label="Kembali">${r.back}</button>
+              <div class="identity-stage-header-title" id="identitySupportTag">${t}</div>
+              <button type="button" class="welcome-close-btn" aria-label="Tutup">${r.close}</button>
+            </div>
+
+            <div class="identity-stage-body">
+              <div class="identity-hero-avatar">
+                ${r.agentAvatar}
+              </div>
+              <div class="identity-code-pill" id="identityCustCode">Tamu</div>
+              <h3 class="identity-stage-title">Halo! Kenalan Dulu Yuk</h3>
+              <p class="identity-stage-subtitle">
+                Boleh kami tahu nama panggilan Anda? Agar tim CS kami dapat menyapa Anda dengan ramah.
+              </p>
+
+              <div class="identity-form-box">
+                <label class="identity-form-label" for="identityNameInput">Nama Panggilan Anda</label>
+                <input 
+                  type="text" 
+                  class="identity-name-input" 
+                  id="identityNameInput" 
+                  placeholder="Contoh: Budi, Sarah, Alex..." 
+                  maxlength="40" 
+                  autocomplete="name"
+                />
+                <button type="button" class="identity-continue-btn" id="identityContinueBtn">
+                  <span>Lanjut ke Obrolan</span>
+                  ${r.chevronRight}
+                </button>
+              </div>
+            </div>
+
+            <div class="welcome-footer">
+              ${r.sparkles} <span>Powered by BeanTalk \u2022 Web Chat</span>
             </div>
           </div>
 
@@ -755,17 +1012,24 @@
           <div class="stage-chat">
             <div class="chat-header">
               <div class="chat-header-left">
-                <button type="button" class="chat-back-btn" aria-label="Kembali">${o.back}</button>
+                <button type="button" class="chat-back-btn" aria-label="Kembali">${r.back}</button>
                 <div class="chat-header-avatar">
-                  ${o.agentAvatar}
+                  ${r.agentAvatar}
                   <span class="header-online-dot"></span>
                 </div>
                 <div class="chat-header-info">
-                  <div class="chat-header-title">${e}</div>
+                  <div class="chat-header-title">${t}</div>
                   <div class="chat-header-status">Online \u2022 Membalas dalam hitungan menit</div>
                 </div>
               </div>
-              <button type="button" class="chat-close-btn" aria-label="Tutup">${o.close}</button>
+              <button type="button" class="chat-close-btn" aria-label="Tutup">${r.close}</button>
+            </div>
+
+            <!-- INLINE IDENTITY BANNER -->
+            <div class="chat-identity-banner" id="chatInlineIdentityBanner" style="display: none;">
+              <span>Boleh tahu nama Anda?</span>
+              <input type="text" id="inlineIdentityInput" placeholder="Nama Anda..." maxlength="40" />
+              <button type="button" id="inlineIdentityBtn">Simpan</button>
             </div>
 
             <!-- MESSAGES THREAD -->
@@ -776,23 +1040,23 @@
             <!-- COMPOSER BAR -->
             <div class="chat-composer-box">
               <textarea class="composer-textarea" placeholder="Tulis pesan ke CS..." rows="1"></textarea>
-              <button type="button" class="composer-send-btn" aria-label="Kirim" disabled>${o.send}</button>
+              <button type="button" class="composer-send-btn" aria-label="Kirim" disabled>${r.send}</button>
             </div>
           </div>
         </div>
 
         <!-- FLOATING LAUNCHER BUTTON -->
         <button type="button" class="chat-launcher-btn" aria-label="Buka Chat">
-          <div class="launcher-icon-chat">${o.chat}</div>
-          <div class="launcher-icon-close">${o.close}</div>
+          <div class="launcher-icon-chat">${r.chat}</div>
+          <div class="launcher-icon-close">${r.close}</div>
           <div class="launcher-unread-badge">0</div>
         </button>
       </div>
-    `,l=document.createElement("div");l.innerHTML=n,this.shadowRoot.appendChild(l.firstElementChild),this.wrapperEl=this.shadowRoot.querySelector(".chat-wrapper"),this.launcherBtn=this.shadowRoot.querySelector(".chat-launcher-btn"),this.unreadBadge=this.shadowRoot.querySelector(".launcher-unread-badge"),this.stageWelcome=this.shadowRoot.querySelector(".stage-welcome"),this.stageChat=this.shadowRoot.querySelector(".stage-chat"),this.messagesArea=this.shadowRoot.querySelector(".chat-messages-area"),this.composerInput=this.shadowRoot.querySelector(".composer-textarea"),this.composerSendBtn=this.shadowRoot.querySelector(".composer-send-btn"),this.cardSnippetText=this.shadowRoot.querySelector("#card-snippet")}bindEvents(){this.launcherBtn.addEventListener("click",()=>{this.toggle()}),this.shadowRoot.querySelectorAll(".welcome-close-btn, .chat-close-btn").forEach(i=>{i.addEventListener("click",()=>this.close())});let e=this.shadowRoot.querySelector(".card-active-chat");e&&e.addEventListener("click",()=>{this.goToStage("chat")});let t=this.shadowRoot.querySelector(".chat-back-btn");t&&t.addEventListener("click",()=>{this.goToStage("welcome")}),this.composerInput.addEventListener("input",()=>{this.composerInput.style.height="auto",this.composerInput.style.height=Math.min(this.composerInput.scrollHeight,90)+"px";let i=this.composerInput.value.trim().length>0;this.composerSendBtn.disabled=!i}),this.composerInput.addEventListener("keydown",i=>{i.key==="Enter"&&!i.shiftKey&&(i.preventDefault(),this.handleSend())}),this.composerSendBtn.addEventListener("click",()=>{this.handleSend()})}handleSend(){let e=this.composerInput.value.trim();if(!e)return;this.composerInput.value="",this.composerInput.style.height="24px",this.composerSendBtn.disabled=!0;let t={id:Date.now(),conversation_id:this.sessionData?.conversation?.id||0,client_message_id:p(),sender_type:"visitor",sender_name:"Anda",message:e,created_at:new Date().toISOString()};this.appendMessage(t),this.emitter.emit("ui:send",t)}goToStage(e){this.currentStage=e,e==="welcome"?(this.stageWelcome.style.display="flex",this.stageChat.style.display="none"):(this.stageWelcome.style.display="none",this.stageChat.style.display="flex",this.scrollToBottom(),setTimeout(()=>this.composerInput.focus(),150))}open(){this.isOpen=!0,this.wrapperEl.classList.add("is-open"),this.unreadCount=0,this.updateUnreadBadge(),this.emitter.emit("widget:opened"),this.currentStage==="chat"&&(this.scrollToBottom(),setTimeout(()=>this.composerInput.focus(),150))}close(){this.isOpen=!1,this.wrapperEl.classList.remove("is-open"),this.emitter.emit("widget:closed")}toggle(){this.isOpen?this.close():this.open()}setMessages(e){this.messages=[...e],this.messagesArea.innerHTML="",e.forEach(t=>this.renderMessageBubble(t)),this.updateSnippet(),this.scrollToBottom()}appendMessage(e){this.messages.some(i=>i.id===e.id||e.client_message_id&&i.client_message_id===e.client_message_id)||(this.messages.push(e),this.renderMessageBubble(e),this.updateSnippet(),this.scrollToBottom(),!this.isOpen&&e.sender_type!=="visitor"&&(this.unreadCount++,this.updateUnreadBadge()))}renderMessageBubble(e){let t=e.sender_type==="visitor",i=document.createElement("div");i.className=`msg-bubble-row ${t?"is-visitor":"is-agent"}`;let a=this.formatTime(e.created_at),n=e.content||e.message||"";i.innerHTML=`
+    `,l=document.createElement("div");l.innerHTML=a,this.shadowRoot.appendChild(l.firstElementChild),this.wrapperEl=this.shadowRoot.querySelector(".chat-wrapper"),this.launcherBtn=this.shadowRoot.querySelector(".chat-launcher-btn"),this.unreadBadge=this.shadowRoot.querySelector(".launcher-unread-badge"),this.stageWelcome=this.shadowRoot.querySelector(".stage-welcome"),this.stageIdentity=this.shadowRoot.querySelector(".stage-identity"),this.stageChat=this.shadowRoot.querySelector(".stage-chat"),this.messagesArea=this.shadowRoot.querySelector(".chat-messages-area"),this.composerInput=this.shadowRoot.querySelector(".composer-textarea"),this.composerSendBtn=this.shadowRoot.querySelector(".composer-send-btn"),this.cardSnippetText=this.shadowRoot.querySelector("#card-snippet"),this.identityCustCode=this.shadowRoot.querySelector("#identityCustCode"),this.identityNameInput=this.shadowRoot.querySelector("#identityNameInput"),this.identityContinueBtn=this.shadowRoot.querySelector("#identityContinueBtn"),this.identityBackBtn=this.shadowRoot.querySelector("#identityBackBtn"),this.identitySupportTag=this.shadowRoot.querySelector("#identitySupportTag"),this.chatInlineIdentityBanner=this.shadowRoot.querySelector("#chatInlineIdentityBanner"),this.inlineIdentityInput=this.shadowRoot.querySelector("#inlineIdentityInput"),this.inlineIdentityBtn=this.shadowRoot.querySelector("#inlineIdentityBtn")}bindEvents(){let e=()=>this.unlockAudio();this.launcherBtn.addEventListener("click",e),window.addEventListener("click",e,{passive:!0}),window.addEventListener("keydown",e,{passive:!0}),window.addEventListener("touchstart",e,{passive:!0}),this.launcherBtn.addEventListener("click",()=>{this.toggle()}),this.shadowRoot.querySelectorAll(".welcome-close-btn, .chat-close-btn").forEach(a=>{a.addEventListener("click",()=>this.close())});let t=this.shadowRoot.querySelector(".card-active-chat");t&&t.addEventListener("click",()=>{this.goToStage("identity")}),this.identityBackBtn&&this.identityBackBtn.addEventListener("click",()=>{this.goToStage("welcome")});let i=()=>{let a=this.identityNameInput?this.identityNameInput.value.trim():"";a&&this.applyCustomerName(a,!0),this.goToStage("chat")};this.identityContinueBtn&&this.identityContinueBtn.addEventListener("click",i),this.identityNameInput&&this.identityNameInput.addEventListener("keydown",a=>{a.key==="Enter"&&(a.preventDefault(),i())});let s=this.shadowRoot.querySelector(".chat-back-btn");s&&s.addEventListener("click",()=>{this.goToStage("welcome")});let o=()=>{let a=this.inlineIdentityInput.value.trim();a&&this.applyCustomerName(a,!0)};this.inlineIdentityBtn&&this.inlineIdentityBtn.addEventListener("click",o),this.inlineIdentityInput&&this.inlineIdentityInput.addEventListener("keydown",a=>{a.key==="Enter"&&(a.preventDefault(),o())}),this.composerInput.addEventListener("input",()=>{this.composerInput.style.height="auto",this.composerInput.style.height=Math.min(this.composerInput.scrollHeight,90)+"px";let a=this.composerInput.value.trim().length>0;this.composerSendBtn.disabled=!a}),this.composerInput.addEventListener("keydown",a=>{a.key==="Enter"&&!a.shiftKey&&(a.preventDefault(),this.handleSend())}),this.composerSendBtn.addEventListener("click",()=>{this.handleSend()})}handleSend(){let e=this.composerInput.value.trim();if(!e)return;this.composerInput.value="",this.composerInput.style.height="24px",this.composerSendBtn.disabled=!0;let t={id:Date.now(),conversation_id:this.sessionData?.conversation?.id||0,client_message_id:g(),sender_type:"visitor",sender_name:this.customerName||"Anda",message:e,created_at:new Date().toISOString()};this.appendMessage(t),this.emitter.emit("ui:send",t)}goToStage(e){this.currentStage=e,e==="welcome"?(this.stageWelcome.style.display="flex",this.stageIdentity&&(this.stageIdentity.style.display="none"),this.stageChat.style.display="none"):e==="identity"?(this.stageWelcome.style.display="none",this.stageIdentity&&(this.stageIdentity.style.display="flex"),this.stageChat.style.display="none",this.identityNameInput&&(this.customerName&&(this.identityNameInput.value=this.customerName),setTimeout(()=>this.identityNameInput.focus(),150))):(this.stageWelcome.style.display="none",this.stageIdentity&&(this.stageIdentity.style.display="none"),this.stageChat.style.display="flex",this.scrollToBottom(),setTimeout(()=>this.composerInput.focus(),150))}open(){this.isOpen=!0,this.wrapperEl.classList.add("is-open"),this.unreadCount=0,this.updateUnreadBadge(),this.emitter.emit("widget:opened"),this.currentStage==="chat"&&(this.scrollToBottom(),setTimeout(()=>this.composerInput.focus(),150))}close(){this.isOpen=!1,this.wrapperEl.classList.remove("is-open"),this.emitter.emit("widget:closed")}toggle(){this.isOpen?this.close():this.open()}setMessages(e){this.messages=[...e],this.messagesArea.innerHTML="",e.forEach(t=>this.renderMessageBubble(t)),this.updateSnippet(),this.scrollToBottom()}unlockAudio(){try{let e=window.AudioContext||window.webkitAudioContext;if(!e)return;this.audioCtx||(this.audioCtx=new e),this.audioCtx.state==="suspended"&&this.audioCtx.resume()}catch{}}playNotificationSound(){try{if(this.unlockAudio(),!this.audioCtx)return;let e=this.audioCtx.currentTime,t=this.audioCtx.createOscillator(),i=this.audioCtx.createGain();t.type="sine",t.frequency.setValueAtTime(659.25,e),t.frequency.exponentialRampToValueAtTime(880,e+.08),i.gain.setValueAtTime(0,e),i.gain.linearRampToValueAtTime(.25,e+.02),i.gain.exponentialRampToValueAtTime(1e-4,e+.4),t.connect(i),i.connect(this.audioCtx.destination),t.start(e),t.stop(e+.4)}catch{}}appendMessage(e){this.messages.some(i=>i.id===e.id||e.client_message_id&&i.client_message_id===e.client_message_id)||(this.messages.push(e),this.renderMessageBubble(e),this.updateSnippet(),this.scrollToBottom(),e.sender_type!=="visitor"&&this.playNotificationSound(),!this.isOpen&&e.sender_type!=="visitor"&&(this.unreadCount++,this.updateUnreadBadge()))}renderMessageBubble(e){let t=e.sender_type==="visitor",i=document.createElement("div");i.className=`msg-bubble-row ${t?"is-visitor":"is-agent"}`;let s=this.formatTime(e.created_at),o=e.content||e.message||"";i.innerHTML=`
       <div class="msg-sender-name">${t?"Anda":e.sender_name||"Agent"}</div>
-      <div class="msg-bubble">${O(n)}</div>
+      <div class="msg-bubble">${ee(o)}</div>
       <div class="msg-time-status">
-        <span>${a}</span>
-        ${t?`<span style="display:inline-flex;">${o.check}</span>`:""}
+        <span>${s}</span>
+        ${t?`<span style="display:inline-flex;">${r.check}</span>`:""}
       </div>
-    `,this.messagesArea.appendChild(i)}updateSnippet(){if(this.messages.length>0){let e=this.messages[this.messages.length-1],t=e.sender_type==="visitor"?"Anda: ":"",i=e.content||e.message||"";this.cardSnippetText.textContent=t+i}}updateUnreadBadge(){this.unreadCount>0?(this.unreadBadge.textContent=this.unreadCount>9?"9+":this.unreadCount.toString(),this.unreadBadge.classList.add("has-unread")):this.unreadBadge.classList.remove("has-unread")}scrollToBottom(){setTimeout(()=>{this.messagesArea.scrollTop=this.messagesArea.scrollHeight},40)}formatTime(e){try{return new Date(e).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}catch{return""}}};function O(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}var d=class{constructor(e){this.sessionData=null;this.initialized=!1;this.options=e,this.emitter=new g;let t=e.apiUrl||window.location.origin;this.api=new m(e.projectKey,t),this.ui=new v(e,this.emitter),this.transport=new u(this.api,this.emitter),this.bindEvents(),this.bootstrap()}isReady(){return this.initialized}bindEvents(){this.emitter.on("ui:send",async e=>{if(!this.sessionData?.conversation?.id){console.error("[BeanTalk] Percakapan belum diinisialisasi.");return}try{let t=await this.api.sendMessage(this.sessionData.conversation.id,{client_message_id:e.client_message_id||p(),message:e.content||e.message||"",sender_name:"Visitor"});t.success&&t.data&&(this.emitter.emit("message:sent",t.data),this.transport.pollNow())}catch(t){console.error("[BeanTalk] Gagal mengirim pesan:",t)}}),this.emitter.on("message:received",e=>{this.ui.appendMessage(e),this.emitter.emit("message",e)}),this.emitter.on("widget:opened",()=>{this.transport.setWidgetOpen(!0),this.transport.pollNow()}),this.emitter.on("widget:closed",()=>{this.transport.setWidgetOpen(!1)})}async bootstrap(){let e=this.options.visitorUuid||k();try{let t=await this.api.initSession(e);if(t.success&&t.data){this.sessionData=t.data;let i=t.data.conversation;if(i){S(i.id),this.ui.setSessionData(t.data);let a=0;i.messages&&i.messages.length>0&&(a=Math.max(...i.messages.map(n=>n.id))),this.transport.start(i.id,a)}this.initialized=!0,this.emitter.emit("ready",t.data)}else console.warn("[BeanTalk] Init session warning:",t.error?.message)}catch(t){console.error("[BeanTalk] Failed to initialize chat session:",t)}}open(){this.ui.open()}close(){this.ui.close()}toggle(){this.ui.toggle()}on(e,t){return this.emitter.on(e,t),this}sendMessage(e){if(!e.trim())return;let t={id:Date.now(),conversation_id:this.sessionData?.conversation?.id||0,client_message_id:p(),sender_type:"visitor",sender_name:"Anda",content:e.trim(),message:e.trim(),created_at:new Date().toISOString()};this.ui.appendMessage(t),this.emitter.emit("ui:send",t)}},H=d,r=null,h={init(s){return r||(r=new d(s)),r},open(){r?.open()},close(){r?.close()},toggle(){r?.toggle()},on(s,e){r?.on(s,e)},sendMessage(s){r?.sendMessage(s)},getInstance(){return r}};typeof window<"u"&&(window.BeanTalk=h,window.ChatWidget=h,window.UniversalChatMe=d,document.addEventListener("DOMContentLoaded",()=>{let s=document.querySelectorAll("script[data-project-key]");if(s.length>0){let e=s[0],t=e.getAttribute("data-project-key"),i=e.getAttribute("data-api-url")||void 0,a=e.getAttribute("data-color")||void 0,n=e.getAttribute("data-store-name")||void 0;t&&!r&&h.init({projectKey:t,apiUrl:i,accentColor:a,storeName:n})}}));var D=h;return I(j);})();
+    `,this.messagesArea.appendChild(i)}updateSnippet(){if(this.messages.length>0){let e=this.messages[this.messages.length-1],t=e.sender_type==="visitor"?"Anda: ":"",i=e.content||e.message||"";this.cardSnippetText.textContent=t+i}}updateUnreadBadge(){this.unreadCount>0?(this.unreadBadge.textContent=this.unreadCount>9?"9+":this.unreadCount.toString(),this.unreadBadge.classList.add("has-unread")):this.unreadBadge.classList.remove("has-unread")}scrollToBottom(){setTimeout(()=>{this.messagesArea.scrollTop=this.messagesArea.scrollHeight},40)}formatTime(e){try{return new Date(e).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}catch{return""}}};function ee(n){return n.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}function te(){if(typeof document>"u")return"";let n=document.currentScript;if(n&&n.src)try{return new URL(n.src,window.location.href).origin}catch{}let e=document.querySelector("script[data-project-key]");if(e&&e.src)try{return new URL(e.src,window.location.href).origin}catch{}let t=document.querySelector('script[src*="chat-widget.js"], script[src*="widget.js"]');if(t&&t.src)try{return new URL(t.src,window.location.href).origin}catch{}return""}var h=class{constructor(e){this.sessionData=null;this.initialized=!1;this.sendQueue=[];this.isSending=!1;this.options=e,this.emitter=new v;let t=te(),i=e.apiUrl||t||(typeof window<"u"?window.location.origin:"");this.api=new b(e.projectKey,i),this.ui=new f(e,this.emitter),this.transport=new y(this.api,this.emitter),this.bindEvents(),this.bootstrap()}isReady(){return this.initialized}async processSendQueue(){if(!(this.isSending||this.sendQueue.length===0)){for(this.isSending=!0;this.sendQueue.length>0;){let e=this.sendQueue.shift();if(!this.sessionData?.conversation?.id){console.error("[BeanTalk] Percakapan belum diinisialisasi.");continue}try{let t=await this.api.sendMessage(this.sessionData.conversation.id,{client_message_id:e.client_message_id||g(),message:e.content||e.message||"",sender_name:e.sender_name||"Tamu"});t.success&&t.data&&this.emitter.emit("message:sent",t.data)}catch(t){console.error("[BeanTalk] Gagal mengirim pesan:",t)}}this.isSending=!1,this.transport.pollNow()}}bindEvents(){this.emitter.on("ui:send",e=>{this.sendQueue.push(e),this.processSendQueue()}),this.emitter.on("customer:rename",async e=>{let t=this.options.visitorUuid||F();try{await this.api.updateProfile(t,e)}catch(i){console.warn("[BeanTalk] Gagal update nama profil pengunjung:",i)}}),this.emitter.on("message:received",e=>{this.ui.appendMessage(e),this.emitter.emit("message",e)}),this.emitter.on("widget:opened",()=>{this.transport.setWidgetOpen(!0),this.transport.pollNow()}),this.emitter.on("widget:closed",()=>{this.transport.setWidgetOpen(!1)})}async bootstrap(){let e=this.options.visitorUuid||F(),t=m();try{let i=await this.api.initSession(e,void 0,t||void 0);if(i.success&&i.data){this.sessionData=i.data;let s=i.data.conversation;if(s){j(s.id),this.ui.setSessionData(i.data);let o=0;s.messages&&s.messages.length>0&&(o=Math.max(...s.messages.map(a=>a.id))),this.transport.start(s.id,o)}this.initialized=!0,this.emitter.emit("ready",i.data)}else console.warn("[BeanTalk] Init session warning:",i.error?.message)}catch(i){console.error("[BeanTalk] Failed to initialize chat session:",i)}}open(){this.ui.open()}close(){this.ui.close()}toggle(){this.ui.toggle()}on(e,t){return this.emitter.on(e,t),this}sendMessage(e){if(!e.trim())return;let t={id:Date.now(),conversation_id:this.sessionData?.conversation?.id||0,client_message_id:g(),sender_type:"visitor",sender_name:"Anda",content:e.trim(),message:e.trim(),created_at:new Date().toISOString()};this.ui.appendMessage(t),this.emitter.emit("ui:send",t)}},ie=h,d=null,x={init(n){return d||(d=new h(n)),d},open(){d?.open()},close(){d?.close()},toggle(){d?.toggle()},on(n,e){d?.on(n,e)},sendMessage(n){d?.sendMessage(n)},getInstance(){return d}};if(typeof window<"u"){let n=function(){let e=document.querySelectorAll("script[data-project-key]");if(e.length>0){let t=e[0],i=t.getAttribute("data-project-key"),s="";if(t.src)try{s=new URL(t.src,window.location.href).origin}catch{}let o=t.getAttribute("data-api-url")||s||void 0,a=t.getAttribute("data-color")||void 0,l=t.getAttribute("data-brand-name")||t.getAttribute("data-store-name")||void 0,u=t.getAttribute("data-support-title")||void 0;i&&!d&&x.init({projectKey:i,apiUrl:o,accentColor:a,brandName:l,storeName:l,supportTitle:u})}};se=n,window.BeanTalk=x,window.ChatWidget=x,window.UniversalChatMe=h,document.readyState==="loading"?document.addEventListener("DOMContentLoaded",n):n()}var se,ne=x;return Q(ae);})();

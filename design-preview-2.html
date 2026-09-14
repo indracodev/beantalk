@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-[#F5F5F7] text-[#1D1D1F] antialiased">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeanTalk — Admin Console</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;450;500;550;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', 'Inter', 'SF Pro Text', 'system-ui', 'sans-serif'],
+                        mono: ['SF Mono', 'JetBrains Mono', 'ui-monospace', 'Menlo', 'monospace']
+                    },
+                    colors: {
+                        apple: {
+                            canvas: '#F5F5F7',
+                            surface: '#FFFFFF',
+                            sidebar: '#F2F2F7',
+                            border: 'rgba(0, 0, 0, 0.08)',
+                            subtleBorder: 'rgba(0, 0, 0, 0.04)',
+                            divider: '#E5E5EA',
+                            textPrimary: '#1D1D1F',
+                            textSecondary: '#6E6E73',
+                            textTertiary: '#86868B',
+                            blue: '#0071E3',
+                            blueHover: '#0077ED',
+                            green: '#34C759',
+                            orange: '#FF9500',
+                            red: '#FF3B30',
+                        }
+                    },
+                    boxShadow: {
+                        'apple-sm': '0 1px 2px rgba(0, 0, 0, 0.04)',
+                        'apple-card': '0 2px 8px -2px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03)',
+                        'apple-popover': '0 12px 32px -4px rgba(0, 0, 0, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.06)',
+                        'apple-modal': '0 24px 48px -12px rgba(0, 0, 0, 0.18), 0 0 1px rgba(0, 0, 0, 0.15)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Native macOS Scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.16);
+            border-radius: 9999px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.28);
+        }
+
+        .glass-acrylic {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+        }
+
+        .glass-sidebar {
+            background: #F8F8FA;
+        }
+
+        /* Message Bubbles */
+        .bubble-visitor {
+            border-radius: 18px 18px 18px 4px;
+        }
+
+        .bubble-agent {
+            border-radius: 18px 18px 4px 18px;
+        }
+
+        /* Draggable Splitter Handle */
+        .panel-resizer {
+            width: 5px;
+            margin: 0 -2px;
+            z-index: 25;
+            cursor: col-resize;
+            transition: background 0.15s ease;
+            position: relative;
+        }
+
+        .panel-resizer:hover,
+        .panel-resizer.is-dragging {
+            background: rgba(0, 113, 227, 0.35);
+        }
+
+        .panel-resizer::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 2px;
+            width: 1px;
+            background: rgba(0, 0, 0, 0.08);
+        }
+
+        /* Sidebar Minimized Styles */
+        .sidebar-collapsed {
+            width: 64px !important;
+        }
+
+        .sidebar-collapsed .sidebar-text,
+        .sidebar-collapsed .sidebar-badge,
+        .sidebar-collapsed .sidebar-subtext {
+            display: none !important;
+        }
+
+        .sidebar-collapsed .sidebar-item {
+            justify-content: center !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        .sidebar-collapsed .workspace-box {
+            justify-content: center !important;
+            padding: 6px !important;
+        }
+
+        .sidebar-collapsed .profile-box {
+            justify-content: center !important;
+            padding: 8px 0 !important;
+        }
+
+        /* Context Inspector Minimized Styles */
+        .inspector-collapsed {
+            width: 48px !important;
+            min-width: 48px !important;
+            max-width: 48px !important;
+        }
+
+        .inspector-collapsed .inspector-full-content {
+            display: none !important;
+        }
+
+        .inspector-collapsed .inspector-compact-rail {
+            display: flex !important;
+        }
+
+        body {
+            overscroll-behavior-y: none;
+        }
+    </style>
+</head>
+
+<body
+    class="h-full w-full flex overflow-hidden font-sans select-none text-[13px] leading-normal antialiased bg-apple-canvas">
+
+    <!-- ========================================================================= -->
+    <!-- FULL HEIGHT SIDEBAR: Pierces from top to bottom edge without topbar gap -->
+    <!-- ========================================================================= -->
+    <aside id="main-sidebar"
+        class="h-full w-60 glass-sidebar border-r border-apple-border flex flex-col justify-between shrink-0 z-30 transition-[width] duration-200 ease-out relative">
+
+        <div class="flex flex-col h-full overflow-hidden">
+            <!-- Top Brand & Minimize Toggle Header -->
+            <div class="h-12 border-b border-apple-border flex items-center justify-between px-3 shrink-0">
+                <div class="flex items-center gap-2.5 overflow-hidden">
+                    <div
+                        class="w-6 h-6 rounded-md bg-gradient-to-b from-[#333336] to-[#1D1D1F] flex items-center justify-center text-white font-semibold text-[11px] shadow-xs shrink-0">
+                        B
+                    </div>
+                    <span
+                        class="font-semibold text-apple-textPrimary tracking-tight text-[13px] truncate sidebar-text">BeanTalk</span>
+                </div>
+
+                <!-- Sidebar Collapse / Expand Button (Apple macOS Style) -->
+                <button onclick="toggleSidebarCollapse()"
+                    class="p-1.5 rounded-md text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 active:scale-95 transition"
+                    title="Toggle Sidebar (Icon Only)">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect width="18" height="18" x="3" y="3" rx="3" />
+                        <path d="M9 3v18" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Scrollable Navigation Content -->
+            <div class="p-2 flex-1 flex flex-col gap-4 overflow-y-auto overflow-x-hidden">
+
+                <!-- Workspace Selector -->
+                <div
+                    class="workspace-box flex items-center justify-between px-2 py-1.5 rounded-xl bg-white border border-apple-border shadow-apple-sm transition">
+                    <div class="flex items-center gap-2 overflow-hidden">
+                        <div
+                            class="w-6 h-6 rounded-lg bg-[#2C2C2E] text-white flex items-center justify-center font-medium text-[10.5px] shrink-0">
+                            ID
+                        </div>
+                        <div class="truncate sidebar-text">
+                            <div class="font-medium text-[12px] text-apple-textPrimary truncate">Indraco Group</div>
+                            <div class="text-[10px] text-apple-textTertiary truncate sidebar-subtext">4 Connected Sites
+                            </div>
+                        </div>
+                    </div>
+                    <svg class="w-3.5 h-3.5 text-apple-textTertiary shrink-0 sidebar-text" fill="none"
+                        stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                    </svg>
+                </div>
+
+                <!-- Navigation Group -->
+                <nav class="flex flex-col gap-0.5">
+                    <div
+                        class="px-2 pb-1 text-[9.5px] font-semibold tracking-wider text-apple-textTertiary uppercase sidebar-text">
+                        Navigation</div>
+
+                    <button id="nav-item-inbox" onclick="switchMainTab('inbox')"
+                        class="sidebar-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-apple-textPrimary bg-white border border-apple-border/60 shadow-apple-sm font-medium transition"
+                        title="Inbox">
+                        <div class="flex items-center gap-2.5">
+                            <svg class="w-4 h-4 text-apple-blue shrink-0" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <rect width="20" height="16" x="2" y="4" rx="2" />
+                                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                            </svg>
+                            <span class="sidebar-text">Inbox</span>
+                        </div>
+                        <span
+                            class="sidebar-badge text-[10.5px] font-medium px-1.5 py-0.2 rounded-full bg-apple-blue/10 text-apple-blue"
+                            id="sidebar-inbox-count">3</span>
+                    </button>
+
+                    <button id="nav-item-integrations" onclick="switchMainTab('integrations')"
+                        class="sidebar-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 font-normal transition"
+                        title="Integrations">
+                        <div class="flex items-center gap-2.5">
+                            <svg class="w-4 h-4 text-apple-textSecondary shrink-0" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                            <span class="sidebar-text">Integrations</span>
+                        </div>
+                        <span class="sidebar-badge text-[10.5px] font-medium text-apple-textTertiary"
+                            id="sidebar-integrations-count">4</span>
+                    </button>
+
+                    <button id="nav-item-team" onclick="switchMainTab('team')"
+                        class="sidebar-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 font-normal transition"
+                        title="Team & RBAC">
+                        <div class="flex items-center gap-2.5">
+                            <svg class="w-4 h-4 text-apple-textSecondary shrink-0" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                            </svg>
+                            <span class="sidebar-text">Team & RBAC</span>
+                        </div>
+                        <span
+                            class="sidebar-badge text-[10px] font-medium px-1.5 py-0.2 rounded-md bg-amber-500/10 text-amber-700">4</span>
+                    </button>
+
+                    <button id="nav-item-logs" onclick="switchMainTab('logs')"
+                        class="sidebar-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 font-normal transition"
+                        title="Activity Logs">
+                        <div class="flex items-center gap-2.5">
+                            <svg class="w-4 h-4 text-apple-textSecondary shrink-0" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <line x1="16" y1="13" x2="8" y2="13" />
+                                <line x1="16" y1="17" x2="8" y2="17" />
+                            </svg>
+                            <span class="sidebar-text">Activity Logs</span>
+                        </div>
+                        <span class="sidebar-badge w-1.5 h-1.5 rounded-full bg-apple-green"></span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Bottom User Profile Card -->
+            <div class="p-2 border-t border-apple-border/80 bg-white/60">
+                <div class="profile-box flex items-center justify-between px-1.5 py-1 rounded-lg">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <div class="relative shrink-0">
+                            <div id="user-avatar-badge"
+                                class="w-7 h-7 rounded-full bg-amber-100 text-amber-800 font-semibold text-[10.5px] flex items-center justify-center border border-amber-300/60 shadow-2xs">
+                                HD
+                            </div>
+                            <span
+                                class="w-2 h-2 rounded-full bg-apple-green absolute bottom-0 right-0 ring-1 ring-white"></span>
+                        </div>
+                        <div class="truncate sidebar-text">
+                            <div id="user-display-name" class="font-medium text-[12px] text-apple-textPrimary truncate">
+                                Hendri</div>
+                            <div id="user-display-role" class="text-[10px] text-apple-textTertiary truncate">Owner</div>
+                        </div>
+                    </div>
+                    <button onclick="showToast('Tenant Info', 'Workspace: Indraco Group (indraco)')"
+                        class="sidebar-text p-1 text-apple-textTertiary hover:text-apple-textPrimary rounded">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="1" />
+                            <circle cx="19" cy="12" r="1" />
+                            <circle cx="5" cy="12" r="1" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ========================================================================= -->
+    <!-- MAIN VIEWPORT: Header and Content Panes -->
+    <!-- ========================================================================= -->
+    <div class="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-apple-surface">
+
+        <!-- Topbar (Sits beside sidebar, full width across content panes) -->
+        <header
+            class="h-12 border-b border-apple-border glass-acrylic z-20 flex items-center justify-between px-3 md:px-4 shrink-0">
+
+            <!-- Left: Mobile Toggle + Breadcrumb -->
+            <div class="flex items-center gap-2">
+                <button onclick="toggleMobileSidebar()"
+                    class="md:hidden p-1.5 rounded-lg text-apple-textSecondary hover:bg-black/5 active:scale-95 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                    </svg>
+                </button>
+                <span class="text-apple-textTertiary text-[11.5px] font-normal">Console</span>
+                <span class="text-apple-textTertiary text-[11px]">/</span>
+                <span id="topbar-current-view" class="font-medium text-apple-textPrimary text-[12px]">Inbox
+                    Messages</span>
+            </div>
+
+            <!-- Center: Simulated Role Selector Pill -->
+            <div
+                class="flex items-center bg-black/5 p-0.5 rounded-lg text-[11px] font-medium text-apple-textSecondary shadow-inner">
+                <button id="role-pill-owner" onclick="setSimulatedRole('owner')"
+                    class="px-2.5 py-1 rounded-md text-apple-textPrimary bg-white shadow-xs font-semibold transition-all">
+                    Owner
+                </button>
+                <button id="role-pill-admin" onclick="setSimulatedRole('admin')"
+                    class="px-2.5 py-1 rounded-md hover:text-apple-textPrimary transition-all">
+                    Admin
+                </button>
+                <button id="role-pill-agent" onclick="setSimulatedRole('agent')"
+                    class="px-2.5 py-1 rounded-md hover:text-apple-textPrimary transition-all">
+                    Agent
+                </button>
+            </div>
+
+            <!-- Right: Quick Status & Add Integration Button -->
+            <div class="flex items-center gap-2 text-[12px]">
+                <div
+                    class="hidden sm:flex items-center gap-1.5 text-apple-textSecondary bg-apple-canvas border border-apple-border px-2 py-0.5 rounded-md text-[11px]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-apple-green animate-pulse"></span>
+                    <span>Operational</span>
+                </div>
+                <button onclick="triggerAddIntegration()"
+                    class="inline-flex items-center gap-1.5 bg-apple-textPrimary text-white hover:bg-black active:scale-[0.98] px-3 py-1 rounded-lg text-[11.5px] font-medium transition shadow-apple-sm">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span class="hidden sm:inline">Add Website</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Content Panes Container -->
+        <main class="flex-1 flex overflow-hidden relative">
+
+            <!-- ================================================================= -->
+            <!-- VIEW 1: INBOX (RESIZABLE 3-PANEL MASTER-DETAIL) -->
+            <!-- ================================================================= -->
+            <div id="tab-inbox" class="flex-1 flex w-full h-full overflow-hidden">
+
+                <!-- ========================================== -->
+                <!-- PANE 1: Conversation List (Resizable)      -->
+                <!-- ========================================== -->
+                <section id="pane-conv-list"
+                    class="w-80 border-r border-apple-border flex flex-col bg-white shrink-0 z-10 select-none overflow-hidden"
+                    style="min-width: 220px; max-width: 520px;">
+
+                    <!-- Search & Filter Controls -->
+                    <div class="p-3 border-b border-apple-border flex flex-col gap-2 shrink-0 bg-white">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-[14px] font-semibold tracking-tight text-apple-textPrimary">Messages</h2>
+                            <span
+                                class="text-[10.5px] font-medium text-apple-textSecondary bg-apple-canvas px-2 py-0.2 rounded-full border border-apple-border">
+                                3 Open
+                            </span>
+                        </div>
+
+                        <!-- Search input -->
+                        <div class="relative">
+                            <input type="text" id="search-conv-input" placeholder="Search customer, site, keyword..."
+                                oninput="handleSearchConv(this.value)"
+                                class="w-full pl-8 pr-7 py-1.5 bg-apple-canvas border border-apple-border/80 rounded-lg text-[12px] placeholder:text-apple-textTertiary focus:bg-white focus:outline-none focus:ring-2 focus:ring-apple-blue/20 focus:border-apple-blue transition" />
+                            <svg class="w-3.5 h-3.5 text-apple-textTertiary absolute left-2.5 top-2.5"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                <circle cx="11" cy="11" r="8" />
+                                <path d="m21 21-4.3-4.3" />
+                            </svg>
+                        </div>
+
+                        <!-- Segmented Scope Filter -->
+                        <div
+                            class="grid grid-cols-3 bg-apple-canvas p-0.5 rounded-lg text-[11px] font-medium text-apple-textSecondary text-center">
+                            <button onclick="filterInboxScope('all', this)"
+                                class="inbox-scope-btn py-1 rounded-md bg-white text-apple-textPrimary shadow-2xs font-medium">All</button>
+                            <button onclick="filterInboxScope('unassigned', this)"
+                                class="inbox-scope-btn py-1 rounded-md hover:text-apple-textPrimary">Unassigned</button>
+                            <button onclick="filterInboxScope('mine', this)"
+                                class="inbox-scope-btn py-1 rounded-md hover:text-apple-textPrimary">Mine</button>
+                        </div>
+
+                        <!-- Channel Dropdown Filter -->
+                        <div class="flex items-center gap-1 text-[11px] text-apple-textSecondary pt-0.5">
+                            <span class="shrink-0 text-apple-textTertiary">Site:</span>
+                            <select id="select-project-filter" onchange="filterProjectList(this.value)"
+                                class="flex-1 bg-transparent font-medium text-apple-textPrimary truncate focus:outline-none cursor-pointer">
+                                <option value="all">All Sites (Supresso, Indraco, B2B)</option>
+                                <option value="supresso">supresso.myshopify.com</option>
+                                <option value="indraco">indracostore.com</option>
+                                <option value="global">indracoglobal.com</option>
+                                <option value="sda">sdastore.id</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Conversation List -->
+                    <div class="flex-1 overflow-y-auto divide-y divide-apple-subtleBorder" id="conv-item-list">
+
+                        <!-- Conv 1 -->
+                        <div onclick="selectConversation('jane')" data-site="supresso" id="card-conv-jane"
+                            class="conv-row active p-3 hover:bg-black/[0.02] cursor-pointer flex gap-2.5 items-start transition border-l-3 border-apple-blue bg-apple-canvas/60">
+                            <div class="relative shrink-0">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-[#E5E5EA] text-apple-textPrimary font-semibold text-[11px] flex items-center justify-center border border-black/5">
+                                    JD
+                                </div>
+                                <span
+                                    class="w-2 h-2 rounded-full bg-apple-green absolute bottom-0 right-0 ring-1 ring-white"></span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between mb-0.5">
+                                    <span class="font-semibold text-apple-textPrimary truncate text-[12.5px]">Jane
+                                        Doe</span>
+                                    <span class="text-[10.5px] text-apple-textTertiary font-mono">14:32</span>
+                                </div>
+                                <div class="flex items-center gap-1.5 mb-1">
+                                    <span
+                                        class="text-[9px] font-medium tracking-tight uppercase px-1.5 py-0.2 rounded bg-neutral-200/70 text-neutral-800">
+                                        supresso
+                                    </span>
+                                    <span class="text-[10px] text-apple-textTertiary font-mono">#vis_88a</span>
+                                </div>
+                                <p class="text-[11.5px] text-apple-textSecondary truncate">
+                                    Halo, saya sedang lihat kapsul kopi Sumatra Mandheling...
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Conv 2 -->
+                        <div onclick="selectConversation('tan')" data-site="global" id="card-conv-tan"
+                            class="conv-row p-3 hover:bg-black/[0.02] cursor-pointer flex gap-2.5 items-start transition border-l-3 border-transparent">
+                            <div class="relative shrink-0">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-[#D1E3FF] text-[#0A58CA] font-semibold text-[11px] flex items-center justify-center border border-black/5">
+                                    MT
+                                </div>
+                                <span
+                                    class="w-2 h-2 rounded-full bg-apple-green absolute bottom-0 right-0 ring-1 ring-white"></span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between mb-0.5">
+                                    <span class="font-semibold text-apple-textPrimary truncate text-[12.5px]">Mr. Tan
+                                        (SG)</span>
+                                    <span class="text-[10.5px] text-apple-textTertiary font-mono">14:15</span>
+                                </div>
+                                <div class="flex items-center gap-1.5 mb-1">
+                                    <span
+                                        class="text-[9px] font-medium tracking-tight uppercase px-1.5 py-0.2 rounded bg-blue-100/70 text-blue-900">
+                                        indracoglobal
+                                    </span>
+                                    <span
+                                        class="text-[9.5px] font-medium px-1 rounded-full bg-apple-blue/10 text-apple-blue">B2B</span>
+                                </div>
+                                <p class="text-[11.5px] text-apple-textSecondary truncate">
+                                    Inquiring about 20ft container green beans MOQ...
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Conv 3 -->
+                        <div onclick="selectConversation('budi')" data-site="indraco" id="card-conv-budi"
+                            class="conv-row p-3 hover:bg-black/[0.02] cursor-pointer flex gap-2.5 items-start transition border-l-3 border-transparent">
+                            <div class="relative shrink-0">
+                                <div
+                                    class="w-8 h-8 rounded-full bg-[#EADFD6] text-[#633B18] font-semibold text-[11px] flex items-center justify-center border border-black/5">
+                                    BS
+                                </div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between mb-0.5">
+                                    <span class="font-semibold text-apple-textPrimary truncate text-[12.5px]">Budi
+                                        Santoso</span>
+                                    <span class="text-[10.5px] text-apple-textTertiary font-mono">13:40</span>
+                                </div>
+                                <div class="flex items-center gap-1.5 mb-1">
+                                    <span
+                                        class="text-[9px] font-medium tracking-tight uppercase px-1.5 py-0.2 rounded bg-amber-100/70 text-amber-900">
+                                        indracostore
+                                    </span>
+                                </div>
+                                <p class="text-[11.5px] text-apple-textSecondary truncate">
+                                    Voucher promo sachet kopi jahe tidak bisa diklaim...
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- Resizer Handle 1 (Between Conv List and Chat Feed) -->
+                <div id="resizer-conv-chat" class="panel-resizer hidden md:block"
+                    title="Drag to resize conversation column (Double click to reset)"></div>
+
+                <!-- ========================================== -->
+                <!-- PANE 2: Active Chat Feed                   -->
+                <!-- ========================================== -->
+                <section id="pane-chat-thread"
+                    class="hidden md:flex flex-1 flex-col h-full bg-white relative overflow-hidden min-w-[320px]">
+
+                    <!-- Thread Toolbar -->
+                    <div
+                        class="h-12 border-b border-apple-border glass-acrylic px-3.5 flex items-center justify-between z-10 shrink-0">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <button onclick="mobileBackToList()"
+                                class="md:hidden p-1.5 -ml-1 rounded-lg text-apple-textSecondary hover:bg-black/5">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5">
+                                    <polyline points="15 18 9 12 15 6" />
+                                </svg>
+                            </button>
+
+                            <div class="relative shrink-0">
+                                <div id="thread-avatar"
+                                    class="w-7 h-7 rounded-full bg-neutral-200 text-apple-textPrimary font-semibold text-[11px] flex items-center justify-center border border-black/5">
+                                    JD
+                                </div>
+                                <span
+                                    class="w-2 h-2 rounded-full bg-apple-green absolute bottom-0 right-0 ring-1 ring-white"></span>
+                            </div>
+
+                            <div class="truncate">
+                                <div class="flex items-center gap-2">
+                                    <h3 id="thread-name"
+                                        class="font-semibold text-[13px] text-apple-textPrimary truncate">Jane Doe</h3>
+                                    <span id="thread-origin-badge"
+                                        class="text-[9.5px] font-medium tracking-tight uppercase px-1.5 py-0.2 rounded bg-black/5 text-apple-textSecondary">supresso
+                                        shopify</span>
+                                </div>
+                                <div id="thread-meta-sub" class="text-[10.5px] text-apple-textTertiary truncate">
+                                    Browsing: /products/sumatra-capsule • Agent: Sarah
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions Right -->
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="openAssignModal()"
+                                class="px-2.5 py-1 text-[11px] rounded-lg border border-apple-border bg-white text-apple-textPrimary hover:bg-apple-canvas active:scale-95 transition font-medium shadow-2xs">
+                                Assign
+                            </button>
+                            <button onclick="resolveCurrentChat()"
+                                class="px-2.5 py-1 text-[11px] rounded-lg border border-apple-border/80 bg-white text-apple-red hover:bg-red-50 active:scale-95 transition font-medium shadow-2xs">
+                                Resolve
+                            </button>
+                            <!-- Inspector Toggle for Customer Context -->
+                            <button onclick="toggleInspectorMode()"
+                                class="p-1.5 rounded-lg border border-apple-border bg-white text-apple-textSecondary hover:text-apple-textPrimary hover:bg-apple-canvas transition shadow-2xs"
+                                title="Minimize / Expand Customer Session">
+                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M12 16v-4" />
+                                    <path d="M12 8h.01" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Active Page Context Sticky Banner -->
+                    <div
+                        class="bg-apple-canvas/80 border-b border-apple-border/60 px-3.5 py-1.5 flex items-center justify-between text-[11px] shrink-0">
+                        <div class="flex items-center gap-2 truncate">
+                            <span class="text-apple-textTertiary font-medium">Live Active Page:</span>
+                            <span class="font-medium text-apple-textPrimary flex items-center gap-1 truncate">
+                                <svg class="w-3.5 h-3.5 text-apple-blue shrink-0" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="3" width="20" height="14" rx="2" />
+                                    <line x1="8" y1="21" x2="16" y2="21" />
+                                    <line x1="12" y1="17" x2="12" y2="21" />
+                                </svg>
+                                <span id="active-product-title">Supresso Sumatra Mandheling Capsule</span>
+                                <span class="text-apple-textTertiary font-mono">(Rp 95.000)</span>
+                            </span>
+                        </div>
+                        <span class="text-apple-blue font-medium shrink-0 ml-2">Session Live</span>
+                    </div>
+
+                    <!-- Message History Feed -->
+                    <div id="messages-container"
+                        class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 bg-apple-canvas/20">
+                        <div class="flex items-center justify-center my-1">
+                            <span
+                                class="text-[10px] text-apple-textTertiary font-mono px-2 py-0.5 rounded-full bg-black/5">Today,
+                                14:32</span>
+                        </div>
+
+                        <!-- Visitor Bubble -->
+                        <div class="flex flex-col items-start max-w-[85%] sm:max-w-[70%]">
+                            <span class="text-[10.5px] text-apple-textTertiary mb-0.5 pl-1">Jane Doe (Visitor)</span>
+                            <div
+                                class="bubble-visitor bg-white border border-apple-border/80 text-apple-textPrimary px-3 py-2 text-[12.5px] shadow-apple-sm leading-relaxed">
+                                Halo, saya sedang lihat kapsul kopi Sumatra Mandheling. Profil roasting-nya apa ya?
+                            </div>
+                            <span class="text-[9.5px] text-apple-textTertiary mt-0.5 pl-1 font-mono">14:32</span>
+                        </div>
+
+                        <!-- Agent Bubble -->
+                        <div class="flex flex-col items-end self-end max-w-[85%] sm:max-w-[70%]">
+                            <span class="text-[10.5px] text-apple-textTertiary mb-0.5 pr-1">Sarah (Support)</span>
+                            <div
+                                class="bubble-agent bg-apple-blue text-white px-3 py-2 text-[12.5px] shadow-apple-sm leading-relaxed">
+                                Halo Kak Jane! Profil roasting-nya Medium-Dark dengan tasting notes cokelat hitam dan
+                                rempah halus. Sangat cocok untuk mesin Nespresso original line!
+                            </div>
+                            <span class="text-[9.5px] text-apple-textTertiary mt-0.5 pr-1 font-mono">14:33 • Sent</span>
+                        </div>
+                    </div>
+
+                    <!-- Composer Box -->
+                    <div class="p-3 border-t border-apple-border glass-acrylic shrink-0">
+                        <div
+                            class="bg-white border border-apple-border rounded-xl shadow-apple-sm overflow-hidden focus-within:ring-2 focus-within:ring-apple-blue/20 focus-within:border-apple-blue transition">
+                            <textarea id="admin-reply-textarea" rows="2"
+                                placeholder="Reply (Press Enter to send, Shift+Enter for newline)..."
+                                onkeydown="handleReplyKey(event)"
+                                class="w-full px-3 py-2 text-[12.5px] text-apple-textPrimary placeholder:text-apple-textTertiary resize-none focus:outline-none bg-transparent"></textarea>
+
+                            <div
+                                class="px-2.5 py-1 bg-apple-canvas/40 border-t border-apple-border/50 flex items-center justify-between text-[10.5px] text-apple-textTertiary">
+                                <div class="flex items-center gap-1.5">
+                                    <button onclick="insertCannedResponse('/shipping')"
+                                        class="hover:text-apple-textPrimary font-mono px-1 py-0.2 rounded bg-black/5 hover:bg-black/10 transition">/shipping</button>
+                                    <button onclick="insertCannedResponse('/stock')"
+                                        class="hover:text-apple-textPrimary font-mono px-1 py-0.2 rounded bg-black/5 hover:bg-black/10 transition">/stock</button>
+                                </div>
+                                <button onclick="sendAdminReplyMessage()"
+                                    class="px-2.5 py-0.5 bg-apple-blue text-white rounded-md font-medium text-[11px] hover:bg-apple-blueHover active:scale-95 transition shadow-2xs">
+                                    Send
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </section>
+
+                <!-- Resizer Handle 2 (Between Chat Feed and Customer Context) -->
+                <div id="resizer-chat-context" class="panel-resizer hidden lg:block"
+                    title="Drag to resize customer context column (Double click to reset)"></div>
+
+                <!-- ========================================== -->
+                <!-- PANE 3: Customer Context Session           -->
+                <!-- ========================================== -->
+                <aside id="pane-context-inspector"
+                    class="w-72 border-l border-apple-border bg-white flex flex-col shrink-0 overflow-hidden select-none transition-[width] duration-150 ease-out hidden lg:flex"
+                    style="min-width: 48px; max-width: 420px;">
+
+                    <!-- Mode A: Full Inspector Content -->
+                    <div class="inspector-full-content flex-1 flex flex-col h-full overflow-hidden">
+                        <div
+                            class="h-12 px-3 border-b border-apple-border flex items-center justify-between shrink-0 bg-white">
+                            <span class="font-semibold text-[12.5px] text-apple-textPrimary">Customer Session</span>
+                            <div class="flex items-center gap-1.5">
+                                <span
+                                    class="text-[9.5px] font-mono text-apple-green bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                                    Live
+                                </span>
+                                <button onclick="toggleInspectorMode()"
+                                    class="p-1 rounded text-apple-textTertiary hover:text-apple-textPrimary hover:bg-black/5"
+                                    title="Minimize Panel">
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <polyline points="13 17 18 12 13 7" />
+                                        <polyline points="6 17 11 12 6 7" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex-1 overflow-y-auto p-3 flex flex-col gap-3.5 text-[11.5px]">
+                            <!-- Customer Profile -->
+                            <div>
+                                <div
+                                    class="text-[9.5px] font-semibold uppercase tracking-wider text-apple-textTertiary mb-1.5">
+                                    Customer Profile</div>
+                                <div
+                                    class="rounded-xl border border-apple-border/80 bg-apple-canvas/40 p-2.5 flex flex-col gap-1.5">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-apple-textSecondary">Full Name</span>
+                                        <span id="ctx-name" class="font-medium text-apple-textPrimary">Jane Doe</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-apple-textSecondary">Email</span>
+                                        <span id="ctx-email"
+                                            class="font-medium text-apple-textPrimary truncate max-w-[130px]">jane.doe@gmail.com</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-apple-textSecondary">Token</span>
+                                        <span class="font-mono text-[10px] text-apple-textTertiary">#vis_c4b8b409</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Live Browsing State -->
+                            <div>
+                                <div
+                                    class="text-[9.5px] font-semibold uppercase tracking-wider text-apple-textTertiary mb-1.5">
+                                    Live Session State</div>
+                                <div
+                                    class="rounded-xl border border-apple-border/80 bg-apple-canvas/40 p-2.5 flex flex-col gap-1.5">
+                                    <div>
+                                        <div class="text-apple-textSecondary text-[10.5px]">Origin Channel</div>
+                                        <div id="ctx-channel" class="font-semibold text-apple-textPrimary truncate">
+                                            supresso.myshopify.com</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-apple-textSecondary text-[10.5px]">Active Path</div>
+                                        <div id="ctx-path" class="font-mono text-[10px] text-apple-blue break-all">
+                                            /products/sumatra-capsule</div>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-apple-textSecondary">Cart Value</span>
+                                        <span class="font-semibold text-apple-textPrimary font-mono">Rp 95.000</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Device Telemetry -->
+                            <div>
+                                <div
+                                    class="text-[9.5px] font-semibold uppercase tracking-wider text-apple-textTertiary mb-1.5">
+                                    Device Telemetry</div>
+                                <div
+                                    class="rounded-xl border border-apple-border/80 bg-apple-canvas/40 p-2.5 flex flex-col gap-1 text-[11px]">
+                                    <div class="flex justify-between">
+                                        <span class="text-apple-textSecondary">Platform</span>
+                                        <span class="text-apple-textPrimary font-medium">Apple iPhone 15</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-apple-textSecondary">Browser</span>
+                                        <span class="text-apple-textPrimary">Safari 17.4</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-apple-textSecondary">IP</span>
+                                        <span class="font-mono text-apple-textTertiary">180.252.16.89</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-apple-textSecondary">City</span>
+                                        <span class="text-apple-textPrimary">Surabaya, ID</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mode B: Minimalist Compact Rail (Icon-Only strip when minimized) -->
+                    <div
+                        class="inspector-compact-rail flex-1 hidden flex-col items-center py-3 gap-3 bg-apple-canvas/40">
+                        <button onclick="toggleInspectorMode()"
+                            class="p-1.5 rounded-lg hover:bg-black/5 text-apple-textSecondary"
+                            title="Expand Customer Session">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="11 17 6 12 11 7" />
+                                <polyline points="18 17 13 12 18 7" />
+                            </svg>
+                        </button>
+                        <div class="w-7 h-7 rounded-full bg-white border border-apple-border flex items-center justify-center font-semibold text-[10px] text-apple-textPrimary shadow-2xs"
+                            title="Jane Doe">
+                            JD
+                        </div>
+                        <div class="w-2 h-2 rounded-full bg-apple-green" title="Session Active"></div>
+                        <span class="text-[9px] font-mono font-medium text-apple-blue rotate-90 my-2">LIVE</span>
+                    </div>
+
+                </aside>
+
+            </div>
+
+            <!-- ================================================================= -->
+            <!-- VIEW 2: CONNECTED CHANNELS & INTEGRATIONS -->
+            <!-- ================================================================= -->
+            <div id="tab-integrations"
+                class="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-5 hidden bg-apple-canvas/30">
+                <div class="flex items-center justify-between pb-3 border-b border-apple-border">
+                    <div>
+                        <h2 class="text-[17px] font-semibold text-apple-textPrimary tracking-tight">Connected Channels
+                        </h2>
+                        <p class="text-[12px] text-apple-textSecondary">Deploy unified chat across Shopify, WooCommerce,
+                            or headless websites with a 1-line script tag.</p>
+                    </div>
+                    <button onclick="triggerAddIntegration()"
+                        class="inline-flex items-center gap-1.5 bg-apple-blue hover:bg-apple-blueHover text-white px-3 py-1.5 rounded-lg text-[12px] font-medium transition shadow-apple-sm">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                        <span>Connect Website</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5" id="integrations-card-container">
+                    <!-- Supresso -->
+                    <div
+                        class="bg-white border border-apple-border rounded-xl p-4 shadow-apple-sm flex flex-col justify-between gap-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <div
+                                    class="w-9 h-9 rounded-lg bg-[#1E1E1E] text-white flex items-center justify-center font-bold text-[13px]">
+                                    SC</div>
+                                <div>
+                                    <h4 class="font-semibold text-[13px] text-apple-textPrimary">Supresso Coffee</h4>
+                                    <div class="text-[11px] text-apple-textTertiary font-mono">supresso.myshopify.com
+                                    </div>
+                                </div>
+                            </div>
+                            <span
+                                class="inline-flex items-center gap-1 px-2 py-0.2 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Live
+                            </span>
+                        </div>
+                        <div class="bg-[#1C1C1E] text-neutral-300 font-mono text-[10px] p-2 rounded-md truncate">
+                            &lt;script src="https://chat.indraco.com/widget.js" data-key="<span
+                                class="text-sky-400">pk_live_supresso_8819</span>" async&gt;&lt;/script&gt;
+                        </div>
+                        <div class="flex justify-end gap-2 pt-1 border-t border-apple-subtleBorder">
+                            <button onclick="copySnippet('pk_live_supresso_8819')"
+                                class="px-2.5 py-1 text-[11px] font-medium rounded-md border border-apple-border text-apple-textPrimary hover:bg-apple-canvas transition">Copy
+                                Code</button>
+                            <button onclick="showToast('Supresso', 'Channel configured.')"
+                                class="px-2.5 py-1 text-[11px] font-medium rounded-md bg-apple-canvas text-apple-textSecondary hover:text-apple-textPrimary transition">Settings</button>
+                        </div>
+                    </div>
+
+                    <!-- Indraco Store -->
+                    <div
+                        class="bg-white border border-apple-border rounded-xl p-4 shadow-apple-sm flex flex-col justify-between gap-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <div
+                                    class="w-9 h-9 rounded-lg bg-[#6F4E37] text-white flex items-center justify-center font-bold text-[13px]">
+                                    IS</div>
+                                <div>
+                                    <h4 class="font-semibold text-[13px] text-apple-textPrimary">Indraco Store</h4>
+                                    <div class="text-[11px] text-apple-textTertiary font-mono">indracostore.com</div>
+                                </div>
+                            </div>
+                            <span
+                                class="inline-flex items-center gap-1 px-2 py-0.2 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Live
+                            </span>
+                        </div>
+                        <div class="bg-[#1C1C1E] text-neutral-300 font-mono text-[10px] p-2 rounded-md truncate">
+                            &lt;script src="https://chat.indraco.com/widget.js" data-key="<span
+                                class="text-sky-400">pk_live_indraco_5521</span>" async&gt;&lt;/script&gt;
+                        </div>
+                        <div class="flex justify-end gap-2 pt-1 border-t border-apple-subtleBorder">
+                            <button onclick="copySnippet('pk_live_indraco_5521')"
+                                class="px-2.5 py-1 text-[11px] font-medium rounded-md border border-apple-border text-apple-textPrimary hover:bg-apple-canvas transition">Copy
+                                Code</button>
+                            <button onclick="showToast('Indraco Store', 'Channel configured.')"
+                                class="px-2.5 py-1 text-[11px] font-medium rounded-md bg-apple-canvas text-apple-textSecondary hover:text-apple-textPrimary transition">Settings</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================= -->
+            <!-- VIEW 3: TEAM & RBAC -->
+            <!-- ================================================================= -->
+            <div id="tab-team" class="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-5 hidden bg-apple-canvas/30">
+                <div class="flex items-center justify-between pb-3 border-b border-apple-border">
+                    <div>
+                        <h2 class="text-[17px] font-semibold text-apple-textPrimary tracking-tight">Team Members &
+                            Access Control</h2>
+                        <p class="text-[12px] text-apple-textSecondary">Enforce role-based privileges (Owner, Admin,
+                            Agent) with strict middleware authorization.</p>
+                    </div>
+                    <button onclick="triggerInviteMember()"
+                        class="inline-flex items-center gap-1.5 bg-apple-blue hover:bg-apple-blueHover text-white px-3 py-1.5 rounded-lg text-[12px] font-medium transition shadow-apple-sm">
+                        <span>Invite Member</span>
+                    </button>
+                </div>
+
+                <div class="bg-white border border-apple-border rounded-xl shadow-apple-sm overflow-hidden">
+                    <table class="w-full text-left text-[12px]">
+                        <thead
+                            class="bg-apple-canvas/80 text-apple-textSecondary text-[10.5px] font-medium uppercase border-b border-apple-border">
+                            <tr>
+                                <th class="px-4 py-2">User</th>
+                                <th class="px-4 py-2">Role</th>
+                                <th class="px-4 py-2">Status</th>
+                                <th class="px-4 py-2 text-right">Privilege</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-apple-subtleBorder">
+                            <tr class="hover:bg-black/[0.01]">
+                                <td class="px-4 py-2.5 font-medium text-apple-textPrimary">Hendri (Director)</td>
+                                <td class="px-4 py-2.5"><span
+                                        class="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase bg-amber-100 text-amber-900 border border-amber-300">Owner</span>
+                                </td>
+                                <td class="px-4 py-2.5 text-apple-green font-medium">● Online</td>
+                                <td class="px-4 py-2.5 text-right text-apple-textTertiary font-mono text-[11px]">All
+                                    Permissions</td>
+                            </tr>
+                            <tr class="hover:bg-black/[0.01]">
+                                <td class="px-4 py-2.5 font-medium text-apple-textPrimary">System Admin</td>
+                                <td class="px-4 py-2.5"><span
+                                        class="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase bg-blue-100 text-blue-900 border border-blue-300">Admin</span>
+                                </td>
+                                <td class="px-4 py-2.5 text-apple-green font-medium">● Online</td>
+                                <td class="px-4 py-2.5 text-right text-apple-textTertiary font-mono text-[11px]">
+                                    Channels & Staff</td>
+                            </tr>
+                            <tr class="hover:bg-black/[0.01]">
+                                <td class="px-4 py-2.5 font-medium text-apple-textPrimary">Sarah (CS Specialist)</td>
+                                <td class="px-4 py-2.5"><span
+                                        class="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase bg-emerald-100 text-emerald-900 border border-emerald-300">Agent</span>
+                                </td>
+                                <td class="px-4 py-2.5 text-apple-green font-medium">● Online</td>
+                                <td class="px-4 py-2.5 text-right text-apple-textTertiary font-mono text-[11px]">Chat
+                                    Feeds Only</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ================================================================= -->
+            <!-- VIEW 4: ACTIVITY LOGS & AUDIT TRAIL -->
+            <!-- ================================================================= -->
+            <div id="tab-logs" class="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-5 hidden bg-apple-canvas/30">
+                <div class="flex items-center justify-between pb-3 border-b border-apple-border">
+                    <div>
+                        <h2 class="text-[17px] font-semibold text-apple-textPrimary tracking-tight">Audit Trail &
+                            Security Logs</h2>
+                        <p class="text-[12px] text-apple-textSecondary">Immutable chronological record of admin events,
+                            replies, and channel mutations.</p>
+                    </div>
+                    <span
+                        class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-apple-green/10 text-apple-green border border-apple-green/30">
+                        ● Streaming
+                    </span>
+                </div>
+
+                <div class="bg-white border border-apple-border rounded-xl shadow-apple-sm overflow-hidden">
+                    <table class="w-full text-left text-[12px]">
+                        <thead
+                            class="bg-apple-canvas/80 text-apple-textSecondary text-[10.5px] font-medium uppercase border-b border-apple-border">
+                            <tr>
+                                <th class="px-4 py-2 w-32">Timestamp</th>
+                                <th class="px-4 py-2 w-40">Actor</th>
+                                <th class="px-4 py-2 w-32">Event</th>
+                                <th class="px-4 py-2">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-table-body" class="divide-y divide-apple-subtleBorder">
+                            <tr>
+                                <td class="px-4 py-2.5 text-apple-textTertiary font-mono text-[11px]">14:33:02</td>
+                                <td class="px-4 py-2.5 font-medium text-apple-textPrimary">Sarah (CS)</td>
+                                <td class="px-4 py-2.5"><span
+                                        class="font-mono text-[10.5px] text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200">message.sent</span>
+                                </td>
+                                <td class="px-4 py-2.5 text-apple-textSecondary">Replied to Jane Doe regarding roast
+                                    profile.</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-2.5 text-apple-textTertiary font-mono text-[11px]">09:05:41</td>
+                                <td class="px-4 py-2.5 font-medium text-apple-textPrimary">Hendri (Director)</td>
+                                <td class="px-4 py-2.5"><span
+                                        class="font-mono text-[10.5px] text-amber-800 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">rbac.enforced</span>
+                                </td>
+                                <td class="px-4 py-2.5 text-apple-textSecondary">Validated multi-tenant policy for
+                                    tenant: indraco.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- Modal Connect Website -->
+    <div id="modal-backdrop"
+        class="fixed inset-0 bg-black/30 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-apple-modal border border-apple-border overflow-hidden">
+            <div class="px-4 py-3.5 border-b border-apple-border flex items-center justify-between bg-apple-canvas/50">
+                <h4 class="font-semibold text-[14px] text-apple-textPrimary">Connect Website Channel</h4>
+                <button onclick="closeModal()"
+                    class="w-6 h-6 rounded-full bg-black/5 hover:bg-black/10 flex items-center justify-center text-apple-textSecondary transition text-[12px]">✕</button>
+            </div>
+            <div id="modal-form" class="p-4 flex flex-col gap-3.5 text-[12px]">
+                <div>
+                    <label class="block font-medium text-apple-textPrimary mb-1">Site / Store Name</label>
+                    <input type="text" id="input-site-name" placeholder="e.g. Supresso Singapore"
+                        class="w-full px-3 py-1.5 border border-apple-border rounded-lg focus:outline-none focus:ring-2 focus:ring-apple-blue/20"
+                        value="Supresso Singapore">
+                </div>
+                <div>
+                    <label class="block font-medium text-apple-textPrimary mb-1">Domain Whitelist</label>
+                    <input type="text" id="input-site-domain" placeholder="e.g. supresso.sg"
+                        class="w-full px-3 py-1.5 border border-apple-border rounded-lg font-mono text-[11.5px]"
+                        value="supresso.sg">
+                </div>
+                <div class="pt-2 flex justify-end gap-2 border-t border-apple-border">
+                    <button onclick="closeModal()"
+                        class="px-3 py-1.5 rounded-lg border border-apple-border text-apple-textSecondary font-medium">Cancel</button>
+                    <button onclick="submitNewIntegration()"
+                        class="px-3.5 py-1.5 rounded-lg bg-apple-blue text-white font-medium shadow-apple-sm">Create
+                        Channel</button>
+                </div>
+            </div>
+            <div id="modal-result" class="p-4 flex-col gap-3 text-[12px] hidden">
+                <span class="text-apple-green font-semibold">✓ Channel Token Created!</span>
+                <div id="snippet-display"
+                    class="bg-[#1C1C1E] text-neutral-200 font-mono text-[10.5px] p-2.5 rounded-lg break-all"></div>
+                <div class="flex justify-end gap-2 pt-2 border-t border-apple-border">
+                    <button onclick="copySnippetFromModal()"
+                        class="px-3 py-1.5 rounded-lg bg-apple-textPrimary text-white font-medium">Copy Script</button>
+                    <button onclick="closeModal()"
+                        class="px-3 py-1.5 rounded-lg border border-apple-border text-apple-textSecondary">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="apple-toast"
+        class="fixed bottom-5 right-5 z-50 bg-white/95 backdrop-blur-md border border-apple-border shadow-apple-popover rounded-xl p-3 flex items-start gap-2.5 max-w-sm transform translate-y-12 opacity-0 pointer-events-none transition-all duration-200 ease-out">
+        <div
+            class="w-4 h-4 rounded-full bg-apple-blue/10 text-apple-blue flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
+            ✓</div>
+        <div class="flex-1 min-w-0">
+            <div id="toast-title" class="font-semibold text-[12px] text-apple-textPrimary">Notice</div>
+            <div id="toast-message" class="text-[11px] text-apple-textSecondary leading-snug">Action completed.</div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let activeRole = 'owner';
+        let currentConversation = 'jane';
+        let isSidebarCollapsed = false;
+        let isInspectorCollapsed = false;
+        let toastTimer = null;
+        let latestSnippetKey = 'pk_live_sg_9021';
+
+        const roleProfiles = {
+            owner: { name: 'Hendri', roleLabel: 'Owner', canAddWebsite: true, canInvite: true },
+            admin: { name: 'System Admin', roleLabel: 'Admin', canAddWebsite: true, canInvite: true },
+            agent: { name: 'Sarah CS', roleLabel: 'Agent', canAddWebsite: false, canInvite: false }
+        };
+
+        // Tab switcher
+        function switchMainTab(tabName) {
+            const tabs = ['inbox', 'integrations', 'team', 'logs'];
+            const titles = {
+                inbox: 'Inbox Messages',
+                integrations: 'Connected Channels & Integrations',
+                team: 'Team & Role-Based Access Control',
+                logs: 'Audit Trail & Activity Logs'
+            };
+
+            tabs.forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                const nav = document.getElementById(`nav-item-${t}`);
+                if (el) el.classList.add('hidden');
+                if (nav) {
+                    nav.className = "sidebar-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 font-normal transition";
+                }
+            });
+
+            const targetView = document.getElementById(`tab-${tabName}`);
+            const targetNav = document.getElementById(`nav-item-${tabName}`);
+            if (targetView) targetView.classList.remove('hidden');
+            if (targetNav) {
+                targetNav.className = "sidebar-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-apple-textPrimary bg-white border border-apple-border/60 shadow-apple-sm font-medium transition";
+            }
+
+            const viewHeaderTitle = document.getElementById('topbar-current-view');
+            if (viewHeaderTitle) viewHeaderTitle.textContent = titles[tabName] || 'Console';
+        }
+
+        // Role switcher simulation
+        function setSimulatedRole(roleKey) {
+            activeRole = roleKey;
+            const profile = roleProfiles[roleKey];
+            if (!profile) return;
+
+            ['owner', 'admin', 'agent'].forEach(r => {
+                const btn = document.getElementById(`role-pill-${r}`);
+                if (btn) {
+                    btn.className = (r === roleKey)
+                        ? "px-2.5 py-1 rounded-md text-apple-textPrimary bg-white shadow-xs font-semibold transition-all"
+                        : "px-2.5 py-1 rounded-md hover:text-apple-textPrimary transition-all";
+                }
+            });
+
+            const displayName = document.getElementById('user-display-name');
+            const displayRole = document.getElementById('user-display-role');
+            if (displayName) displayName.textContent = profile.name;
+            if (displayRole) displayRole.textContent = profile.roleLabel;
+
+            showToast(`Role: ${profile.roleLabel}`, `Client-side permission set to ${profile.roleLabel}`);
+        }
+
+        // Sidebar Minimization (Icon-Only Mode)
+        function toggleSidebarCollapse() {
+            const sidebar = document.getElementById('main-sidebar');
+            isSidebarCollapsed = !isSidebarCollapsed;
+            if (sidebar) {
+                sidebar.classList.toggle('sidebar-collapsed', isSidebarCollapsed);
+            }
+        }
+
+        // Customer Session Inspector Toggle
+        function toggleInspectorMode() {
+            const inspector = document.getElementById('pane-context-inspector');
+            if (!inspector) return;
+            isInspectorCollapsed = !isInspectorCollapsed;
+            inspector.classList.toggle('inspector-collapsed', isInspectorCollapsed);
+        }
+
+        // DRAGGABLE HORIZONTAL RESIZER LOGIC
+        function initPanelResizers() {
+            // Resizer 1: Conv List <-> Chat Feed
+            const resizerConvChat = document.getElementById('resizer-conv-chat');
+            const paneConvList = document.getElementById('pane-conv-list');
+
+            if (resizerConvChat && paneConvList) {
+                let isDragging = false;
+
+                resizerConvChat.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    resizerConvChat.classList.add('is-dragging');
+                    document.body.style.cursor = 'col-resize';
+                    document.body.style.userSelect = 'none';
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    const sidebarWidth = document.getElementById('main-sidebar').offsetWidth;
+                    const newWidth = e.clientX - sidebarWidth;
+                    if (newWidth >= 220 && newWidth <= 520) {
+                        paneConvList.style.width = `${newWidth}px`;
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        resizerConvChat.classList.remove('is-dragging');
+                        document.body.style.cursor = '';
+                        document.body.style.userSelect = '';
+                    }
+                });
+
+                // Double click resets to default 320px
+                resizerConvChat.addEventListener('dblclick', () => {
+                    paneConvList.style.width = '320px';
+                });
+            }
+
+            // Resizer 2: Chat Feed <-> Customer Context
+            const resizerChatContext = document.getElementById('resizer-chat-context');
+            const paneContext = document.getElementById('pane-context-inspector');
+
+            if (resizerChatContext && paneContext) {
+                let isDraggingContext = false;
+
+                resizerChatContext.addEventListener('mousedown', (e) => {
+                    if (isInspectorCollapsed) return; // Do not resize while in icon-only rail
+                    isDraggingContext = true;
+                    resizerChatContext.classList.add('is-dragging');
+                    document.body.style.cursor = 'col-resize';
+                    document.body.style.userSelect = 'none';
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDraggingContext) return;
+                    const newWidth = window.innerWidth - e.clientX;
+                    if (newWidth >= 220 && newWidth <= 420) {
+                        paneContext.style.width = `${newWidth}px`;
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isDraggingContext) {
+                        isDraggingContext = false;
+                        resizerChatContext.classList.remove('is-dragging');
+                        document.body.style.cursor = '';
+                        document.body.style.userSelect = '';
+                    }
+                });
+
+                // Double click resets to default 288px
+                resizerChatContext.addEventListener('dblclick', () => {
+                    paneContext.style.width = '288px';
+                });
+            }
+        }
+
+        // Select conversation row
+        function selectConversation(personKey) {
+            currentConversation = personKey;
+            document.querySelectorAll('.conv-row').forEach(r => {
+                r.classList.remove('active', 'border-apple-blue', 'bg-apple-canvas/60');
+                r.classList.add('border-transparent');
+            });
+
+            const activeCard = document.getElementById(`card-conv-${personKey}`);
+            if (activeCard) {
+                activeCard.classList.add('active', 'border-apple-blue', 'bg-apple-canvas/60');
+                activeCard.classList.remove('border-transparent');
+            }
+
+            // Mobile pane switch
+            if (window.innerWidth < 768) {
+                document.getElementById('pane-conv-list').classList.add('hidden');
+                const chatPane = document.getElementById('pane-chat-thread');
+                chatPane.classList.remove('hidden');
+                chatPane.classList.add('flex');
+            }
+
+            const threadName = document.getElementById('thread-name');
+            const threadAvatar = document.getElementById('thread-avatar');
+            const threadOrigin = document.getElementById('thread-origin-badge');
+            const threadSub = document.getElementById('thread-meta-sub');
+            const activeProd = document.getElementById('active-product-title');
+
+            const ctxName = document.getElementById('ctx-name');
+            const ctxEmail = document.getElementById('ctx-email');
+            const ctxChannel = document.getElementById('ctx-channel');
+            const ctxPath = document.getElementById('ctx-path');
+
+            if (personKey === 'tan') {
+                if (threadName) threadName.textContent = 'Mr. Tan (Singapore)';
+                if (threadAvatar) threadAvatar.textContent = 'MT';
+                if (threadOrigin) threadOrigin.textContent = 'indracoglobal';
+                if (threadSub) threadSub.textContent = 'Browsing: /export/green-beans • Agent: Budi';
+                if (activeProd) activeProd.textContent = 'Sumatra Green Beans Grade 1 (20ft)';
+                if (ctxName) ctxName.textContent = 'Mr. Tan';
+                if (ctxEmail) ctxEmail.textContent = 'tan@sg-cafe.sg';
+                if (ctxChannel) ctxChannel.textContent = 'indracoglobal.com';
+                if (ctxPath) ctxPath.textContent = '/export/green-beans';
+            } else if (personKey === 'budi') {
+                if (threadName) threadName.textContent = 'Budi Santoso';
+                if (threadAvatar) threadAvatar.textContent = 'BS';
+                if (threadOrigin) threadOrigin.textContent = 'indracostore';
+                if (threadSub) threadSub.textContent = 'Browsing: /promo/kopi-jahe • Agent: Sarah';
+                if (activeProd) activeProd.textContent = 'Kopi Jahe Kental 10 Sachet';
+                if (ctxName) ctxName.textContent = 'Budi Santoso';
+                if (ctxEmail) ctxEmail.textContent = 'budi.santoso@yahoo.com';
+                if (ctxChannel) ctxChannel.textContent = 'indracostore.com';
+                if (ctxPath) ctxPath.textContent = '/promo/kopi-jahe';
+            } else {
+                if (threadName) threadName.textContent = 'Jane Doe';
+                if (threadAvatar) threadAvatar.textContent = 'JD';
+                if (threadOrigin) threadOrigin.textContent = 'supresso shopify';
+                if (threadSub) threadSub.textContent = 'Browsing: /products/sumatra-capsule • Agent: Sarah';
+                if (activeProd) activeProd.textContent = 'Supresso Sumatra Mandheling Capsule';
+                if (ctxName) ctxName.textContent = 'Jane Doe';
+                if (ctxEmail) ctxEmail.textContent = 'jane.doe@gmail.com';
+                if (ctxChannel) ctxChannel.textContent = 'supresso.myshopify.com';
+                if (ctxPath) ctxPath.textContent = '/products/sumatra-capsule';
+            }
+        }
+
+        function mobileBackToList() {
+            document.getElementById('pane-conv-list').classList.remove('hidden');
+            const chatPane = document.getElementById('pane-chat-thread');
+            chatPane.classList.add('hidden');
+            chatPane.classList.remove('flex');
+        }
+
+        // Composer Action
+        function sendAdminReplyMessage() {
+            const textarea = document.getElementById('admin-reply-textarea');
+            const text = textarea.value.trim();
+            if (!text) return;
+
+            const container = document.getElementById('messages-container');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = "flex flex-col items-end self-end max-w-[85%] sm:max-w-[70%]";
+            msgDiv.innerHTML = `
+        <span class="text-[10.5px] text-apple-textTertiary mb-0.5 pr-1">${roleProfiles[activeRole].name}</span>
+        <div class="bubble-agent bg-apple-blue text-white px-3 py-2 text-[12.5px] shadow-apple-sm leading-relaxed">
+          ${escapeHtml(text)}
+        </div>
+        <span class="text-[9.5px] text-apple-textTertiary mt-0.5 pr-1 font-mono">Just now • Sent</span>
+      `;
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+            textarea.value = '';
+        }
+
+        function handleReplyKey(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendAdminReplyMessage();
+            }
+        }
+
+        function insertCannedResponse(shortcut) {
+            const textarea = document.getElementById('admin-reply-textarea');
+            if (shortcut === '/shipping') {
+                textarea.value = 'Pesanan sebelum jam 15:00 WIB dikirim pada hari yang sama!';
+            } else if (shortcut === '/stock') {
+                textarea.value = 'Stok produk ini siap kirim dari gudang pusat Surabaya!';
+            }
+            textarea.focus();
+        }
+
+        // Toast
+        function showToast(title, message) {
+            const toast = document.getElementById('apple-toast');
+            const toastTitle = document.getElementById('toast-title');
+            const toastMsg = document.getElementById('toast-message');
+            if (!toast) return;
+
+            if (toastTitle) toastTitle.textContent = title;
+            if (toastMsg) toastMsg.textContent = message;
+
+            toast.classList.remove('translate-y-12', 'opacity-0', 'pointer-events-none');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.add('translate-y-12', 'opacity-0', 'pointer-events-none');
+            }, 3500);
+        }
+
+        // Modal Control
+        function triggerAddIntegration() {
+            if (!roleProfiles[activeRole].canAddWebsite) {
+                showToast('HTTP 403 Forbidden', 'Agent role cannot register websites.');
+                return;
+            }
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.getElementById('modal-form').classList.remove('hidden');
+            document.getElementById('modal-result').classList.add('hidden');
+        }
+
+        function triggerInviteMember() {
+            if (!roleProfiles[activeRole].canInvite) {
+                showToast('HTTP 403 Forbidden', 'Agent role cannot invite staff.');
+                return;
+            }
+            showToast('Invitation Ready', 'Staff token generated.');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-backdrop').classList.add('hidden');
+        }
+
+        function submitNewIntegration() {
+            const name = document.getElementById('input-site-name').value.trim() || 'New Store';
+            const domain = document.getElementById('input-site-domain').value.trim() || 'store.com';
+            latestSnippetKey = `pk_live_${domain.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${Math.floor(1000 + Math.random() * 9000)}`;
+
+            document.getElementById('modal-form').classList.add('hidden');
+            document.getElementById('modal-result').classList.remove('hidden');
+            document.getElementById('snippet-display').textContent =
+                `<script src="https://chat.indraco.com/widget.js" data-key="${latestSnippetKey}" async><\/script>`;
+
+            showToast('Channel Created', `Added ${name}`);
+        }
+
+        function copySnippet(key) {
+            copyToClipboardText(`<script src="https://chat.indraco.com/widget.js" data-key="${key}" async><\/script>`);
+            showToast('Copied', 'Script copied to clipboard');
+        }
+
+        function copySnippetFromModal() {
+            copyToClipboardText(`<script src="https://chat.indraco.com/widget.js" data-key="${latestSnippetKey}" async><\/script>`);
+            showToast('Copied', 'Script copied to clipboard');
+        }
+
+        function copyToClipboardText(text) {
+            const input = document.createElement('textarea');
+            input.value = text;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+        }
+
+        function filterProjectList(siteKey) {
+            document.querySelectorAll('#conv-item-list .conv-row').forEach(r => {
+                r.style.display = (siteKey === 'all' || r.getAttribute('data-site') === siteKey) ? 'flex' : 'none';
+            });
+        }
+
+        function filterInboxScope(scope, btn) {
+            document.querySelectorAll('.inbox-scope-btn').forEach(b => {
+                b.className = "inbox-scope-btn py-1 rounded-md hover:text-apple-textPrimary";
+            });
+            btn.className = "inbox-scope-btn py-1 rounded-md bg-white text-apple-textPrimary shadow-2xs font-medium";
+        }
+
+        function handleSearchConv(query) {
+            const q = query.toLowerCase().trim();
+            document.querySelectorAll('#conv-item-list .conv-row').forEach(r => {
+                r.style.display = r.textContent.toLowerCase().includes(q) ? 'flex' : 'none';
+            });
+        }
+
+        function openAssignModal() {
+            showToast('Assigned', 'Ticket assigned to Sarah.');
+        }
+
+        function resolveCurrentChat() {
+            showToast('Resolved', 'Chat marked as resolved.');
+        }
+
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('main-sidebar');
+            if (sidebar) sidebar.classList.toggle('-translate-x-full');
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // Initialize resizers on load
+        window.addEventListener('DOMContentLoaded', () => {
+            initPanelResizers();
+        });
+    </script>
+</body>
+
+</html>

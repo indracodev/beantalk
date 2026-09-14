@@ -2,29 +2,43 @@ import { ICONS } from './icons';
 import { generateWidgetCss } from './styles';
 import { Message, SessionInitData, WidgetInitOptions } from '../types';
 import { EventEmitter } from '../core/emitter';
-import { generateClientMessageId } from '../core/storage';
+import { generateClientMessageId, getStoredCustomerName, setStoredCustomerName } from '../core/storage';
 
 export class ChatWidgetUi {
   private shadowRoot: ShadowRoot;
   private emitter: EventEmitter;
   private options: WidgetInitOptions;
   private isOpen: boolean = false;
-  private currentStage: 'welcome' | 'chat' = 'welcome';
+  private currentStage: 'welcome' | 'identity' | 'chat' = 'welcome';
   private unreadCount: number = 0;
   private messages: Message[] = [];
   private sessionData: SessionInitData | null = null;
+  private customerName: string = '';
+  private customerCode: string = '';
 
   // DOM Elements inside Shadow DOM
   private wrapperEl!: HTMLElement;
   private launcherBtn!: HTMLButtonElement;
   private unreadBadge!: HTMLElement;
   private stageWelcome!: HTMLElement;
+  private stageIdentity!: HTMLElement;
   private stageChat!: HTMLElement;
   private messagesArea!: HTMLElement;
   private composerInput!: HTMLTextAreaElement;
   private composerSendBtn!: HTMLButtonElement;
   private cardSnippetText!: HTMLElement;
   private styleEl!: HTMLStyleElement;
+
+  // Customer Identity Elements
+  private identityCustCode!: HTMLElement;
+  private identityNameInput!: HTMLInputElement;
+  private identityContinueBtn!: HTMLButtonElement;
+  private identityBackBtn!: HTMLButtonElement;
+  private identitySupportTag!: HTMLElement;
+  private chatInlineIdentityBanner!: HTMLElement;
+  private inlineIdentityInput!: HTMLInputElement;
+  private inlineIdentityBtn!: HTMLButtonElement;
+  private audioCtx: AudioContext | null = null;
 
   constructor(options: WidgetInitOptions, emitter: EventEmitter) {
     this.options = options;
@@ -49,6 +63,12 @@ export class ChatWidgetUi {
     // 4. Render UI Skeleton
     this.renderSkeleton();
     this.bindEvents();
+
+    // Check stored customer name
+    const stored = getStoredCustomerName();
+    if (stored) {
+      this.applyCustomerName(stored, false);
+    }
   }
 
   updateTheming(primaryColor: string): void {
@@ -76,20 +96,103 @@ export class ChatWidgetUi {
     const headerSubEl = this.shadowRoot.querySelector('.welcome-subtitle');
     if (headerSubEl) headerSubEl.textContent = greeting;
 
+    const supportTitle = settings.support_title || this.options.supportTitle || this.options.brandName || this.options.storeName || data.project?.name || 'Customer Support';
+
+    const cardChatName = this.shadowRoot.querySelector('#cardChatName');
+    if (cardChatName) cardChatName.textContent = supportTitle;
+
+    if (this.identitySupportTag) this.identitySupportTag.textContent = supportTitle;
+
     const chatTitleEl = this.shadowRoot.querySelector('.chat-header-title');
-    if (chatTitleEl) chatTitleEl.textContent = data.project?.name || 'Store Support';
+    if (chatTitleEl) chatTitleEl.textContent = supportTitle;
 
     const brandBadge = this.shadowRoot.querySelector('.welcome-brand-badge');
     if (brandBadge) brandBadge.textContent = data.project?.name || 'Live Support';
+
+    // Populate customer code and name
+    const visitorObj = (data.visitor as any) || {};
+    const code = visitorObj.customer_code || visitorObj.customer_code_formatted;
+    if (code) {
+      this.customerCode = code;
+      if (this.identityCustCode) {
+        this.identityCustCode.textContent = code;
+      }
+    }
+
+    const serverName = visitorObj.name;
+    const storedName = getStoredCustomerName();
+    const effectiveName = serverName || storedName;
+    if (effectiveName) {
+      this.applyCustomerName(effectiveName, false);
+    } else {
+      if (this.chatInlineIdentityBanner) {
+        this.chatInlineIdentityBanner.style.display = 'flex';
+      }
+    }
 
     // Populate initial messages if present
     if (data.conversation?.messages && data.conversation.messages.length > 0) {
       this.setMessages(data.conversation.messages);
     }
+
+    // Populate social channels ("Find us somewhere else")
+    const socialChannelsCard = this.shadowRoot.querySelector('#socialChannelsCard') as HTMLElement;
+    const socialChannelsTitle = this.shadowRoot.querySelector('#socialChannelsTitle') as HTMLElement;
+    const socialChannelsRow = this.shadowRoot.querySelector('#socialChannelsRow') as HTMLElement;
+
+    const channels = settings.social_channels || [];
+    const findUsTitle = settings.find_us_title || 'Reach Us Anywhere Else';
+
+    if (socialChannelsTitle) {
+      socialChannelsTitle.textContent = findUsTitle;
+    }
+
+    if (socialChannelsCard && socialChannelsRow) {
+      const activeChannels = Array.isArray(channels)
+        ? channels.filter((c: any) => c.enabled && c.url)
+        : [];
+
+      if (activeChannels.length > 0) {
+        socialChannelsRow.innerHTML = '';
+        activeChannels.forEach((chan: any) => {
+          const btn = document.createElement('a');
+          btn.className = `social-channel-btn social-btn-${chan.id}`;
+          btn.href = chan.url;
+          btn.target = '_blank';
+          btn.rel = 'noopener noreferrer';
+          btn.title = `Hubungi via ${chan.name}`;
+
+          const iconSvg = (ICONS as any)[chan.icon || chan.id] || ICONS.chat;
+          btn.innerHTML = iconSvg;
+          socialChannelsRow.appendChild(btn);
+        });
+        socialChannelsCard.style.display = 'block';
+      } else {
+        socialChannelsCard.style.display = 'none';
+      }
+    }
+  }
+
+  applyCustomerName(name: string, persist: boolean = true): void {
+    const clean = name.trim();
+    if (!clean) return;
+    this.customerName = clean;
+
+    if (persist) {
+      setStoredCustomerName(clean);
+      this.emitter.emit('customer:rename', clean);
+    }
+
+    if (this.identityNameInput) this.identityNameInput.value = clean;
+    if (this.chatInlineIdentityBanner) this.chatInlineIdentityBanner.style.display = 'none';
+    if (this.composerInput) {
+      this.composerInput.placeholder = `Tulis pesan sebagai ${clean}...`;
+    }
   }
 
   private renderSkeleton(): void {
-    const storeName = this.options.storeName || 'Store Support';
+    const brandName = this.options.brandName || this.options.storeName || 'Customer Support';
+    const supportTitle = this.options.supportTitle || brandName || 'Customer Support';
     const greetingTitle = this.options.greetingTitle || 'Hallo!';
     const greetingSub = this.options.greetingSubtitle || 'Apakah ada yang bisa kami bantu? Tanyakan informasi apapun di sini.';
     const posClass = this.options.position === 'bottom-left' ? 'pos-bottom-left' : '';
@@ -103,7 +206,7 @@ export class ChatWidgetUi {
           <div class="stage-welcome">
             <div class="welcome-header">
               <div class="welcome-header-top">
-                <span class="welcome-brand-badge">${storeName}</span>
+                <span class="welcome-brand-badge">${brandName}</span>
                 <button type="button" class="welcome-close-btn" aria-label="Tutup">${ICONS.close}</button>
               </div>
               <h2 class="welcome-title">${greetingTitle}</h2>
@@ -111,8 +214,8 @@ export class ChatWidgetUi {
             </div>
 
             <div class="welcome-body">
-              <!-- CARD 1: ACTIVE CHAT -->
-              <div class="card-active-chat">
+              <!-- CARD 1: STORE SUPPORT (ACTIVE CHAT TRIGGER) -->
+              <div class="card-active-chat" id="cardActiveChat">
                 <div class="card-live-indicator">
                   <span class="live-dot"></span>
                   <span>Live Chat Available</span>
@@ -122,8 +225,8 @@ export class ChatWidgetUi {
                     ${ICONS.agentAvatar}
                   </div>
                   <div class="card-chat-info">
-                    <div class="card-chat-name">${storeName}</div>
-                    <div class="card-chat-snippet" id="card-snippet">Mulai obrolan baru dengan agen kami...</div>
+                    <div class="card-chat-name" id="cardChatName">${supportTitle}</div>
+                    <div class="card-chat-snippet" id="card-snippet">Mulai obrolan baru dengan tim kami...</div>
                   </div>
                   <div class="card-chat-chevron">
                     ${ICONS.chevronRight}
@@ -131,37 +234,59 @@ export class ChatWidgetUi {
                 </div>
               </div>
 
-              <!-- CARD 2: REACH US ELSEWHERE -->
-              <div class="card-social-reach">
-                <div class="social-reach-title">Atau Hubungi Kami Lewat</div>
-                <div class="social-channel-list">
-                  <a href="${this.options.whatsappNumber ? 'https://wa.me/' + this.options.whatsappNumber : '#'}" target="_blank" class="social-channel-item">
-                    <div class="social-left">
-                      <div class="social-icon-box whatsapp">${ICONS.whatsapp}</div>
-                      <span>WhatsApp CS Resmi</span>
-                    </div>
-                    <span style="color:#94A3B8;">${ICONS.chevronRight}</span>
-                  </a>
-                  <a href="${this.options.instagramHandle ? 'https://instagram.com/' + this.options.instagramHandle : '#'}" target="_blank" class="social-channel-item">
-                    <div class="social-left">
-                      <div class="social-icon-box instagram">${ICONS.instagram}</div>
-                      <span>Instagram Direct</span>
-                    </div>
-                    <span style="color:#94A3B8;">${ICONS.chevronRight}</span>
-                  </a>
-                  <a href="${this.options.messengerUrl || '#'}" target="_blank" class="social-channel-item">
-                    <div class="social-left">
-                      <div class="social-icon-box messenger">${ICONS.messenger}</div>
-                      <span>Facebook Messenger</span>
-                    </div>
-                    <span style="color:#94A3B8;">${ICONS.chevronRight}</span>
-                  </a>
+              <!-- CARD 2: REACH US ANYWHERE ELSE / FIND US SOMEWHERE ELSE -->
+              <div class="card-social-channels" id="socialChannelsCard" style="display: none;">
+                <div class="social-channels-header">
+                  <span class="social-channels-title" id="socialChannelsTitle">Reach Us Anywhere Else</span>
+                </div>
+                <div class="social-channels-row" id="socialChannelsRow">
+                  <!-- Populated dynamically from server settings -->
                 </div>
               </div>
             </div>
 
             <div class="welcome-footer">
-              ${ICONS.sparkles} <span>Powered by BeanTalk</span>
+              ${ICONS.sparkles} <span>Powered by BeanTalk • Web Chat</span>
+            </div>
+          </div>
+
+          <!-- ================= STAGE 1.5: FORM PEMANGGILAN NAMA ================= -->
+          <div class="stage-identity" style="display: none;">
+            <div class="identity-stage-header">
+              <button type="button" class="identity-back-btn" id="identityBackBtn" aria-label="Kembali">${ICONS.back}</button>
+              <div class="identity-stage-header-title" id="identitySupportTag">${supportTitle}</div>
+              <button type="button" class="welcome-close-btn" aria-label="Tutup">${ICONS.close}</button>
+            </div>
+
+            <div class="identity-stage-body">
+              <div class="identity-hero-avatar">
+                ${ICONS.agentAvatar}
+              </div>
+              <div class="identity-code-pill" id="identityCustCode">Tamu</div>
+              <h3 class="identity-stage-title">Halo! Kenalan Dulu Yuk</h3>
+              <p class="identity-stage-subtitle">
+                Boleh kami tahu nama panggilan Anda? Agar tim CS kami dapat menyapa Anda dengan ramah.
+              </p>
+
+              <div class="identity-form-box">
+                <label class="identity-form-label" for="identityNameInput">Nama Panggilan Anda</label>
+                <input 
+                  type="text" 
+                  class="identity-name-input" 
+                  id="identityNameInput" 
+                  placeholder="Contoh: Budi, Sarah, Alex..." 
+                  maxlength="40" 
+                  autocomplete="name"
+                />
+                <button type="button" class="identity-continue-btn" id="identityContinueBtn">
+                  <span>Lanjut ke Obrolan</span>
+                  ${ICONS.chevronRight}
+                </button>
+              </div>
+            </div>
+
+            <div class="welcome-footer">
+              ${ICONS.sparkles} <span>Powered by BeanTalk • Web Chat</span>
             </div>
           </div>
 
@@ -175,11 +300,18 @@ export class ChatWidgetUi {
                   <span class="header-online-dot"></span>
                 </div>
                 <div class="chat-header-info">
-                  <div class="chat-header-title">${storeName}</div>
+                  <div class="chat-header-title">${supportTitle}</div>
                   <div class="chat-header-status">Online • Membalas dalam hitungan menit</div>
                 </div>
               </div>
               <button type="button" class="chat-close-btn" aria-label="Tutup">${ICONS.close}</button>
+            </div>
+
+            <!-- INLINE IDENTITY BANNER -->
+            <div class="chat-identity-banner" id="chatInlineIdentityBanner" style="display: none;">
+              <span>Boleh tahu nama Anda?</span>
+              <input type="text" id="inlineIdentityInput" placeholder="Nama Anda..." maxlength="40" />
+              <button type="button" id="inlineIdentityBtn">Simpan</button>
             </div>
 
             <!-- MESSAGES THREAD -->
@@ -213,14 +345,32 @@ export class ChatWidgetUi {
     this.launcherBtn = this.shadowRoot.querySelector('.chat-launcher-btn') as HTMLButtonElement;
     this.unreadBadge = this.shadowRoot.querySelector('.launcher-unread-badge') as HTMLElement;
     this.stageWelcome = this.shadowRoot.querySelector('.stage-welcome') as HTMLElement;
+    this.stageIdentity = this.shadowRoot.querySelector('.stage-identity') as HTMLElement;
     this.stageChat = this.shadowRoot.querySelector('.stage-chat') as HTMLElement;
     this.messagesArea = this.shadowRoot.querySelector('.chat-messages-area') as HTMLElement;
     this.composerInput = this.shadowRoot.querySelector('.composer-textarea') as HTMLTextAreaElement;
     this.composerSendBtn = this.shadowRoot.querySelector('.composer-send-btn') as HTMLButtonElement;
     this.cardSnippetText = this.shadowRoot.querySelector('#card-snippet') as HTMLElement;
+
+    // Customer Identity references
+    this.identityCustCode = this.shadowRoot.querySelector('#identityCustCode') as HTMLElement;
+    this.identityNameInput = this.shadowRoot.querySelector('#identityNameInput') as HTMLInputElement;
+    this.identityContinueBtn = this.shadowRoot.querySelector('#identityContinueBtn') as HTMLButtonElement;
+    this.identityBackBtn = this.shadowRoot.querySelector('#identityBackBtn') as HTMLButtonElement;
+    this.identitySupportTag = this.shadowRoot.querySelector('#identitySupportTag') as HTMLElement;
+    this.chatInlineIdentityBanner = this.shadowRoot.querySelector('#chatInlineIdentityBanner') as HTMLElement;
+    this.inlineIdentityInput = this.shadowRoot.querySelector('#inlineIdentityInput') as HTMLInputElement;
+    this.inlineIdentityBtn = this.shadowRoot.querySelector('#inlineIdentityBtn') as HTMLButtonElement;
   }
 
   private bindEvents(): void {
+    // Lazy audio unlock on interaction
+    const unlockFn = () => this.unlockAudio();
+    this.launcherBtn.addEventListener('click', unlockFn);
+    window.addEventListener('click', unlockFn, { passive: true });
+    window.addEventListener('keydown', unlockFn, { passive: true });
+    window.addEventListener('touchstart', unlockFn, { passive: true });
+
     // Toggle Launcher
     this.launcherBtn.addEventListener('click', () => {
       this.toggle();
@@ -231,19 +381,66 @@ export class ChatWidgetUi {
       btn.addEventListener('click', () => this.close());
     });
 
-    // Stage 1 Card Click -> Go to Stage 2
+    // Stage 1 Card Click -> Go to Stage 1.5 Identity Form
     const activeCard = this.shadowRoot.querySelector('.card-active-chat');
     if (activeCard) {
       activeCard.addEventListener('click', () => {
-        this.goToStage('chat');
+        this.goToStage('identity');
       });
     }
 
-    // Stage 2 Back Button -> Go to Stage 1
+    // Stage 1.5 Back Button -> Return to Welcome
+    if (this.identityBackBtn) {
+      this.identityBackBtn.addEventListener('click', () => {
+        this.goToStage('welcome');
+      });
+    }
+
+    // Stage 1.5 Form Submit (Lanjut ke Chat)
+    const handleIdentitySubmit = () => {
+      const val = this.identityNameInput ? this.identityNameInput.value.trim() : '';
+      if (val) {
+        this.applyCustomerName(val, true);
+      }
+      this.goToStage('chat');
+    };
+
+    if (this.identityContinueBtn) {
+      this.identityContinueBtn.addEventListener('click', handleIdentitySubmit);
+    }
+    if (this.identityNameInput) {
+      this.identityNameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          handleIdentitySubmit();
+        }
+      });
+    }
+
+    // Stage 2 Back Button -> Go to Stage 1 Welcome
     const backBtn = this.shadowRoot.querySelector('.chat-back-btn');
     if (backBtn) {
       backBtn.addEventListener('click', () => {
         this.goToStage('welcome');
+      });
+    }
+
+    // Customer Identity Save in Inline Banner
+    const saveInlineIdentity = () => {
+      const val = this.inlineIdentityInput.value.trim();
+      if (val) {
+        this.applyCustomerName(val, true);
+      }
+    };
+    if (this.inlineIdentityBtn) {
+      this.inlineIdentityBtn.addEventListener('click', saveInlineIdentity);
+    }
+    if (this.inlineIdentityInput) {
+      this.inlineIdentityInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          saveInlineIdentity();
+        }
       });
     }
 
@@ -284,7 +481,7 @@ export class ChatWidgetUi {
       conversation_id: this.sessionData?.conversation?.id || 0,
       client_message_id: generateClientMessageId(),
       sender_type: 'visitor',
-      sender_name: 'Anda',
+      sender_name: this.customerName || 'Anda',
       message: text,
       created_at: new Date().toISOString(),
     };
@@ -293,13 +490,25 @@ export class ChatWidgetUi {
     this.emitter.emit('ui:send', tempMsg);
   }
 
-  goToStage(stage: 'welcome' | 'chat'): void {
+  goToStage(stage: 'welcome' | 'identity' | 'chat'): void {
     this.currentStage = stage;
     if (stage === 'welcome') {
       this.stageWelcome.style.display = 'flex';
+      if (this.stageIdentity) this.stageIdentity.style.display = 'none';
       this.stageChat.style.display = 'none';
+    } else if (stage === 'identity') {
+      this.stageWelcome.style.display = 'none';
+      if (this.stageIdentity) this.stageIdentity.style.display = 'flex';
+      this.stageChat.style.display = 'none';
+      if (this.identityNameInput) {
+        if (this.customerName) {
+          this.identityNameInput.value = this.customerName;
+        }
+        setTimeout(() => this.identityNameInput.focus(), 150);
+      }
     } else {
       this.stageWelcome.style.display = 'none';
+      if (this.stageIdentity) this.stageIdentity.style.display = 'none';
       this.stageChat.style.display = 'flex';
       this.scrollToBottom();
       setTimeout(() => this.composerInput.focus(), 150);
@@ -341,6 +550,48 @@ export class ChatWidgetUi {
     this.scrollToBottom();
   }
 
+  private unlockAudio(): void {
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      if (!this.audioCtx) {
+        this.audioCtx = new AudioContextClass();
+      }
+      if (this.audioCtx.state === 'suspended') {
+        this.audioCtx.resume();
+      }
+    } catch (e) {
+      // Lazy unlock error ignored
+    }
+  }
+
+  playNotificationSound(): void {
+    try {
+      this.unlockAudio();
+      if (!this.audioCtx) return;
+
+      const now = this.audioCtx.currentTime;
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(659.25, now); // E5
+      osc.frequency.exponentialRampToValueAtTime(880, now + 0.08); // Glide to A5
+
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.25, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+
+      osc.connect(gain);
+      gain.connect(this.audioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.4);
+    } catch (e) {
+      // Audio playback ignored
+    }
+  }
+
   appendMessage(msg: Message): void {
     // Avoid duplicates if client_message_id matches
     const exists = this.messages.some(
@@ -351,6 +602,11 @@ export class ChatWidgetUi {
       this.renderMessageBubble(msg);
       this.updateSnippet();
       this.scrollToBottom();
+
+      // If message from agent, play lazy audio chime
+      if (msg.sender_type !== 'visitor') {
+        this.playNotificationSound();
+      }
 
       // If closed and message from agent, increment unread
       if (!this.isOpen && msg.sender_type !== 'visitor') {
