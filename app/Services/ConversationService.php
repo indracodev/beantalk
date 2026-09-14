@@ -54,7 +54,21 @@ class ConversationService
     }
 
     /**
-     * Gets the active conversation for a visitor or creates a new thread
+     * Gets the active conversation for a visitor ONLY if it has messages (does not auto-create empty conversation)
+     */
+    public function getActiveConversation(Project $project, Visitor $visitor): ?Conversation
+    {
+        return Conversation::where('project_id', $project->id)
+            ->where('visitor_id', $visitor->id)
+            ->whereIn('status', ['open', 'pending'])
+            ->whereHas('messages')
+            ->with(['latestMessage'])
+            ->latest('id')
+            ->first();
+    }
+
+    /**
+     * Gets the active conversation for a visitor or creates a new thread on first customer message
      */
     public function getOrCreateConversation(Project $project, Visitor $visitor, array $context = []): Conversation
     {
@@ -76,7 +90,7 @@ class ConversationService
             return $conversation;
         }
 
-        // Buat percakapan baru jika belum ada
+        // Buat percakapan baru saat pesan pertama dikirim
         return Conversation::create([
             'tenant_id' => $project->tenant_id,
             'project_id' => $project->id,

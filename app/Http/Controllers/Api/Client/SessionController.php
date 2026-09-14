@@ -45,14 +45,23 @@ class SessionController extends Controller
             $request->input('name')
         );
 
-        // 3. Resolve or create active conversation
-        $conversation = $this->conversationService->getOrCreateConversation($project, $visitor, [
-            'page_url'   => $request->input('page_url'),
-            'page_title' => $request->input('page_title'),
-        ]);
+        // 3. Resolve active conversation ONLY if one already exists with messages
+        $conversation = $this->conversationService->getActiveConversation($project, $visitor);
 
         // 4. Widget settings (Warna core & teks)
         $widgetSetting = $project->widgetSetting;
+
+        $conversationData = null;
+        if ($conversation) {
+            $conversationData = [
+                'id'                  => $conversation->id,
+                'status'              => $conversation->status,
+                'channel'             => $conversation->channel,
+                'channel_label'       => $conversation->channel_label,
+                'last_message_at'     => $conversation->last_message_at ? $conversation->last_message_at->toIso8601String() : null,
+                'unread_visitor_count'=> $conversation->unread_visitor_count,
+            ];
+        }
 
         return response()->json([
             'success' => true,
@@ -63,14 +72,7 @@ class SessionController extends Controller
                     'customer_code' => $visitor->customer_code_formatted,
                     'display_name'  => $visitor->display_name,
                 ],
-                'conversation' => [
-                    'id'                  => $conversation->id,
-                    'status'              => $conversation->status,
-                    'channel'             => $conversation->channel,
-                    'channel_label'       => $conversation->channel_label,
-                    'last_message_at'     => $conversation->last_message_at ? $conversation->last_message_at->toIso8601String() : null,
-                    'unread_visitor_count'=> $conversation->unread_visitor_count,
-                ],
+                'conversation' => $conversationData,
                 'project' => [
                     'id'   => $project->id,
                     'name' => $project->name,

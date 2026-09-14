@@ -97,18 +97,38 @@ class MessageController extends Controller
         /** @var Project $project */
         $project = $request->attributes->get('project');
 
-        $conversation = Conversation::where('project_id', $project->id)
-            ->where('id', $conversationId)
-            ->first();
+        $conversation = null;
+        if (!empty($conversationId) && is_numeric($conversationId) && (int)$conversationId > 0) {
+            $conversation = Conversation::where('project_id', $project->id)
+                ->where('id', $conversationId)
+                ->first();
+        }
 
+        // Jika conversation belum ada (misal pesan pertama dari widget), resolve/create on demand!
         if (!$conversation) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'CONVERSATION_NOT_FOUND',
-                    'message' => 'Percakapan tidak ditemukan untuk project ini.',
-                ]
-            ], 404);
+            $visitorUuid = $request->input('visitor_uuid');
+            if ($visitorUuid) {
+                $visitor = $this->conversationService->getOrCreateVisitor(
+                    $project,
+                    $visitorUuid,
+                    $request->ip(),
+                    $request->userAgent(),
+                    $request->input('sender_name')
+                );
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'error' => [
+                        'code' => 'CONVERSATION_NOT_FOUND',
+                        'message' => 'Percakapan tidak ditemukan untuk project ini.',
+                    ]
+                ], 404);
+            }
+
+            $conversation = $this->conversationService->getOrCreateConversation($project, $visitor, [
+                'page_url'   => $request->input('page_url'),
+                'page_title' => $request->input('page_title'),
+            ]);
         }
 
         $rawSenderName = strip_tags(trim($request->input('sender_name', '')));
@@ -136,6 +156,7 @@ class MessageController extends Controller
             'success' => true,
             'data' => [
                 'id'                => $msg->id,
+                'conversation_id'   => $conversation->id,
                 'client_message_id' => $msg->client_message_id,
                 'sender_type'       => $msg->sender_type,
                 'sender_name'       => $msg->sender_name,

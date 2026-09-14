@@ -22,7 +22,8 @@ class ConversationController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Conversation::with(['visitor', 'contact', 'project', 'assignedUser'])
+        $query = Conversation::whereHas('messages')
+            ->with(['visitor', 'contact', 'project', 'assignedUser'])
             ->orderBy('last_message_at', 'desc');
 
         if ($projectId = $request->query('project_id')) {

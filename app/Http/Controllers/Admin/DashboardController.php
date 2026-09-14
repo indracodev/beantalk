@@ -247,8 +247,9 @@ class DashboardController extends Controller
         // Ambil semua project milik tenant
         $projects = Project::where('tenant_id', $tenantId)->orderBy('name', 'asc')->get();
 
-        // Query percakapan dengan filter (eager load semua relasi untuk menghindari N+1 query)
+        // Query percakapan dengan filter (hanya tampilkan yang sudah memiliki pesan nyata, hindari tiket kosong)
         $query = Conversation::where('tenant_id', $tenantId)
+            ->whereHas('messages')
             ->with(['visitor', 'project.widgetSetting', 'assignedUser', 'latestMessage'])
             ->orderBy('last_message_at', 'desc');
 
@@ -308,6 +309,7 @@ class DashboardController extends Controller
 
         // Statistik ringkas dalam 1 query agregasi tunggal (menghindari multiple roundtrip counts)
         $statusCounts = Conversation::where('tenant_id', $tenantId)
+            ->whereHas('messages')
             ->selectRaw("
                 COUNT(*) as total_all,
                 SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END) as total_open,
@@ -566,8 +568,9 @@ class DashboardController extends Controller
                 ->get();
         }
 
-        // Query daftar percakapan aktif dengan filter yang sama
+        // Query daftar percakapan aktif dengan filter yang sama (hanya percakapan dengan pesan)
         $query = Conversation::where('tenant_id', $tenantId)
+            ->whereHas('messages')
             ->with(['visitor', 'project.widgetSetting', 'assignedUser', 'latestMessage'])
             ->orderBy('last_message_at', 'desc');
 

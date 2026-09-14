@@ -84,15 +84,26 @@ export class ApiClient {
 
   async sendMessage(
     conversationId: number,
-    payload: { client_message_id: string; message: string; sender_name?: string }
+    payload: {
+      client_message_id: string;
+      message: string;
+      sender_name?: string;
+      visitor_uuid?: string;
+      page_url?: string;
+      page_title?: string;
+    }
   ): Promise<ApiResponse<Message>> {
-    return this.request<Message>(`/api/v1/client/conversations/${conversationId}/messages`, {
+    const targetId = conversationId && conversationId > 0 ? conversationId : 0;
+    return this.request<Message>(`/api/v1/client/conversations/${targetId}/messages`, {
       method: 'POST',
       body: JSON.stringify({
+        visitor_uuid: payload.visitor_uuid,
         client_message_id: payload.client_message_id,
         content: payload.message,
         message: payload.message,
         sender_name: payload.sender_name,
+        page_url: payload.page_url,
+        page_title: payload.page_title,
       }),
     });
   }

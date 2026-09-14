@@ -67,19 +67,34 @@ export class BeanTalk {
 
     while (this.sendQueue.length > 0) {
       const msg = this.sendQueue.shift()!;
-      if (!this.sessionData?.conversation?.id) {
-        console.error('[BeanTalk] Percakapan belum diinisialisasi.');
-        continue;
-      }
+      const convId = this.sessionData?.conversation?.id || 0;
+      const visitorUuid = this.options.visitorUuid || getOrCreateVisitorUuid();
+      const storedName = getStoredCustomerName();
 
       try {
-        const res = await this.api.sendMessage(this.sessionData.conversation.id, {
+        const res = await this.api.sendMessage(convId, {
+          visitor_uuid: visitorUuid,
           client_message_id: msg.client_message_id || generateClientMessageId(),
           message: msg.content || msg.message || '',
-          sender_name: msg.sender_name || 'Tamu',
+          sender_name: msg.sender_name || storedName || 'Tamu',
+          page_url: window.location.href,
+          page_title: document.title,
         });
 
         if (res.success && res.data) {
+          const resConvId = (res.data as any).conversation_id;
+          if (resConvId && (!this.sessionData?.conversation?.id || this.sessionData.conversation.id !== resConvId)) {
+            if (!this.sessionData) {
+              this.sessionData = {} as any;
+            }
+            if (!this.sessionData.conversation) {
+              this.sessionData.conversation = { id: resConvId, status: 'open' } as any;
+            } else {
+              this.sessionData.conversation.id = resConvId;
+            }
+            setLastConversationId(resConvId);
+            this.transport.start(resConvId, res.data.id || 0);
+          }
           this.emitter.emit('message:sent', res.data);
         }
       } catch (err) {
@@ -135,11 +150,11 @@ export class BeanTalk {
 
       if (response.success && response.data) {
         this.sessionData = response.data;
-        const conv = response.data.conversation;
+        this.ui.setSessionData(response.data);
 
-        if (conv) {
+        const conv = response.data.conversation;
+        if (conv && conv.id) {
           setLastConversationId(conv.id);
-          this.ui.setSessionData(response.data);
 
           // Find last message ID
           let lastId = 0;

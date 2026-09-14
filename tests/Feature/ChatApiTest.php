@@ -272,4 +272,56 @@ class ChatApiTest extends TestCase
                   ->assertJsonPath('data.visitor.name', 'Andi Wijaya')
                   ->assertJsonPath('data.visitor.display_name', 'Andi Wijaya');
     }
+
+    /**
+     * Test 10: Session init does NOT create empty conversation in database
+     */
+    public function testSessionInitDoesNotCreateEmptyConversation()
+    {
+        $uniqueUuid = 'fresh-visitor-' . uniqid();
+        $convCountBefore = \App\Models\Conversation::withoutGlobalScopes()->count();
+
+        $res = $this->withHeaders([
+            'X-Project-Key' => 'pk_live_supresso_8819',
+        ])->postJson('/api/v1/client/session/init', [
+            'visitor_uuid' => $uniqueUuid,
+            'name'         => 'Visitor Tanpa Chat',
+        ]);
+
+        $res->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.conversation', null);
+
+        $convCountAfter = \App\Models\Conversation::withoutGlobalScopes()->count();
+        $this->assertEquals($convCountBefore, $convCountAfter, 'Session init should not create empty conversation rows.');
+    }
+
+    /**
+     * Test 11: First customer message creates conversation lazily
+     */
+    public function testFirstMessageCreatesConversationLazily()
+    {
+        $uniqueUuid = 'chatting-visitor-' . uniqid();
+
+        $res = $this->withHeaders([
+            'X-Project-Key' => 'pk_live_supresso_8819',
+        ])->postJson('/api/v1/client/conversations/0/messages', [
+            'visitor_uuid' => $uniqueUuid,
+            'sender_name'  => 'Ibu Maya',
+            'content'      => 'Halo kak, apakah ada promo diskon hari ini?',
+        ]);
+
+        $res->assertStatus(201)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.sender_name', 'Ibu Maya')
+            ->assertJsonPath('data.content', 'Halo kak, apakah ada promo diskon hari ini?');
+
+        $convId = $res->json('data.conversation_id');
+        $this->assertNotNull($convId);
+        $this->assertGreaterThan(0, $convId);
+
+        $conv = \App\Models\Conversation::find($convId);
+        $this->assertNotNull($conv);
+        $this->assertEquals('Halo kak, apakah ada promo diskon hari ini?', $conv->last_message_preview);
+    }
 }
