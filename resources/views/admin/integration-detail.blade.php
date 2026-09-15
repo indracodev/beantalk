@@ -296,20 +296,16 @@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-apple-border">
                     <div>
                         <div class="flex items-center gap-2">
-                            <h3 class="text-[14px] font-bold text-apple-textPrimary">Saluran Kontak Alternatif &amp; Multi-Kontak</h3>
+                            <h3 class="text-[14px] font-bold text-apple-textPrimary">Saluran Sosial, Kontak &amp; Marketplace</h3>
                             <span id="labelSocialCount" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">{{ count(array_filter($socialChannelsList, fn($c) => !empty($c['enabled']))) }} Aktif</span>
                         </div>
-                        <p class="text-[11.5px] text-apple-textSecondary mt-0.5">Dukung penambahan banyak kontak untuk platform yang sama (contoh: WhatsApp Sales, WhatsApp Retur &amp; Garansi). Pelanggan dapat memilih kontak tujuan di widget.</p>
+                        <p class="text-[11.5px] text-apple-textSecondary mt-0.5">Tambahkan saluran komunikasi resmi atau toko Anda (WhatsApp, Instagram, Telegram, Shopee, Tokopedia, Custom Link, dsb). Mendukung banyak kontak untuk platform yang sama.</p>
                     </div>
 
-                    <div class="flex items-center gap-2 flex-wrap self-start sm:self-auto">
-                        <button type="button" onclick="addNewSocialChannel('whatsapp', 'WhatsApp CS & Order', '')" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-[11.5px] font-semibold transition shadow-apple-sm cursor-pointer">
-                            <span>+ Tambah Kontak WhatsApp</span>
-                        </button>
-                        <button type="button" onclick="addNewSocialChannel('custom', 'Tautan Kustom', '')" class="inline-flex items-center gap-1.5 bg-apple-canvas border border-apple-border hover:bg-apple-border/40 text-apple-textPrimary px-3 py-1.5 rounded-lg text-[11.5px] font-medium transition shadow-2xs cursor-pointer">
-                            <span>+ Saluran Lain</span>
-                        </button>
-                    </div>
+                    <button type="button" onclick="addNewSocialChannel()" class="inline-flex items-center gap-1.5 bg-apple-blue hover:bg-apple-blueHover text-white px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition shadow-apple-sm cursor-pointer self-start sm:self-auto">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <span>+ Tambah Saluran / Kontak Baru</span>
+                    </button>
                 </div>
 
                 <!-- Container Baris Saluran Sosial (Vanilla JS Managed) -->
@@ -320,17 +316,17 @@
                 <!-- Empty State -->
                 <div id="socialChannelsEmptyState" class="{{ count($socialChannelsList) > 0 ? 'hidden' : '' }} p-6 text-center border-2 border-dashed border-apple-border rounded-xl text-[12px] text-apple-textTertiary bg-apple-canvas/20">
                     <svg class="w-7 h-7 text-neutral-300 mx-auto mb-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-                    <p class="font-medium text-apple-textSecondary">Belum ada saluran kontak alternatif.</p>
-                    <p class="mt-0.5 text-apple-textTertiary text-[11px]">Klik tombol <strong>"+ Tambah Kontak WhatsApp"</strong> di atas untuk menambahkan kontak customer support pertama Anda.</p>
+                    <p class="font-medium text-apple-textSecondary">Belum ada saluran kontak atau marketplace.</p>
+                    <p class="mt-0.5 text-apple-textTertiary text-[11px]">Klik tombol <strong>"+ Tambah Saluran / Kontak Baru"</strong> di atas untuk menambahkan saluran kontak atau tautan toko pertama Anda.</p>
                 </div>
 
                 <!-- Informative Callout for Multi-Contact Feature -->
-                <div class="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl text-[11.5px] text-emerald-900 flex items-start gap-2.5">
-                    <svg class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <div class="p-3.5 bg-blue-50/70 border border-blue-200 rounded-xl text-[11.5px] text-blue-900 flex items-start gap-2.5">
+                    <svg class="w-4 h-4 text-blue-600 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                     <div>
-                        <span class="font-bold">Fitur Pemilihan Multi-Kontak Otomatis</span>
-                        <p class="mt-0.5 text-emerald-800 leading-relaxed text-[11px]">
-                            Jika Anda menambahkan <strong>lebih dari 1 kontak aktif pada platform yang sama</strong> (misal: 2 nomor WhatsApp), saat pelanggan mengklik ikon WhatsApp di widget website, sistem akan otomatis membuka <strong>Menu Pilihan Kontak</strong> agar pelanggan dapat memilih apakah ingin menghubungi CS Sales, CS Retur, atau layanan lainnya.
+                        <span class="font-bold">Dukungan Multi-Akun &amp; Multi-Kontak</span>
+                        <p class="mt-0.5 text-blue-800 leading-relaxed text-[11px]">
+                            Jika Anda menambahkan <strong>lebih dari 1 kontak aktif pada platform yang sama</strong> (misal: beberapa nomor WhatsApp, akun Instagram cabang, dsb), pengunjung website akan disuguhkan <strong>Menu Pilihan Kontak</strong> di widget agar dapat memilih layanan yang dituju.
                         </p>
                     </div>
                 </div>
@@ -560,7 +556,7 @@ function renderSocialChannelsList() {
                 <div class="flex-1 w-full grid grid-cols-1 md:grid-cols-12 gap-2.5">
                     <div class="md:col-span-5">
                         <label class="block text-[10.5px] font-semibold text-apple-textSecondary mb-1">Nama / Label Kontak</label>
-                        <input type="text" value="${escapeHtml(chan.name || '')}" oninput="updateSocialChannelField(${idx}, 'name', this.value)" placeholder="Contoh: CS Sales &amp; Pemesanan" class="w-full text-[12px] px-3 py-1.5 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                        <input type="text" value="${escapeHtml(chan.name || '')}" oninput="updateSocialChannelField(${idx}, 'name', this.value)" placeholder="Contoh: CS Sales, Akun Resmi, CS Retur..." class="w-full text-[12px] px-3 py-1.5 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
                     </div>
                     <div class="md:col-span-7">
                         <label class="block text-[10.5px] font-semibold text-apple-textSecondary mb-1">Nomor HP / URL Tautan</label>

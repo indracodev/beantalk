@@ -60,11 +60,13 @@ class IntegrationController extends Controller
             'greeting_subtitle' => 'nullable|string|max:255',
         ]);
 
-        // Default to first tenant if not explicitly set (Single tenant / multi project)
-        $tenantId = (app()->bound('current_tenant_id') ? app('current_tenant_id') : null) ?? Tenant::firstOrCreate(
-            ['slug' => 'default'],
-            ['name' => 'Default Organization', 'plan' => 'enterprise']
-        )->id;
+        // Tenant resolution: Auth user tenant > Bound tenant > Default tenant
+        $tenantId = ($request->user() && $request->user()->tenant_id)
+            ? $request->user()->tenant_id
+            : ((app()->bound('current_tenant_id') ? app('current_tenant_id') : null) ?? Tenant::firstOrCreate(
+                ['slug' => 'default'],
+                ['name' => 'Default Organization', 'plan' => 'enterprise']
+            )->id);
 
         $slug = Str::slug($request->input('name'));
         if (Project::where('tenant_id', $tenantId)->where('slug', $slug)->exists()) {
