@@ -177,7 +177,49 @@ class DashboardController extends Controller
             ],
         ];
 
-        // 5. Time-Series Chart Data
+        // 5. Time-Series Chart Data & Chart Harian (Senin - Minggu)
+        $dayNamesIndo = [
+            1 => 'Senin',
+            2 => 'Selasa',
+            3 => 'Rabu',
+            4 => 'Kamis',
+            5 => 'Jumat',
+            6 => 'Sabtu',
+            7 => 'Minggu',
+        ];
+
+        // Weekly Day-by-Day (Senin - Minggu) of current week
+        $startOfWeek = $now->copy()->startOfWeek(\Carbon\Carbon::MONDAY);
+        $weeklyChartData = [];
+        for ($d = 1; $d <= 7; $d++) {
+            $dayDate = $startOfWeek->copy()->addDays($d - 1);
+            $dayStart = $dayDate->copy()->startOfDay();
+            $dayEnd = $dayDate->copy()->endOfDay();
+            $dayName = $dayNamesIndo[$d];
+
+            $inboundDay = Conversation::where('tenant_id', $tenantId)
+                ->whereHas('messages')
+                ->whereBetween('created_at', [$dayStart, $dayEnd])
+                ->count();
+
+            $resolvedDay = Conversation::where('tenant_id', $tenantId)
+                ->where('status', 'closed')
+                ->whereBetween('updated_at', [$dayStart, $dayEnd])
+                ->count();
+
+            $weeklyChartData[] = [
+                'day_index' => $d,
+                'day_name' => $dayName,
+                'date_formatted' => $dayDate->format('d M'),
+                'label' => $dayName,
+                'full_label' => $dayName . ' (' . $dayDate->format('d M') . ')',
+                'inbound' => $inboundDay,
+                'resolved' => $resolvedDay,
+                'is_today' => $dayDate->isToday(),
+                'is_future' => $dayDate->isFuture(),
+            ];
+        }
+
         $chartData = [];
         if ($period === 'today') {
             for ($i = 0; $i < 7; $i++) {
@@ -191,6 +233,9 @@ class DashboardController extends Controller
                     'resolved' => Conversation::where('tenant_id', $tenantId)->where('status', 'closed')->whereBetween('updated_at', [$ptStart, $ptEnd])->count(),
                 ];
             }
+        } elseif ($period === '7d') {
+            // Default 7d uses Senin - Minggu daily data
+            $chartData = $weeklyChartData;
         } else {
             $stepDays = $period === '30d' ? 2 : ($period === 'quarter' ? 7 : 1);
             for ($i = 0; $i < $chartPoints; $i++) {
@@ -314,8 +359,61 @@ class DashboardController extends Controller
             ];
         }
 
-        // 9. High Intent Products / Inquiries from visitor pages
-        $topPages = Conversation::where('tenant_id', $tenantId)
+        // 9. Halaman Setiap Integrasi Web yang Paling Banyak Dikunjungi untuk Memulai Chat
+        $topPagesByProject = [];
+        foreach ($projects as $proj) {
+            $pages = Conversation::where('project_id', $proj->id)
+                ->whereNotNull('page_url')
+                ->where('page_url', '!=', '')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->selectRaw('page_url, COALESCE(NULLIF(page_title, ""), page_url) as title, count(*) as volume')
+                ->groupBy('page_url', 'title')
+                ->orderByDesc('volume')
+                ->limit(4)
+                ->get();
+
+            $projTotalChats = Conversation::where('project_id', $proj->id)
+                ->whereHas('messages')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->count();
+
+            $pageList = [];
+            if ($pages->isNotEmpty()) {
+                foreach ($pages as $p) {
+                    $parsedPath = parse_url($p->page_url, PHP_URL_PATH) ?: $p->page_url;
+                    $share = $projTotalChats > 0 ? round(($p->volume / $projTotalChats) * 100, 1) : 100;
+                    $pageList[] = [
+                        'title' => $p->title,
+                        'url' => $p->page_url,
+                        'path' => $parsedPath,
+                        'volume' => $p->volume,
+                        'share' => $share . '%',
+                    ];
+                }
+            } else {
+                $pageList[] = [
+                    'title' => $proj->name . ' - Storefront Homepage',
+                    'url' => 'https://' . ($proj->domains->first()->domain ?? ($proj->slug . '.store')),
+                    'path' => '/',
+                    'volume' => $projTotalChats,
+                    'share' => '100%',
+                ];
+            }
+
+            $topPagesByProject[] = [
+                'project_id' => $proj->id,
+                'project_name' => $proj->name,
+                'domain' => $proj->domains->first()->domain ?? ($proj->slug . '.store'),
+                'color' => $proj->widgetSetting->primary_color ?? '#0071E3',
+                'initials' => strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $proj->name), 0, 2)) ?: 'WS',
+                'total_chats' => $projTotalChats,
+                'pages' => $pageList,
+            ];
+        }
+
+        // Overall High Intent Products
+        $highIntentProducts = [];
+        $topGlobalPages = Conversation::where('tenant_id', $tenantId)
             ->whereNotNull('page_url')
             ->where('page_url', '!=', '')
             ->whereBetween('created_at', [$startDate, $endDate])
@@ -325,9 +423,8 @@ class DashboardController extends Controller
             ->limit(3)
             ->get();
 
-        $highIntentProducts = [];
-        if ($topPages->isNotEmpty()) {
-            foreach ($topPages as $page) {
+        if ($topGlobalPages->isNotEmpty()) {
+            foreach ($topGlobalPages as $page) {
                 $highIntentProducts[] = [
                     'title' => $page->page_title ?: 'Storefront Product Page',
                     'path' => parse_url($page->page_url, PHP_URL_PATH) ?: $page->page_url,
@@ -355,9 +452,11 @@ class DashboardController extends Controller
             'totalUnreadConversations',
             'summary',
             'chartData',
+            'weeklyChartData',
             'intentBreakdown',
             'channels',
             'specialists',
+            'topPagesByProject',
             'highIntentProducts',
             'period'
         ));

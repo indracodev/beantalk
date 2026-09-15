@@ -167,8 +167,8 @@
         <div class="lg:col-span-2 bg-white border border-apple-border/80 rounded-2xl p-4 sm:p-5 shadow-apple-card flex flex-col justify-between">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-apple-border/60 gap-2">
                 <div>
-                    <h3 class="text-[14px] font-semibold text-apple-textPrimary tracking-tight">Volume &amp; Resolution Velocity</h3>
-                    <p class="text-[11.5px] text-apple-textSecondary">Tren harian volume pesan masuk (inbound) vs sesi yang terselesaikan selama 14 hari.</p>
+                    <h3 class="text-[14px] font-semibold text-apple-textPrimary tracking-tight">Volume &amp; Resolution Velocity (Harian: Senin &ndash; Minggu)</h3>
+                    <p class="text-[11.5px] text-apple-textSecondary">Tren harian volume pesan masuk (inbound) vs percakapan terselesaikan (resolved).</p>
                 </div>
                 <!-- Legend Indicators -->
                 <div class="flex items-center gap-3 text-[11.5px] self-start sm:self-auto">
@@ -286,21 +286,42 @@
                     @endforeach
                 </svg>
 
-                <!-- X Axis Labels -->
+                <!-- X Axis Labels (Senin - Minggu) -->
                 <div class="flex justify-between px-6 sm:px-8 mt-1 text-[10.5px] text-apple-textTertiary font-medium">
                     @foreach($chartData as $idx => $d)
-                        <span class="{{ $loop->last ? 'text-apple-blue font-bold' : '' }}">{{ $d['label'] }}</span>
+                        <span class="{{ (!empty($d['is_today']) || $loop->last) ? 'text-apple-blue font-bold' : '' }}">
+                            {{ $d['label'] }}
+                        </span>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- 7-Day Day-by-Day Grid (Senin - Minggu) -->
+            <div class="mt-3 pt-3 border-t border-apple-border/60">
+                <div class="grid grid-cols-7 gap-1.5 text-center">
+                    @foreach($weeklyChartData as $wDay)
+                        <div class="p-1.5 rounded-lg {{ $wDay['is_today'] ? 'bg-apple-blue/10 border border-apple-blue/30 font-semibold' : 'bg-apple-canvas/50 border border-apple-border/40' }} transition">
+                            <div class="text-[10px] {{ $wDay['is_today'] ? 'text-apple-blue font-bold' : 'text-apple-textSecondary' }}">
+                                {{ $wDay['day_name'] }}
+                            </div>
+                            <div class="text-[12px] font-mono font-bold text-apple-textPrimary mt-0.5">
+                                {{ $wDay['inbound'] }}
+                            </div>
+                            <div class="text-[9px] font-mono text-apple-textTertiary">
+                                {{ $wDay['resolved'] }} res
+                            </div>
+                        </div>
                     @endforeach
                 </div>
             </div>
 
             <!-- Mini Footnote Velocity Rate -->
-            <div class="mt-2 pt-2.5 border-t border-apple-border/50 flex items-center justify-between text-[11px] text-apple-textSecondary flex-wrap gap-2">
+            <div class="mt-2.5 pt-2 border-t border-apple-border/50 flex items-center justify-between text-[11px] text-apple-textSecondary flex-wrap gap-2">
                 <div class="flex items-center gap-1.5">
                     <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                     <span>Resolution Rate: <strong>{{ $summary['csat']['value'] }}</strong></span>
                 </div>
-                <span class="text-apple-textTertiary font-mono">Velocity Peak: {{ collect($chartData)->pluck('inbound')->max() ?? 0 }} chats</span>
+                <span class="text-apple-textTertiary font-mono">Velocity Peak: {{ collect($chartData)->pluck('inbound')->max() ?? 0 }} chats/hari</span>
             </div>
         </div>
 
@@ -521,46 +542,72 @@
             </div>
         </div>
 
-        <!-- Kolom 2: Pelacak Produk dengan Inquiry Tertinggi (High-Intent Products) -->
+        <!-- Kolom 2: Halaman Setiap Integrasi Web yang Paling Banyak Dikunjungi untuk Memulai Chat -->
         <div class="bg-white border border-apple-border/80 rounded-2xl p-4 sm:p-5 shadow-apple-card flex flex-col justify-between">
             <div>
                 <div class="pb-3 border-b border-apple-border/60 flex items-center justify-between">
                     <div>
-                        <h3 class="text-[14px] font-semibold text-apple-textPrimary tracking-tight">High-Intent Inquiries by Product</h3>
-                        <p class="text-[11.5px] text-apple-textSecondary">Halaman produk (SKU) yang paling sering memicu percakapan.</p>
+                        <h3 class="text-[14px] font-semibold text-apple-textPrimary tracking-tight">Top Trigger Pages per Website</h3>
+                        <p class="text-[11.5px] text-apple-textSecondary">Halaman yang paling banyak dikunjungi pengunjung saat memulai chat.</p>
                     </div>
-                    <span class="text-[10.5px] font-medium text-apple-textTertiary bg-black/5 px-2 py-0.5 rounded-md">Top 3 SKUs</span>
+                    <span class="text-[10.5px] font-medium text-apple-textTertiary bg-black/5 px-2 py-0.5 rounded-md">By Channel</span>
                 </div>
 
-                <!-- Product Inquiry List -->
-                <div class="flex flex-col gap-2.5 mt-3.5">
-                    @foreach($highIntentProducts as $prod)
-                        <div class="p-2.5 sm:p-3 rounded-xl bg-apple-canvas/40 border border-apple-border/60 hover:bg-white hover:shadow-2xs transition flex items-start justify-between gap-3">
-                            <div class="flex items-start gap-2.5 overflow-hidden">
-                                <div class="w-8 h-8 rounded-xl bg-white border border-apple-border flex items-center justify-center text-[15px] shrink-0 shadow-2xs">
-                                    {{ $prod['icon'] }}
-                                </div>
-                                <div class="truncate">
-                                    <h4 class="font-semibold text-apple-textPrimary text-[12.5px] truncate" title="{{ $prod['title'] }}">{{ $prod['title'] }}</h4>
-                                    <div class="flex items-center gap-2 text-[10.5px] text-apple-textTertiary font-mono mt-0.5">
-                                        <span>{{ $prod['path'] }}</span>
-                                        <span>•</span>
-                                        <span class="font-semibold text-apple-textSecondary">{{ $prod['meta'] }}</span>
+                <!-- Web Integrations Landing Pages List -->
+                <div class="flex flex-col gap-3.5 mt-3.5 max-h-[380px] overflow-y-auto pr-0.5">
+                    @forelse($topPagesByProject as $projEntry)
+                        <div class="p-3 rounded-xl bg-apple-canvas/40 border border-apple-border/60 hover:bg-white hover:shadow-2xs transition">
+                            <!-- Project / Channel Header -->
+                            <div class="flex items-center justify-between pb-2 mb-2 border-b border-apple-border/40">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <div class="w-6 h-6 rounded-md text-white flex items-center justify-center font-bold text-[9px] shrink-0 shadow-2xs" style="background-color: {{ $projEntry['color'] }};">
+                                        {{ $projEntry['initials'] }}
+                                    </div>
+                                    <div class="truncate">
+                                        <h4 class="font-semibold text-apple-textPrimary text-[12.5px] truncate">{{ $projEntry['project_name'] }}</h4>
+                                        <span class="text-[10px] text-apple-textTertiary font-mono">{{ $projEntry['domain'] }}</span>
                                     </div>
                                 </div>
+                                <span class="text-[10.5px] font-bold text-apple-blue font-mono shrink-0 bg-apple-blue/10 px-1.5 py-0.5 rounded">
+                                    {{ $projEntry['total_chats'] }} chats
+                                </span>
                             </div>
-                            <div class="text-right shrink-0">
-                                <span class="font-bold text-apple-textPrimary font-mono text-[12px] block">{{ $prod['volume'] }}</span>
-                                <span class="text-[10.5px] text-emerald-700 font-medium block mt-0.5">{{ $prod['result'] }}</span>
+
+                            <!-- List of Top Entry Pages for this website -->
+                            <div class="flex flex-col gap-2">
+                                @foreach($projEntry['pages'] as $page)
+                                    <div>
+                                        <div class="flex items-start justify-between text-[11.5px] gap-2">
+                                            <div class="truncate">
+                                                <div class="font-medium text-apple-textPrimary truncate" title="{{ $page['title'] }}">
+                                                    {{ $page['title'] }}
+                                                </div>
+                                                <span class="text-[10px] text-apple-textTertiary font-mono truncate block">{{ $page['path'] }}</span>
+                                            </div>
+                                            <div class="text-right shrink-0">
+                                                <span class="font-bold text-apple-textPrimary font-mono text-[11px]">{{ $page['volume'] }}</span>
+                                                <span class="text-[9.5px] text-apple-textTertiary font-mono ml-0.5">({{ $page['share'] }})</span>
+                                            </div>
+                                        </div>
+                                        <!-- Share percentage bar -->
+                                        <div class="w-full bg-black/5 rounded-full h-1 mt-1 overflow-hidden">
+                                            <div class="h-full rounded-full transition-all" style="width: {{ $page['share'] }}; background-color: {{ $projEntry['color'] }};"></div>
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
                         </div>
-                    @endforeach
+                    @empty
+                        <div class="py-6 text-center text-apple-textTertiary text-[12px]">
+                            Belum ada riwayat halaman pemicu chat.
+                        </div>
+                    @endforelse
                 </div>
             </div>
 
             <div class="mt-3 pt-2.5 border-t border-apple-border/40 text-[11px] text-apple-textTertiary flex items-center justify-between">
-                <span>Inquiry-to-Order Conversion</span>
-                <strong class="font-mono text-emerald-700 font-semibold">21.8% Average</strong>
+                <span>Total Landing Channels</span>
+                <strong class="font-mono text-apple-textPrimary font-semibold">{{ count($topPagesByProject) }} Websites Terintegrasi</strong>
             </div>
         </div>
 
