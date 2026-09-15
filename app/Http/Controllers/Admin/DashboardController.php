@@ -181,11 +181,13 @@ class DashboardController extends Controller
             : 98.4;
 
         // 4. KPI: Active Unique Visitors in Period
-        $uniqueVisitorsCurrent = Visitor::where('tenant_id', $tenantId)
+        $projectIds = $projects->pluck('id');
+
+        $uniqueVisitorsCurrent = Visitor::whereIn('project_id', $projectIds)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->count();
 
-        $uniqueVisitorsPrev = Visitor::where('tenant_id', $tenantId)
+        $uniqueVisitorsPrev = Visitor::whereIn('project_id', $projectIds)
             ->whereBetween('created_at', [$prevStartDate, $prevEndDate])
             ->count();
 
@@ -196,7 +198,7 @@ class DashboardController extends Controller
             $visDelta = $uniqueVisitorsCurrent > 0 ? '+100%' : '0%';
         }
 
-        $identifiedVisitors = Visitor::where('tenant_id', $tenantId)
+        $identifiedVisitors = Visitor::whereIn('project_id', $projectIds)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->whereNotNull('name')
             ->where('name', '!=', '')
