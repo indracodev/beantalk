@@ -201,7 +201,7 @@
 
                     <button type="button" onclick="addNewFaqRuleRow()" class="inline-flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg text-[11.5px] font-semibold transition shadow-apple-sm cursor-pointer self-start sm:self-auto">
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        <span>+ Tambah Aturan FAQ Baru</span>
+                        <span>Tambah Aturan FAQ Baru</span>
                     </button>
                 </div>
 
@@ -214,7 +214,7 @@
                 <div id="faqEmptyState" class="{{ count($botRules) > 0 ? 'hidden' : '' }} p-6 text-center border-2 border-dashed border-apple-border rounded-xl text-[12px] text-apple-textTertiary bg-apple-canvas/20">
                     <svg class="w-7 h-7 text-neutral-300 mx-auto mb-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                     <p class="font-medium text-apple-textSecondary">Belum ada aturan kata kunci FAQ.</p>
-                    <p class="mt-0.5 text-apple-textTertiary text-[11px]">Klik tombol <strong>"+ Tambah Aturan FAQ Baru"</strong> di atas untuk membuat auto-responder kata kunci pertama Anda.</p>
+                    <p class="mt-0.5 text-apple-textTertiary text-[11px]">Klik tombol <strong>"Tambah Aturan FAQ Baru"</strong> di atas untuk membuat auto-responder kata kunci pertama Anda.</p>
                 </div>
 
                 <!-- Info Box Smart CS Handoff -->
@@ -304,7 +304,7 @@
 
                     <button type="button" onclick="addNewSocialChannel()" class="inline-flex items-center gap-1.5 bg-apple-blue hover:bg-apple-blueHover text-white px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition shadow-apple-sm cursor-pointer self-start sm:self-auto">
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        <span>+ Tambah Saluran / Kontak Baru</span>
+                        <span>Tambah Saluran / Kontak Baru</span>
                     </button>
                 </div>
 
@@ -317,7 +317,7 @@
                 <div id="socialChannelsEmptyState" class="{{ count($socialChannelsList) > 0 ? 'hidden' : '' }} p-6 text-center border-2 border-dashed border-apple-border rounded-xl text-[12px] text-apple-textTertiary bg-apple-canvas/20">
                     <svg class="w-7 h-7 text-neutral-300 mx-auto mb-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
                     <p class="font-medium text-apple-textSecondary">Belum ada saluran kontak atau marketplace.</p>
-                    <p class="mt-0.5 text-apple-textTertiary text-[11px]">Klik tombol <strong>"+ Tambah Saluran / Kontak Baru"</strong> di atas untuk menambahkan saluran kontak atau tautan toko pertama Anda.</p>
+                    <p class="mt-0.5 text-apple-textTertiary text-[11px]">Klik tombol <strong>"Tambah Saluran / Kontak Baru"</strong> di atas untuk menambahkan saluran kontak atau tautan toko pertama Anda.</p>
                 </div>
 
                 <!-- Informative Callout for Multi-Contact Feature -->
