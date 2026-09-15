@@ -17,7 +17,7 @@
                 <!-- Live Telemetry Streaming Status Pill -->
                 <div class="inline-flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 px-2.5 py-0.5 rounded-full text-[11px] font-medium shadow-2xs">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span>4 Sites Streaming</span>
+                    <span>{{ count($projects) }} {{ count($projects) === 1 ? 'Site' : 'Sites' }} Streaming</span>
                 </div>
             </div>
             <p class="text-[12.5px] text-apple-textSecondary mt-0.5">Real-time support engagement, conversation velocity, and multi-tenant telemetry.</p>
@@ -186,15 +186,21 @@
             <!-- SVG Responsive Spline Chart (macOS Pro Look) -->
             <div class="relative w-full pt-4 pb-1">
                 @php
-                    // Max value calculation for SVG Y scale (max inbound is 182, let's normalize to 200)
-                    $maxY = 200;
+                    $maxDataVal = max(
+                        collect($chartData)->pluck('inbound')->max() ?? 0,
+                        collect($chartData)->pluck('resolved')->max() ?? 0,
+                        10
+                    );
+                    $maxY = ceil($maxDataVal / 10) * 10;
+                    if ($maxY < 10) $maxY = 10;
                     $svgWidth = 700;
                     $svgHeight = 220;
                     $paddingX = 40;
                     $paddingY = 25;
                     $plotWidth = $svgWidth - (2 * $paddingX);
                     $plotHeight = $svgHeight - (2 * $paddingY);
-                    $stepX = $plotWidth / (count($chartData) - 1);
+                    $countPts = count($chartData);
+                    $stepX = $countPts > 1 ? ($plotWidth / ($countPts - 1)) : $plotWidth;
 
                     // Compute points
                     $inboundCoords = [];
@@ -208,8 +214,8 @@
                     }
 
                     // Build path strings
-                    $inboundPath = "M " . $inboundCoords[0]['x'] . " " . $inboundCoords[0]['y'];
-                    $resolvedPath = "M " . $resolvedCoords[0]['x'] . " " . $resolvedCoords[0]['y'];
+                    $inboundPath = !empty($inboundCoords) ? ("M " . $inboundCoords[0]['x'] . " " . $inboundCoords[0]['y']) : "";
+                    $resolvedPath = !empty($resolvedCoords) ? ("M " . $resolvedCoords[0]['x'] . " " . $resolvedCoords[0]['y']) : "";
                     for ($i = 1; $i < count($inboundCoords); $i++) {
                         $prev = $inboundCoords[$i-1];
                         $curr = $inboundCoords[$i];
@@ -223,7 +229,7 @@
                     }
 
                     // Closed area path for gradient
-                    $inboundArea = $inboundPath . " L " . end($inboundCoords)['x'] . " " . ($svgHeight - $paddingY) . " L " . $inboundCoords[0]['x'] . " " . ($svgHeight - $paddingY) . " Z";
+                    $inboundArea = !empty($inboundCoords) ? ($inboundPath . " L " . end($inboundCoords)['x'] . " " . ($svgHeight - $paddingY) . " L " . $inboundCoords[0]['x'] . " " . ($svgHeight - $paddingY) . " Z") : "";
                 @endphp
 
                 <svg viewBox="0 0 {{ $svgWidth }} {{ $svgHeight }}" class="w-full h-44 sm:h-56 overflow-visible select-none" preserveAspectRatio="none">
@@ -242,21 +248,27 @@
                     <!-- Horizontal Grid lines -->
                     @for($g = 0; $g <= 4; $g++)
                         @php
-                            $gridVal = $g * 50;
+                            $gridVal = round(($g / 4) * $maxY);
                             $gridY = $svgHeight - $paddingY - (($gridVal / $maxY) * $plotHeight);
                         @endphp
                         <line x1="{{ $paddingX }}" y1="{{ $gridY }}" x2="{{ $svgWidth - $paddingX }}" y2="{{ $gridY }}" stroke="#E5E5EA" stroke-dasharray="3,3" stroke-width="1" />
                         <text x="{{ $paddingX - 8 }}" y="{{ $gridY + 3.5 }}" fill="#86868B" font-size="9" text-anchor="end" font-family="monospace">{{ $gridVal }}</text>
                     @endfor
 
-                    <!-- Area fill -->
-                    <path d="{{ $inboundArea }}" fill="url(#inboundGrad)" />
+                    @if($inboundArea)
+                        <!-- Area fill -->
+                        <path d="{{ $inboundArea }}" fill="url(#inboundGrad)" />
+                    @endif
 
-                    <!-- Resolution Line (Green) -->
-                    <path d="{{ $resolvedPath }}" fill="none" stroke="#34C759" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                    @if($resolvedPath)
+                        <!-- Resolution Line (Green) -->
+                        <path d="{{ $resolvedPath }}" fill="none" stroke="#34C759" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                    @endif
 
-                    <!-- Inbound Line (Blue) -->
-                    <path d="{{ $inboundPath }}" fill="none" stroke="#0071E3" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+                    @if($inboundPath)
+                        <!-- Inbound Line (Blue) -->
+                        <path d="{{ $inboundPath }}" fill="none" stroke="#0071E3" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+                    @endif
 
                     <!-- Interactive Data Points -->
                     @foreach($inboundCoords as $idx => $pt)
@@ -274,15 +286,11 @@
                     @endforeach
                 </svg>
 
-                <!-- X Axis Labels (7 Points) -->
+                <!-- X Axis Labels -->
                 <div class="flex justify-between px-6 sm:px-8 mt-1 text-[10.5px] text-apple-textTertiary font-medium">
-                    <span>28 Agu</span>
-                    <span>31 Agu</span>
-                    <span>02 Sep</span>
-                    <span>04 Sep</span>
-                    <span>06 Sep</span>
-                    <span>08 Sep</span>
-                    <span class="text-apple-blue font-bold">Hari ini (10 Sep)</span>
+                    @foreach($chartData as $idx => $d)
+                        <span class="{{ $loop->last ? 'text-apple-blue font-bold' : '' }}">{{ $d['label'] }}</span>
+                    @endforeach
                 </div>
             </div>
 
@@ -290,9 +298,9 @@
             <div class="mt-2 pt-2.5 border-t border-apple-border/50 flex items-center justify-between text-[11px] text-apple-textSecondary flex-wrap gap-2">
                 <div class="flex items-center gap-1.5">
                     <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <span>Resolution Rate: <strong>96.5%</strong> (168/174 chats terselesaikan hari ini)</span>
+                    <span>Resolution Rate: <strong>{{ $summary['csat']['value'] }}</strong></span>
                 </div>
-                <span class="text-apple-textTertiary font-mono">Velocity Peak: 182 chats/day</span>
+                <span class="text-apple-textTertiary font-mono">Velocity Peak: {{ collect($chartData)->pluck('inbound')->max() ?? 0 }} chats</span>
             </div>
         </div>
 
@@ -362,18 +370,18 @@
                     <tr class="bg-apple-canvas/60 text-[10.5px] font-semibold text-apple-textTertiary uppercase tracking-wider border-b border-apple-border">
                         <th class="py-2.5 px-4">Website / Domain</th>
                         <th class="py-2.5 px-4">Pengunjung Aktif</th>
-                        <th class="py-2.5 px-4">Total Chat (7 Hari)</th>
+                        <th class="py-2.5 px-4">Total Chat ({{ $curPeriod === 'today' ? 'Hari ini' : ($curPeriod === '30d' ? '30 Hari' : ($curPeriod === 'quarter' ? 'Quarter' : '7 Hari')) }})</th>
                         <th class="py-2.5 px-4">Median FRT</th>
-                        <th class="py-2.5 px-4">Konversi &amp; Nilai Penjualan</th>
+                        <th class="py-2.5 px-4">Aktivitas Chat</th>
                         <th class="py-2.5 px-4 text-right">Status Kanal</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-apple-border/50">
-                    @foreach($channels as $chan)
+                    @forelse($channels as $chan)
                         <tr class="hover:bg-apple-canvas/40 transition">
                             <td class="py-3 px-4">
                                 <div class="flex items-center gap-2.5">
-                                    <div class="w-7 h-7 rounded-lg bg-[#2C2C2E] text-white flex items-center justify-center font-bold text-[10px] shrink-0 shadow-2xs">
+                                    <div class="w-7 h-7 rounded-lg text-white flex items-center justify-center font-bold text-[10px] shrink-0 shadow-2xs" style="background-color: {{ $chan['color'] ?? '#2C2C2E' }};">
                                         {{ strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $chan['name']), 0, 2)) }}
                                     </div>
                                     <div>
@@ -384,7 +392,7 @@
                             </td>
                             <td class="py-3 px-4">
                                 <span class="inline-flex items-center gap-1.5 text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[11px] font-medium font-mono">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 {{ $chan['active_online'] > 0 ? 'animate-pulse' : '' }}"></span>
                                     {{ $chan['active_online'] }} online
                                 </span>
                             </td>
@@ -397,8 +405,8 @@
                             </td>
                             <td class="py-3 px-4">
                                 <div>
-                                    <span class="font-bold text-emerald-700 font-mono text-[12.5px]">{{ $chan['revenue'] }}</span>
-                                    <div class="text-[11px] text-apple-textSecondary">Rate: {{ $chan['conversion'] }}</div>
+                                    <span class="font-bold text-apple-textPrimary font-mono text-[12px]">{{ $chan['conversion'] }} of traffic</span>
+                                    <div class="text-[11px] text-apple-textSecondary">{{ $chan['revenue'] }} estimasi</div>
                                 </div>
                             </td>
                             <td class="py-3 px-4 text-right">
@@ -407,18 +415,24 @@
                                 </span>
                             </td>
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr>
+                            <td colspan="6" class="py-8 text-center text-apple-textTertiary text-[12px]">
+                                Belum ada website/channel yang terhubung. <a href="{{ route('admin.integrations') }}" class="text-apple-blue font-medium hover:underline">Tambah Website Baru</a>
+                            </td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
 
         <!-- Mobile Card List View (md:hidden) -->
         <div class="md:hidden divide-y divide-apple-border/60">
-            @foreach($channels as $chan)
+            @forelse($channels as $chan)
                 <div class="p-3.5 flex flex-col gap-2.5">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <div class="w-6 h-6 rounded-md bg-[#2C2C2E] text-white flex items-center justify-center font-bold text-[9px]">
+                            <div class="w-6 h-6 rounded-md text-white flex items-center justify-center font-bold text-[9px]" style="background-color: {{ $chan['color'] ?? '#2C2C2E' }};">
                                 {{ strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $chan['name']), 0, 2)) }}
                             </div>
                             <div>
@@ -427,13 +441,13 @@
                             </div>
                         </div>
                         <span class="inline-flex items-center gap-1 text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[10.5px] font-medium font-mono">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 {{ $chan['active_online'] > 0 ? 'animate-pulse' : '' }}"></span>
                             {{ $chan['active_online'] }}
                         </span>
                     </div>
                     <div class="grid grid-cols-3 gap-2 bg-apple-canvas/60 p-2 rounded-xl text-[11px]">
                         <div>
-                            <span class="text-apple-textTertiary block text-[9.5px]">Chats 7D</span>
+                            <span class="text-apple-textTertiary block text-[9.5px]">Chats</span>
                             <strong class="font-mono text-apple-textPrimary">{{ $chan['chats_7d'] }}</strong>
                         </div>
                         <div>
@@ -441,16 +455,20 @@
                             <strong class="font-mono text-apple-textPrimary">{{ $chan['median_frt'] }}</strong>
                         </div>
                         <div>
-                            <span class="text-apple-textTertiary block text-[9.5px]">Konversi</span>
-                            <strong class="font-mono text-emerald-700">{{ $chan['conversion'] }}</strong>
+                            <span class="text-apple-textTertiary block text-[9.5px]">Share</span>
+                            <strong class="font-mono text-apple-textPrimary">{{ $chan['conversion'] }}</strong>
                         </div>
                     </div>
                     <div class="flex items-center justify-between text-[11.5px] pt-1">
-                        <span class="text-apple-textSecondary">Assisted Revenue:</span>
+                        <span class="text-apple-textSecondary">Estimasi:</span>
                         <strong class="font-mono text-emerald-700 font-semibold">{{ $chan['revenue'] }}</strong>
                     </div>
                 </div>
-            @endforeach
+            @empty
+                <div class="p-6 text-center text-apple-textTertiary text-[12px]">
+                    Belum ada website/channel terhubung.
+                </div>
+            @endforelse
         </div>
     </div>
 
@@ -571,7 +589,7 @@
         if (type === 'pdf') {
             window.print();
         } else {
-            alert('Mengunduh dataset telemetri periode {{ $curPeriod }} (CSV Export)...');
+            window.location.href = "{{ route('admin.dashboard.export') }}?period={{ $curPeriod }}";
         }
     }
 </script>

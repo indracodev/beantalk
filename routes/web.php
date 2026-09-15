@@ -29,6 +29,7 @@ Route::post('logout', 'Auth\LoginController@logout')->name('logout');
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', 'Admin\DashboardController@index')->name('dashboard');
     Route::get('dashboard', 'Admin\DashboardController@index')->name('dashboard.index');
+    Route::get('dashboard/export', 'Admin\DashboardController@exportReport')->name('dashboard.export');
     Route::get('inbox/feed/updates', 'Admin\DashboardController@pollUpdates')->name('inbox.updates');
     Route::get('inbox/{id?}', 'Admin\DashboardController@inbox')->name('inbox');
     Route::post('inbox/{id}/reply', 'Admin\DashboardController@reply')->name('inbox.reply');

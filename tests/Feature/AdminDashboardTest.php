@@ -78,9 +78,20 @@ class AdminDashboardTest extends TestCase
 
         $response->assertStatus(200)
             ->assertSee('Executive Dashboard')
-            ->assertSee('4 Sites Streaming')
+            ->assertSee('Streaming')
             ->assertSee('Total Conversations')
             ->assertSee('Volume &amp; Resolution Velocity', false);
+    }
+
+    /**
+     * Test Authenticated User can export Dashboard CSV report
+     */
+    public function testAuthenticatedUserCanExportDashboardReport()
+    {
+        $response = $this->actingAs($this->superadmin)->get('/admin/dashboard/export?period=7d');
+
+        $response->assertStatus(200)
+            ->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
     }
 
     /**
