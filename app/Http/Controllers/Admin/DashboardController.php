@@ -183,9 +183,13 @@ class DashboardController extends Controller
         // 4. KPI: Active Unique Visitors in Period
         $projectIds = $projects->pluck('id');
 
-        $uniqueVisitorsCurrent = Visitor::whereIn('project_id', $projectIds)
+        $visitorStats = Visitor::whereIn('project_id', $projectIds)
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->count();
+            ->selectRaw('count(*) as total_visitors, count(case when name is not null and name != "" then 1 end) as identified_visitors')
+            ->first();
+
+        $uniqueVisitorsCurrent = $visitorStats ? (int) $visitorStats->total_visitors : 0;
+        $identifiedVisitors = $visitorStats ? (int) $visitorStats->identified_visitors : 0;
 
         $uniqueVisitorsPrev = Visitor::whereIn('project_id', $projectIds)
             ->whereBetween('created_at', [$prevStartDate, $prevEndDate])
@@ -197,12 +201,6 @@ class DashboardController extends Controller
         } else {
             $visDelta = $uniqueVisitorsCurrent > 0 ? '+100%' : '0%';
         }
-
-        $identifiedVisitors = Visitor::whereIn('project_id', $projectIds)
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->whereNotNull('name')
-            ->where('name', '!=', '')
-            ->count();
 
         $summary = [
             'period' => $period,
@@ -414,18 +412,19 @@ class DashboardController extends Controller
             'bg-amber-100 text-amber-700'
         ];
 
+        $staffStats = Conversation::where('tenant_id', $tenantId)
+            ->whereNotNull('assigned_user_id')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->selectRaw('assigned_user_id, count(*) as total_assigned, count(case when status = "closed" then 1 end) as total_resolved')
+            ->groupBy('assigned_user_id')
+            ->get()
+            ->keyBy('assigned_user_id');
+
         $specialists = [];
         foreach ($staffUsers as $idx => $user) {
-            $assignedTotal = Conversation::where('tenant_id', $tenantId)
-                ->where('assigned_user_id', $user->id)
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->count();
-
-            $resolvedUser = Conversation::where('tenant_id', $tenantId)
-                ->where('assigned_user_id', $user->id)
-                ->where('status', 'closed')
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->count();
+            $userStat = $staffStats->get($user->id);
+            $assignedTotal = $userStat ? (int) $userStat->total_assigned : 0;
+            $resolvedUser = $userStat ? (int) $userStat->total_resolved : 0;
 
             $userSla = $assignedTotal > 0 ? round(($resolvedUser / $assignedTotal) * 100, 1) . '%' : '100%';
 
@@ -454,7 +453,7 @@ class DashboardController extends Controller
                 ->limit(4)
                 ->get();
 
-            $projTotalChats = Conversation::where('project_id', $proj->id)
+            $projTotalChats = $proj->conversations_count ?? Conversation::where('project_id', $proj->id)
                 ->whereHas('messages')
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->count();
