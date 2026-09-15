@@ -81,8 +81,146 @@ function playNotificationSound() {
 
 
 // ======================================================================
-// 1. HELPERS & CSRF
+// 1. HELPERS, LOCAL TIME FORMATTERS & CSRF
 // ======================================================================
+function formatLocalTime(isoStr) {
+    if (!isoStr) return '-';
+    try {
+        let parsed = isoStr;
+        if (typeof parsed === 'string' && !parsed.includes('Z') && !parsed.includes('+') && !parsed.includes('T')) {
+            parsed = parsed.replace(' ', 'T') + 'Z';
+        }
+        const d = new Date(parsed);
+        if (isNaN(d.getTime())) return isoStr;
+        const h = String(d.getHours()).padStart(2, '0');
+        const m = String(d.getMinutes()).padStart(2, '0');
+        return `${h}:${m}`;
+    } catch (e) {
+        return isoStr;
+    }
+}
+
+function getLocalDateKey(isoStr) {
+    if (!isoStr) return (new Date()).toISOString().split('T')[0];
+    try {
+        let parsed = isoStr;
+        if (typeof parsed === 'string' && !parsed.includes('Z') && !parsed.includes('+') && !parsed.includes('T')) {
+            parsed = parsed.replace(' ', 'T') + 'Z';
+        }
+        const d = new Date(parsed);
+        if (isNaN(d.getTime())) return (new Date()).toISOString().split('T')[0];
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const date = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${date}`;
+    } catch (e) {
+        return (new Date()).toISOString().split('T')[0];
+    }
+}
+
+function formatLocalDateLabel(isoStr) {
+    if (!isoStr) return 'Hari Ini';
+    try {
+        let parsed = isoStr;
+        if (typeof parsed === 'string' && !parsed.includes('Z') && !parsed.includes('+') && !parsed.includes('T')) {
+            parsed = parsed.replace(' ', 'T') + 'Z';
+        }
+        const d = new Date(parsed);
+        if (isNaN(d.getTime())) return 'Hari Ini';
+        
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const targetDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        
+        const diffDays = Math.round((today - targetDate) / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 0) return 'Hari Ini';
+        if (diffDays === 1) return 'Kemarin';
+        
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        const day = d.getDate();
+        const month = months[d.getMonth()];
+        const year = d.getFullYear();
+        
+        if (year === now.getFullYear()) {
+            return `${day} ${month}`;
+        }
+        return `${day} ${month} ${year}`;
+    } catch (e) {
+        return 'Hari Ini';
+    }
+}
+
+function formatConvListTime(isoStr) {
+    if (!isoStr) return '-';
+    try {
+        let parsed = isoStr;
+        if (typeof parsed === 'string' && !parsed.includes('Z') && !parsed.includes('+') && !parsed.includes('T')) {
+            parsed = parsed.replace(' ', 'T') + 'Z';
+        }
+        const d = new Date(parsed);
+        if (isNaN(d.getTime())) return '-';
+        
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const targetDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        const diffDays = Math.round((today - targetDate) / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 0) {
+            const h = String(d.getHours()).padStart(2, '0');
+            const m = String(d.getMinutes()).padStart(2, '0');
+            return `${h}:${m}`;
+        }
+        if (diffDays === 1) return 'Kemarin';
+        
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        
+        if (year === now.getFullYear()) {
+            return `${day}/${month}`;
+        }
+        return `${day}/${month}/${year}`;
+    } catch (e) {
+        return '-';
+    }
+}
+
+function hydrateAllLocalTimestamps() {
+    // 1. Hydrate message bubbles in chat thread
+    document.querySelectorAll('.msg-time-display[data-created-at]').forEach(el => {
+        const iso = el.getAttribute('data-created-at');
+        if (iso) {
+            const isSent = el.textContent.includes('Sent');
+            el.textContent = formatLocalTime(iso) + (isSent ? ' • Sent' : '');
+        }
+    });
+
+    // 2. Hydrate date dividers in chat thread
+    document.querySelectorAll('[data-date-divider]').forEach(el => {
+        const isoKey = el.getAttribute('data-date-divider');
+        const badge = el.querySelector('span');
+        if (badge && isoKey) {
+            badge.textContent = formatLocalDateLabel(isoKey);
+        }
+    });
+
+    // 3. Hydrate conversation list timestamps
+    document.querySelectorAll('.conv-time[data-timestamp]').forEach(el => {
+        const iso = el.getAttribute('data-timestamp');
+        if (iso) {
+            el.textContent = formatConvListTime(iso);
+        }
+    });
+}
+
+// Jalankan hydration saat script dimuat
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', hydrateAllLocalTimestamps);
+} else {
+    hydrateAllLocalTimestamps();
+}
+
 function scrollToBottom() {
     const body = document.getElementById('chatThreadBody');
     if (body) {
@@ -170,6 +308,8 @@ window.onGlobalFeedUpdate = function(data) {
             let item = existingItems[0] || null;
             const isCurrentActive = typeof activeConversationId !== 'undefined' && (activeConversationId === conv.id || (item && item.getAttribute('data-conv-id') === String(activeConversationId)));
 
+            const timeText = conv.last_message_at ? formatConvListTime(conv.last_message_at) : (conv.last_message_time || '-');
+
             if (!item) {
                 // Percakapan BARU Masuk!
                 item = document.createElement('a');
@@ -188,7 +328,6 @@ window.onGlobalFeedUpdate = function(data) {
                 const custName = escapeHtml(conv.customer_name || 'Tamu');
                 const siteName = escapeHtml(conv.project_name || 'Website');
                 const custCode = escapeHtml(conv.customer_code || 'CUS-0000');
-                const timeText = escapeHtml(conv.last_message_time || '-');
                 const lastPreview = escapeHtml(conv.last_message_preview || 'Percakapan baru...');
                 const unreadCount = conv.unread_agent_count || 0;
                 const badgeText = unreadCount > 9 ? '9+' : String(unreadCount);
@@ -211,7 +350,7 @@ window.onGlobalFeedUpdate = function(data) {
                                 <span class="conv-name font-semibold text-apple-textPrimary truncate text-[12.5px]" title="${custName}">
                                     ${custName}
                                 </span>
-                                <span class="conv-time text-[10.5px] text-apple-textTertiary font-mono">${timeText}</span>
+                                <span class="conv-time text-[10.5px] text-apple-textTertiary font-mono" data-timestamp="${conv.last_message_at || ''}">${timeText}</span>
                             </div>
                             <div class="conv-meta-row flex items-center gap-1.5 mb-1" data-conv-meta>
                                 <span class="conv-site text-[9px] font-semibold tracking-tight uppercase px-1.5 py-0.5 rounded truncate max-w-[110px]" style="background-color: ${projectColor}14; color: ${projectColor}; border: 1px solid ${projectColor}30;">
@@ -252,7 +391,12 @@ window.onGlobalFeedUpdate = function(data) {
                 if (snippet) snippet.textContent = conv.last_message_preview;
 
                 const time = item.querySelector('.conv-time');
-                if (time) time.textContent = conv.last_message_time;
+                if (time) {
+                    time.textContent = timeText;
+                    if (conv.last_message_at) {
+                        time.setAttribute('data-timestamp', conv.last_message_at);
+                    }
+                }
 
                 const name = item.querySelector('.conv-name');
                 if (name) {
@@ -363,8 +507,8 @@ async function pollNewMessages() {
                         // Cek jika elemen dengan data-id ini sudah ada di DOM
                         const existing = document.querySelector(`[data-id="${msg.id}"]`);
                         if (!existing && thread) {
-                            const dateKey = msg.date_key || (new Date()).toISOString().split('T')[0];
-                            const dateLabel = msg.date_label || 'Hari Ini';
+                            const dateKey = getLocalDateKey(msg.created_at);
+                            const dateLabel = formatLocalDateLabel(msg.created_at);
                             ensureDateDivider(thread, dateKey, dateLabel);
 
                             const isVisitor = msg.sender_type === 'visitor';
@@ -374,6 +518,9 @@ async function pollNewMessages() {
                                 : 'flex flex-col items-end self-end max-w-[85%] sm:max-w-[70%]';
                             row.setAttribute('data-id', msg.id);
                             row.setAttribute('data-date-key', dateKey);
+                            if (msg.created_at) {
+                                row.setAttribute('data-created-at', msg.created_at);
+                            }
 
                             const senderName = escapeHtml(msg.sender_name || (isVisitor ? 'Pengunjung' : 'Staff CS'));
                             const senderLabel = isVisitor ? `${senderName} (Visitor)` : senderName;
@@ -381,12 +528,13 @@ async function pollNewMessages() {
                             const bubbleClass = isVisitor
                                 ? 'bubble-visitor bg-white border border-apple-border/80 text-apple-textPrimary px-3 py-2 text-[12.5px] shadow-apple-sm leading-relaxed'
                                 : 'bubble-agent bg-apple-blue text-white px-3 py-2 text-[12.5px] shadow-apple-sm leading-relaxed';
-                            const timeText = escapeHtml(msg.created_at || '-') + (isVisitor ? '' : ' • Sent');
+                            const localTime = formatLocalTime(msg.created_at);
+                            const timeText = escapeHtml(localTime) + (isVisitor ? '' : ' • Sent');
 
                             row.innerHTML = `
                                 <span class="text-[10.5px] text-apple-textTertiary mb-0.5 ${alignPad}">${senderLabel}</span>
                                 <div class="${bubbleClass}">${escapeHtml(msg.content)}</div>
-                                <span class="text-[9.5px] text-apple-textTertiary mt-0.5 ${alignPad} font-mono">${timeText}</span>
+                                <span class="msg-time-display text-[9.5px] text-apple-textTertiary mt-0.5 ${alignPad} font-mono" data-created-at="${msg.created_at || ''}">${timeText}</span>
                             `;
                             thread.appendChild(row);
                             hasNewRendered = true;
@@ -402,7 +550,12 @@ async function pollNewMessages() {
                         const snippet = activeItem.querySelector('.conv-snippet');
                         if (snippet) snippet.textContent = lastMsg.content;
                         const time = activeItem.querySelector('.conv-time');
-                        if (time) time.textContent = lastMsg.created_at;
+                        if (time) {
+                            time.textContent = formatConvListTime(lastMsg.created_at);
+                            if (lastMsg.created_at) {
+                                time.setAttribute('data-timestamp', lastMsg.created_at);
+                            }
+                        }
                     }
 
                     if (hasNewRendered) {
@@ -511,7 +664,8 @@ async function handleSendReply(e) {
                 tempDiv.style.opacity = '1';
                 tempDiv.setAttribute('data-id', json.data.id);
                 const timeSpan = tempDiv.querySelector('.msg-time');
-                if (timeSpan) timeSpan.textContent = `${json.data.created_at || 'Baru saja'} • Sent`;
+                const replyTime = formatLocalTime(json.data.created_at);
+                if (timeSpan) timeSpan.textContent = `${replyTime} • Sent`;
             }
             if (json.data.id > lastMessageId) {
                 lastMessageId = json.data.id;

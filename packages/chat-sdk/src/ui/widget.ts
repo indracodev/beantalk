@@ -740,8 +740,16 @@ export class ChatWidgetUi {
 
   private formatTime(dateStr: string): string {
     try {
-      const d = new Date(dateStr);
-      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      if (!dateStr) return '';
+      let parsed = dateStr;
+      if (typeof parsed === 'string' && !parsed.includes('Z') && !parsed.includes('+') && !parsed.includes('T')) {
+        parsed = parsed.replace(' ', 'T') + 'Z';
+      }
+      const d = new Date(parsed);
+      if (isNaN(d.getTime())) return '';
+      const hours = String(d.getHours()).padStart(2, '0');
+      const mins = String(d.getMinutes()).padStart(2, '0');
+      return `${hours}:${mins}`;
     } catch {
       return '';
     }

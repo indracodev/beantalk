@@ -229,7 +229,7 @@
                                         {{ $displayName }}
                                     </span>
                                     <span
-                                        class="conv-time text-[10.5px] text-apple-textTertiary font-mono">{{ $timeHuman }}</span>
+                                        class="conv-time text-[10.5px] text-apple-textTertiary font-mono" data-timestamp="{{ $conv->last_message_at ? $conv->last_message_at->toIso8601String() : '' }}">{{ $timeHuman }}</span>
                                 </div>
                                 <div class="conv-meta-row flex items-center gap-1.5 mb-1" data-conv-meta>
                                     <span
@@ -413,22 +413,22 @@
                         @if ($msg->sender_type === 'visitor')
                             <!-- Visitor Bubble -->
                             <div class="flex flex-col items-start max-w-[85%] sm:max-w-[70%]"
-                                data-id="{{ $msg->id }}" data-date-key="{{ $msgDateKey }}">
+                                data-id="{{ $msg->id }}" data-date-key="{{ $msgDateKey }}" data-created-at="{{ $msg->created_at ? $msg->created_at->toIso8601String() : '' }}">
                                 <span class="text-[10.5px] text-apple-textTertiary mb-0.5 pl-1">{{ $msg->sender_name ?: $activeDisplayName }} (Visitor)</span>
                                 <div class="bubble-visitor bg-white border border-apple-border/80 text-apple-textPrimary px-3 py-2 text-[12.5px] shadow-apple-sm leading-relaxed">
                                     {{ $msg->content }}
                                 </div>
-                                <span class="text-[9.5px] text-apple-textTertiary mt-0.5 pl-1 font-mono">{{ $msgCreatedAt ? $msgCreatedAt->format('H:i') : '-' }}</span>
+                                <span class="msg-time-display text-[9.5px] text-apple-textTertiary mt-0.5 pl-1 font-mono" data-created-at="{{ $msg->created_at ? $msg->created_at->toIso8601String() : '' }}">{{ $msgCreatedAt ? $msgCreatedAt->format('H:i') : '-' }}</span>
                             </div>
                         @else
                             <!-- Agent Bubble -->
                             <div class="flex flex-col items-end self-end max-w-[85%] sm:max-w-[70%]"
-                                data-id="{{ $msg->id }}" data-date-key="{{ $msgDateKey }}">
+                                data-id="{{ $msg->id }}" data-date-key="{{ $msgDateKey }}" data-created-at="{{ $msg->created_at ? $msg->created_at->toIso8601String() : '' }}">
                                 <span class="text-[10.5px] text-apple-textTertiary mb-0.5 pr-1">{{ $msg->sender_name ?: $msg->user->name ?? 'Staff CS' }}</span>
                                 <div class="bubble-agent bg-apple-blue text-white px-3 py-2 text-[12.5px] shadow-apple-sm leading-relaxed">
                                     {{ $msg->content }}
                                 </div>
-                                <span class="text-[9.5px] text-apple-textTertiary mt-0.5 pr-1 font-mono">{{ $msgCreatedAt ? $msgCreatedAt->format('H:i') : '-' }} • Sent</span>
+                                <span class="msg-time-display text-[9.5px] text-apple-textTertiary mt-0.5 pr-1 font-mono" data-created-at="{{ $msg->created_at ? $msg->created_at->toIso8601String() : '' }}">{{ $msgCreatedAt ? $msgCreatedAt->format('H:i') : '-' }} • Sent</span>
                             </div>
                         @endif
                     @empty

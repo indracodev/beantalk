@@ -866,7 +866,7 @@ class DashboardController extends Controller
                 'sender_type'        => 'agent',
                 'sender_name'        => $user->name,
                 'content'            => $msg->content,
-                'created_at'         => $msg->created_at ? $msg->created_at->format('H:i') : '-',
+                'created_at'         => $msg->created_at ? $msg->created_at->toIso8601String() : null,
                 'assigned_user_id'   => $conversation->assigned_user_id,
                 'assigned_user_name' => $user->name,
             ]
@@ -898,19 +898,6 @@ class DashboardController extends Controller
 
         $formatted = $newMessages->map(function ($msg) use ($visitorName) {
             $created = $msg->created_at ? \Carbon\Carbon::parse($msg->created_at) : null;
-            $dateLabel = 'Hari Ini';
-            $dateKey = $created ? $created->format('Y-m-d') : date('Y-m-d');
-            if ($created) {
-                if ($created->isToday()) {
-                    $dateLabel = 'Hari Ini';
-                } elseif ($created->isYesterday()) {
-                    $dateLabel = 'Kemarin';
-                } elseif ($created->isCurrentYear()) {
-                    $dateLabel = $created->format('d M');
-                } else {
-                    $dateLabel = $created->format('d M Y');
-                }
-            }
             return [
                 'id'          => $msg->id,
                 'sender_type' => $msg->sender_type,
@@ -918,9 +905,9 @@ class DashboardController extends Controller
                     ? $visitorName 
                     : ($msg->sender_name ?? ($msg->user->name ?? 'Staff CS')),
                 'content'     => $msg->content,
-                'created_at'  => $created ? $created->format('H:i') : '-',
-                'date_key'    => $dateKey,
-                'date_label'  => $dateLabel,
+                'created_at'  => $created ? $created->toIso8601String() : null,
+                'date_key'    => $created ? $created->format('Y-m-d') : date('Y-m-d'),
+                'date_label'  => 'Hari Ini',
             ];
         });
 
@@ -1012,6 +999,7 @@ class DashboardController extends Controller
                 'channel_label'        => $conv->channel_label,
                 'project_name'         => $conv->project ? $conv->project->name : 'Website',
                 'last_message_preview' => $conv->last_message_preview ?: 'Percakapan baru diinisialisasi...',
+                'last_message_at'      => $conv->last_message_at ? $conv->last_message_at->toIso8601String() : null,
                 'last_message_time'    => $conv->last_message_time,
                 'unread_agent_count'   => (int) $conv->unread_agent_count,
                 'is_unread'            => (bool) ($conv->unread_agent_count > 0),
