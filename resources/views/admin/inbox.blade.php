@@ -1,7 +1,17 @@
 @extends('layouts.admin')
 
 @section('title', 'Live Inbox')
-@section('header_title', 'Inbox Messages')
+
+@section('breadcrumb')
+    <a href="{{ route('admin.inbox') }}" class="{{ $activeConversation ? 'text-apple-textTertiary hover:text-apple-textPrimary transition text-[11.5px] font-normal no-loader' : 'font-medium text-apple-textPrimary text-[12px]' }}">Inbox Messages</a>
+    @if($activeConversation && $activeConversation->project)
+        <span class="text-apple-textTertiary text-[11px]">/</span>
+        <span id="topbar-integration-name" class="font-medium text-apple-textPrimary text-[12px] flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full inline-block" style="background-color: {{ $activeConversation->project->widgetSetting->primary_color ?? '#0071E3' }};"></span>
+            <span>{{ $activeConversation->project->name }}</span>
+        </span>
+    @endif
+@endsection
 
 
 @section('content')

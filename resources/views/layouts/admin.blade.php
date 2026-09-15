@@ -102,10 +102,12 @@
         <!-- Topbar -->
         <header class="h-11 md:h-12 border-b border-apple-border glass-acrylic z-20 flex items-center justify-between px-3 md:px-4 shrink-0">
             <!-- Left: Brand / Breadcrumb -->
-            <div class="flex items-center gap-2">
-                <span class="text-apple-textTertiary text-[11.5px] font-normal">Console</span>
-                <span class="text-apple-textTertiary text-[11px]">/</span>
-                <span id="topbar-current-view" class="font-medium text-apple-textPrimary text-[12px]">@yield('header_title', 'Inbox Messages')</span>
+            <div class="flex items-center gap-1.5" id="topbar-breadcrumb">
+                @hasSection('breadcrumb')
+                    @yield('breadcrumb')
+                @else
+                    <span id="topbar-current-view" class="font-medium text-apple-textPrimary text-[12px]">@yield('header_title', 'Dashboard')</span>
+                @endif
             </div>
 
             <!-- Center: Role Badge or Status -->
