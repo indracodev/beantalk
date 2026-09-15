@@ -1326,10 +1326,29 @@ class DashboardController extends Controller
             'telegram'  => ['name' => 'Telegram', 'placeholder' => '@username atau https://t.me/...', 'icon' => 'telegram'],
             'shopee'    => ['name' => 'Shopee Store', 'placeholder' => 'https://shopee.co.id/...', 'icon' => 'shopee'],
             'tokopedia' => ['name' => 'Tokopedia Store', 'placeholder' => 'https://tokopedia.com/...', 'icon' => 'tokopedia'],
+            'custom'    => ['name' => 'Custom Link', 'placeholder' => 'https://...', 'icon' => 'link'],
         ];
 
         // Format rules array
         $botRules = is_array($widgetSetting->bot_rules) ? $widgetSetting->bot_rules : [];
+
+        // Format social channels list (supports multi-instance of same platform, e.g. multiple WA)
+        $rawChannels = $widgetSetting->social_channels;
+        $socialChannelsList = [];
+        if (is_array($rawChannels)) {
+            foreach ($rawChannels as $key => $item) {
+                if (!is_array($item)) continue;
+                $platform = strtolower(trim($item['platform'] ?? $item['icon'] ?? (is_string($key) ? $key : 'whatsapp')));
+                $socialChannelsList[] = [
+                    'id'       => $item['id'] ?? (is_string($key) ? $key : ('ch_' . uniqid())),
+                    'platform' => $platform,
+                    'name'     => $item['name'] ?? ($availableChannels[$platform]['name'] ?? ucfirst($platform)),
+                    'url'      => $item['url'] ?? '',
+                    'enabled'  => !empty($item['enabled']),
+                    'icon'     => $item['icon'] ?? ($availableChannels[$platform]['icon'] ?? $platform),
+                ];
+            }
+        }
 
         // Recent activity logs for this project
         $recentLogs = ActivityLog::where('tenant_id', $tenantId)
@@ -1342,7 +1361,7 @@ class DashboardController extends Controller
             ->take(8)
             ->get();
 
-        return view('admin.integration-detail', compact('project', 'widgetSetting', 'availableChannels', 'botRules', 'recentLogs'));
+        return view('admin.integration-detail', compact('project', 'widgetSetting', 'availableChannels', 'botRules', 'socialChannelsList', 'recentLogs'));
     }
 
     /**
@@ -1362,50 +1381,90 @@ class DashboardController extends Controller
             'find_us_title'     => 'nullable|string|max:100',
         ]);
 
-        $channelsInput = $request->input('channels', []);
         $formattedChannels = [];
+        $socialChannelsRaw = $request->input('social_channels');
 
-        $availableChannels = [
-            'whatsapp'  => ['name' => 'WhatsApp', 'icon' => 'whatsapp'],
-            'instagram' => ['name' => 'Instagram', 'icon' => 'instagram'],
-            'messenger' => ['name' => 'Facebook Messenger', 'icon' => 'messenger'],
-            'telegram'  => ['name' => 'Telegram', 'icon' => 'telegram'],
-            'shopee'    => ['name' => 'Shopee', 'icon' => 'shopee'],
-            'tokopedia' => ['name' => 'Tokopedia', 'icon' => 'tokopedia'],
-        ];
-
-        foreach ($availableChannels as $key => $meta) {
-            $enabled = !empty($channelsInput[$key]['enabled']);
-            $url = trim($channelsInput[$key]['url'] ?? '');
-
-            // Normalisasi URL WhatsApp jika hanya diisi nomor handphone
-            if ($key === 'whatsapp' && $url && !str_starts_with($url, 'http')) {
-                $cleanNumber = preg_replace('/[^0-9]/', '', $url);
-                if (str_starts_with($cleanNumber, '0')) {
-                    $cleanNumber = '62' . substr($cleanNumber, 1);
+        if (!empty($socialChannelsRaw)) {
+            if (is_string($socialChannelsRaw)) {
+                $decoded = json_decode($socialChannelsRaw, true);
+                if (is_array($decoded)) {
+                    $socialChannelsRaw = $decoded;
                 }
-                $url = 'https://wa.me/' . $cleanNumber;
             }
 
-            if ($key === 'instagram' && $url && !str_starts_with($url, 'http')) {
-                $url = 'https://instagram.com/' . ltrim($url, '@');
-            }
+            if (is_array($socialChannelsRaw)) {
+                foreach ($socialChannelsRaw as $idx => $item) {
+                    if (!is_array($item)) continue;
+                    $platform = strtolower(trim($item['platform'] ?? $item['icon'] ?? 'whatsapp'));
+                    $name = trim($item['name'] ?? ucfirst($platform));
+                    $url = trim($item['url'] ?? '');
+                    $enabled = !empty($item['enabled']);
+                    $idStr = trim($item['id'] ?? ($platform . '_' . ($idx + 1)));
 
-            if ($key === 'telegram' && $url && !str_starts_with($url, 'http')) {
-                $url = 'https://t.me/' . ltrim($url, '@');
-            }
+                    // Normalisasi URL
+                    if ($platform === 'whatsapp' && $url && !str_starts_with($url, 'http')) {
+                        $cleanNumber = preg_replace('/[^0-9]/', '', $url);
+                        if (str_starts_with($cleanNumber, '0')) {
+                            $cleanNumber = '62' . substr($cleanNumber, 1);
+                        }
+                        $url = 'https://wa.me/' . $cleanNumber;
+                    } elseif ($platform === 'instagram' && $url && !str_starts_with($url, 'http')) {
+                        $url = 'https://instagram.com/' . ltrim($url, '@');
+                    } elseif ($platform === 'telegram' && $url && !str_starts_with($url, 'http')) {
+                        $url = 'https://t.me/' . ltrim($url, '@');
+                    } elseif ($platform === 'messenger' && $url && !str_starts_with($url, 'http')) {
+                        $url = 'https://m.me/' . ltrim($url, '/');
+                    }
 
-            if ($key === 'messenger' && $url && !str_starts_with($url, 'http')) {
-                $url = 'https://m.me/' . ltrim($url, '/');
+                    $formattedChannels[] = [
+                        'id'       => $idStr,
+                        'platform' => $platform,
+                        'name'     => $name,
+                        'url'      => $url,
+                        'enabled'  => $enabled && !empty($url),
+                        'icon'     => $platform,
+                    ];
+                }
             }
-
-            $formattedChannels[] = [
-                'id'      => $key,
-                'name'    => $meta['name'],
-                'enabled' => $enabled && !empty($url),
-                'url'     => $url,
-                'icon'    => $meta['icon'],
+        } else {
+            // Legacy channels dictionary processing
+            $channelsInput = $request->input('channels', []);
+            $availableChannels = [
+                'whatsapp'  => ['name' => 'WhatsApp', 'icon' => 'whatsapp'],
+                'instagram' => ['name' => 'Instagram', 'icon' => 'instagram'],
+                'messenger' => ['name' => 'Facebook Messenger', 'icon' => 'messenger'],
+                'telegram'  => ['name' => 'Telegram', 'icon' => 'telegram'],
+                'shopee'    => ['name' => 'Shopee', 'icon' => 'shopee'],
+                'tokopedia' => ['name' => 'Tokopedia', 'icon' => 'tokopedia'],
             ];
+
+            foreach ($availableChannels as $key => $meta) {
+                $enabled = !empty($channelsInput[$key]['enabled']);
+                $url = trim($channelsInput[$key]['url'] ?? '');
+
+                if ($key === 'whatsapp' && $url && !str_starts_with($url, 'http')) {
+                    $cleanNumber = preg_replace('/[^0-9]/', '', $url);
+                    if (str_starts_with($cleanNumber, '0')) {
+                        $cleanNumber = '62' . substr($cleanNumber, 1);
+                    }
+                    $url = 'https://wa.me/' . $cleanNumber;
+                } elseif ($key === 'instagram' && $url && !str_starts_with($url, 'http')) {
+                    $url = 'https://instagram.com/' . ltrim($url, '@');
+                } elseif ($key === 'telegram' && $url && !str_starts_with($url, 'http')) {
+                    $url = 'https://t.me/' . ltrim($url, '@');
+                } elseif ($key === 'messenger' && $url && !str_starts_with($url, 'http')) {
+                    $url = 'https://m.me/' . ltrim($url, '/');
+                }
+
+                $formattedChannels[] = [
+                    'id'       => $key,
+                    'platform' => $key,
+                    'name'     => $meta['name'],
+                    'enabled'  => $enabled && !empty($url),
+                    'url'      => $url,
+                    'icon'     => $meta['icon'],
+                ];
+            }
         }
 
         $widgetSetting = WidgetSetting::firstOrCreate(

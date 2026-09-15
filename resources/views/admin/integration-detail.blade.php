@@ -7,12 +7,13 @@
 <div class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-20 md:pb-6 flex flex-col gap-4 sm:gap-5 bg-apple-canvas/30 w-full">
 
     <!-- MAIN FORM WRAPPER -->
-    <form id="formIntegrationSettings" action="{{ route('admin.integrations.settings', $project->id) }}" method="POST" onsubmit="serializeBotRules()" class="flex flex-col gap-4 sm:gap-5 w-full">
+    <form id="formIntegrationSettings" action="{{ route('admin.integrations.settings', $project->id) }}" method="POST" onsubmit="serializeAllSettings()" class="flex flex-col gap-4 sm:gap-5 w-full">
         @csrf
         @method('PUT')
 
-        <!-- Hidden Input to serialize rules into JSON -->
+        <!-- Hidden Inputs to serialize rules & social channels into JSON -->
         <input type="hidden" name="bot_rules" id="hiddenBotRules" value="{{ json_encode($botRules) }}">
+        <input type="hidden" name="social_channels" id="hiddenSocialChannels" value="{{ json_encode($socialChannelsList) }}">
 
         <!-- Header Action Bar -->
         <div class="bg-white border border-apple-border rounded-xl p-3.5 sm:p-4 shadow-apple-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -119,6 +120,7 @@
                     <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
                 </svg>
                 <span>Saluran Sosial &amp; Marketplace</span>
+                <span id="badgeTabSocialCount" class="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-bold">{{ count(array_filter($socialChannelsList, fn($c) => !empty($c['enabled']))) }}</span>
             </button>
 
             <button type="button" onclick="switchDetailTab('embed')" id="tab-btn-embed" class="tab-btn shrink-0 whitespace-nowrap px-3.5 py-2 rounded-lg text-[12px] font-medium text-apple-textSecondary hover:text-apple-textPrimary hover:bg-apple-canvas transition flex items-center gap-2 cursor-pointer">
@@ -287,40 +289,50 @@
         </div>
 
         <!-- ============================================================ -->
-        <!-- TAB 3: SOCIAL CHANNELS & MARKETPLACE                         -->
+        <!-- TAB 3: SOCIAL CHANNELS & MULTI-CONTACT BUILDER               -->
         <!-- ============================================================ -->
         <div id="tab-pane-social" class="tab-pane flex flex-col gap-4" style="display: none;">
             <div class="bg-white border border-apple-border rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col gap-4">
-                <div class="pb-3 border-b border-apple-border">
-                    <h3 class="text-[14px] font-bold text-apple-textPrimary">Saluran Kontak Alternatif ("Find Us Somewhere Else")</h3>
-                    <p class="text-[11.5px] text-apple-textSecondary mt-0.5">Tautan alternatif yang muncul pada Halaman Awal (Welcome Hub) widget agar pelanggan dapat menghubungi Anda di platform sosial & marketplace.</p>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-apple-border">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-[14px] font-bold text-apple-textPrimary">Saluran Kontak Alternatif &amp; Multi-Kontak</h3>
+                            <span id="labelSocialCount" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">{{ count(array_filter($socialChannelsList, fn($c) => !empty($c['enabled']))) }} Aktif</span>
+                        </div>
+                        <p class="text-[11.5px] text-apple-textSecondary mt-0.5">Dukung penambahan banyak kontak untuk platform yang sama (contoh: WhatsApp Sales, WhatsApp Retur &amp; Garansi). Pelanggan dapat memilih kontak tujuan di widget.</p>
+                    </div>
+
+                    <div class="flex items-center gap-2 flex-wrap self-start sm:self-auto">
+                        <button type="button" onclick="addNewSocialChannel('whatsapp', 'WhatsApp CS & Order', '')" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-[11.5px] font-semibold transition shadow-apple-sm cursor-pointer">
+                            <span>+ Tambah Kontak WhatsApp</span>
+                        </button>
+                        <button type="button" onclick="addNewSocialChannel('custom', 'Tautan Kustom', '')" class="inline-flex items-center gap-1.5 bg-apple-canvas border border-apple-border hover:bg-apple-border/40 text-apple-textPrimary px-3 py-1.5 rounded-lg text-[11.5px] font-medium transition shadow-2xs cursor-pointer">
+                            <span>+ Saluran Lain</span>
+                        </button>
+                    </div>
                 </div>
 
-                @php
-                    $savedChannels = collect($widgetSetting->social_channels ?? [])->keyBy('id');
-                @endphp
+                <!-- Container Baris Saluran Sosial (Vanilla JS Managed) -->
+                <div id="socialChannelsListContainer" class="flex flex-col gap-3">
+                    <!-- Dynamic Rows Rendered Here by JavaScript -->
+                </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                    @foreach($availableChannels as $channelKey => $cMeta)
-                        @php
-                            $chData = $savedChannels->get($channelKey);
-                            $chEnabled = !empty($chData['enabled']);
-                            $chUrl = $chData['url'] ?? '';
-                        @endphp
-                        <div class="p-3.5 rounded-xl border border-apple-border bg-apple-canvas/20 flex flex-col gap-2">
-                            <div class="flex items-center justify-between">
-                                <label class="flex items-center gap-2 font-semibold text-[12px] text-apple-textPrimary cursor-pointer">
-                                    <input type="checkbox" name="channels[{{ $channelKey }}][enabled]" value="1" {{ $chEnabled ? 'checked' : '' }} class="rounded text-apple-blue focus:ring-0">
-                                    <span>{{ $cMeta['name'] }}</span>
-                                </label>
-                                <span class="text-[10.5px] {{ $chEnabled ? 'text-emerald-600 font-semibold' : 'text-neutral-400' }}">
-                                    {{ $chEnabled ? '● Aktif' : 'Nonaktif' }}
-                                </span>
-                            </div>
+                <!-- Empty State -->
+                <div id="socialChannelsEmptyState" class="{{ count($socialChannelsList) > 0 ? 'hidden' : '' }} p-6 text-center border-2 border-dashed border-apple-border rounded-xl text-[12px] text-apple-textTertiary bg-apple-canvas/20">
+                    <svg class="w-7 h-7 text-neutral-300 mx-auto mb-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                    <p class="font-medium text-apple-textSecondary">Belum ada saluran kontak alternatif.</p>
+                    <p class="mt-0.5 text-apple-textTertiary text-[11px]">Klik tombol <strong>"+ Tambah Kontak WhatsApp"</strong> di atas untuk menambahkan kontak customer support pertama Anda.</p>
+                </div>
 
-                            <input type="text" name="channels[{{ $channelKey }}][url]" value="{{ $chUrl }}" placeholder="{{ $cMeta['placeholder'] }}" class="w-full text-[11.5px] px-3 py-1.5 bg-white border border-apple-border rounded-lg focus:outline-none focus:ring-2 focus:ring-apple-blue/20 focus:border-apple-blue">
-                        </div>
-                    @endforeach
+                <!-- Informative Callout for Multi-Contact Feature -->
+                <div class="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl text-[11.5px] text-emerald-900 flex items-start gap-2.5">
+                    <svg class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <div>
+                        <span class="font-bold">Fitur Pemilihan Multi-Kontak Otomatis</span>
+                        <p class="mt-0.5 text-emerald-800 leading-relaxed text-[11px]">
+                            Jika Anda menambahkan <strong>lebih dari 1 kontak aktif pada platform yang sama</strong> (misal: 2 nomor WhatsApp), saat pelanggan mengklik ikon WhatsApp di widget website, sistem akan otomatis membuka <strong>Menu Pilihan Kontak</strong> agar pelanggan dapat memilih apakah ingin menghubungi CS Sales, CS Retur, atau layanan lainnya.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -370,13 +382,28 @@
     </form>
 </div>
 
-<!-- Vanilla JavaScript for Tab Switching, FAQ Rule Builder, & Color Sync -->
+<!-- Vanilla JavaScript for Tab Switching, FAQ Rule Builder, Multi-Contact Channels, & Color Sync -->
 <script>
-// Initial Bot Rules Data from Backend
+// Initial Data from Backend
 let currentFaqRules = @json($botRules);
 if (!Array.isArray(currentFaqRules)) {
     currentFaqRules = [];
 }
+
+let currentSocialChannels = @json($socialChannelsList);
+if (!Array.isArray(currentSocialChannels)) {
+    currentSocialChannels = [];
+}
+
+const PLATFORM_OPTIONS = [
+    { value: 'whatsapp', name: 'WhatsApp', placeholder: '08123456789 atau https://wa.me/...', badgeClass: 'bg-emerald-100 text-emerald-800' },
+    { value: 'instagram', name: 'Instagram', placeholder: '@username atau https://instagram.com/...', badgeClass: 'bg-pink-100 text-pink-800' },
+    { value: 'telegram', name: 'Telegram', placeholder: '@username atau https://t.me/...', badgeClass: 'bg-sky-100 text-sky-800' },
+    { value: 'messenger', name: 'Facebook Messenger', placeholder: 'username atau https://m.me/...', badgeClass: 'bg-blue-100 text-blue-800' },
+    { value: 'shopee', name: 'Shopee Store', placeholder: 'https://shopee.co.id/...', badgeClass: 'bg-orange-100 text-orange-800' },
+    { value: 'tokopedia', name: 'Tokopedia Store', placeholder: 'https://tokopedia.com/...', badgeClass: 'bg-green-100 text-green-800' },
+    { value: 'custom', name: 'Custom Link / Website', placeholder: 'https://...', badgeClass: 'bg-slate-100 text-slate-800' }
+];
 
 // 1. Tab Switching Function (Zero dependencies, Bulletproof inline display toggle)
 function switchDetailTab(tabName) {
@@ -468,7 +495,6 @@ function addNewFaqRuleRow() {
     });
     renderFaqRulesList();
 
-    // Auto-focus input on newly created row
     setTimeout(() => {
         const inputs = document.querySelectorAll('#faqRulesListContainer input');
         if (inputs.length > 0) {
@@ -491,6 +517,149 @@ function serializeBotRules() {
     }
 }
 
+// 3. Dynamic Multi-Contact Social Channels Builder
+function renderSocialChannelsList() {
+    const container = document.getElementById('socialChannelsListContainer');
+    const emptyState = document.getElementById('socialChannelsEmptyState');
+    const labelCount = document.getElementById('labelSocialCount');
+    const badgeTabCount = document.getElementById('badgeTabSocialCount');
+
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (!Array.isArray(currentSocialChannels) || currentSocialChannels.length === 0) {
+        if (emptyState) emptyState.classList.remove('hidden');
+    } else {
+        if (emptyState) emptyState.classList.add('hidden');
+
+        currentSocialChannels.forEach((chan, idx) => {
+            const row = document.createElement('div');
+            const isEnabled = Boolean(chan.enabled);
+            const currentPlatform = chan.platform || chan.icon || 'whatsapp';
+            const matchedOpt = PLATFORM_OPTIONS.find(o => o.value === currentPlatform) || PLATFORM_OPTIONS[0];
+
+            row.className = 'p-3.5 rounded-xl border border-apple-border bg-white shadow-2xs hover:border-emerald-300 transition flex flex-col md:flex-row items-start md:items-center gap-3';
+            
+            let platformOptionsHtml = '';
+            PLATFORM_OPTIONS.forEach(opt => {
+                const selected = (opt.value === currentPlatform) ? 'selected' : '';
+                platformOptionsHtml += `<option value="${opt.value}" ${selected}>${opt.name}</option>`;
+            });
+
+            row.innerHTML = `
+                <div class="flex items-center gap-2 shrink-0 self-start md:self-center">
+                    <span class="w-6 h-6 rounded-full bg-apple-canvas border border-apple-border text-[11px] font-bold text-apple-textSecondary flex items-center justify-center">
+                        ${idx + 1}
+                    </span>
+                    <select onchange="updateSocialPlatform(${idx}, this.value)" class="text-[11.5px] font-semibold py-1.5 px-2.5 bg-apple-canvas/60 border border-apple-border rounded-lg focus:bg-white focus:outline-none cursor-pointer">
+                        ${platformOptionsHtml}
+                    </select>
+                </div>
+
+                <div class="flex-1 w-full grid grid-cols-1 md:grid-cols-12 gap-2.5">
+                    <div class="md:col-span-5">
+                        <label class="block text-[10.5px] font-semibold text-apple-textSecondary mb-1">Nama / Label Kontak</label>
+                        <input type="text" value="${escapeHtml(chan.name || '')}" oninput="updateSocialChannelField(${idx}, 'name', this.value)" placeholder="Contoh: CS Sales &amp; Pemesanan" class="w-full text-[12px] px-3 py-1.5 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                    </div>
+                    <div class="md:col-span-7">
+                        <label class="block text-[10.5px] font-semibold text-apple-textSecondary mb-1">Nomor HP / URL Tautan</label>
+                        <input type="text" value="${escapeHtml(chan.url || '')}" oninput="updateSocialChannelField(${idx}, 'url', this.value)" placeholder="${matchedOpt.placeholder}" class="w-full text-[12px] px-3 py-1.5 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 shrink-0 self-end md:self-center">
+                    <label class="flex items-center gap-1.5 text-[11.5px] font-semibold cursor-pointer ${isEnabled ? 'text-emerald-700' : 'text-neutral-500'}">
+                        <input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="updateSocialChannelField(${idx}, 'enabled', this.checked)" class="rounded text-emerald-600 focus:ring-0 cursor-pointer">
+                        <span>${isEnabled ? 'Aktif' : 'Nonaktif'}</span>
+                    </label>
+
+                    <button type="button" onclick="removeSocialChannel(${idx})" class="text-neutral-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition cursor-pointer" title="Hapus Kontak Ini">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                </div>
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    const activeCount = Array.isArray(currentSocialChannels) ? currentSocialChannels.filter(c => c.enabled).length : 0;
+    if (labelCount) labelCount.innerText = activeCount + ' Aktif';
+    if (badgeTabCount) badgeTabCount.innerText = activeCount;
+    serializeSocialChannels();
+}
+
+function updateSocialPlatform(index, newPlatform) {
+    if (currentSocialChannels[index]) {
+        currentSocialChannels[index].platform = newPlatform;
+        currentSocialChannels[index].icon = newPlatform;
+        if (!currentSocialChannels[index].name || currentSocialChannels[index].name.startsWith('CS') || currentSocialChannels[index].name.includes('WhatsApp')) {
+            const opt = PLATFORM_OPTIONS.find(o => o.value === newPlatform);
+            if (opt) {
+                currentSocialChannels[index].name = opt.name;
+            }
+        }
+        renderSocialChannelsList();
+    }
+}
+
+function updateSocialChannelField(index, field, value) {
+    if (currentSocialChannels[index]) {
+        currentSocialChannels[index][field] = value;
+        if (field === 'enabled') {
+            renderSocialChannelsList();
+        } else {
+            serializeSocialChannels();
+        }
+    }
+}
+
+function addNewSocialChannel(platform = 'whatsapp', name = '', url = '') {
+    if (!Array.isArray(currentSocialChannels)) {
+        currentSocialChannels = [];
+    }
+
+    const opt = PLATFORM_OPTIONS.find(o => o.value === platform) || PLATFORM_OPTIONS[0];
+    const defaultName = name || opt.name;
+
+    currentSocialChannels.push({
+        id: platform + '_' + Date.now(),
+        platform: platform,
+        name: defaultName,
+        url: url,
+        enabled: true,
+        icon: platform
+    });
+
+    renderSocialChannelsList();
+
+    setTimeout(() => {
+        const inputs = document.querySelectorAll('#socialChannelsListContainer input[type="text"]');
+        if (inputs.length > 0) {
+            inputs[inputs.length - 2].focus();
+        }
+    }, 50);
+}
+
+function removeSocialChannel(index) {
+    if (Array.isArray(currentSocialChannels) && currentSocialChannels[index]) {
+        currentSocialChannels.splice(index, 1);
+        renderSocialChannelsList();
+    }
+}
+
+function serializeSocialChannels() {
+    const hidden = document.getElementById('hiddenSocialChannels');
+    if (hidden) {
+        hidden.value = JSON.stringify(currentSocialChannels);
+    }
+}
+
+function serializeAllSettings() {
+    serializeBotRules();
+    serializeSocialChannels();
+}
+
 function escapeHtml(text) {
     if (!text) return '';
     const map = {
@@ -503,7 +672,7 @@ function escapeHtml(text) {
     return text.toString().replace(/[&<>"']/g, m => map[m]);
 }
 
-// 3. Bot Toggle Switch Visual Updates
+// 4. Bot Toggle Switch Visual Updates
 function toggleBotSwitch(checkbox) {
     const isChecked = checkbox.checked;
     const label = document.getElementById('botToggleLabel');
@@ -526,7 +695,7 @@ function toggleBotSwitch(checkbox) {
     }
 }
 
-// 4. Brand Color Realtime Sync
+// 5. Brand Color Realtime Sync
 function updateBrandColor(hex) {
     if (!hex) return;
     if (!hex.startsWith('#')) hex = '#' + hex;
@@ -542,7 +711,7 @@ function updateBrandColor(hex) {
     if (hexText) hexText.innerText = hex;
 }
 
-// 5. Copy Code Snippet Helper
+// 6. Copy Code Snippet Helper
 function copySnippetText(elementId, btn) {
     const el = document.getElementById(elementId);
     if (!el) return;
@@ -557,6 +726,7 @@ function copySnippetText(elementId, btn) {
 // Initial Boot
 document.addEventListener('DOMContentLoaded', function() {
     renderFaqRulesList();
+    renderSocialChannelsList();
 });
 </script>
 @endsection

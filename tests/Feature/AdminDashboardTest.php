@@ -737,6 +737,64 @@ class AdminDashboardTest extends TestCase
     }
 
     /**
+     * Test Admin can save multiple contacts of the same platform (e.g. multiple WhatsApp numbers)
+     */
+    public function testAdminCanSaveMultiInstanceSocialChannels()
+    {
+        $payload = [
+            'primary_color'   => '#0071E3',
+            'find_us_title'   => 'Hubungi Kami',
+            'social_channels' => json_encode([
+                [
+                    'id'       => 'wa_sales',
+                    'platform' => 'whatsapp',
+                    'name'     => 'CS 1 - Sales & Pemesanan',
+                    'url'      => '081234567890',
+                    'enabled'  => true,
+                ],
+                [
+                    'id'       => 'wa_retur',
+                    'platform' => 'whatsapp',
+                    'name'     => 'CS 2 - Retur & Klaim',
+                    'url'      => '089876543210',
+                    'enabled'  => true,
+                ],
+                [
+                    'id'       => 'ig_official',
+                    'platform' => 'instagram',
+                    'name'     => 'Instagram Official',
+                    'url'      => '@supresso_coffee',
+                    'enabled'  => true,
+                ],
+            ]),
+        ];
+
+        $response = $this->actingAs($this->superadmin)
+            ->put("/admin/integrations/{$this->project->id}/settings", $payload);
+
+        $response->assertSessionHas('success');
+
+        $setting = \App\Models\WidgetSetting::where('project_id', $this->project->id)->first();
+        $this->assertNotNull($setting);
+
+        $channels = $setting->social_channels;
+        $this->assertIsArray($channels);
+        $this->assertCount(3, $channels);
+
+        // Verify both WA numbers are preserved and normalized
+        $waList = array_values(array_filter($channels, fn($c) => $c['platform'] === 'whatsapp'));
+        $this->assertCount(2, $waList);
+        $this->assertEquals('CS 1 - Sales & Pemesanan', $waList[0]['name']);
+        $this->assertEquals('https://wa.me/6281234567890', $waList[0]['url']);
+        $this->assertEquals('CS 2 - Retur & Klaim', $waList[1]['name']);
+        $this->assertEquals('https://wa.me/6289876543210', $waList[1]['url']);
+
+        $ig = collect($channels)->firstWhere('platform', 'instagram');
+        $this->assertNotNull($ig);
+        $this->assertEquals('https://instagram.com/supresso_coffee', $ig['url']);
+    }
+
+    /**
      * Test Authenticated Admin can view dedicated integration detail page
      */
     public function testAuthenticatedUserCanViewIntegrationDetail()
@@ -750,4 +808,5 @@ class AdminDashboardTest extends TestCase
             ->assertSee('Saluran Sosial &amp; Marketplace', false);
     }
 }
+
 

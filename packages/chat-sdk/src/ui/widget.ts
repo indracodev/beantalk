@@ -9,7 +9,7 @@ export class ChatWidgetUi {
   private emitter: EventEmitter;
   private options: WidgetInitOptions;
   private isOpen: boolean = false;
-  private currentStage: 'welcome' | 'identity' | 'chat' = 'welcome';
+  private currentStage: 'welcome' | 'identity' | 'chat' | 'social-picker' = 'welcome';
   private unreadCount: number = 0;
   private messages: Message[] = [];
   private sessionData: SessionInitData | null = null;
@@ -23,6 +23,7 @@ export class ChatWidgetUi {
   private stageWelcome!: HTMLElement;
   private stageIdentity!: HTMLElement;
   private stageChat!: HTMLElement;
+  private stageSocialPicker!: HTMLElement;
   private messagesArea!: HTMLElement;
   private composerInput!: HTMLTextAreaElement;
   private composerSendBtn!: HTMLButtonElement;
@@ -38,6 +39,7 @@ export class ChatWidgetUi {
   private chatInlineIdentityBanner!: HTMLElement;
   private inlineIdentityInput!: HTMLInputElement;
   private inlineIdentityBtn!: HTMLButtonElement;
+  private socialPickerBackBtn!: HTMLButtonElement;
   private audioCtx: AudioContext | null = null;
 
   constructor(options: WidgetInitOptions, emitter: EventEmitter) {
@@ -158,18 +160,51 @@ export class ChatWidgetUi {
 
       if (activeChannels.length > 0) {
         socialChannelsRow.innerHTML = '';
-        activeChannels.forEach((chan: any) => {
-          const btn = document.createElement('a');
-          btn.className = `social-channel-btn social-btn-${chan.id}`;
-          btn.href = chan.url;
-          btn.target = '_blank';
-          btn.rel = 'noopener noreferrer';
-          btn.title = `Hubungi via ${chan.name}`;
 
-          const iconSvg = (ICONS as any)[chan.icon || chan.id] || ICONS.chat;
-          btn.innerHTML = iconSvg;
-          socialChannelsRow.appendChild(btn);
+        // Group by platform to support multi-contact (e.g. multiple WhatsApp numbers)
+        const grouped: { [key: string]: any[] } = {};
+        activeChannels.forEach((chan: any) => {
+          const plat = (chan.platform || chan.icon || chan.id || 'whatsapp').toLowerCase();
+          if (!grouped[plat]) {
+            grouped[plat] = [];
+          }
+          grouped[plat].push(chan);
         });
+
+        Object.keys(grouped).forEach((plat) => {
+          const list = grouped[plat];
+          const first = list[0];
+          const iconKey = first.icon || plat;
+          const iconSvg = (ICONS as any)[iconKey] || (ICONS as any)[plat] || ICONS.chat;
+
+          if (list.length === 1) {
+            // Single contact for this platform -> direct link
+            const btn = document.createElement('a');
+            btn.className = `social-channel-btn social-btn-${plat}`;
+            btn.href = first.url;
+            btn.target = '_blank';
+            btn.rel = 'noopener noreferrer';
+            btn.title = `Hubungi via ${first.name || getPlatformDisplayName(plat)}`;
+            btn.innerHTML = iconSvg;
+            socialChannelsRow.appendChild(btn);
+          } else {
+            // Multiple contacts for this platform (e.g. 2+ WA numbers) -> opens multi-contact picker
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `social-channel-btn social-btn-${plat} has-multi-badge`;
+            btn.title = `${getPlatformDisplayName(plat)} (${list.length} pilihan kontak)`;
+            btn.innerHTML = `
+              ${iconSvg}
+              <span class="social-channel-badge">${list.length}</span>
+            `;
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              this.openSocialPicker(plat, list);
+            });
+            socialChannelsRow.appendChild(btn);
+          }
+        });
+
         socialChannelsCard.style.display = 'block';
       } else {
         socialChannelsCard.style.display = 'none';
@@ -294,6 +329,35 @@ export class ChatWidgetUi {
             </div>
           </div>
 
+          <!-- ================= STAGE 1.8: MULTI-CONTACT CHANNEL SELECTOR ================= -->
+          <div class="stage-social-picker" id="stageSocialPicker" style="display: none;">
+            <div class="social-picker-header">
+              <button type="button" class="social-picker-back-btn" id="socialPickerBackBtn" aria-label="Kembali">${ICONS.back}</button>
+              <div class="social-picker-header-title" id="socialPickerHeaderTitle">Pilih Kontak</div>
+              <button type="button" class="welcome-close-btn" aria-label="Tutup">${ICONS.close}</button>
+            </div>
+
+            <div class="social-picker-body">
+              <div class="social-picker-hero">
+                <div class="social-picker-avatar social-btn-whatsapp" id="socialPickerHeroAvatar">
+                  ${ICONS.whatsapp}
+                </div>
+                <h3 class="social-picker-title" id="socialPickerTitle">Hubungi via WhatsApp</h3>
+                <p class="social-picker-subtitle" id="socialPickerSubtitle">
+                  Pilih salah satu nomor / kontak layanan di bawah untuk terhubung langsung:
+                </p>
+              </div>
+
+              <div class="social-picker-list" id="socialPickerList">
+                <!-- Dynamically populated options -->
+              </div>
+            </div>
+
+            <div class="welcome-footer">
+              ${ICONS.sparkles} <span>Powered by BeanTalk • Web Chat</span>
+            </div>
+          </div>
+
           <!-- ================= STAGE 2: CHAT UTAMA ================= -->
           <div class="stage-chat">
             <div class="chat-header">
@@ -351,6 +415,7 @@ export class ChatWidgetUi {
     this.stageWelcome = this.shadowRoot.querySelector('.stage-welcome') as HTMLElement;
     this.stageIdentity = this.shadowRoot.querySelector('.stage-identity') as HTMLElement;
     this.stageChat = this.shadowRoot.querySelector('.stage-chat') as HTMLElement;
+    this.stageSocialPicker = this.shadowRoot.querySelector('#stageSocialPicker') as HTMLElement;
     this.messagesArea = this.shadowRoot.querySelector('.chat-messages-area') as HTMLElement;
     this.composerInput = this.shadowRoot.querySelector('.composer-textarea') as HTMLTextAreaElement;
     this.composerSendBtn = this.shadowRoot.querySelector('.composer-send-btn') as HTMLButtonElement;
@@ -365,6 +430,7 @@ export class ChatWidgetUi {
     this.chatInlineIdentityBanner = this.shadowRoot.querySelector('#chatInlineIdentityBanner') as HTMLElement;
     this.inlineIdentityInput = this.shadowRoot.querySelector('#inlineIdentityInput') as HTMLInputElement;
     this.inlineIdentityBtn = this.shadowRoot.querySelector('#inlineIdentityBtn') as HTMLButtonElement;
+    this.socialPickerBackBtn = this.shadowRoot.querySelector('#socialPickerBackBtn') as HTMLButtonElement;
   }
 
   private bindEvents(): void {
@@ -396,6 +462,13 @@ export class ChatWidgetUi {
     // Stage 1.5 Back Button -> Return to Welcome
     if (this.identityBackBtn) {
       this.identityBackBtn.addEventListener('click', () => {
+        this.goToStage('welcome');
+      });
+    }
+
+    // Stage 1.8 Social Picker Back Button -> Return to Welcome
+    if (this.socialPickerBackBtn) {
+      this.socialPickerBackBtn.addEventListener('click', () => {
         this.goToStage('welcome');
       });
     }
@@ -554,15 +627,17 @@ export class ChatWidgetUi {
     this.emitter.emit('ui:send', tempMsg);
   }
 
-  goToStage(stage: 'welcome' | 'identity' | 'chat'): void {
+  goToStage(stage: 'welcome' | 'identity' | 'chat' | 'social-picker'): void {
     this.currentStage = stage;
     if (stage === 'welcome') {
       this.stageWelcome.style.display = 'flex';
       if (this.stageIdentity) this.stageIdentity.style.display = 'none';
+      if (this.stageSocialPicker) this.stageSocialPicker.style.display = 'none';
       this.stageChat.style.display = 'none';
     } else if (stage === 'identity') {
       this.stageWelcome.style.display = 'none';
       if (this.stageIdentity) this.stageIdentity.style.display = 'flex';
+      if (this.stageSocialPicker) this.stageSocialPicker.style.display = 'none';
       this.stageChat.style.display = 'none';
       if (this.identityNameInput) {
         if (this.customerName) {
@@ -570,14 +645,77 @@ export class ChatWidgetUi {
         }
         setTimeout(() => this.identityNameInput.focus(), 150);
       }
+    } else if (stage === 'social-picker') {
+      this.stageWelcome.style.display = 'none';
+      if (this.stageIdentity) this.stageIdentity.style.display = 'none';
+      if (this.stageSocialPicker) this.stageSocialPicker.style.display = 'flex';
+      this.stageChat.style.display = 'none';
     } else {
       this.stageWelcome.style.display = 'none';
       if (this.stageIdentity) this.stageIdentity.style.display = 'none';
+      if (this.stageSocialPicker) this.stageSocialPicker.style.display = 'none';
       this.stageChat.style.display = 'flex';
       this.scrollToBottom();
       setTimeout(() => this.composerInput.focus(), 150);
     }
     this.updateViewportDimensions();
+  }
+
+  openSocialPicker(platform: string, contacts: any[]): void {
+    const titleEl = this.shadowRoot.querySelector('#socialPickerTitle') as HTMLElement;
+    const headerTitleEl = this.shadowRoot.querySelector('#socialPickerHeaderTitle') as HTMLElement;
+    const avatarEl = this.shadowRoot.querySelector('#socialPickerHeroAvatar') as HTMLElement;
+    const listEl = this.shadowRoot.querySelector('#socialPickerList') as HTMLElement;
+
+    const platName = getPlatformDisplayName(platform);
+    if (headerTitleEl) headerTitleEl.textContent = `Pilih Kontak ${platName}`;
+    if (titleEl) titleEl.textContent = `Hubungi via ${platName}`;
+
+    if (avatarEl) {
+      const first = contacts[0] || {};
+      const iconKey = first.icon || platform;
+      const iconSvg = (ICONS as any)[iconKey] || (ICONS as any)[platform] || ICONS.chat;
+      avatarEl.innerHTML = iconSvg;
+      avatarEl.className = `social-picker-avatar social-btn-${platform}`;
+    }
+
+    if (listEl) {
+      listEl.innerHTML = '';
+      contacts.forEach((c) => {
+        const item = document.createElement('a');
+        item.className = 'social-picker-item';
+        item.href = c.url;
+        item.target = '_blank';
+        item.rel = 'noopener noreferrer';
+
+        const iconKey = c.icon || platform;
+        const iconSvg = (ICONS as any)[iconKey] || (ICONS as any)[platform] || ICONS.chat;
+        const cleanUrlSnippet = extractContactDisplay(c.url, platform);
+
+        item.innerHTML = `
+          <div class="social-picker-item-avatar social-btn-${platform}">
+            ${iconSvg}
+          </div>
+          <div class="social-picker-item-info">
+            <div class="social-picker-item-name">${escapeHtml(c.name || platName)}</div>
+            ${cleanUrlSnippet ? `<div class="social-picker-item-sub">${escapeHtml(cleanUrlSnippet)}</div>` : ''}
+          </div>
+          <div class="social-picker-item-arrow">
+            ${ICONS.chevronRight}
+          </div>
+        `;
+
+        item.addEventListener('click', () => {
+          setTimeout(() => {
+            this.goToStage('welcome');
+          }, 300);
+        });
+
+        listEl.appendChild(item);
+      });
+    }
+
+    this.goToStage('social-picker');
   }
 
   open(): void {
@@ -765,4 +903,47 @@ function escapeHtml(str: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+function getPlatformDisplayName(platform: string): string {
+  const map: { [key: string]: string } = {
+    whatsapp: 'WhatsApp',
+    instagram: 'Instagram',
+    telegram: 'Telegram',
+    messenger: 'Facebook Messenger',
+    shopee: 'Shopee Store',
+    tokopedia: 'Tokopedia Store',
+    custom: 'Link Kustom',
+    link: 'Tautan Kustom',
+  };
+  return map[platform.toLowerCase()] || capitalize(platform);
+}
+
+function extractContactDisplay(url: string, platform: string): string {
+  if (!url) return '';
+  const plat = platform.toLowerCase();
+
+  if (plat === 'whatsapp') {
+    if (url.includes('wa.me/')) {
+      const num = url.split('wa.me/')[1]?.split('?')[0] || '';
+      return num ? `+${num}` : url;
+    }
+  } else if (plat === 'instagram') {
+    if (url.includes('instagram.com/')) {
+      const user = url.split('instagram.com/')[1]?.split('/')[0]?.split('?')[0] || '';
+      return user ? `@${user}` : url;
+    }
+  } else if (plat === 'telegram') {
+    if (url.includes('t.me/')) {
+      const user = url.split('t.me/')[1]?.split('/')[0]?.split('?')[0] || '';
+      return user ? `@${user}` : url;
+    }
+  }
+
+  return url;
+}
+
+function capitalize(str: string): string {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }

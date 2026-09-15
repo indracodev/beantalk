@@ -577,6 +577,192 @@ export function generateWidgetCss(primaryColor: string = '#1E1E1E'): string {
       color: #FFFFFF;
     }
 
+    .social-btn-custom, .social-btn-link {
+      background: linear-gradient(135deg, #475569, #1E293B);
+      color: #FFFFFF;
+    }
+
+    .social-channel-btn.has-multi-badge {
+      position: relative;
+    }
+
+    .social-channel-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #0071E3;
+      color: #FFFFFF;
+      font-size: 9.5px;
+      font-weight: 800;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 3px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* ==========================================================================
+       STAGE 1.8: MULTI-CONTACT CHANNEL SELECTOR (PILIH KONTAK)
+       ========================================================================== */
+    .stage-social-picker {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: #F8FAFC;
+    }
+
+    .social-picker-header {
+      background: var(--chat-primary);
+      color: var(--chat-primary-text);
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .social-picker-back-btn {
+      background: none;
+      border: none;
+      color: var(--chat-primary-text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border-radius: 8px;
+      transition: background 0.15s ease;
+    }
+
+    .social-picker-back-btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .social-picker-header-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .social-picker-body {
+      flex: 1;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .social-picker-hero {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .social-picker-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+      color: #FFFFFF;
+    }
+
+    .social-picker-avatar svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .social-picker-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #0F172A;
+      margin: 0 0 4px 0;
+    }
+
+    .social-picker-subtitle {
+      font-size: 12px;
+      color: #64748B;
+      line-height: 1.45;
+      margin: 0;
+      max-width: 290px;
+    }
+
+    .social-picker-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .social-picker-item {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+      cursor: pointer;
+    }
+
+    .social-picker-item:hover {
+      transform: translateY(-2px);
+      border-color: #CBD5E1;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.07);
+    }
+
+    .social-picker-item-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: #FFFFFF;
+    }
+
+    .social-picker-item-avatar svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .social-picker-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .social-picker-item-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #0F172A;
+      margin-bottom: 2px;
+    }
+
+    .social-picker-item-sub {
+      font-size: 11px;
+      color: #64748B;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .social-picker-item-arrow {
+      color: #94A3B8;
+      display: flex;
+      align-items: center;
+    }
+
     .chat-identity-banner {
       padding: 8px 12px;
       background: #F8FAFC;

@@ -1,4 +1,4 @@
-"use strict";var BeanTalk=(()=>{var S=Object.defineProperty;var V=Object.getOwnPropertyDescriptor;var G=Object.getOwnPropertyNames;var K=Object.prototype.hasOwnProperty;var Y=(n,e)=>{for(var t in e)S(n,t,{get:e[t],enumerable:!0})},Q=(n,e,t,i)=>{if(e&&typeof e=="object"||typeof e=="function")for(let s of G(e))!K.call(n,s)&&s!==t&&S(n,s,{get:()=>e[s],enumerable:!(i=V(e,s))||i.enumerable});return n};var J=n=>Q(S({},"__esModule",{value:!0}),n);var he={};Y(he,{BeanTalk:()=>g,ChatWidget:()=>d,UniversalChatMe:()=>ie,close:()=>ae,default:()=>ce,getInstance:()=>de,init:()=>ne,on:()=>re,open:()=>se,sendMessage:()=>le,toggle:()=>oe});var x=class{constructor(){this.events={}}on(e,t){return this.events[e]||(this.events[e]=[]),this.events[e].push(t),this}off(e,t){return this.events[e]?(this.events[e]=this.events[e].filter(i=>i!==t),this):this}emit(e,t){this.events[e]&&this.events[e].forEach(i=>{try{i(t)}catch(s){console.error(`[BeanTalk] Error in event handler for "${e}":`,s)}})}};var b=class{constructor(e,t=""){this.projectKey=e,this.baseUrl=t.replace(/\/+$/,"")}async request(e,t={}){let i=`${this.baseUrl}${e}`,s={Accept:"application/json","Content-Type":"application/json","X-Project-Key":this.projectKey,...t.headers||{}},o=new AbortController,r=setTimeout(()=>o.abort(),12e3);try{let a=await fetch(i,{...t,headers:s,signal:o.signal});return clearTimeout(r),await a.json()}catch(a){return clearTimeout(r),{success:!1,error:{code:a.name==="AbortError"?"TIMEOUT":"NETWORK_ERROR",message:a.message||"Gagal terhubung ke server chat."}}}}async initSession(e,t,i){return this.request("/api/v1/client/session/init",{method:"POST",body:JSON.stringify({visitor_uuid:e,name:i,project_key:this.projectKey,page_url:window.location.href,page_title:document.title,client_url:window.location.href,metadata:{referrer:document.referrer,userAgent:navigator.userAgent,title:document.title,...t}})})}async updateProfile(e,t){return this.request("/api/v1/client/session/profile",{method:"POST",body:JSON.stringify({visitor_uuid:e,name:t})})}async pollMessages(e,t=0){return this.request(`/api/v1/client/conversations/${e}/messages?after_id=${t}`,{method:"GET"})}async sendMessage(e,t){let i=e&&e>0?e:0;return this.request(`/api/v1/client/conversations/${i}/messages`,{method:"POST",body:JSON.stringify({visitor_uuid:t.visitor_uuid,client_message_id:t.client_message_id,content:t.message,message:t.message,sender_name:t.sender_name,page_url:t.page_url,page_title:t.page_title})})}};var H="beantalk_visitor_uuid",Z="beantalk_last_conv_id",O={};function D(n){try{return window.localStorage.getItem(n)}catch{return O[n]||null}}function M(n,e){try{window.localStorage.setItem(n,e)}catch{O[n]=e}}function X(){return typeof crypto<"u"&&typeof crypto.randomUUID=="function"?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,n=>{let e=Math.random()*16|0;return(n==="x"?e:e&3|8).toString(16)})}function v(){return"msg_"+Date.now().toString(36)+"_"+Math.random().toString(36).substring(2,9)}function y(){let n=D(H);return n||(n=X(),M(H,n)),n}function F(n){M(Z,n.toString())}var j="beantalk_customer_name";function u(){return D(j)}function z(n){M(j,n)}var f=class{constructor(e,t,i={}){this.conversationId=null;this.lastMessageId=0;this.isRunning=!1;this.isPolling=!1;this.pollQueued=!1;this.timer=null;this.isWindowVisible=!0;this.isOnline=!0;this.isWidgetOpen=!1;this.burstRemaining=0;this.burstIntervalMs=1200;this.api=e,this.emitter=t,this.activeIntervalMs=i.activeIntervalMs||2500,this.idleIntervalMs=i.idleIntervalMs||15e3,this.setupListeners()}setupListeners(){typeof document<"u"&&document.addEventListener("visibilitychange",()=>{let e=document.visibilityState==="visible";this.isWindowVisible=e,e&&this.isRunning&&this.pollNow()}),typeof window<"u"&&(window.addEventListener("online",()=>{this.isOnline=!0,this.isRunning&&this.pollNow()}),window.addEventListener("offline",()=>{this.isOnline=!1,this.clearTimer()}))}setConversation(e,t=0){this.conversationId=e,t>this.lastMessageId&&(this.lastMessageId=t)}setWidgetOpen(e){this.isWidgetOpen=e,this.isRunning&&this.reschedule()}start(e,t=0){this.conversationId=e,this.lastMessageId=Math.max(this.lastMessageId,t),this.isRunning=!0,this.reschedule()}stop(){this.isRunning=!1,this.clearTimer()}clearTimer(){this.timer&&(clearTimeout(this.timer),this.timer=null)}getInterval(){return this.burstRemaining>0?this.burstIntervalMs:this.isWindowVisible&&this.isWidgetOpen?this.activeIntervalMs:this.idleIntervalMs}reschedule(){this.clearTimer(),!(!this.isRunning||!this.isOnline)&&(this.timer=setTimeout(()=>{this.executePoll()},this.getInterval()))}async pollNow(){if(this.isPolling){this.pollQueued=!0;return}this.clearTimer(),this.burstRemaining=3,await this.executePoll()}async executePoll(){if(!this.isRunning||!this.conversationId||!this.isOnline||this.isPolling){this.reschedule();return}this.isPolling=!0;try{let e=await this.api.pollMessages(this.conversationId,this.lastMessageId);if(e.success&&e.data){let{messages:t,last_id:i}=e.data;if(Array.isArray(t)&&t.length>0){let s=t.filter(o=>o.id>this.lastMessageId);s.length>0&&s.forEach(o=>{this.emitter.emit("message:received",o)}),i&&i>this.lastMessageId&&(this.lastMessageId=i)}}}catch(e){this.emitter.emit("poll:error",e)}finally{this.isPolling=!1,this.burstRemaining>0&&this.burstRemaining--,this.pollQueued?(this.pollQueued=!1,this.burstRemaining=2,this.clearTimer(),this.timer=setTimeout(()=>this.executePoll(),100)):this.reschedule()}}};var l={chat:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+"use strict";var BeanTalk=(()=>{var L=Object.defineProperty;var Z=Object.getOwnPropertyDescriptor;var X=Object.getOwnPropertyNames;var ee=Object.prototype.hasOwnProperty;var te=(n,e)=>{for(var t in e)L(n,t,{get:e[t],enumerable:!0})},ie=(n,e,t,i)=>{if(e&&typeof e=="object"||typeof e=="function")for(let s of X(e))!ee.call(n,s)&&s!==t&&L(n,s,{get:()=>e[s],enumerable:!(i=Z(e,s))||i.enumerable});return n};var ne=n=>ie(L({},"__esModule",{value:!0}),n);var fe={};te(fe,{BeanTalk:()=>f,ChatWidget:()=>h,UniversalChatMe:()=>de,close:()=>ue,default:()=>be,getInstance:()=>ve,init:()=>pe,on:()=>me,open:()=>he,sendMessage:()=>xe,toggle:()=>ge});var T=class{constructor(){this.events={}}on(e,t){return this.events[e]||(this.events[e]=[]),this.events[e].push(t),this}off(e,t){return this.events[e]?(this.events[e]=this.events[e].filter(i=>i!==t),this):this}emit(e,t){this.events[e]&&this.events[e].forEach(i=>{try{i(t)}catch(s){console.error(`[BeanTalk] Error in event handler for "${e}":`,s)}})}};var S=class{constructor(e,t=""){this.projectKey=e,this.baseUrl=t.replace(/\/+$/,"")}async request(e,t={}){let i=`${this.baseUrl}${e}`,s={Accept:"application/json","Content-Type":"application/json","X-Project-Key":this.projectKey,...t.headers||{}},o=new AbortController,l=setTimeout(()=>o.abort(),12e3);try{let a=await fetch(i,{...t,headers:s,signal:o.signal});return clearTimeout(l),await a.json()}catch(a){return clearTimeout(l),{success:!1,error:{code:a.name==="AbortError"?"TIMEOUT":"NETWORK_ERROR",message:a.message||"Gagal terhubung ke server chat."}}}}async initSession(e,t,i){return this.request("/api/v1/client/session/init",{method:"POST",body:JSON.stringify({visitor_uuid:e,name:i,project_key:this.projectKey,page_url:window.location.href,page_title:document.title,client_url:window.location.href,metadata:{referrer:document.referrer,userAgent:navigator.userAgent,title:document.title,...t}})})}async updateProfile(e,t){return this.request("/api/v1/client/session/profile",{method:"POST",body:JSON.stringify({visitor_uuid:e,name:t})})}async pollMessages(e,t=0){return this.request(`/api/v1/client/conversations/${e}/messages?after_id=${t}`,{method:"GET"})}async sendMessage(e,t){let i=e&&e>0?e:0;return this.request(`/api/v1/client/conversations/${i}/messages`,{method:"POST",body:JSON.stringify({visitor_uuid:t.visitor_uuid,client_message_id:t.client_message_id,content:t.message,message:t.message,sender_name:t.sender_name,page_url:t.page_url,page_title:t.page_title})})}};var z="beantalk_visitor_uuid",se="beantalk_last_conv_id",U={};function W(n){try{return window.localStorage.getItem(n)}catch{return U[n]||null}}function R(n,e){try{window.localStorage.setItem(n,e)}catch{U[n]=e}}function ae(){return typeof crypto<"u"&&typeof crypto.randomUUID=="function"?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,n=>{let e=Math.random()*16|0;return(n==="x"?e:e&3|8).toString(16)})}function k(){return"msg_"+Date.now().toString(36)+"_"+Math.random().toString(36).substring(2,9)}function C(){let n=W(z);return n||(n=ae(),R(z,n)),n}function N(n){R(se,n.toString())}var q="beantalk_customer_name";function y(){return W(q)}function V(n){R(q,n)}var F=class{constructor(e,t,i={}){this.conversationId=null;this.lastMessageId=0;this.isRunning=!1;this.isPolling=!1;this.pollQueued=!1;this.timer=null;this.isWindowVisible=!0;this.isOnline=!0;this.isWidgetOpen=!1;this.burstRemaining=0;this.burstIntervalMs=1200;this.api=e,this.emitter=t,this.activeIntervalMs=i.activeIntervalMs||2500,this.idleIntervalMs=i.idleIntervalMs||15e3,this.setupListeners()}setupListeners(){typeof document<"u"&&document.addEventListener("visibilitychange",()=>{let e=document.visibilityState==="visible";this.isWindowVisible=e,e&&this.isRunning&&this.pollNow()}),typeof window<"u"&&(window.addEventListener("online",()=>{this.isOnline=!0,this.isRunning&&this.pollNow()}),window.addEventListener("offline",()=>{this.isOnline=!1,this.clearTimer()}))}setConversation(e,t=0){this.conversationId=e,t>this.lastMessageId&&(this.lastMessageId=t)}setWidgetOpen(e){this.isWidgetOpen=e,this.isRunning&&this.reschedule()}start(e,t=0){this.conversationId=e,this.lastMessageId=Math.max(this.lastMessageId,t),this.isRunning=!0,this.reschedule()}stop(){this.isRunning=!1,this.clearTimer()}clearTimer(){this.timer&&(clearTimeout(this.timer),this.timer=null)}getInterval(){return this.burstRemaining>0?this.burstIntervalMs:this.isWindowVisible&&this.isWidgetOpen?this.activeIntervalMs:this.idleIntervalMs}reschedule(){this.clearTimer(),!(!this.isRunning||!this.isOnline)&&(this.timer=setTimeout(()=>{this.executePoll()},this.getInterval()))}async pollNow(){if(this.isPolling){this.pollQueued=!0;return}this.clearTimer(),this.burstRemaining=3,await this.executePoll()}async executePoll(){if(!this.isRunning||!this.conversationId||!this.isOnline||this.isPolling){this.reschedule();return}this.isPolling=!0;try{let e=await this.api.pollMessages(this.conversationId,this.lastMessageId);if(e.success&&e.data){let{messages:t,last_id:i}=e.data;if(Array.isArray(t)&&t.length>0){let s=t.filter(o=>o.id>this.lastMessageId);s.length>0&&s.forEach(o=>{this.emitter.emit("message:received",o)}),i&&i>this.lastMessageId&&(this.lastMessageId=i)}}}catch(e){this.emitter.emit("poll:error",e)}finally{this.isPolling=!1,this.burstRemaining>0&&this.burstRemaining--,this.pollQueued?(this.pollQueued=!1,this.burstRemaining=2,this.clearTimer(),this.timer=setTimeout(()=>this.executePoll(),100)):this.reschedule()}}};var r={chat:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
   </svg>`,close:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -39,7 +39,13 @@
   </svg>`,agentAvatar:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
     <circle cx="12" cy="7" r="4"></circle>
-  </svg>`};function A(n="#1E1E1E"){return`
+  </svg>`,link:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>`,custom:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>`};function H(n="#1E1E1E"){return`
     :host {
       all: initial;
       display: block !important;
@@ -52,7 +58,7 @@
       box-sizing: border-box;
       -webkit-font-smoothing: antialiased;
       --chat-primary: ${n};
-      --chat-primary-hover: ${ee(n,-15)};
+      --chat-primary-hover: ${oe(n,-15)};
       --chat-primary-text: #FFFFFF;
       --chat-bg: #FFFFFF;
       --chat-surface: #F8FAFC;
@@ -617,6 +623,192 @@
       color: #FFFFFF;
     }
 
+    .social-btn-custom, .social-btn-link {
+      background: linear-gradient(135deg, #475569, #1E293B);
+      color: #FFFFFF;
+    }
+
+    .social-channel-btn.has-multi-badge {
+      position: relative;
+    }
+
+    .social-channel-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #0071E3;
+      color: #FFFFFF;
+      font-size: 9.5px;
+      font-weight: 800;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 3px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* ==========================================================================
+       STAGE 1.8: MULTI-CONTACT CHANNEL SELECTOR (PILIH KONTAK)
+       ========================================================================== */
+    .stage-social-picker {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: #F8FAFC;
+    }
+
+    .social-picker-header {
+      background: var(--chat-primary);
+      color: var(--chat-primary-text);
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .social-picker-back-btn {
+      background: none;
+      border: none;
+      color: var(--chat-primary-text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border-radius: 8px;
+      transition: background 0.15s ease;
+    }
+
+    .social-picker-back-btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .social-picker-header-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .social-picker-body {
+      flex: 1;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .social-picker-hero {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .social-picker-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+      color: #FFFFFF;
+    }
+
+    .social-picker-avatar svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .social-picker-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #0F172A;
+      margin: 0 0 4px 0;
+    }
+
+    .social-picker-subtitle {
+      font-size: 12px;
+      color: #64748B;
+      line-height: 1.45;
+      margin: 0;
+      max-width: 290px;
+    }
+
+    .social-picker-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .social-picker-item {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+      cursor: pointer;
+    }
+
+    .social-picker-item:hover {
+      transform: translateY(-2px);
+      border-color: #CBD5E1;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.07);
+    }
+
+    .social-picker-item-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: #FFFFFF;
+    }
+
+    .social-picker-item-avatar svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .social-picker-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .social-picker-item-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #0F172A;
+      margin-bottom: 2px;
+    }
+
+    .social-picker-item-sub {
+      font-size: 11px;
+      color: #64748B;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .social-picker-item-arrow {
+      color: #94A3B8;
+      display: flex;
+      align-items: center;
+    }
+
     .chat-identity-banner {
       padding: 8px 12px;
       background: #F8FAFC;
@@ -973,7 +1165,10 @@
         -webkit-overflow-scrolling: touch;
       }
     }
-  `}function ee(n,e){let t=parseInt(n.replace("#",""),16),i=(t>>16)+e,s=(t>>8&255)+e,o=(t&255)+e;return i=Math.min(255,Math.max(0,i)),s=Math.min(255,Math.max(0,s)),o=Math.min(255,Math.max(0,o)),"#"+(s|o<<8|i<<16).toString(16).padStart(6,"0")}var w=class{constructor(e,t){this.isOpen=!1;this.currentStage="welcome";this.unreadCount=0;this.messages=[];this.sessionData=null;this.customerName="";this.customerCode="";this.audioCtx=null;this.options=e,this.emitter=t;let i=document.getElementById("beantalk-chat-root")||document.getElementById("universal-chat-root");i||(i=document.createElement("div"),i.id="beantalk-chat-root",i.style.position="relative",i.style.zIndex="2147483647",i.style.display="block",document.body.appendChild(i)),this.shadowRoot=i.attachShadow({mode:"open"}),this.styleEl=document.createElement("style"),this.styleEl.textContent=A(e.accentColor||"#1E1E1E"),this.shadowRoot.appendChild(this.styleEl),this.renderSkeleton(),this.bindEvents(),this.initViewportHandler();let s=u();s&&this.applyCustomerName(s,!1)}updateTheming(e){this.styleEl&&(this.styleEl.textContent=A(e))}setSessionData(e){this.sessionData=e;let t=e.widget||e.widget_settings||{};t.primary_color&&this.updateTheming(t.primary_color);let i=t.greeting_title||t.header_title||e.project?.name||"Chat Support",s=t.greeting_subtitle||t.greeting_text||"Hallo! Ada yang bisa kami bantu? Tanyakan apapun di sini.",o=this.shadowRoot.querySelector(".welcome-title");o&&(o.textContent=i);let r=this.shadowRoot.querySelector(".welcome-subtitle");r&&(r.textContent=s);let a=t.support_title||this.options.supportTitle||this.options.brandName||this.options.storeName||e.project?.name||"Customer Support",m=this.shadowRoot.querySelector("#cardChatName");m&&(m.textContent=a),this.identitySupportTag&&(this.identitySupportTag.textContent=a);let E=this.shadowRoot.querySelector(".chat-header-title");E&&(E.textContent=a);let B=this.shadowRoot.querySelector(".welcome-brand-badge");B&&(B.textContent=e.project?.name||"Live Support");let k=e.visitor||{},T=k.customer_code||k.customer_code_formatted;T&&(this.customerCode=T,this.identityCustCode&&(this.identityCustCode.textContent=T));let W=k.name,P=u(),R=W||P;R?this.applyCustomerName(R,!1):this.chatInlineIdentityBanner&&(this.chatInlineIdentityBanner.style.display="flex"),e.conversation?.messages&&e.conversation.messages.length>0&&this.setMessages(e.conversation.messages);let C=this.shadowRoot.querySelector("#socialChannelsCard"),L=this.shadowRoot.querySelector("#socialChannelsTitle"),I=this.shadowRoot.querySelector("#socialChannelsRow"),N=t.social_channels||[],$=t.find_us_title||"Reach Us Anywhere Else";if(L&&(L.textContent=$),C&&I){let _=Array.isArray(N)?N.filter(p=>p.enabled&&p.url):[];_.length>0?(I.innerHTML="",_.forEach(p=>{let h=document.createElement("a");h.className=`social-channel-btn social-btn-${p.id}`,h.href=p.url,h.target="_blank",h.rel="noopener noreferrer",h.title=`Hubungi via ${p.name}`;let q=l[p.icon||p.id]||l.chat;h.innerHTML=q,I.appendChild(h)}),C.style.display="block"):C.style.display="none"}}applyCustomerName(e,t=!0){let i=e.trim();i&&(this.customerName=i,t&&(z(i),this.emitter.emit("customer:rename",i)),this.identityNameInput&&(this.identityNameInput.value=i),this.chatInlineIdentityBanner&&(this.chatInlineIdentityBanner.style.display="none"),this.composerInput&&(this.composerInput.placeholder=`Tulis pesan sebagai ${i}...`))}renderSkeleton(){let e=this.options.brandName||this.options.storeName||"Customer Support",t=this.options.supportTitle||e||"Customer Support",i=this.options.greetingTitle||"Hallo!",s=this.options.greetingSubtitle||"Apakah ada yang bisa kami bantu? Tanyakan informasi apapun di sini.",r=`
+  `}function oe(n,e){let t=parseInt(n.replace("#",""),16),i=(t>>16)+e,s=(t>>8&255)+e,o=(t&255)+e;return i=Math.min(255,Math.max(0,i)),s=Math.min(255,Math.max(0,s)),o=Math.min(255,Math.max(0,o)),"#"+(s|o<<8|i<<16).toString(16).padStart(6,"0")}var M=class{constructor(e,t){this.isOpen=!1;this.currentStage="welcome";this.unreadCount=0;this.messages=[];this.sessionData=null;this.customerName="";this.customerCode="";this.audioCtx=null;this.options=e,this.emitter=t;let i=document.getElementById("beantalk-chat-root")||document.getElementById("universal-chat-root");i||(i=document.createElement("div"),i.id="beantalk-chat-root",i.style.position="relative",i.style.zIndex="2147483647",i.style.display="block",document.body.appendChild(i)),this.shadowRoot=i.attachShadow({mode:"open"}),this.styleEl=document.createElement("style"),this.styleEl.textContent=H(e.accentColor||"#1E1E1E"),this.shadowRoot.appendChild(this.styleEl),this.renderSkeleton(),this.bindEvents(),this.initViewportHandler();let s=y();s&&this.applyCustomerName(s,!1)}updateTheming(e){this.styleEl&&(this.styleEl.textContent=H(e))}setSessionData(e){this.sessionData=e;let t=e.widget||e.widget_settings||{};t.primary_color&&this.updateTheming(t.primary_color);let i=t.greeting_title||t.header_title||e.project?.name||"Chat Support",s=t.greeting_subtitle||t.greeting_text||"Hallo! Ada yang bisa kami bantu? Tanyakan apapun di sini.",o=this.shadowRoot.querySelector(".welcome-title");o&&(o.textContent=i);let l=this.shadowRoot.querySelector(".welcome-subtitle");l&&(l.textContent=s);let a=t.support_title||this.options.supportTitle||this.options.brandName||this.options.storeName||e.project?.name||"Customer Support",u=this.shadowRoot.querySelector("#cardChatName");u&&(u.textContent=a),this.identitySupportTag&&(this.identitySupportTag.textContent=a);let d=this.shadowRoot.querySelector(".chat-header-title");d&&(d.textContent=a);let v=this.shadowRoot.querySelector(".welcome-brand-badge");v&&(v.textContent=e.project?.name||"Live Support");let w=e.visitor||{},b=w.customer_code||w.customer_code_formatted;b&&(this.customerCode=b,this.identityCustCode&&(this.identityCustCode.textContent=b));let G=w.name,K=y(),O=G||K;O?this.applyCustomerName(O,!1):this.chatInlineIdentityBanner&&(this.chatInlineIdentityBanner.style.display="flex"),e.conversation?.messages&&e.conversation.messages.length>0&&this.setMessages(e.conversation.messages);let A=this.shadowRoot.querySelector("#socialChannelsCard"),P=this.shadowRoot.querySelector("#socialChannelsTitle"),E=this.shadowRoot.querySelector("#socialChannelsRow"),D=t.social_channels||[],Y=t.find_us_title||"Reach Us Anywhere Else";if(P&&(P.textContent=Y),A&&E){let j=Array.isArray(D)?D.filter(x=>x.enabled&&x.url):[];if(j.length>0){E.innerHTML="";let x={};j.forEach(p=>{let m=(p.platform||p.icon||p.id||"whatsapp").toLowerCase();x[m]||(x[m]=[]),x[m].push(p)}),Object.keys(x).forEach(p=>{let m=x[p],B=m[0],Q=B.icon||p,$=r[Q]||r[p]||r.chat;if(m.length===1){let c=document.createElement("a");c.className=`social-channel-btn social-btn-${p}`,c.href=B.url,c.target="_blank",c.rel="noopener noreferrer",c.title=`Hubungi via ${B.name||_(p)}`,c.innerHTML=$,E.appendChild(c)}else{let c=document.createElement("button");c.type="button",c.className=`social-channel-btn social-btn-${p} has-multi-badge`,c.title=`${_(p)} (${m.length} pilihan kontak)`,c.innerHTML=`
+              ${$}
+              <span class="social-channel-badge">${m.length}</span>
+            `,c.addEventListener("click",J=>{J.stopPropagation(),this.openSocialPicker(p,m)}),E.appendChild(c)}}),A.style.display="block"}else A.style.display="none"}}applyCustomerName(e,t=!0){let i=e.trim();i&&(this.customerName=i,t&&(V(i),this.emitter.emit("customer:rename",i)),this.identityNameInput&&(this.identityNameInput.value=i),this.chatInlineIdentityBanner&&(this.chatInlineIdentityBanner.style.display="none"),this.composerInput&&(this.composerInput.placeholder=`Tulis pesan sebagai ${i}...`))}renderSkeleton(){let e=this.options.brandName||this.options.storeName||"Customer Support",t=this.options.supportTitle||e||"Customer Support",i=this.options.greetingTitle||"Hallo!",s=this.options.greetingSubtitle||"Apakah ada yang bisa kami bantu? Tanyakan informasi apapun di sini.",l=`
       <div class="chat-wrapper ${this.options.position==="bottom-left"?"pos-bottom-left":""}">
         <!-- WIDGET WINDOW -->
         <div class="chat-window">
@@ -983,7 +1178,7 @@
             <div class="welcome-header">
               <div class="welcome-header-top">
                 <span class="welcome-brand-badge">${e}</span>
-                <button type="button" class="welcome-close-btn" aria-label="Tutup">${l.close}</button>
+                <button type="button" class="welcome-close-btn" aria-label="Tutup">${r.close}</button>
               </div>
               <h2 class="welcome-title">${i}</h2>
               <p class="welcome-subtitle">${s}</p>
@@ -998,14 +1193,14 @@
                 </div>
                 <div class="card-chat-row">
                   <div class="card-chat-avatar">
-                    ${l.agentAvatar}
+                    ${r.agentAvatar}
                   </div>
                   <div class="card-chat-info">
                     <div class="card-chat-name" id="cardChatName">${t}</div>
                     <div class="card-chat-snippet" id="card-snippet">Mulai obrolan baru dengan tim kami...</div>
                   </div>
                   <div class="card-chat-chevron">
-                    ${l.chevronRight}
+                    ${r.chevronRight}
                   </div>
                 </div>
               </div>
@@ -1022,21 +1217,21 @@
             </div>
 
             <div class="welcome-footer">
-              ${l.sparkles} <span>Powered by BeanTalk \u2022 Web Chat</span>
+              ${r.sparkles} <span>Powered by BeanTalk \u2022 Web Chat</span>
             </div>
           </div>
 
           <!-- ================= STAGE 1.5: FORM PEMANGGILAN NAMA ================= -->
           <div class="stage-identity" style="display: none;">
             <div class="identity-stage-header">
-              <button type="button" class="identity-back-btn" id="identityBackBtn" aria-label="Kembali">${l.back}</button>
+              <button type="button" class="identity-back-btn" id="identityBackBtn" aria-label="Kembali">${r.back}</button>
               <div class="identity-stage-header-title" id="identitySupportTag">${t}</div>
-              <button type="button" class="welcome-close-btn" aria-label="Tutup">${l.close}</button>
+              <button type="button" class="welcome-close-btn" aria-label="Tutup">${r.close}</button>
             </div>
 
             <div class="identity-stage-body">
               <div class="identity-hero-avatar">
-                ${l.agentAvatar}
+                ${r.agentAvatar}
               </div>
               <div class="identity-code-pill" id="identityCustCode">Tamu</div>
               <h3 class="identity-stage-title">Halo! Kenalan Dulu Yuk</h3>
@@ -1056,13 +1251,42 @@
                 />
                 <button type="button" class="identity-continue-btn" id="identityContinueBtn">
                   <span>Lanjut ke Obrolan</span>
-                  ${l.chevronRight}
+                  ${r.chevronRight}
                 </button>
               </div>
             </div>
 
             <div class="welcome-footer">
-              ${l.sparkles} <span>Powered by BeanTalk \u2022 Web Chat</span>
+              ${r.sparkles} <span>Powered by BeanTalk \u2022 Web Chat</span>
+            </div>
+          </div>
+
+          <!-- ================= STAGE 1.8: MULTI-CONTACT CHANNEL SELECTOR ================= -->
+          <div class="stage-social-picker" id="stageSocialPicker" style="display: none;">
+            <div class="social-picker-header">
+              <button type="button" class="social-picker-back-btn" id="socialPickerBackBtn" aria-label="Kembali">${r.back}</button>
+              <div class="social-picker-header-title" id="socialPickerHeaderTitle">Pilih Kontak</div>
+              <button type="button" class="welcome-close-btn" aria-label="Tutup">${r.close}</button>
+            </div>
+
+            <div class="social-picker-body">
+              <div class="social-picker-hero">
+                <div class="social-picker-avatar social-btn-whatsapp" id="socialPickerHeroAvatar">
+                  ${r.whatsapp}
+                </div>
+                <h3 class="social-picker-title" id="socialPickerTitle">Hubungi via WhatsApp</h3>
+                <p class="social-picker-subtitle" id="socialPickerSubtitle">
+                  Pilih salah satu nomor / kontak layanan di bawah untuk terhubung langsung:
+                </p>
+              </div>
+
+              <div class="social-picker-list" id="socialPickerList">
+                <!-- Dynamically populated options -->
+              </div>
+            </div>
+
+            <div class="welcome-footer">
+              ${r.sparkles} <span>Powered by BeanTalk \u2022 Web Chat</span>
             </div>
           </div>
 
@@ -1070,9 +1294,9 @@
           <div class="stage-chat">
             <div class="chat-header">
               <div class="chat-header-left">
-                <button type="button" class="chat-back-btn" aria-label="Kembali">${l.back}</button>
+                <button type="button" class="chat-back-btn" aria-label="Kembali">${r.back}</button>
                 <div class="chat-header-avatar">
-                  ${l.agentAvatar}
+                  ${r.agentAvatar}
                   <span class="header-online-dot"></span>
                 </div>
                 <div class="chat-header-info">
@@ -1080,7 +1304,7 @@
                   <div class="chat-header-status">Online \u2022 Membalas dalam hitungan menit</div>
                 </div>
               </div>
-              <button type="button" class="chat-close-btn" aria-label="Tutup">${l.close}</button>
+              <button type="button" class="chat-close-btn" aria-label="Tutup">${r.close}</button>
             </div>
 
             <!-- INLINE IDENTITY BANNER -->
@@ -1098,23 +1322,34 @@
             <!-- COMPOSER BAR -->
             <div class="chat-composer-box">
               <textarea class="composer-textarea" placeholder="Tulis pesan ke CS..." rows="1"></textarea>
-              <button type="button" class="composer-send-btn" aria-label="Kirim" disabled>${l.send}</button>
+              <button type="button" class="composer-send-btn" aria-label="Kirim" disabled>${r.send}</button>
             </div>
           </div>
         </div>
 
         <!-- FLOATING LAUNCHER BUTTON -->
         <button type="button" class="chat-launcher-btn" aria-label="Buka Chat">
-          <div class="launcher-icon-chat">${l.chat}</div>
-          <div class="launcher-icon-close">${l.close}</div>
+          <div class="launcher-icon-chat">${r.chat}</div>
+          <div class="launcher-icon-close">${r.close}</div>
           <div class="launcher-unread-badge">0</div>
         </button>
       </div>
-    `,a=document.createElement("div");a.innerHTML=r,this.shadowRoot.appendChild(a.firstElementChild),this.wrapperEl=this.shadowRoot.querySelector(".chat-wrapper"),this.launcherBtn=this.shadowRoot.querySelector(".chat-launcher-btn"),this.unreadBadge=this.shadowRoot.querySelector(".launcher-unread-badge"),this.stageWelcome=this.shadowRoot.querySelector(".stage-welcome"),this.stageIdentity=this.shadowRoot.querySelector(".stage-identity"),this.stageChat=this.shadowRoot.querySelector(".stage-chat"),this.messagesArea=this.shadowRoot.querySelector(".chat-messages-area"),this.composerInput=this.shadowRoot.querySelector(".composer-textarea"),this.composerSendBtn=this.shadowRoot.querySelector(".composer-send-btn"),this.cardSnippetText=this.shadowRoot.querySelector("#card-snippet"),this.identityCustCode=this.shadowRoot.querySelector("#identityCustCode"),this.identityNameInput=this.shadowRoot.querySelector("#identityNameInput"),this.identityContinueBtn=this.shadowRoot.querySelector("#identityContinueBtn"),this.identityBackBtn=this.shadowRoot.querySelector("#identityBackBtn"),this.identitySupportTag=this.shadowRoot.querySelector("#identitySupportTag"),this.chatInlineIdentityBanner=this.shadowRoot.querySelector("#chatInlineIdentityBanner"),this.inlineIdentityInput=this.shadowRoot.querySelector("#inlineIdentityInput"),this.inlineIdentityBtn=this.shadowRoot.querySelector("#inlineIdentityBtn")}bindEvents(){let e=()=>this.unlockAudio();this.launcherBtn.addEventListener("click",e),window.addEventListener("click",e,{passive:!0}),window.addEventListener("keydown",e,{passive:!0}),window.addEventListener("touchstart",e,{passive:!0}),this.launcherBtn.addEventListener("click",()=>{this.toggle()}),this.shadowRoot.querySelectorAll(".welcome-close-btn, .chat-close-btn").forEach(a=>{a.addEventListener("click",()=>this.close())});let t=this.shadowRoot.querySelector(".card-active-chat");t&&t.addEventListener("click",()=>{this.goToStage("identity")}),this.identityBackBtn&&this.identityBackBtn.addEventListener("click",()=>{this.goToStage("welcome")});let i=()=>{let a=this.identityNameInput?this.identityNameInput.value.trim():"";a&&this.applyCustomerName(a,!0),this.goToStage("chat")};this.identityContinueBtn&&this.identityContinueBtn.addEventListener("click",i),this.identityNameInput&&this.identityNameInput.addEventListener("keydown",a=>{a.key==="Enter"&&(a.preventDefault(),i())});let s=this.shadowRoot.querySelector(".chat-back-btn");s&&s.addEventListener("click",()=>{this.goToStage("welcome")});let o=()=>{let a=this.inlineIdentityInput.value.trim();a&&this.applyCustomerName(a,!0)};this.inlineIdentityBtn&&this.inlineIdentityBtn.addEventListener("click",o),this.inlineIdentityInput&&this.inlineIdentityInput.addEventListener("keydown",a=>{a.key==="Enter"&&(a.preventDefault(),o())}),this.composerInput.addEventListener("input",()=>{this.composerInput.style.height="auto",this.composerInput.style.height=Math.min(this.composerInput.scrollHeight,90)+"px";let a=this.composerInput.value.trim().length>0;this.composerSendBtn.disabled=!a}),this.composerInput.addEventListener("keydown",a=>{a.key==="Enter"&&!a.shiftKey&&(a.preventDefault(),this.handleSend())}),this.composerSendBtn.addEventListener("click",()=>{this.handleSend()});let r=()=>{typeof window<"u"&&window.innerWidth<=640&&(setTimeout(()=>{this.updateViewportDimensions(),this.scrollToBottom(),this.currentStage==="chat"&&this.composerInput.scrollIntoView({block:"nearest",behavior:"smooth"})},100),setTimeout(()=>{this.updateViewportDimensions(),this.scrollToBottom()},300))};this.composerInput.addEventListener("focus",r),this.identityNameInput&&this.identityNameInput.addEventListener("focus",r)}initViewportHandler(){if(typeof window>"u")return;let e=()=>{this.isOpen&&this.updateViewportDimensions()};window.visualViewport&&(window.visualViewport.addEventListener("resize",e),window.visualViewport.addEventListener("scroll",e)),window.addEventListener("resize",e),window.addEventListener("orientationchange",()=>{setTimeout(e,200)})}updateViewportDimensions(){if(typeof window>"u")return;if(!(window.innerWidth<=640)){this.wrapperEl.style.removeProperty("--bt-viewport-height"),this.wrapperEl.style.removeProperty("--bt-viewport-top");return}if(window.visualViewport){let t=Math.round(window.visualViewport.height),i=Math.round(window.visualViewport.offsetTop);this.wrapperEl.style.setProperty("--bt-viewport-height",`${t}px`),this.wrapperEl.style.setProperty("--bt-viewport-top",`${i}px`)}else this.wrapperEl.style.setProperty("--bt-viewport-height",`${window.innerHeight}px`),this.wrapperEl.style.setProperty("--bt-viewport-top","0px")}handleSend(){let e=this.composerInput.value.trim();if(!e)return;this.composerInput.value="",this.composerInput.style.height="24px",this.composerSendBtn.disabled=!0;let t={id:Date.now(),conversation_id:this.sessionData?.conversation?.id||0,client_message_id:v(),sender_type:"visitor",sender_name:this.customerName||"Anda",message:e,created_at:new Date().toISOString()};this.appendMessage(t),this.emitter.emit("ui:send",t)}goToStage(e){this.currentStage=e,e==="welcome"?(this.stageWelcome.style.display="flex",this.stageIdentity&&(this.stageIdentity.style.display="none"),this.stageChat.style.display="none"):e==="identity"?(this.stageWelcome.style.display="none",this.stageIdentity&&(this.stageIdentity.style.display="flex"),this.stageChat.style.display="none",this.identityNameInput&&(this.customerName&&(this.identityNameInput.value=this.customerName),setTimeout(()=>this.identityNameInput.focus(),150))):(this.stageWelcome.style.display="none",this.stageIdentity&&(this.stageIdentity.style.display="none"),this.stageChat.style.display="flex",this.scrollToBottom(),setTimeout(()=>this.composerInput.focus(),150)),this.updateViewportDimensions()}open(){this.isOpen=!0,this.wrapperEl.classList.add("is-open"),this.unreadCount=0,this.updateUnreadBadge(),this.updateViewportDimensions(),this.emitter.emit("widget:opened"),typeof document<"u"&&window.innerWidth<=640&&(document.documentElement.style.overflow="hidden",document.body.style.overflow="hidden"),this.currentStage==="chat"&&(this.scrollToBottom(),setTimeout(()=>this.composerInput.focus(),150))}close(){this.isOpen=!1,this.wrapperEl.classList.remove("is-open"),this.emitter.emit("widget:closed"),typeof document<"u"&&(document.documentElement.style.overflow="",document.body.style.overflow="")}toggle(){this.isOpen?this.close():this.open()}setMessages(e){this.messages=[...e],this.messagesArea.innerHTML="",e.forEach(t=>this.renderMessageBubble(t)),this.updateSnippet(),this.scrollToBottom()}unlockAudio(){try{let e=window.AudioContext||window.webkitAudioContext;if(!e)return;this.audioCtx||(this.audioCtx=new e),this.audioCtx.state==="suspended"&&this.audioCtx.resume()}catch{}}playNotificationSound(){try{if(this.unlockAudio(),!this.audioCtx)return;let e=this.audioCtx.currentTime,t=this.audioCtx.createOscillator(),i=this.audioCtx.createGain();t.type="sine",t.frequency.setValueAtTime(659.25,e),t.frequency.exponentialRampToValueAtTime(880,e+.08),i.gain.setValueAtTime(0,e),i.gain.linearRampToValueAtTime(.25,e+.02),i.gain.exponentialRampToValueAtTime(1e-4,e+.4),t.connect(i),i.connect(this.audioCtx.destination),t.start(e),t.stop(e+.4)}catch{}}appendMessage(e){this.messages.some(i=>i.id===e.id||e.client_message_id&&i.client_message_id===e.client_message_id)||(this.messages.push(e),this.renderMessageBubble(e),this.updateSnippet(),this.scrollToBottom(),e.sender_type!=="visitor"&&this.playNotificationSound(),!this.isOpen&&e.sender_type!=="visitor"&&(this.unreadCount++,this.updateUnreadBadge()))}renderMessageBubble(e){let t=e.sender_type==="visitor",i=e.sender_type==="bot",s=document.createElement("div");s.className=`msg-bubble-row ${t?"is-visitor":"is-agent"}`;let o=this.formatTime(e.created_at),r=e.content||e.message||"",a=t?"Anda":i?"\u{1F916} "+(e.sender_name||"BeanBot"):e.sender_name||"Agent";s.innerHTML=`
-      <div class="msg-sender-name" style="${i?"color: #5856D6; font-weight: 600;":""}">${U(a)}</div>
-      <div class="msg-bubble">${U(r)}</div>
+    `,a=document.createElement("div");a.innerHTML=l,this.shadowRoot.appendChild(a.firstElementChild),this.wrapperEl=this.shadowRoot.querySelector(".chat-wrapper"),this.launcherBtn=this.shadowRoot.querySelector(".chat-launcher-btn"),this.unreadBadge=this.shadowRoot.querySelector(".launcher-unread-badge"),this.stageWelcome=this.shadowRoot.querySelector(".stage-welcome"),this.stageIdentity=this.shadowRoot.querySelector(".stage-identity"),this.stageChat=this.shadowRoot.querySelector(".stage-chat"),this.stageSocialPicker=this.shadowRoot.querySelector("#stageSocialPicker"),this.messagesArea=this.shadowRoot.querySelector(".chat-messages-area"),this.composerInput=this.shadowRoot.querySelector(".composer-textarea"),this.composerSendBtn=this.shadowRoot.querySelector(".composer-send-btn"),this.cardSnippetText=this.shadowRoot.querySelector("#card-snippet"),this.identityCustCode=this.shadowRoot.querySelector("#identityCustCode"),this.identityNameInput=this.shadowRoot.querySelector("#identityNameInput"),this.identityContinueBtn=this.shadowRoot.querySelector("#identityContinueBtn"),this.identityBackBtn=this.shadowRoot.querySelector("#identityBackBtn"),this.identitySupportTag=this.shadowRoot.querySelector("#identitySupportTag"),this.chatInlineIdentityBanner=this.shadowRoot.querySelector("#chatInlineIdentityBanner"),this.inlineIdentityInput=this.shadowRoot.querySelector("#inlineIdentityInput"),this.inlineIdentityBtn=this.shadowRoot.querySelector("#inlineIdentityBtn"),this.socialPickerBackBtn=this.shadowRoot.querySelector("#socialPickerBackBtn")}bindEvents(){let e=()=>this.unlockAudio();this.launcherBtn.addEventListener("click",e),window.addEventListener("click",e,{passive:!0}),window.addEventListener("keydown",e,{passive:!0}),window.addEventListener("touchstart",e,{passive:!0}),this.launcherBtn.addEventListener("click",()=>{this.toggle()}),this.shadowRoot.querySelectorAll(".welcome-close-btn, .chat-close-btn").forEach(a=>{a.addEventListener("click",()=>this.close())});let t=this.shadowRoot.querySelector(".card-active-chat");t&&t.addEventListener("click",()=>{this.goToStage("identity")}),this.identityBackBtn&&this.identityBackBtn.addEventListener("click",()=>{this.goToStage("welcome")}),this.socialPickerBackBtn&&this.socialPickerBackBtn.addEventListener("click",()=>{this.goToStage("welcome")});let i=()=>{let a=this.identityNameInput?this.identityNameInput.value.trim():"";a&&this.applyCustomerName(a,!0),this.goToStage("chat")};this.identityContinueBtn&&this.identityContinueBtn.addEventListener("click",i),this.identityNameInput&&this.identityNameInput.addEventListener("keydown",a=>{a.key==="Enter"&&(a.preventDefault(),i())});let s=this.shadowRoot.querySelector(".chat-back-btn");s&&s.addEventListener("click",()=>{this.goToStage("welcome")});let o=()=>{let a=this.inlineIdentityInput.value.trim();a&&this.applyCustomerName(a,!0)};this.inlineIdentityBtn&&this.inlineIdentityBtn.addEventListener("click",o),this.inlineIdentityInput&&this.inlineIdentityInput.addEventListener("keydown",a=>{a.key==="Enter"&&(a.preventDefault(),o())}),this.composerInput.addEventListener("input",()=>{this.composerInput.style.height="auto",this.composerInput.style.height=Math.min(this.composerInput.scrollHeight,90)+"px";let a=this.composerInput.value.trim().length>0;this.composerSendBtn.disabled=!a}),this.composerInput.addEventListener("keydown",a=>{a.key==="Enter"&&!a.shiftKey&&(a.preventDefault(),this.handleSend())}),this.composerSendBtn.addEventListener("click",()=>{this.handleSend()});let l=()=>{typeof window<"u"&&window.innerWidth<=640&&(setTimeout(()=>{this.updateViewportDimensions(),this.scrollToBottom(),this.currentStage==="chat"&&this.composerInput.scrollIntoView({block:"nearest",behavior:"smooth"})},100),setTimeout(()=>{this.updateViewportDimensions(),this.scrollToBottom()},300))};this.composerInput.addEventListener("focus",l),this.identityNameInput&&this.identityNameInput.addEventListener("focus",l)}initViewportHandler(){if(typeof window>"u")return;let e=()=>{this.isOpen&&this.updateViewportDimensions()};window.visualViewport&&(window.visualViewport.addEventListener("resize",e),window.visualViewport.addEventListener("scroll",e)),window.addEventListener("resize",e),window.addEventListener("orientationchange",()=>{setTimeout(e,200)})}updateViewportDimensions(){if(typeof window>"u")return;if(!(window.innerWidth<=640)){this.wrapperEl.style.removeProperty("--bt-viewport-height"),this.wrapperEl.style.removeProperty("--bt-viewport-top");return}if(window.visualViewport){let t=Math.round(window.visualViewport.height),i=Math.round(window.visualViewport.offsetTop);this.wrapperEl.style.setProperty("--bt-viewport-height",`${t}px`),this.wrapperEl.style.setProperty("--bt-viewport-top",`${i}px`)}else this.wrapperEl.style.setProperty("--bt-viewport-height",`${window.innerHeight}px`),this.wrapperEl.style.setProperty("--bt-viewport-top","0px")}handleSend(){let e=this.composerInput.value.trim();if(!e)return;this.composerInput.value="",this.composerInput.style.height="24px",this.composerSendBtn.disabled=!0;let t={id:Date.now(),conversation_id:this.sessionData?.conversation?.id||0,client_message_id:k(),sender_type:"visitor",sender_name:this.customerName||"Anda",message:e,created_at:new Date().toISOString()};this.appendMessage(t),this.emitter.emit("ui:send",t)}goToStage(e){this.currentStage=e,e==="welcome"?(this.stageWelcome.style.display="flex",this.stageIdentity&&(this.stageIdentity.style.display="none"),this.stageSocialPicker&&(this.stageSocialPicker.style.display="none"),this.stageChat.style.display="none"):e==="identity"?(this.stageWelcome.style.display="none",this.stageIdentity&&(this.stageIdentity.style.display="flex"),this.stageSocialPicker&&(this.stageSocialPicker.style.display="none"),this.stageChat.style.display="none",this.identityNameInput&&(this.customerName&&(this.identityNameInput.value=this.customerName),setTimeout(()=>this.identityNameInput.focus(),150))):e==="social-picker"?(this.stageWelcome.style.display="none",this.stageIdentity&&(this.stageIdentity.style.display="none"),this.stageSocialPicker&&(this.stageSocialPicker.style.display="flex"),this.stageChat.style.display="none"):(this.stageWelcome.style.display="none",this.stageIdentity&&(this.stageIdentity.style.display="none"),this.stageSocialPicker&&(this.stageSocialPicker.style.display="none"),this.stageChat.style.display="flex",this.scrollToBottom(),setTimeout(()=>this.composerInput.focus(),150)),this.updateViewportDimensions()}openSocialPicker(e,t){let i=this.shadowRoot.querySelector("#socialPickerTitle"),s=this.shadowRoot.querySelector("#socialPickerHeaderTitle"),o=this.shadowRoot.querySelector("#socialPickerHeroAvatar"),l=this.shadowRoot.querySelector("#socialPickerList"),a=_(e);if(s&&(s.textContent=`Pilih Kontak ${a}`),i&&(i.textContent=`Hubungi via ${a}`),o){let d=(t[0]||{}).icon||e,v=r[d]||r[e]||r.chat;o.innerHTML=v,o.className=`social-picker-avatar social-btn-${e}`}l&&(l.innerHTML="",t.forEach(u=>{let d=document.createElement("a");d.className="social-picker-item",d.href=u.url,d.target="_blank",d.rel="noopener noreferrer";let v=u.icon||e,w=r[v]||r[e]||r.chat,b=re(u.url,e);d.innerHTML=`
+          <div class="social-picker-item-avatar social-btn-${e}">
+            ${w}
+          </div>
+          <div class="social-picker-item-info">
+            <div class="social-picker-item-name">${I(u.name||a)}</div>
+            ${b?`<div class="social-picker-item-sub">${I(b)}</div>`:""}
+          </div>
+          <div class="social-picker-item-arrow">
+            ${r.chevronRight}
+          </div>
+        `,d.addEventListener("click",()=>{setTimeout(()=>{this.goToStage("welcome")},300)}),l.appendChild(d)})),this.goToStage("social-picker")}open(){this.isOpen=!0,this.wrapperEl.classList.add("is-open"),this.unreadCount=0,this.updateUnreadBadge(),this.updateViewportDimensions(),this.emitter.emit("widget:opened"),typeof document<"u"&&window.innerWidth<=640&&(document.documentElement.style.overflow="hidden",document.body.style.overflow="hidden"),this.currentStage==="chat"&&(this.scrollToBottom(),setTimeout(()=>this.composerInput.focus(),150))}close(){this.isOpen=!1,this.wrapperEl.classList.remove("is-open"),this.emitter.emit("widget:closed"),typeof document<"u"&&(document.documentElement.style.overflow="",document.body.style.overflow="")}toggle(){this.isOpen?this.close():this.open()}setMessages(e){this.messages=[...e],this.messagesArea.innerHTML="",e.forEach(t=>this.renderMessageBubble(t)),this.updateSnippet(),this.scrollToBottom()}unlockAudio(){try{let e=window.AudioContext||window.webkitAudioContext;if(!e)return;this.audioCtx||(this.audioCtx=new e),this.audioCtx.state==="suspended"&&this.audioCtx.resume()}catch{}}playNotificationSound(){try{if(this.unlockAudio(),!this.audioCtx)return;let e=this.audioCtx.currentTime,t=this.audioCtx.createOscillator(),i=this.audioCtx.createGain();t.type="sine",t.frequency.setValueAtTime(659.25,e),t.frequency.exponentialRampToValueAtTime(880,e+.08),i.gain.setValueAtTime(0,e),i.gain.linearRampToValueAtTime(.25,e+.02),i.gain.exponentialRampToValueAtTime(1e-4,e+.4),t.connect(i),i.connect(this.audioCtx.destination),t.start(e),t.stop(e+.4)}catch{}}appendMessage(e){this.messages.some(i=>i.id===e.id||e.client_message_id&&i.client_message_id===e.client_message_id)||(this.messages.push(e),this.renderMessageBubble(e),this.updateSnippet(),this.scrollToBottom(),e.sender_type!=="visitor"&&this.playNotificationSound(),!this.isOpen&&e.sender_type!=="visitor"&&(this.unreadCount++,this.updateUnreadBadge()))}renderMessageBubble(e){let t=e.sender_type==="visitor",i=e.sender_type==="bot",s=document.createElement("div");s.className=`msg-bubble-row ${t?"is-visitor":"is-agent"}`;let o=this.formatTime(e.created_at),l=e.content||e.message||"",a=t?"Anda":i?"\u{1F916} "+(e.sender_name||"BeanBot"):e.sender_name||"Agent";s.innerHTML=`
+      <div class="msg-sender-name" style="${i?"color: #5856D6; font-weight: 600;":""}">${I(a)}</div>
+      <div class="msg-bubble">${I(l)}</div>
       <div class="msg-time-status">
         <span>${o}</span>
-        ${t?`<span style="display:inline-flex;">${l.check}</span>`:""}
+        ${t?`<span style="display:inline-flex;">${r.check}</span>`:""}
       </div>
-    `,this.messagesArea.appendChild(s)}updateSnippet(){if(this.messages.length>0){let e=this.messages[this.messages.length-1],t=e.sender_type==="visitor"?"Anda: ":"",i=e.content||e.message||"";this.cardSnippetText.textContent=t+i}}updateUnreadBadge(){this.unreadCount>0?(this.unreadBadge.textContent=this.unreadCount>9?"9+":this.unreadCount.toString(),this.unreadBadge.classList.add("has-unread")):this.unreadBadge.classList.remove("has-unread")}scrollToBottom(){setTimeout(()=>{this.messagesArea.scrollTop=this.messagesArea.scrollHeight},40)}formatTime(e){try{if(!e)return"";let t=e;typeof t=="string"&&!t.includes("Z")&&!t.includes("+")&&!t.includes("T")&&(t=t.replace(" ","T")+"Z");let i=new Date(t);if(isNaN(i.getTime()))return"";let s=String(i.getHours()).padStart(2,"0"),o=String(i.getMinutes()).padStart(2,"0");return`${s}:${o}`}catch{return""}}};function U(n){return n.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}function te(){if(typeof document>"u")return"";let n=document.currentScript;if(n&&n.src)try{return new URL(n.src,window.location.href).origin}catch{}let e=document.querySelector("script[data-project-key]");if(e&&e.src)try{return new URL(e.src,window.location.href).origin}catch{}let t=document.querySelector('script[src*="chat-widget.js"], script[src*="widget.js"]');if(t&&t.src)try{return new URL(t.src,window.location.href).origin}catch{}return""}if(typeof window<"u")try{console.log("%c[BeanTalk]%c Universal Chat Widget Started","background: #0071E3; color: #ffffff; padding: 2px 6px; border-radius: 4px; font-weight: bold;","color: inherit; font-weight: 500;")}catch{}var g=class{constructor(e){this.sessionData=null;this.initialized=!1;this.sendQueue=[];this.isSending=!1;this.options=e,this.emitter=new x,console.log("[BeanTalk] Initializing widget instance for project:",e.projectKey);let t=te(),i=e.apiUrl||t||(typeof window<"u"?window.location.origin:"");this.api=new b(e.projectKey,i),this.ui=new w(e,this.emitter),this.transport=new f(this.api,this.emitter),this.bindEvents(),this.bootstrap()}isReady(){return this.initialized}async processSendQueue(){if(!(this.isSending||this.sendQueue.length===0)){for(this.isSending=!0;this.sendQueue.length>0;){let e=this.sendQueue.shift(),t=this.sessionData?.conversation?.id||0,i=this.options.visitorUuid||y(),s=u();try{let o=await this.api.sendMessage(t,{visitor_uuid:i,client_message_id:e.client_message_id||v(),message:e.content||e.message||"",sender_name:e.sender_name||s||"Tamu",page_url:window.location.href,page_title:document.title});if(o.success&&o.data){let r=o.data.conversation_id;r&&(!this.sessionData?.conversation?.id||this.sessionData.conversation.id!==r)&&(this.sessionData||(this.sessionData={}),this.sessionData.conversation?this.sessionData.conversation.id=r:this.sessionData.conversation={id:r,status:"open"},F(r),this.transport.start(r,o.data.id||0)),this.emitter.emit("message:sent",o.data)}}catch(o){console.error("[BeanTalk] Gagal mengirim pesan:",o)}}this.isSending=!1,this.transport.pollNow()}}bindEvents(){this.emitter.on("ui:send",e=>{this.sendQueue.push(e),this.processSendQueue()}),this.emitter.on("customer:rename",async e=>{let t=this.options.visitorUuid||y();try{await this.api.updateProfile(t,e)}catch(i){console.warn("[BeanTalk] Gagal update nama profil pengunjung:",i)}}),this.emitter.on("message:received",e=>{this.ui.appendMessage(e),this.emitter.emit("message",e)}),this.emitter.on("widget:opened",()=>{this.transport.setWidgetOpen(!0),this.transport.pollNow()}),this.emitter.on("widget:closed",()=>{this.transport.setWidgetOpen(!1)})}async bootstrap(){let e=this.options.visitorUuid||y(),t=u();try{let i=await this.api.initSession(e,void 0,t||void 0);if(i.success&&i.data){this.sessionData=i.data,this.ui.setSessionData(i.data);let s=i.data.conversation;if(s&&s.id){F(s.id);let o=0;s.messages&&s.messages.length>0&&(o=Math.max(...s.messages.map(r=>r.id))),this.transport.start(s.id,o)}this.initialized=!0,console.log("[BeanTalk] Session established successfully:",{brand:i.data.project?.name,customerCode:i.data.visitor?.customer_code,conversationId:i.data.conversation?.id||"New Thread"}),this.emitter.emit("ready",i.data)}else console.warn("[BeanTalk] Init session warning:",i.error?.message)}catch(i){console.error("[BeanTalk] Failed to initialize chat session:",i)}}open(){console.log("[BeanTalk] Opening chat widget window"),this.ui.open()}close(){console.log("[BeanTalk] Closing chat widget window"),this.ui.close()}toggle(){this.ui.toggle()}on(e,t){return this.emitter.on(e,t),this}sendMessage(e){if(!e.trim())return;let t={id:Date.now(),conversation_id:this.sessionData?.conversation?.id||0,client_message_id:v(),sender_type:"visitor",sender_name:"Anda",content:e.trim(),message:e.trim(),created_at:new Date().toISOString()};this.ui.appendMessage(t),this.emitter.emit("ui:send",t)}},ie=g,c=null,ne=n=>d.init(n),se=()=>d.open(),ae=()=>d.close(),oe=()=>d.toggle(),re=(n,e)=>d.on(n,e),le=n=>d.sendMessage(n),de=()=>d.getInstance(),d={init(n){return c||(console.log("[BeanTalk] Creating singleton widget instance"),c=new g(n)),c},open(){c?c.open():console.warn("[BeanTalk] Widget instance not yet initialized")},close(){c?.close()},toggle(){c?.toggle()},on(n,e){c?.on(n,e)},sendMessage(n){c?.sendMessage(n)},getInstance(){return c}};if(typeof window<"u"){let n=function(){let e=document.querySelectorAll("script[data-project-key]");if(e.length>0){let t=e[0],i=t.getAttribute("data-project-key"),s="";if(t.src)try{s=new URL(t.src,window.location.href).origin}catch{}let o=t.getAttribute("data-api-url")||s||void 0,r=t.getAttribute("data-color")||void 0,a=t.getAttribute("data-brand-name")||t.getAttribute("data-store-name")||void 0,m=t.getAttribute("data-support-title")||void 0;console.log("[BeanTalk] Found embed tag on page:",{projectKey:i,apiUrl:o,brandName:a}),i&&!c&&d.init({projectKey:i,apiUrl:o,accentColor:r,brandName:a,storeName:a,supportTitle:m})}};pe=n,window.ChatWidget=d,window.UniversalChatMe=g,setTimeout(()=>{try{window.BeanTalk&&Object.assign(window.BeanTalk,d)}catch{}},0),document.readyState==="loading"?document.addEventListener("DOMContentLoaded",n):n()}var pe,ce=d;return J(he);})();
+    `,this.messagesArea.appendChild(s)}updateSnippet(){if(this.messages.length>0){let e=this.messages[this.messages.length-1],t=e.sender_type==="visitor"?"Anda: ":"",i=e.content||e.message||"";this.cardSnippetText.textContent=t+i}}updateUnreadBadge(){this.unreadCount>0?(this.unreadBadge.textContent=this.unreadCount>9?"9+":this.unreadCount.toString(),this.unreadBadge.classList.add("has-unread")):this.unreadBadge.classList.remove("has-unread")}scrollToBottom(){setTimeout(()=>{this.messagesArea.scrollTop=this.messagesArea.scrollHeight},40)}formatTime(e){try{if(!e)return"";let t=e;typeof t=="string"&&!t.includes("Z")&&!t.includes("+")&&!t.includes("T")&&(t=t.replace(" ","T")+"Z");let i=new Date(t);if(isNaN(i.getTime()))return"";let s=String(i.getHours()).padStart(2,"0"),o=String(i.getMinutes()).padStart(2,"0");return`${s}:${o}`}catch{return""}}};function I(n){return n.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}function _(n){return{whatsapp:"WhatsApp",instagram:"Instagram",telegram:"Telegram",messenger:"Facebook Messenger",shopee:"Shopee Store",tokopedia:"Tokopedia Store",custom:"Link Kustom",link:"Tautan Kustom"}[n.toLowerCase()]||le(n)}function re(n,e){if(!n)return"";let t=e.toLowerCase();if(t==="whatsapp"){if(n.includes("wa.me/")){let i=n.split("wa.me/")[1]?.split("?")[0]||"";return i?`+${i}`:n}}else if(t==="instagram"){if(n.includes("instagram.com/")){let i=n.split("instagram.com/")[1]?.split("/")[0]?.split("?")[0]||"";return i?`@${i}`:n}}else if(t==="telegram"&&n.includes("t.me/")){let i=n.split("t.me/")[1]?.split("/")[0]?.split("?")[0]||"";return i?`@${i}`:n}return n}function le(n){return n?n.charAt(0).toUpperCase()+n.slice(1):""}function ce(){if(typeof document>"u")return"";let n=document.currentScript;if(n&&n.src)try{return new URL(n.src,window.location.href).origin}catch{}let e=document.querySelector("script[data-project-key]");if(e&&e.src)try{return new URL(e.src,window.location.href).origin}catch{}let t=document.querySelector('script[src*="chat-widget.js"], script[src*="widget.js"]');if(t&&t.src)try{return new URL(t.src,window.location.href).origin}catch{}return""}if(typeof window<"u")try{console.log("%c[BeanTalk]%c Universal Chat Widget Started","background: #0071E3; color: #ffffff; padding: 2px 6px; border-radius: 4px; font-weight: bold;","color: inherit; font-weight: 500;")}catch{}var f=class{constructor(e){this.sessionData=null;this.initialized=!1;this.sendQueue=[];this.isSending=!1;this.options=e,this.emitter=new T,console.log("[BeanTalk] Initializing widget instance for project:",e.projectKey);let t=ce(),i=e.apiUrl||t||(typeof window<"u"?window.location.origin:"");this.api=new S(e.projectKey,i),this.ui=new M(e,this.emitter),this.transport=new F(this.api,this.emitter),this.bindEvents(),this.bootstrap()}isReady(){return this.initialized}async processSendQueue(){if(!(this.isSending||this.sendQueue.length===0)){for(this.isSending=!0;this.sendQueue.length>0;){let e=this.sendQueue.shift(),t=this.sessionData?.conversation?.id||0,i=this.options.visitorUuid||C(),s=y();try{let o=await this.api.sendMessage(t,{visitor_uuid:i,client_message_id:e.client_message_id||k(),message:e.content||e.message||"",sender_name:e.sender_name||s||"Tamu",page_url:window.location.href,page_title:document.title});if(o.success&&o.data){let l=o.data.conversation_id;l&&(!this.sessionData?.conversation?.id||this.sessionData.conversation.id!==l)&&(this.sessionData||(this.sessionData={}),this.sessionData.conversation?this.sessionData.conversation.id=l:this.sessionData.conversation={id:l,status:"open"},N(l),this.transport.start(l,o.data.id||0)),this.emitter.emit("message:sent",o.data)}}catch(o){console.error("[BeanTalk] Gagal mengirim pesan:",o)}}this.isSending=!1,this.transport.pollNow()}}bindEvents(){this.emitter.on("ui:send",e=>{this.sendQueue.push(e),this.processSendQueue()}),this.emitter.on("customer:rename",async e=>{let t=this.options.visitorUuid||C();try{await this.api.updateProfile(t,e)}catch(i){console.warn("[BeanTalk] Gagal update nama profil pengunjung:",i)}}),this.emitter.on("message:received",e=>{this.ui.appendMessage(e),this.emitter.emit("message",e)}),this.emitter.on("widget:opened",()=>{this.transport.setWidgetOpen(!0),this.transport.pollNow()}),this.emitter.on("widget:closed",()=>{this.transport.setWidgetOpen(!1)})}async bootstrap(){let e=this.options.visitorUuid||C(),t=y();try{let i=await this.api.initSession(e,void 0,t||void 0);if(i.success&&i.data){this.sessionData=i.data,this.ui.setSessionData(i.data);let s=i.data.conversation;if(s&&s.id){N(s.id);let o=0;s.messages&&s.messages.length>0&&(o=Math.max(...s.messages.map(l=>l.id))),this.transport.start(s.id,o)}this.initialized=!0,console.log("[BeanTalk] Session established successfully:",{brand:i.data.project?.name,customerCode:i.data.visitor?.customer_code,conversationId:i.data.conversation?.id||"New Thread"}),this.emitter.emit("ready",i.data)}else console.warn("[BeanTalk] Init session warning:",i.error?.message)}catch(i){console.error("[BeanTalk] Failed to initialize chat session:",i)}}open(){console.log("[BeanTalk] Opening chat widget window"),this.ui.open()}close(){console.log("[BeanTalk] Closing chat widget window"),this.ui.close()}toggle(){this.ui.toggle()}on(e,t){return this.emitter.on(e,t),this}sendMessage(e){if(!e.trim())return;let t={id:Date.now(),conversation_id:this.sessionData?.conversation?.id||0,client_message_id:k(),sender_type:"visitor",sender_name:"Anda",content:e.trim(),message:e.trim(),created_at:new Date().toISOString()};this.ui.appendMessage(t),this.emitter.emit("ui:send",t)}},de=f,g=null,pe=n=>h.init(n),he=()=>h.open(),ue=()=>h.close(),ge=()=>h.toggle(),me=(n,e)=>h.on(n,e),xe=n=>h.sendMessage(n),ve=()=>h.getInstance(),h={init(n){return g||(console.log("[BeanTalk] Creating singleton widget instance"),g=new f(n)),g},open(){g?g.open():console.warn("[BeanTalk] Widget instance not yet initialized")},close(){g?.close()},toggle(){g?.toggle()},on(n,e){g?.on(n,e)},sendMessage(n){g?.sendMessage(n)},getInstance(){return g}};if(typeof window<"u"){let n=function(){let e=document.querySelectorAll("script[data-project-key]");if(e.length>0){let t=e[0],i=t.getAttribute("data-project-key"),s="";if(t.src)try{s=new URL(t.src,window.location.href).origin}catch{}let o=t.getAttribute("data-api-url")||s||void 0,l=t.getAttribute("data-color")||void 0,a=t.getAttribute("data-brand-name")||t.getAttribute("data-store-name")||void 0,u=t.getAttribute("data-support-title")||void 0;console.log("[BeanTalk] Found embed tag on page:",{projectKey:i,apiUrl:o,brandName:a}),i&&!g&&h.init({projectKey:i,apiUrl:o,accentColor:l,brandName:a,storeName:a,supportTitle:u})}};ye=n,window.ChatWidget=h,window.UniversalChatMe=f,setTimeout(()=>{try{window.BeanTalk&&Object.assign(window.BeanTalk,h)}catch{}},0),document.readyState==="loading"?document.addEventListener("DOMContentLoaded",n):n()}var ye,be=h;return ne(fe);})();
