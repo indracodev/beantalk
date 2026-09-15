@@ -386,10 +386,14 @@ class DashboardController extends Controller
         
         if ($sort === 'conversations_count') {
             $query->orderBy('conversations_count', $direction);
-        } elseif (in_array($sort, ['name', 'username', 'email', 'role', 'status', 'created_at'])) {
+        } elseif ($sort === 'role') {
+            $query->orderByRaw("CASE WHEN role = 'superadmin' THEN 1 WHEN role = 'owner' THEN 2 WHEN role = 'admin' THEN 3 ELSE 4 END " . $direction)
+                  ->orderBy('name', 'asc');
+        } elseif (in_array($sort, ['name', 'username', 'email', 'status', 'created_at'])) {
             $query->orderBy($sort, $direction);
         } else {
-            $query->orderBy('role', 'asc')->orderBy('name', 'asc');
+            $query->orderByRaw("CASE WHEN role = 'superadmin' THEN 1 WHEN role = 'owner' THEN 2 WHEN role = 'admin' THEN 3 ELSE 4 END ASC")
+                  ->orderBy('name', 'asc');
         }
 
         $members = $query->paginate(15)->withQueryString();

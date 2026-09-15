@@ -29,29 +29,27 @@ class AdminDashboardTest extends TestCase
             ['name' => 'Dashboard Test Tenant', 'plan' => 'enterprise']
         );
 
-        $this->superadmin = User::firstOrCreate(
-            ['email' => 'dashsuper@indraco.com'],
-            [
-                'tenant_id' => $this->tenant->id,
-                'name'      => 'Dashboard Superadmin',
-                'username'  => 'dashsuper',
-                'password'  => bcrypt('password'),
-                'role'      => 'superadmin',
-                'status'    => 'online',
-            ]
-        );
+        User::where('tenant_id', $this->tenant->id)->delete();
 
-        $this->agent = User::firstOrCreate(
-            ['email' => 'dashagent@indraco.com'],
-            [
-                'tenant_id' => $this->tenant->id,
-                'name'      => 'Dashboard Agent',
-                'username'  => 'dashagent',
-                'password'  => bcrypt('password'),
-                'role'      => 'agent',
-                'status'    => 'online',
-            ]
-        );
+        $this->superadmin = User::create([
+            'tenant_id' => $this->tenant->id,
+            'name'      => 'Dashboard Superadmin',
+            'email'     => 'dashsuper@indraco.com',
+            'username'  => 'dashsuper',
+            'password'  => bcrypt('password'),
+            'role'      => 'superadmin',
+            'status'    => 'online',
+        ]);
+
+        $this->agent = User::create([
+            'tenant_id' => $this->tenant->id,
+            'name'      => 'Dashboard Agent',
+            'email'     => 'dashagent@indraco.com',
+            'username'  => 'dashagent',
+            'password'  => bcrypt('password'),
+            'role'      => 'agent',
+            'status'    => 'online',
+        ]);
 
         $this->project = Project::firstOrCreate(
             ['tenant_id' => $this->tenant->id, 'slug' => 'test-dash-project'],
