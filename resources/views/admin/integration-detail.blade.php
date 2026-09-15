@@ -63,7 +63,7 @@
         </div>
 
         <!-- Telemetry Summary Cards -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
             <div class="bg-white border border-apple-border rounded-xl p-3 sm:p-3.5 shadow-apple-sm flex flex-col">
                 <span class="text-[10px] font-semibold text-apple-textTertiary uppercase tracking-wider">Total Percakapan</span>
                 <span class="text-[17px] font-bold text-apple-textPrimary font-mono mt-0.5">{{ number_format($project->conversations_count) }}</span>
@@ -81,6 +81,14 @@
                     {{ $widgetSetting->bot_enabled ? 'Aktif' : 'Nonaktif' }}
                 </span>
                 <span class="text-[10.5px] text-apple-textSecondary mt-0.5">{{ $widgetSetting->bot_name ?: 'BeanBot' }}</span>
+            </div>
+            <div class="bg-white border border-apple-border rounded-xl p-3 sm:p-3.5 shadow-apple-sm flex flex-col">
+                <span class="text-[10px] font-semibold text-apple-textTertiary uppercase tracking-wider">Telegram Forum</span>
+                <span id="cardTelegramStatus" class="text-[13px] font-bold {{ !empty($widgetSetting->telegram_topic_mode_enabled) ? 'text-sky-600' : 'text-neutral-500' }} mt-0.5 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full {{ !empty($widgetSetting->telegram_topic_mode_enabled) ? 'bg-sky-500' : 'bg-neutral-400' }}"></span>
+                    {{ !empty($widgetSetting->telegram_topic_mode_enabled) ? 'Mode Topik ON' : 'Mode Topik OFF' }}
+                </span>
+                <span class="text-[10.5px] text-apple-textSecondary mt-0.5">{{ !empty($widgetSetting->telegram_notifications_enabled) ? 'Notif 1x Aktif' : 'Notif OFF' }}</span>
             </div>
             <div class="bg-white border border-apple-border rounded-xl p-3 sm:p-3.5 shadow-apple-sm flex flex-col">
                 <span class="text-[10px] font-semibold text-apple-textTertiary uppercase tracking-wider">Warna Brand</span>
@@ -418,11 +426,16 @@
                     <!-- Toggle 1: Master Notifikasi -->
                     <div class="p-3.5 rounded-xl border border-apple-border bg-apple-canvas/30 flex items-start justify-between gap-3">
                         <div>
-                            <span class="text-[12px] font-bold text-apple-textPrimary block">Aktifkan Notifikasi Telegram</span>
-                            <p class="text-[11px] text-apple-textSecondary mt-0.5">Kirim notifikasi 1x saat ada customer baru memulai obrolan (anti-spam).</p>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[12px] font-bold text-apple-textPrimary block">Notifikasi Tiket Baru</span>
+                                <span id="badgeNotifToggle" class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ !empty($widgetSetting->telegram_notifications_enabled) ? 'bg-sky-100 text-sky-800' : 'bg-neutral-100 text-neutral-600' }}">
+                                    {{ !empty($widgetSetting->telegram_notifications_enabled) ? 'ON (Aktif)' : 'OFF' }}
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-apple-textSecondary mt-0.5">Kirim pesan alert 1x ke grup saat ada customer baru memulai chat.</p>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
-                            <input type="checkbox" name="telegram_notifications_enabled" value="1" {{ !empty($widgetSetting->telegram_notifications_enabled) ? 'checked' : '' }} class="sr-only peer">
+                            <input type="checkbox" name="telegram_notifications_enabled" id="toggleTelegramNotif" value="1" {{ !empty($widgetSetting->telegram_notifications_enabled) ? 'checked' : '' }} onchange="updateTelegramToggleBadges()" class="sr-only peer">
                             <div class="w-10 h-5.5 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-sky-500"></div>
                         </label>
                     </div>
@@ -430,11 +443,16 @@
                     <!-- Toggle 2: Mode Topic Forum -->
                     <div class="p-3.5 rounded-xl border border-apple-border bg-apple-canvas/30 flex items-start justify-between gap-3">
                         <div>
-                            <span class="text-[12px] font-bold text-apple-textPrimary block">Mode Forum Topics (1 Topik per Customer)</span>
-                            <p class="text-[11px] text-apple-textSecondary mt-0.5">Buat room topik terpisah per customer di grup Telegram dengan nama <code>[{{ $project->name }}] Nama (Kode)</code>.</p>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[12px] font-bold text-apple-textPrimary block">Mode Forum Topics</span>
+                                <span id="badgeTopicToggle" class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ !empty($widgetSetting->telegram_topic_mode_enabled) ? 'bg-sky-100 text-sky-800' : 'bg-neutral-100 text-neutral-600' }}">
+                                    {{ !empty($widgetSetting->telegram_topic_mode_enabled) ? 'ON (Aktif)' : 'OFF' }}
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-apple-textSecondary mt-0.5">Buat room topik terpisah per customer di grup: <code>[{{ $project->name }}] Nama (Kode)</code>.</p>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
-                            <input type="checkbox" name="telegram_topic_mode_enabled" value="1" {{ !empty($widgetSetting->telegram_topic_mode_enabled) ? 'checked' : '' }} class="sr-only peer">
+                            <input type="checkbox" name="telegram_topic_mode_enabled" id="toggleTelegramTopic" value="1" {{ !empty($widgetSetting->telegram_topic_mode_enabled) ? 'checked' : '' }} onchange="updateTelegramToggleBadges()" class="sr-only peer">
                             <div class="w-10 h-5.5 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-sky-500"></div>
                         </label>
                     </div>
@@ -696,6 +714,37 @@ document.getElementById('inputTelegramBotToken')?.addEventListener('input', func
         link.href = 'https://api.telegram.org/bot' + encodeURIComponent(token) + '/setWebhook?url=' + encodeURIComponent('{{ url("/api/v1/telegram/webhook") }}');
     }
 });
+
+// Real-time Telegram toggle badge updater
+function updateTelegramToggleBadges() {
+    const notifChecked = document.getElementById('toggleTelegramNotif')?.checked;
+    const topicChecked = document.getElementById('toggleTelegramTopic')?.checked;
+
+    const notifBadge = document.getElementById('badgeNotifToggle');
+    const topicBadge = document.getElementById('badgeTopicToggle');
+    const cardStatus = document.getElementById('cardTelegramStatus');
+
+    if (notifBadge) {
+        notifBadge.className = notifChecked 
+            ? 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800'
+            : 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-neutral-100 text-neutral-600';
+        notifBadge.textContent = notifChecked ? 'ON (Aktif)' : 'OFF';
+    }
+
+    if (topicBadge) {
+        topicBadge.className = topicChecked 
+            ? 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800'
+            : 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-neutral-100 text-neutral-600';
+        topicBadge.textContent = topicChecked ? 'ON (Aktif)' : 'OFF';
+    }
+
+    if (cardStatus) {
+        cardStatus.className = topicChecked 
+            ? 'text-[13px] font-bold text-sky-600 mt-0.5 flex items-center gap-1.5'
+            : 'text-[13px] font-bold text-neutral-500 mt-0.5 flex items-center gap-1.5';
+        cardStatus.innerHTML = '<span class="w-2 h-2 rounded-full ' + (topicChecked ? 'bg-sky-500' : 'bg-neutral-400') + '"></span>' + (topicChecked ? 'Mode Topik ON' : 'Mode Topik OFF');
+    }
+}
 
 // 2. Render FAQ Rules List
 function renderFaqRulesList() {
