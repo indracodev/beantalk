@@ -119,12 +119,12 @@ class BotService
             }
         }
 
-        // 3. FIRST INBOUND WELCOME MESSAGE (Jika pesan pertama kali masuk)
-        $visitorMessageCount = Message::where('conversation_id', $conversation->id)
-            ->where('sender_type', 'visitor')
-            ->count();
+        // 3. FIRST INBOUND WELCOME MESSAGE (Jika tiket obrolan ini belum pernah mendapat sambutan bot)
+        $hasBotReplied = Message::where('conversation_id', $conversation->id)
+            ->where('sender_type', 'bot')
+            ->exists();
 
-        if ($visitorMessageCount <= 1 && !empty($widgetSetting->bot_welcome_message)) {
+        if (!$hasBotReplied && !empty($widgetSetting->bot_welcome_message)) {
             $res = $this->conversationService->appendMessage($conversation, [
                 'sender_type'       => 'bot',
                 'sender_name'       => $botName,
