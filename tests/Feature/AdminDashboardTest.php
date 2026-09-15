@@ -215,8 +215,8 @@ class AdminDashboardTest extends TestCase
         $queryCount = count($queries);
 
         // Dengan eager loading lengkap dan reuse model, total query tetap konstan O(1)
-        // yaitu 11 query terindeks untuk merender seluruh 3-kolom inbox, terlepas dari berapapun jumlah pesan.
-        $this->assertLessThanOrEqual(12, $queryCount, "Terdeteksi potensi N+1 query: Total {$queryCount} query dieksekusi.");
+        // yaitu maksimal 13 query terindeks untuk merender seluruh 3-kolom inbox + multi-channel switcher, terlepas dari berapapun jumlah pesan.
+        $this->assertLessThanOrEqual(13, $queryCount, "Terdeteksi potensi N+1 query: Total {$queryCount} query dieksekusi.");
     }
 
     /**

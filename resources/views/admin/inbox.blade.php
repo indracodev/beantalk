@@ -28,10 +28,108 @@
             style="min-width: 220px; max-width: 520px;">
 
             <!-- Search & Filter Controls -->
-            <div class="p-3 border-b border-apple-border flex flex-col gap-2 shrink-0 glass-sidebar">
+            <div class="p-2.5 sm:p-3 border-b border-apple-border flex flex-col gap-2 shrink-0 glass-sidebar">
+                <!-- Website / Channel Selector Dropdown -->
+                @php
+                    $allInboxProjects = isset($projects) && is_iterable($projects) && !($projects instanceof \Illuminate\Database\Eloquent\Builder) 
+                        ? $projects 
+                        : (Auth::user()->relationLoaded('tenant') && Auth::user()->tenant ? Auth::user()->tenant->projects : collect());
+                    
+                    $selectedProjId = request('project_id');
+                    $isAllSelected = empty($selectedProjId) || $selectedProjId === 'all';
+                    $activeProject = null;
+
+                    if (!$isAllSelected && is_iterable($allInboxProjects) && count($allInboxProjects) > 0) {
+                        $activeProject = collect($allInboxProjects)->firstWhere('id', $selectedProjId);
+                    }
+
+                    if ($activeProject) {
+                        $activeWorkspaceName = $activeProject->name;
+                        $workspaceInitials = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $activeWorkspaceName), 0, 2)) ?: 'WS';
+                        $projectColor = $activeProject->widgetSetting->primary_color ?? '#0071E3';
+                    } else {
+                        $activeWorkspaceName = 'All Websites';
+                        $workspaceInitials = 'ALL';
+                        $projectColor = '#0071E3';
+                    }
+
+                    $sitesCount = is_countable($allInboxProjects) ? count($allInboxProjects) : 1;
+                @endphp
+
+                <div class="relative mb-0.5">
+                    <button type="button" onclick="toggleWorkspaceDropdown(event)" class="workspace-box w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-white border border-apple-border/80 shadow-2xs hover:border-apple-border hover:bg-apple-canvas/40 transition cursor-pointer text-left">
+                        <div class="flex items-center gap-2 overflow-hidden min-w-0">
+                            <div class="w-6 h-6 rounded-lg {{ $isAllSelected ? 'bg-gradient-to-br from-blue-600 to-indigo-700' : '' }} text-white flex items-center justify-center font-bold text-[9.5px] shrink-0 shadow-2xs" style="{{ !$isAllSelected ? 'background-color: ' . $projectColor . ';' : '' }}">
+                                {{ $workspaceInitials }}
+                            </div>
+                            <div class="truncate">
+                                <div class="font-semibold text-[12px] text-apple-textPrimary truncate" id="sidebar-workspace-title">{{ $activeWorkspaceName }}</div>
+                                <div class="text-[9.5px] text-apple-textTertiary truncate">{{ $sitesCount }} Connected {{ $sitesCount > 1 ? 'Sites' : 'Site' }}</div>
+                            </div>
+                        </div>
+                        <svg class="w-3.5 h-3.5 text-apple-textTertiary shrink-0 transition-transform" id="workspace-chevron" fill="none"
+                            stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                        </svg>
+                    </button>
+
+                    <!-- macOS Flyout Menu for Multi-Channel Switcher -->
+                    <div id="workspace-dropdown-menu" class="hidden absolute top-full left-0 right-0 mt-1 bg-white border border-apple-border shadow-apple-popover rounded-xl p-1.5 z-50 text-[12px]">
+                        <div class="px-2 py-1 text-[9.5px] font-semibold text-apple-textTertiary uppercase tracking-wider">
+                            Filter Channel (Website)
+                        </div>
+                        <div class="flex flex-col gap-0.5 max-h-52 overflow-y-auto">
+                            <!-- Option: All Websites -->
+                            <a href="{{ route('admin.inbox', ['status' => request('status'), 'search' => request('search')]) }}" class="flex items-center justify-between px-2 py-1.5 rounded-lg {{ $isAllSelected ? 'bg-apple-blue/10 text-apple-blue font-medium' : 'text-apple-textPrimary hover:bg-black/5' }} transition no-loader">
+                                <div class="flex items-center gap-2 truncate">
+                                    <span class="w-5 h-5 rounded {{ $isAllSelected ? 'bg-apple-blue text-white' : 'bg-black/5 text-apple-textSecondary' }} text-[9px] font-bold flex items-center justify-center shrink-0">ALL</span>
+                                    <span class="truncate text-[11.5px]">All Websites (Semua Channel)</span>
+                                </div>
+                                @if($isAllSelected)
+                                    <svg class="w-3.5 h-3.5 text-apple-blue shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                @endif
+                            </a>
+
+                            @if(is_iterable($allInboxProjects) && count($allInboxProjects) > 0)
+                                @foreach($allInboxProjects as $proj)
+                                    @php
+                                        $isSelected = !$isAllSelected && $activeProject && $activeProject->id == $proj->id;
+                                        $projInitials = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $proj->name), 0, 2)) ?: 'WS';
+                                        $projColor = $proj->widgetSetting->primary_color ?? '#0071E3';
+                                    @endphp
+                                    <a href="{{ route('admin.inbox', ['project_id' => $proj->id, 'status' => request('status'), 'search' => request('search')]) }}" class="flex items-center justify-between px-2 py-1.5 rounded-lg {{ $isSelected ? 'bg-apple-blue/10 text-apple-blue font-medium' : 'text-apple-textPrimary hover:bg-black/5' }} transition no-loader">
+                                        <div class="flex items-center gap-2 truncate">
+                                            <span class="w-5 h-5 rounded text-white text-[9.5px] font-bold flex items-center justify-center shrink-0" style="background-color: {{ $projColor }};">{{ $projInitials }}</span>
+                                            <span class="truncate text-[11.5px]">{{ $proj->name }}</span>
+                                        </div>
+                                        @if($isSelected)
+                                            <svg class="w-3.5 h-3.5 text-apple-blue shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                        @endif
+                                    </a>
+                                @endforeach
+                            @endif
+                        </div>
+
+                        @if(Auth::user()->isSuperAdmin())
+                            <div class="my-1 border-t border-apple-border/60"></div>
+                            <a href="{{ route('admin.integrations') }}" class="flex items-center gap-2 px-2 py-1.5 rounded-lg text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 text-[11.5px] transition no-loader">
+                                <svg class="w-3.5 h-3.5 text-apple-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                <span>Manage Channels</span>
+                            </a>
+                        @endif
+                    </div>
+                </div>
+
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <h2 class="text-[14px] font-semibold tracking-tight text-apple-textPrimary">Messages</h2>
+                        <h2 class="text-[13.5px] font-semibold tracking-tight text-apple-textPrimary">Messages</h2>
                         @if (($totalUnreadConversations ?? 0) > 0)
                             <span
                                 class="text-[10px] font-semibold px-1.5 py-0.2 rounded-full bg-apple-blue/10 text-apple-blue"

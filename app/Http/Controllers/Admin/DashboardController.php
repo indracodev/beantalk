@@ -244,8 +244,8 @@ class DashboardController extends Controller
     {
         $tenantId = $request->user()->tenant_id;
 
-        // Ambil semua project milik tenant
-        $projects = Project::where('tenant_id', $tenantId)->orderBy('name', 'asc')->get();
+        // Ambil semua project milik tenant dengan relasi widgetSetting
+        $projects = Project::where('tenant_id', $tenantId)->with('widgetSetting')->orderBy('name', 'asc')->get();
 
         // Query percakapan dengan filter (hanya tampilkan yang sudah memiliki pesan nyata, hindari tiket kosong)
         $query = Conversation::where('tenant_id', $tenantId)

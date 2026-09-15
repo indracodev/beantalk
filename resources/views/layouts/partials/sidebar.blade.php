@@ -1,4 +1,12 @@
 <!-- Collapsible Apple-style Sidebar Partial -->
+@php
+    $sidebarSitesCount = isset($projects) && is_countable($projects)
+        ? count($projects)
+        : (Auth::user() && Auth::user()->tenant ? Auth::user()->tenant->projects()->count() : 0);
+    $sidebarTeamCount = isset($staffMembers) && is_countable($staffMembers)
+        ? count($staffMembers)
+        : (Auth::user() && Auth::user()->tenant ? Auth::user()->tenant->users()->count() : 0);
+@endphp
 <aside id="main-sidebar"
     class="fixed md:static inset-y-0 left-0 -translate-x-full md:translate-x-0 h-full w-60 glass-sidebar border-r border-apple-border flex flex-col justify-between shrink-0 z-40 md:z-30 transition-transform md:transition-[width] duration-200 ease-out">
 
@@ -37,102 +45,6 @@
 
         <!-- Scrollable Navigation Content -->
         <div class="p-2 flex-1 flex flex-col gap-4 overflow-y-auto overflow-x-hidden">
-
-            <!-- Workspace Selector with Channel Switcher Dropdown -->
-            @php
-                $allSidebarProjects = isset($projects) && is_iterable($projects) && !($projects instanceof \Illuminate\Database\Eloquent\Builder) 
-                    ? $projects 
-                    : (Auth::user()->relationLoaded('tenant') && Auth::user()->tenant ? Auth::user()->tenant->projects : (isset($projects) ? $projects : collect()));
-                
-                $selectedProjId = request('project_id');
-                $isAllSelected = empty($selectedProjId) || $selectedProjId === 'all';
-                $activeProject = null;
-
-                if (!$isAllSelected && is_iterable($allSidebarProjects) && count($allSidebarProjects) > 0) {
-                    $activeProject = collect($allSidebarProjects)->firstWhere('id', $selectedProjId);
-                }
-
-                if ($activeProject) {
-                    $activeWorkspaceName = $activeProject->name;
-                    $workspaceInitials = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $activeWorkspaceName), 0, 2)) ?: 'WS';
-                } else {
-                    $tenantName = Auth::user()->relationLoaded('tenant') && Auth::user()->tenant ? Auth::user()->tenant->name : 'All Channels';
-                    $activeWorkspaceName = 'All Websites';
-                    $workspaceInitials = 'ALL';
-                }
-
-                $sidebarSitesCount = is_countable($allSidebarProjects) ? count($allSidebarProjects) : (isset($connectedSitesCount) ? $connectedSitesCount : 1);
-                $sidebarTeamCount = isset($staffMembers) ? count($staffMembers) : (isset($teamMembers) ? (is_countable($teamMembers) ? count($teamMembers) : 0) : (isset($teamCount) ? $teamCount : 1));
-            @endphp
-            <div class="relative">
-                <button type="button" onclick="toggleWorkspaceDropdown(event)" class="workspace-box w-full flex items-center justify-between px-2 py-1.5 rounded-xl bg-white border border-apple-border shadow-apple-sm hover:border-apple-border/80 hover:bg-apple-canvas/40 transition cursor-pointer text-left">
-                    <div class="flex items-center gap-2 overflow-hidden">
-                        <div class="w-6 h-6 rounded-lg {{ $isAllSelected ? 'bg-gradient-to-br from-blue-600 to-indigo-700' : 'bg-[#2C2C2E]' }} text-white flex items-center justify-center font-medium text-[10px] shrink-0 shadow-2xs">
-                            {{ $workspaceInitials }}
-                        </div>
-                        <div class="truncate sidebar-text">
-                            <div class="font-medium text-[12px] text-apple-textPrimary truncate" id="sidebar-workspace-title">{{ $activeWorkspaceName }}</div>
-                            <div class="text-[10px] text-apple-textTertiary truncate sidebar-subtext">{{ $sidebarSitesCount }} Connected {{ $sidebarSitesCount > 1 ? 'Sites' : 'Site' }}</div>
-                        </div>
-                    </div>
-                    <svg class="w-3.5 h-3.5 text-apple-textTertiary shrink-0 sidebar-text transition-transform" id="workspace-chevron" fill="none"
-                        stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-                    </svg>
-                </button>
-
-                <!-- macOS Flyout Menu for Multi-Channel Switcher -->
-                <div id="workspace-dropdown-menu" class="hidden absolute top-full left-0 mt-1 w-60 bg-white border border-apple-border shadow-apple-popover rounded-xl p-1.5 z-50 text-[12px]">
-                    <div class="px-2 py-1 text-[10px] font-semibold text-apple-textTertiary uppercase tracking-wider">
-                        Filter Channel (Website)
-                    </div>
-                    <div class="flex flex-col gap-0.5 max-h-52 overflow-y-auto">
-                        <!-- Option: All Websites -->
-                        <a href="{{ route('admin.inbox', ['status' => request('status'), 'search' => request('search')]) }}" data-loading-msg="Memuat Semua Channel..." class="flex items-center justify-between px-2 py-1.5 rounded-lg {{ $isAllSelected ? 'bg-apple-blue/10 text-apple-blue font-medium' : 'text-apple-textPrimary hover:bg-black/5' }} transition">
-                            <div class="flex items-center gap-2 truncate">
-                                <span class="w-5 h-5 rounded {{ $isAllSelected ? 'bg-apple-blue text-white' : 'bg-black/5 text-apple-textSecondary' }} text-[9px] font-bold flex items-center justify-center shrink-0">ALL</span>
-                                <span class="truncate text-[11.5px]">All Websites (Semua Channel)</span>
-                            </div>
-                            @if($isAllSelected)
-                                <svg class="w-3.5 h-3.5 text-apple-blue shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
-                            @endif
-                        </a>
-
-                        @if(is_iterable($allSidebarProjects) && count($allSidebarProjects) > 0)
-                            @foreach($allSidebarProjects as $proj)
-                                @php
-                                    $isSelected = !$isAllSelected && $activeProject && $activeProject->id == $proj->id;
-                                    $projInitials = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $proj->name), 0, 2)) ?: 'WS';
-                                @endphp
-                                <a href="{{ route('admin.inbox', ['project_id' => $proj->id, 'status' => request('status'), 'search' => request('search')]) }}" data-loading-msg="Memuat {{ $proj->name }}..." class="flex items-center justify-between px-2 py-1.5 rounded-lg {{ $isSelected ? 'bg-apple-blue/10 text-apple-blue font-medium' : 'text-apple-textPrimary hover:bg-black/5' }} transition">
-                                    <div class="flex items-center gap-2 truncate">
-                                        <span class="w-5 h-5 rounded {{ $isSelected ? 'bg-apple-blue text-white' : 'bg-black/5 text-apple-textSecondary' }} text-[9.5px] font-bold flex items-center justify-center shrink-0">{{ $projInitials }}</span>
-                                        <span class="truncate text-[11.5px]">{{ $proj->name }}</span>
-                                    </div>
-                                    @if($isSelected)
-                                        <svg class="w-3.5 h-3.5 text-apple-blue shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                        </svg>
-                                    @endif
-                                </a>
-                            @endforeach
-                        @endif
-                    </div>
-
-                    @if(Auth::user()->isSuperAdmin())
-                        <div class="my-1 border-t border-apple-border/60"></div>
-                        <a href="{{ route('admin.integrations') }}" data-loading-msg="Memuat Integrations..." class="flex items-center gap-2 px-2 py-1.5 rounded-lg text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 text-[11.5px] transition">
-                            <svg class="w-3.5 h-3.5 text-apple-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
-                            <span>Manage Channels</span>
-                        </a>
-                    @endif
-                </div>
-            </div>
 
             <!-- Navigation Group -->
             <nav class="flex flex-col gap-0.5">
