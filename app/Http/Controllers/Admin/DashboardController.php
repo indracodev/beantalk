@@ -291,7 +291,32 @@ class DashboardController extends Controller
             }
         }
 
-        // 6. Intent Distribution Breakdown (from Channels / Topics)
+        // 6. Chart Title & Period Summary
+        if ($isCustomDate) {
+            $chartTitle = "Volume & Resolution Velocity ({$startDateLabel} – {$endDateLabel})";
+            $chartSubtitle = "Tren deret tanggal volume pesan masuk (inbound) vs percakapan terselesaikan (resolved).";
+        } elseif ($period === 'today') {
+            $chartTitle = "Volume & Resolution Velocity (Hari Ini: 24 Jam)";
+            $chartSubtitle = "Distribusi volume chat per blok jam sepanjang hari ini.";
+        } elseif ($period === '30d') {
+            $chartTitle = "Volume & Resolution Velocity (30 Hari Terakhir: {$startDateLabel} – {$endDateLabel})";
+            $chartSubtitle = "Tren deret tanggal volume percakapan selama 30 hari terakhir.";
+        } elseif ($period === 'quarter') {
+            $chartTitle = "Volume & Resolution Velocity (Kuartal / 90 Hari: {$startDateLabel} – {$endDateLabel})";
+            $chartSubtitle = "Tren volume percakapan kuartalan per rentang minggu.";
+        } else {
+            $chartTitle = "Volume & Resolution Velocity (Mingguan: Senin – Minggu)";
+            $chartSubtitle = "Tren harian volume pesan masuk (inbound) vs percakapan terselesaikan (resolved) minggu ini.";
+        }
+
+        $chartTotalInbound = collect($chartData)->sum('inbound');
+        $chartTotalResolved = collect($chartData)->sum('resolved');
+        $chartPeakPoint = collect($chartData)->sortByDesc('inbound')->first();
+        $chartPeakDate = $chartPeakPoint ? ($chartPeakPoint['label'] . ' (' . $chartPeakPoint['inbound'] . ' chats)') : '-';
+        $activeDaysCount = max(1, $isCustomDate ? (int) $daysDiff : ($period === 'today' ? 1 : ($period === '30d' ? 30 : ($period === 'quarter' ? 90 : 7))));
+        $chartAvgInbound = round($chartTotalInbound / $activeDaysCount, 1);
+
+        // 7. Intent Distribution Breakdown (from Channels / Topics)
         $intentColors = [
             ['color' => '#0071E3', 'bg' => 'bg-apple-blue'],
             ['color' => '#6366F1', 'bg' => 'bg-indigo-500'],
@@ -489,6 +514,12 @@ class DashboardController extends Controller
             'summary',
             'chartData',
             'weeklyChartData',
+            'chartTitle',
+            'chartSubtitle',
+            'chartTotalInbound',
+            'chartTotalResolved',
+            'chartPeakDate',
+            'chartAvgInbound',
             'intentBreakdown',
             'channels',
             'specialists',

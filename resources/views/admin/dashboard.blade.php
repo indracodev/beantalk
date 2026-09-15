@@ -212,8 +212,8 @@
         <div class="lg:col-span-2 bg-white border border-apple-border/80 rounded-2xl p-4 sm:p-5 shadow-apple-card flex flex-col justify-between">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-apple-border/60 gap-2">
                 <div>
-                    <h3 class="text-[14px] font-semibold text-apple-textPrimary tracking-tight">Volume &amp; Resolution Velocity (Harian: Senin &ndash; Minggu)</h3>
-                    <p class="text-[11.5px] text-apple-textSecondary">Tren harian volume pesan masuk (inbound) vs percakapan terselesaikan (resolved).</p>
+                    <h3 class="text-[14px] font-semibold text-apple-textPrimary tracking-tight">{{ $chartTitle ?? 'Volume & Resolution Velocity' }}</h3>
+                    <p class="text-[11.5px] text-apple-textSecondary">{{ $chartSubtitle ?? 'Tren volume pesan masuk (inbound) vs percakapan terselesaikan (resolved).' }}</p>
                 </div>
                 <!-- Legend Indicators -->
                 <div class="flex items-center gap-3 text-[11.5px] self-start sm:self-auto">
@@ -331,7 +331,7 @@
                     @endforeach
                 </svg>
 
-                <!-- X Axis Labels (Senin - Minggu) -->
+                <!-- X Axis Labels -->
                 <div class="flex justify-between px-6 sm:px-8 mt-1 text-[10.5px] text-apple-textTertiary font-medium">
                     @foreach($chartData as $idx => $d)
                         <span class="{{ (!empty($d['is_today']) || $loop->last) ? 'text-apple-blue font-bold' : '' }}">
@@ -341,24 +341,68 @@
                 </div>
             </div>
 
-            <!-- 7-Day Day-by-Day Grid (Senin - Minggu) -->
-            <div class="mt-3 pt-3 border-t border-apple-border/60">
-                <div class="grid grid-cols-7 gap-1.5 text-center">
-                    @foreach($weeklyChartData as $wDay)
-                        <div class="p-1.5 rounded-lg {{ $wDay['is_today'] ? 'bg-apple-blue/10 border border-apple-blue/30 font-semibold' : 'bg-apple-canvas/50 border border-apple-border/40' }} transition">
-                            <div class="text-[10px] {{ $wDay['is_today'] ? 'text-apple-blue font-bold' : 'text-apple-textSecondary' }}">
-                                {{ $wDay['day_name'] }}
+            <!-- Breakdown Grid & Overview (Adaptive per Periode) -->
+            @if($curPeriod === '7d')
+                <!-- 7-Day Day-by-Day Grid (Senin - Minggu) -->
+                <div class="mt-3 pt-3 border-t border-apple-border/60">
+                    <div class="grid grid-cols-7 gap-1.5 text-center">
+                        @foreach($weeklyChartData as $wDay)
+                            <div class="p-1.5 rounded-lg {{ $wDay['is_today'] ? 'bg-apple-blue/10 border border-apple-blue/30 font-semibold' : 'bg-apple-canvas/50 border border-apple-border/40' }} transition">
+                                <div class="text-[10px] {{ $wDay['is_today'] ? 'text-apple-blue font-bold' : 'text-apple-textSecondary' }}">
+                                    {{ $wDay['day_name'] }}
+                                </div>
+                                <div class="text-[12px] font-mono font-bold text-apple-textPrimary mt-0.5">
+                                    {{ $wDay['inbound'] }}
+                                </div>
+                                <div class="text-[9px] font-mono text-apple-textTertiary">
+                                    {{ $wDay['resolved'] }} res
+                                </div>
                             </div>
-                            <div class="text-[12px] font-mono font-bold text-apple-textPrimary mt-0.5">
-                                {{ $wDay['inbound'] }}
-                            </div>
-                            <div class="text-[9px] font-mono text-apple-textTertiary">
-                                {{ $wDay['resolved'] }} res
-                            </div>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    </div>
                 </div>
-            </div>
+            @elseif(!empty($isCustomDate) && count($chartData) <= 7)
+                <!-- Custom Date Range (<= 7 Hari) Grid Harian -->
+                <div class="mt-3 pt-3 border-t border-apple-border/60">
+                    <div class="grid grid-cols-{{ count($chartData) }} gap-1.5 text-center">
+                        @foreach($chartData as $cDay)
+                            <div class="p-1.5 rounded-lg bg-apple-canvas/50 border border-apple-border/40 transition">
+                                <div class="text-[10px] text-apple-textSecondary font-medium truncate">
+                                    {{ $cDay['label'] }}
+                                </div>
+                                <div class="text-[12px] font-mono font-bold text-apple-textPrimary mt-0.5">
+                                    {{ $cDay['inbound'] }}
+                                </div>
+                                <div class="text-[9px] font-mono text-apple-textTertiary">
+                                    {{ $cDay['resolved'] }} res
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @else
+                <!-- Overview Metrik (Hari Ini / 30 Hari / Kuartal / Rentang Tanggal Panjang) -->
+                <div class="mt-3 pt-3 border-t border-apple-border/60">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                        <div class="p-2 rounded-xl bg-apple-canvas/50 border border-apple-border/40">
+                            <div class="text-[10.5px] text-apple-textSecondary">Total Inbound</div>
+                            <div class="text-[14px] font-bold font-mono text-apple-blue mt-0.5">{{ number_format($chartTotalInbound) }}</div>
+                        </div>
+                        <div class="p-2 rounded-xl bg-apple-canvas/50 border border-apple-border/40">
+                            <div class="text-[10.5px] text-apple-textSecondary">Total Resolved</div>
+                            <div class="text-[14px] font-bold font-mono text-emerald-600 mt-0.5">{{ number_format($chartTotalResolved) }}</div>
+                        </div>
+                        <div class="p-2 rounded-xl bg-apple-canvas/50 border border-apple-border/40">
+                            <div class="text-[10.5px] text-apple-textSecondary">Rata-rata Harian</div>
+                            <div class="text-[14px] font-bold font-mono text-apple-textPrimary mt-0.5">{{ $chartAvgInbound }} <span class="text-[10px] font-normal text-apple-textTertiary">/hari</span></div>
+                        </div>
+                        <div class="p-2 rounded-xl bg-apple-canvas/50 border border-apple-border/40">
+                            <div class="text-[10.5px] text-apple-textSecondary">Puncak Volume</div>
+                            <div class="text-[13px] font-bold font-mono text-indigo-600 mt-0.5 truncate" title="{{ $chartPeakDate }}">{{ $chartPeakDate }}</div>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             <!-- Mini Footnote Velocity Rate -->
             <div class="mt-2.5 pt-2 border-t border-apple-border/50 flex items-center justify-between text-[11px] text-apple-textSecondary flex-wrap gap-2">
