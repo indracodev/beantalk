@@ -49,6 +49,9 @@ export class ChatWidgetUi {
     if (!hostEl) {
       hostEl = document.createElement('div');
       hostEl.id = 'beantalk-chat-root';
+      hostEl.style.position = 'relative';
+      hostEl.style.zIndex = '2147483647';
+      hostEl.style.display = 'block';
       document.body.appendChild(hostEl);
     }
 

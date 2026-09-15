@@ -2,6 +2,9 @@ export function generateWidgetCss(primaryColor: string = '#1E1E1E'): string {
   return `
     :host {
       all: initial;
+      display: block !important;
+      position: relative;
+      z-index: 2147483647;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       font-size: 14px;
       line-height: 1.5;
