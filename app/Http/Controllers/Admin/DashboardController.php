@@ -521,6 +521,20 @@ class DashboardController extends Controller
         $visitorName = $conversation->visitor->display_name ?? 'Tamu';
 
         $formatted = $newMessages->map(function ($msg) use ($visitorName) {
+            $created = $msg->created_at ? \Carbon\Carbon::parse($msg->created_at) : null;
+            $dateLabel = 'Hari Ini';
+            $dateKey = $created ? $created->format('Y-m-d') : date('Y-m-d');
+            if ($created) {
+                if ($created->isToday()) {
+                    $dateLabel = 'Hari Ini';
+                } elseif ($created->isYesterday()) {
+                    $dateLabel = 'Kemarin';
+                } elseif ($created->isCurrentYear()) {
+                    $dateLabel = $created->format('d M');
+                } else {
+                    $dateLabel = $created->format('d M Y');
+                }
+            }
             return [
                 'id'          => $msg->id,
                 'sender_type' => $msg->sender_type,
@@ -528,7 +542,9 @@ class DashboardController extends Controller
                     ? $visitorName 
                     : ($msg->sender_name ?? ($msg->user->name ?? 'Staff CS')),
                 'content'     => $msg->content,
-                'created_at'  => $msg->created_at ? $msg->created_at->format('H:i') : '-',
+                'created_at'  => $created ? $created->format('H:i') : '-',
+                'date_key'    => $dateKey,
+                'date_label'  => $dateLabel,
             ];
         });
 

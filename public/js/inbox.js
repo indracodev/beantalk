@@ -298,6 +298,22 @@ function pollConversationFeed() {
 }
 
 
+function ensureDateDivider(thread, dateKey, dateLabel) {
+    if (!thread || !dateKey) return;
+    const existing = thread.querySelector(`[data-date-divider="${dateKey}"]`);
+    if (!existing) {
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-center my-1.5 select-none';
+        div.setAttribute('data-date-divider', dateKey);
+        div.innerHTML = `
+            <span class="text-[10.5px] font-medium text-apple-textSecondary bg-white/95 border border-apple-border/80 px-3 py-0.5 rounded-full shadow-2xs">
+                ${escapeHtml(dateLabel || 'Hari Ini')}
+            </span>
+        `;
+        thread.appendChild(div);
+    }
+}
+
 // ======================================================================
 // 3. ACTIVE CONVERSATION THREAD POLLING
 // ======================================================================
@@ -349,12 +365,17 @@ async function pollNewMessages() {
                         // Cek jika elemen dengan data-id ini sudah ada di DOM
                         const existing = document.querySelector(`[data-id="${msg.id}"]`);
                         if (!existing && thread) {
+                            const dateKey = msg.date_key || (new Date()).toISOString().split('T')[0];
+                            const dateLabel = msg.date_label || 'Hari Ini';
+                            ensureDateDivider(thread, dateKey, dateLabel);
+
                             const isVisitor = msg.sender_type === 'visitor';
                             const row = document.createElement('div');
                             row.className = isVisitor
                                 ? 'flex flex-col items-start max-w-[85%] sm:max-w-[70%]'
                                 : 'flex flex-col items-end self-end max-w-[85%] sm:max-w-[70%]';
                             row.setAttribute('data-id', msg.id);
+                            row.setAttribute('data-date-key', dateKey);
 
                             const senderName = escapeHtml(msg.sender_name || (isVisitor ? 'Pengunjung' : 'Staff CS'));
                             const senderLabel = isVisitor ? `${senderName} (Visitor)` : senderName;
@@ -441,9 +462,13 @@ async function handleSendReply(e) {
     const thread = document.getElementById('chatThreadBody');
     let tempDiv = null;
     if (thread) {
+        const todayKey = (new Date()).toISOString().split('T')[0];
+        ensureDateDivider(thread, todayKey, 'Hari Ini');
+
         tempDiv = document.createElement('div');
         tempDiv.className = 'flex flex-col items-end self-end max-w-[85%] sm:max-w-[70%]';
         tempDiv.style.opacity = '0.7';
+        tempDiv.setAttribute('data-date-key', todayKey);
         const senderName = typeof currentUserName !== 'undefined' ? currentUserName : 'Staff CS';
         tempDiv.innerHTML = `
             <span class="text-[10.5px] text-apple-textTertiary mb-0.5 pr-1">${escapeHtml(senderName)}</span>

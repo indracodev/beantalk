@@ -106,9 +106,7 @@
                         $siteName = $conv->project->name ?? 'Website';
                         $siteSlug = $conv->project->slug ?? 'site';
                         $projectColor = $conv->project->widgetSetting->primary_color ?? '#0071E3';
-                        $timeHuman = $conv->last_message_at
-                            ? \Carbon\Carbon::parse($conv->last_message_at)->format('H:i')
-                            : '-';
+                        $timeHuman = $conv->last_message_time;
                     @endphp
                     <a href="{{ route('admin.inbox', $conv->id) }}" data-conv-id="{{ $conv->id }}"
                         data-visitor-id="{{ $conv->visitor_id }}"
@@ -279,32 +277,60 @@
 
                 <!-- Message History Feed -->
                 <div id="chatThreadBody" class="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 flex flex-col gap-2.5 bg-apple-canvas/20">
-                    <div class="flex items-center justify-center my-1">
-                        <span class="text-[10px] text-apple-textTertiary font-mono px-2 py-0.5 rounded-full bg-black/5">
-                            {{ \Carbon\Carbon::parse($activeConversation->created_at)->format('d M Y, H:i') }}
-                        </span>
-                    </div>
+                    @php
+                        $lastGroupDate = null;
+                    @endphp
 
                     @forelse($activeConversation->messages as $msg)
+                        @php
+                            $msgCreatedAt = $msg->created_at ? \Carbon\Carbon::parse($msg->created_at) : null;
+                            $msgDateKey = $msgCreatedAt ? $msgCreatedAt->format('Y-m-d') : 'unknown';
+                            if ($msgCreatedAt) {
+                                if ($msgCreatedAt->isToday()) {
+                                    $dateLabel = 'Hari Ini';
+                                } elseif ($msgCreatedAt->isYesterday()) {
+                                    $dateLabel = 'Kemarin';
+                                } elseif ($msgCreatedAt->isCurrentYear()) {
+                                    $dateLabel = $msgCreatedAt->translatedFormat('d F') ?: $msgCreatedAt->format('d M');
+                                } else {
+                                    $dateLabel = $msgCreatedAt->translatedFormat('d F Y') ?: $msgCreatedAt->format('d M Y');
+                                }
+                            } else {
+                                $dateLabel = 'Hari Ini';
+                            }
+                        @endphp
+
+                        @if ($lastGroupDate !== $msgDateKey)
+                            @php
+                                $lastGroupDate = $msgDateKey;
+                            @endphp
+                            <!-- WhatsApp Style Date Divider -->
+                            <div class="flex items-center justify-center my-1.5 select-none" data-date-divider="{{ $msgDateKey }}">
+                                <span class="text-[10.5px] font-medium text-apple-textSecondary bg-white/95 border border-apple-border/80 px-3 py-0.5 rounded-full shadow-2xs">
+                                    {{ $dateLabel }}
+                                </span>
+                            </div>
+                        @endif
+
                         @if ($msg->sender_type === 'visitor')
                             <!-- Visitor Bubble -->
                             <div class="flex flex-col items-start max-w-[85%] sm:max-w-[70%]"
-                                data-id="{{ $msg->id }}">
+                                data-id="{{ $msg->id }}" data-date-key="{{ $msgDateKey }}">
                                 <span class="text-[10.5px] text-apple-textTertiary mb-0.5 pl-1">{{ $msg->sender_name ?: $activeDisplayName }} (Visitor)</span>
                                 <div class="bubble-visitor bg-white border border-apple-border/80 text-apple-textPrimary px-3 py-2 text-[12.5px] shadow-apple-sm leading-relaxed">
                                     {{ $msg->content }}
                                 </div>
-                                <span class="text-[9.5px] text-apple-textTertiary mt-0.5 pl-1 font-mono">{{ \Carbon\Carbon::parse($msg->created_at)->format('H:i') }}</span>
+                                <span class="text-[9.5px] text-apple-textTertiary mt-0.5 pl-1 font-mono">{{ $msgCreatedAt ? $msgCreatedAt->format('H:i') : '-' }}</span>
                             </div>
                         @else
                             <!-- Agent Bubble -->
                             <div class="flex flex-col items-end self-end max-w-[85%] sm:max-w-[70%]"
-                                data-id="{{ $msg->id }}">
+                                data-id="{{ $msg->id }}" data-date-key="{{ $msgDateKey }}">
                                 <span class="text-[10.5px] text-apple-textTertiary mb-0.5 pr-1">{{ $msg->sender_name ?: $msg->user->name ?? 'Staff CS' }}</span>
                                 <div class="bubble-agent bg-apple-blue text-white px-3 py-2 text-[12.5px] shadow-apple-sm leading-relaxed">
                                     {{ $msg->content }}
                                 </div>
-                                <span class="text-[9.5px] text-apple-textTertiary mt-0.5 pr-1 font-mono">{{ \Carbon\Carbon::parse($msg->created_at)->format('H:i') }} • Sent</span>
+                                <span class="text-[9.5px] text-apple-textTertiary mt-0.5 pr-1 font-mono">{{ $msgCreatedAt ? $msgCreatedAt->format('H:i') : '-' }} • Sent</span>
                             </div>
                         @endif
                     @empty

@@ -36,6 +36,7 @@ class Conversation extends Model
 
     protected $appends = [
         'channel_label',
+        'last_message_time',
     ];
 
     public function getChannelLabelAttribute(): string
@@ -46,6 +47,22 @@ class Conversation extends Model
             case 'facebook': return 'Messenger';
             default: return 'Web Chat';
         }
+    }
+
+    public function getLastMessageTimeAttribute(): string
+    {
+        if (!$this->last_message_at) {
+            return '-';
+        }
+        $date = \Carbon\Carbon::parse($this->last_message_at);
+        if ($date->isToday()) {
+            return $date->format('H:i');
+        } elseif ($date->isYesterday()) {
+            return 'Kemarin';
+        } elseif ($date->isCurrentYear()) {
+            return $date->format('d/m');
+        }
+        return $date->format('d/m/Y');
     }
 
     public function project()
