@@ -746,7 +746,7 @@ class AdminDashboardTest extends TestCase
         $response->assertStatus(200)
             ->assertSee($this->project->name)
             ->assertSee('Smart Bot &amp; FAQ Rules', false)
-            ->assertSee('Tampilan &amp; Branding Widget', false)
+            ->assertSee('Tampilan &amp; Branding', false)
             ->assertSee('Saluran Sosial &amp; Marketplace', false);
     }
 }
