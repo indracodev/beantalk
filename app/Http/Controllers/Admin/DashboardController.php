@@ -14,6 +14,7 @@ use App\Models\Visitor;
 use App\Models\WidgetSetting;
 use App\Services\ActivityLogger;
 use App\Services\ConversationService;
+use App\Services\TelegramService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -862,6 +863,12 @@ class DashboardController extends Controller
 
         $msg = $result['message'];
 
+        try {
+            app(\App\Services\TelegramService::class)->forwardAgentReply($conversation, $msg);
+        } catch (\Throwable $e) {
+            // Silently ignore
+        }
+
         ActivityLogger::log(
             'message.replied',
             "Membalas pesan di percakapan #{$conversation->id} ke pengunjung",
@@ -1093,6 +1100,15 @@ class DashboardController extends Controller
         }
 
         $conversation->update(['status' => $newStatus]);
+
+        try {
+            $telegramService = app(\App\Services\TelegramService::class);
+            if ($newStatus === 'closed') {
+                $telegramService->closeForumTopic($conversation);
+            } else {
+                $telegramService->reopenForumTopic($conversation);
+            }
+        } catch (\Throwable $e) {}
 
         ActivityLogger::log(
             'conversation.status_updated',
@@ -1495,27 +1511,53 @@ class DashboardController extends Controller
         }
 
         $widgetSetting->update([
-            'primary_color'       => $request->input('primary_color', $widgetSetting->primary_color),
-            'greeting_title'      => $request->input('greeting_title', $widgetSetting->greeting_title),
-            'greeting_subtitle'   => $request->input('greeting_subtitle', $widgetSetting->greeting_subtitle),
-            'support_title'       => $request->input('support_title', $widgetSetting->support_title ?: 'Customer Support'),
-            'find_us_title'       => $request->input('find_us_title', 'Find Us Somewhere Else'),
-            'social_channels'     => $formattedChannels,
-            'bot_enabled'         => $request->has('bot_enabled') ? (bool) $request->input('bot_enabled') : false,
-            'bot_name'            => $request->input('bot_name', $widgetSetting->bot_name ?: 'BeanBot'),
-            'bot_welcome_message' => $request->input('bot_welcome_message', $widgetSetting->bot_welcome_message),
-            'bot_offline_message' => $request->input('bot_offline_message', $widgetSetting->bot_offline_message),
-            'bot_rules'           => $botRules,
+            'primary_color'                  => $request->input('primary_color', $widgetSetting->primary_color),
+            'greeting_title'                 => $request->input('greeting_title', $widgetSetting->greeting_title),
+            'greeting_subtitle'              => $request->input('greeting_subtitle', $widgetSetting->greeting_subtitle),
+            'support_title'                  => $request->input('support_title', $widgetSetting->support_title ?: 'Customer Support'),
+            'find_us_title'                  => $request->input('find_us_title', 'Find Us Somewhere Else'),
+            'social_channels'                => $formattedChannels,
+            'bot_enabled'                    => $request->has('bot_enabled') ? (bool) $request->input('bot_enabled') : false,
+            'bot_name'                       => $request->input('bot_name', $widgetSetting->bot_name ?: 'BeanBot'),
+            'bot_welcome_message'            => $request->input('bot_welcome_message', $widgetSetting->bot_welcome_message),
+            'bot_offline_message'            => $request->input('bot_offline_message', $widgetSetting->bot_offline_message),
+            'bot_rules'                      => $botRules,
+            'telegram_bot_token'             => $request->input('telegram_bot_token', $widgetSetting->telegram_bot_token),
+            'telegram_chat_id'               => $request->input('telegram_chat_id', $widgetSetting->telegram_chat_id),
+            'telegram_notifications_enabled' => $request->has('telegram_notifications_enabled'),
+            'telegram_topic_mode_enabled'    => $request->has('telegram_topic_mode_enabled'),
         ]);
 
         ActivityLogger::log(
             'widget.updated',
-            "Memperbarui pengaturan tampilan widget dan bot asisten untuk: {$project->name}",
+            "Memperbarui pengaturan tampilan widget, bot, dan notifikasi Telegram untuk: {$project->name}",
             $project,
-            ['project_id' => $project->id, 'bot_enabled' => (bool)$widgetSetting->bot_enabled]
+            [
+                'project_id'       => $project->id, 
+                'bot_enabled'      => (bool)$widgetSetting->bot_enabled,
+                'telegram_enabled' => (bool)$widgetSetting->telegram_notifications_enabled
+            ]
         );
 
-        return redirect()->route('admin.integrations.detail', $project->id)->with('success', "Pengaturan integrasi & smart bot untuk '{$project->name}' berhasil disimpan!");
+        return redirect()->route('admin.integrations.detail', $project->id)->with('success', "Pengaturan integrasi, smart bot & Telegram untuk '{$project->name}' berhasil disimpan!");
+    }
+
+    /**
+     * Test Telegram Connection & Send Ping
+     * POST /admin/integrations/{id}/test-telegram
+     */
+    public function testTelegramAlert(Request $request, $id): JsonResponse
+    {
+        $tenantId = $request->user()->tenant_id;
+        $project = Project::where('tenant_id', $tenantId)->findOrFail($id);
+
+        $token = $request->input('telegram_bot_token') ?: ($project->widgetSetting->telegram_bot_token ?? '');
+        $chatId = $request->input('telegram_chat_id') ?: ($project->widgetSetting->telegram_chat_id ?? '');
+
+        $telegramService = app(TelegramService::class);
+        $result = $telegramService->testConnection($token, $chatId);
+
+        return response()->json($result);
     }
 
     /**

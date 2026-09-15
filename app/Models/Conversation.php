@@ -28,6 +28,8 @@ class Conversation extends Model
         'last_message_preview',
         'unread_agent_count',
         'unread_visitor_count',
+        'telegram_topic_id',
+        'telegram_notif_sent',
     ];
 
     protected $casts = [
@@ -36,6 +38,7 @@ class Conversation extends Model
         'last_message_at'      => 'datetime',
         'unread_agent_count'   => 'integer',
         'unread_visitor_count' => 'integer',
+        'telegram_notif_sent'  => 'boolean',
     ];
 
     protected $appends = [

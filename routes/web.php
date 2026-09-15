@@ -44,6 +44,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('integrations/{id}', 'Admin\DashboardController@integrationDetail')->name('integrations.detail');
     Route::post('integrations/{id}/regenerate', 'Admin\DashboardController@regenerateKey')->name('integrations.regenerate');
     Route::put('integrations/{id}/settings', 'Admin\DashboardController@updateWidgetSettings')->name('integrations.settings');
+    Route::post('integrations/{id}/test-telegram', 'Admin\DashboardController@testTelegramAlert')->name('integrations.test-telegram');
 
     Route::get('team', 'Admin\DashboardController@team')->name('team');
     Route::post('team', 'Admin\DashboardController@storeTeam')->name('team.store');

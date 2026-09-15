@@ -41,6 +41,7 @@ database/*.sqlite
 Thumbs.db
 .vscode/
 .idea/
+scratch/
 
 # ==============================================================================
 # DEVELOPMENT PACKAGES (Kompilasi lokal)

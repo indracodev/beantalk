@@ -27,14 +27,20 @@ class WidgetSetting extends Model
         'bot_rules',
         'bot_ai_enabled',
         'bot_ai_prompt',
+        'telegram_bot_token',
+        'telegram_chat_id',
+        'telegram_notifications_enabled',
+        'telegram_topic_mode_enabled',
     ];
 
     protected $casts = [
-        'is_online'       => 'boolean',
-        'social_channels' => 'array',
-        'bot_enabled'     => 'boolean',
-        'bot_rules'       => 'array',
-        'bot_ai_enabled'  => 'boolean',
+        'is_online'                      => 'boolean',
+        'social_channels'                => 'array',
+        'bot_enabled'                    => 'boolean',
+        'bot_rules'                      => 'array',
+        'bot_ai_enabled'                 => 'boolean',
+        'telegram_notifications_enabled' => 'boolean',
+        'telegram_topic_mode_enabled'    => 'boolean',
     ];
 
     public function project()

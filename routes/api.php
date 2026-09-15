@@ -37,6 +37,9 @@ Route::prefix('v1')->group(function () {
         Route::post('conversations/{id}/upload', 'Api\Client\UploadController@upload')->middleware('throttle:100,1');
     });
 
+    // Telegram Bot Webhook Endpoint (Direct incoming updates from Telegram servers)
+    Route::post('telegram/webhook/{token_hash?}', 'Api\Client\TelegramWebhookController@handle')->name('api.v1.telegram.webhook');
+
     // ========================================================================
     // 2. ADMIN & AGENT ROUTES (Protected by Tenant Scope & RBAC)
     // ========================================================================
