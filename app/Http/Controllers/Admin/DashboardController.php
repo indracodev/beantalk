@@ -604,9 +604,11 @@ class DashboardController extends Controller
         $conversations = $query->take(50)->get()->unique('visitor_id')->values();
 
         $formatted = $conversations->map(function ($conv) {
+            $projectColor = $conv->project && $conv->project->widgetSetting ? $conv->project->widgetSetting->primary_color : '#0071E3';
             return [
                 'id'                   => $conv->id,
                 'project_id'           => $conv->project_id,
+                'project_color'        => $projectColor,
                 'visitor_id'           => $conv->visitor_id,
                 'customer_name'        => $conv->visitor ? $conv->visitor->display_name : 'Tamu',
                 'customer_code'        => $conv->visitor ? $conv->visitor->customer_code : null,

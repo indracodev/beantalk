@@ -95,18 +95,22 @@
                         $channelLabel = $conv->channel_label ?? 'Web Chat';
                         $siteName = $conv->project->name ?? 'Website';
                         $siteSlug = $conv->project->slug ?? 'site';
+                        $projectColor = $conv->project->widgetSetting->primary_color ?? '#0071E3';
                         $timeHuman = $conv->last_message_at
                             ? \Carbon\Carbon::parse($conv->last_message_at)->format('H:i')
                             : '-';
                     @endphp
                     <a href="{{ route('admin.inbox', $conv->id) }}" data-conv-id="{{ $conv->id }}"
                         data-visitor-id="{{ $conv->visitor_id }}"
+                        data-project-color="{{ $projectColor }}"
                         data-site="{{ $conv->project_id }}" id="card-conv-{{ $conv->id }}"
-                        class="conv-row conv-item no-loader w-full block px-2.5 py-2 rounded-lg transition {{ $isConvActive ? 'text-apple-textPrimary bg-white border border-apple-border/60 shadow-apple-sm font-medium' : 'text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 font-normal border border-transparent' }}">
+                        class="conv-row conv-item no-loader w-full block px-2.5 py-2 rounded-lg transition {{ $isConvActive ? 'text-apple-textPrimary bg-white border border-apple-border/60 shadow-apple-sm font-medium' : 'text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 font-normal border border-transparent' }}"
+                        style="{{ $isConvActive ? 'border-left: 3px solid ' . $projectColor . ';' : '' }}">
                         <div class="flex gap-2.5 items-start">
                             <div class="relative shrink-0">
                                 <div
-                                    class="conv-avatar w-8 h-8 rounded-full bg-[#E5E5EA] text-apple-textPrimary font-semibold text-[11px] flex items-center justify-center border border-black/5">
+                                    class="conv-avatar w-8 h-8 rounded-full bg-[#E5E5EA] text-apple-textPrimary font-semibold text-[11px] flex items-center justify-center border"
+                                    style="border-color: {{ $projectColor }}45;">
                                     {{ $initials }}
                                 </div>
                                 <span
@@ -123,7 +127,8 @@
                                 </div>
                                 <div class="conv-meta-row flex items-center gap-1.5 mb-1" data-conv-meta>
                                     <span
-                                        class="conv-site text-[9px] font-medium tracking-tight uppercase px-1.5 py-0.2 rounded bg-neutral-200/70 text-neutral-800 truncate max-w-[110px]">
+                                        class="conv-site text-[9px] font-semibold tracking-tight uppercase px-1.5 py-0.5 rounded truncate max-w-[110px]"
+                                        style="background-color: {{ $projectColor }}14; color: {{ $projectColor }}; border: 1px solid {{ $projectColor }}30;">
                                         {{ $siteName }}
                                     </span>
                                     <span
@@ -172,8 +177,12 @@
                         substr(preg_replace('/[^a-zA-Z0-9]/', '', $activeConversation->visitor->name ?: 'Tamu'), 0, 2),
                     );
                     $activeSiteName = $activeConversation->project->name ?? 'Website';
+                    $activeProjectColor = $activeConversation->project->widgetSetting->primary_color ?? '#0071E3';
                     $assignedStaffName = $activeConversation->assignedUser->name ?? 'Unassigned';
                 @endphp
+
+                <!-- Subtle Top Accent Line with Store Branding -->
+                <div class="h-[2.5px] w-full shrink-0" id="threadTopAccent" style="background-color: {{ $activeProjectColor }};"></div>
 
                 <!-- Thread Toolbar -->
                 <div class="h-11 md:h-12 border-b border-apple-border glass-acrylic px-2.5 md:px-3.5 flex items-center justify-between z-10 shrink-0 gap-2">
@@ -188,7 +197,8 @@
 
                         <div class="relative shrink-0">
                             <div id="threadCustomerAvatar"
-                                class="w-7 h-7 rounded-full bg-neutral-200 text-apple-textPrimary font-semibold text-[11px] flex items-center justify-center border border-black/5">
+                                class="w-7 h-7 rounded-full bg-neutral-200 text-apple-textPrimary font-semibold text-[11px] flex items-center justify-center border"
+                                style="border-color: {{ $activeProjectColor }}55;">
                                 {{ $activeInitials }}
                             </div>
                             <span class="w-2 h-2 rounded-full bg-apple-green absolute bottom-0 right-0 ring-1 ring-white"></span>
@@ -199,7 +209,7 @@
                                 <h3 id="threadCustomerName" class="font-semibold text-[12.5px] text-apple-textPrimary truncate">
                                     {{ $activeDisplayName }}
                                 </h3>
-                                <span id="threadOriginBadge" class="hidden sm:inline-block text-[9px] font-medium tracking-tight uppercase px-1.5 py-0.2 rounded bg-black/5 text-apple-textSecondary truncate max-w-[90px]">
+                                <span id="threadOriginBadge" class="hidden sm:inline-block text-[9px] font-semibold tracking-tight uppercase px-1.5 py-0.5 rounded truncate max-w-[120px]" style="background-color: {{ $activeProjectColor }}14; color: {{ $activeProjectColor }}; border: 1px solid {{ $activeProjectColor }}30;">
                                     {{ $activeSiteName }}
                                 </span>
                             </div>
@@ -438,9 +448,11 @@
                                 class="rounded-xl border border-apple-border/80 bg-apple-canvas/40 p-2.5 flex flex-col gap-1.5">
                                 <div>
                                     <div class="text-apple-textSecondary text-[10.5px]">Origin Channel</div>
-                                    <div class="font-semibold text-apple-textPrimary truncate">
-                                        {{ $activeConversation->project->name }}
-                                        ({{ $activeConversation->channel_label }})</div>
+                                    <div class="font-semibold text-apple-textPrimary truncate flex items-center gap-1.5 mt-0.5">
+                                        <span class="w-2 h-2 rounded-full inline-block shrink-0" style="background-color: {{ $activeProjectColor }};"></span>
+                                        <span>{{ $activeConversation->project->name }}</span>
+                                        <span class="text-[9px] font-semibold uppercase px-1 py-0.2 rounded" style="background-color: {{ $activeProjectColor }}14; color: {{ $activeProjectColor }};">{{ $activeConversation->channel_label }}</span>
+                                    </div>
                                 </div>
                                 <div>
                                     <div class="text-apple-textSecondary text-[10.5px]">Active Path</div>

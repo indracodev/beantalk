@@ -192,11 +192,16 @@ window.onGlobalFeedUpdate = function(data) {
                 const lastPreview = escapeHtml(conv.last_message_preview || 'Percakapan baru...');
                 const unreadCount = conv.unread_agent_count || 0;
                 const badgeText = unreadCount > 9 ? '9+' : String(unreadCount);
+                const projectColor = conv.project_color || '#0071E3';
+
+                if (isCurrentActive) {
+                    item.style.borderLeft = `3px solid ${projectColor}`;
+                }
 
                 item.innerHTML = `
                     <div class="flex gap-2.5 items-start">
                         <div class="relative shrink-0">
-                            <div class="conv-avatar w-8 h-8 rounded-full bg-[#E5E5EA] text-apple-textPrimary font-semibold text-[11px] flex items-center justify-center border border-black/5">
+                            <div class="conv-avatar w-8 h-8 rounded-full bg-[#E5E5EA] text-apple-textPrimary font-semibold text-[11px] flex items-center justify-center border" style="border-color: ${projectColor}45;">
                                 ${initials}
                             </div>
                             <span class="w-2 h-2 rounded-full bg-apple-green absolute bottom-0 right-0 ring-1 ring-white"></span>
@@ -209,7 +214,7 @@ window.onGlobalFeedUpdate = function(data) {
                                 <span class="conv-time text-[10.5px] text-apple-textTertiary font-mono">${timeText}</span>
                             </div>
                             <div class="conv-meta-row flex items-center gap-1.5 mb-1" data-conv-meta>
-                                <span class="conv-site text-[9px] font-medium tracking-tight uppercase px-1.5 py-0.2 rounded bg-neutral-200/70 text-neutral-800 truncate max-w-[110px]">
+                                <span class="conv-site text-[9px] font-semibold tracking-tight uppercase px-1.5 py-0.5 rounded truncate max-w-[110px]" style="background-color: ${projectColor}14; color: ${projectColor}; border: 1px solid ${projectColor}30;">
                                     ${siteName}
                                 </span>
                                 <span class="conv-cust-code text-[10px] text-apple-textTertiary font-mono">${custCode}</span>
@@ -227,6 +232,21 @@ window.onGlobalFeedUpdate = function(data) {
                 item.setAttribute('data-conv-id', conv.id);
                 if (conv.visitor_id) {
                     item.setAttribute('data-visitor-id', conv.visitor_id);
+                }
+                if (conv.project_color) {
+                    const siteBadge = item.querySelector('.conv-site');
+                    if (siteBadge) {
+                        siteBadge.style.backgroundColor = `${conv.project_color}14`;
+                        siteBadge.style.color = conv.project_color;
+                        siteBadge.style.borderColor = `${conv.project_color}30`;
+                    }
+                    const avatar = item.querySelector('.conv-avatar');
+                    if (avatar) {
+                        avatar.style.borderColor = `${conv.project_color}45`;
+                    }
+                    if (isCurrentActive) {
+                        item.style.borderLeft = `3px solid ${conv.project_color}`;
+                    }
                 }
                 const snippet = item.querySelector('.conv-snippet');
                 if (snippet) snippet.textContent = conv.last_message_preview;
