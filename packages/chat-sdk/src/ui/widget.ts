@@ -66,6 +66,7 @@ export class ChatWidgetUi {
     // 4. Render UI Skeleton
     this.renderSkeleton();
     this.bindEvents();
+    this.initViewportHandler();
 
     // Check stored customer name
     const stored = getStoredCustomerName();
@@ -467,6 +468,66 @@ export class ChatWidgetUi {
     this.composerSendBtn.addEventListener('click', () => {
       this.handleSend();
     });
+
+    // Mobile Virtual Keyboard auto-scroll on focus
+    const handleInputFocus = () => {
+      if (typeof window !== 'undefined' && window.innerWidth <= 640) {
+        setTimeout(() => {
+          this.updateViewportDimensions();
+          this.scrollToBottom();
+          if (this.currentStage === 'chat') {
+            this.composerInput.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          }
+        }, 100);
+        setTimeout(() => {
+          this.updateViewportDimensions();
+          this.scrollToBottom();
+        }, 300);
+      }
+    };
+
+    this.composerInput.addEventListener('focus', handleInputFocus);
+    if (this.identityNameInput) {
+      this.identityNameInput.addEventListener('focus', handleInputFocus);
+    }
+  }
+
+  private initViewportHandler(): void {
+    if (typeof window === 'undefined') return;
+
+    const onResizeOrScroll = () => {
+      if (!this.isOpen) return;
+      this.updateViewportDimensions();
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', onResizeOrScroll);
+      window.visualViewport.addEventListener('scroll', onResizeOrScroll);
+    }
+    window.addEventListener('resize', onResizeOrScroll);
+    window.addEventListener('orientationchange', () => {
+      setTimeout(onResizeOrScroll, 200);
+    });
+  }
+
+  private updateViewportDimensions(): void {
+    if (typeof window === 'undefined') return;
+    const isMobile = window.innerWidth <= 640;
+    if (!isMobile) {
+      this.wrapperEl.style.removeProperty('--bt-viewport-height');
+      this.wrapperEl.style.removeProperty('--bt-viewport-top');
+      return;
+    }
+
+    if (window.visualViewport) {
+      const vh = Math.round(window.visualViewport.height);
+      const offsetTop = Math.round(window.visualViewport.offsetTop);
+      this.wrapperEl.style.setProperty('--bt-viewport-height', `${vh}px`);
+      this.wrapperEl.style.setProperty('--bt-viewport-top', `${offsetTop}px`);
+    } else {
+      this.wrapperEl.style.setProperty('--bt-viewport-height', `${window.innerHeight}px`);
+      this.wrapperEl.style.setProperty('--bt-viewport-top', '0px');
+    }
   }
 
   private handleSend(): void {
@@ -516,6 +577,7 @@ export class ChatWidgetUi {
       this.scrollToBottom();
       setTimeout(() => this.composerInput.focus(), 150);
     }
+    this.updateViewportDimensions();
   }
 
   open(): void {
@@ -523,7 +585,14 @@ export class ChatWidgetUi {
     this.wrapperEl.classList.add('is-open');
     this.unreadCount = 0;
     this.updateUnreadBadge();
+    this.updateViewportDimensions();
     this.emitter.emit('widget:opened');
+
+    // Prevent body scroll bounce on mobile
+    if (typeof document !== 'undefined' && window.innerWidth <= 640) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+    }
 
     if (this.currentStage === 'chat') {
       this.scrollToBottom();
@@ -535,6 +604,12 @@ export class ChatWidgetUi {
     this.isOpen = false;
     this.wrapperEl.classList.remove('is-open');
     this.emitter.emit('widget:closed');
+
+    // Restore body scroll
+    if (typeof document !== 'undefined') {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }
   }
 
   toggle(): void {
