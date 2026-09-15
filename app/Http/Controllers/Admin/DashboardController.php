@@ -251,7 +251,7 @@ class DashboardController extends Controller
         $query = Conversation::where('tenant_id', $tenantId)
             ->whereHas('messages')
             ->with(['visitor', 'project.widgetSetting', 'assignedUser', 'latestMessage'])
-            ->orderBy('last_message_at', 'desc');
+            ->orderByRaw('COALESCE(last_message_at, updated_at, created_at) DESC');
 
         if ($request->filled('project_id')) {
             $query->where('project_id', $request->input('project_id'));
@@ -591,7 +591,7 @@ class DashboardController extends Controller
         $query = Conversation::where('tenant_id', $tenantId)
             ->whereHas('messages')
             ->with(['visitor', 'project.widgetSetting', 'assignedUser', 'latestMessage'])
-            ->orderBy('last_message_at', 'desc');
+            ->orderByRaw('COALESCE(last_message_at, updated_at, created_at) DESC');
 
         if ($request->filled('project_id')) {
             $query->where('project_id', $request->input('project_id'));

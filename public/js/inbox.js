@@ -284,10 +284,8 @@ window.onGlobalFeedUpdate = function(data) {
                     if (badge) badge.remove();
                 }
 
-                // Jika percakapan mendapatkan pesan baru dan bukan di urutan pertama, pindahkan ke paling atas
-                if (container.firstElementChild !== item && conv.is_unread) {
-                    container.prepend(item);
-                }
+                // Pertahankan urutan kartu percakapan sesuai array backend (aktivitas terbaru di paling atas)
+                container.appendChild(item);
             }
         });
     }
@@ -477,6 +475,22 @@ async function handleSendReply(e) {
         `;
         thread.appendChild(tempDiv);
         scrollToBottom();
+    }
+
+    // Optimistik: Pindahkan kartu percakapan aktif ke paling atas di daftar chat
+    const activeCard = document.querySelector(`[data-conv-id="${activeConversationId}"]`);
+    const convContainer = document.getElementById('convListContainer');
+    if (activeCard && convContainer) {
+        const snippet = activeCard.querySelector('.conv-snippet');
+        if (snippet) snippet.textContent = text;
+        const timeEl = activeCard.querySelector('.conv-time');
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const mins = String(now.getMinutes()).padStart(2, '0');
+        if (timeEl) timeEl.textContent = `${hours}:${mins}`;
+        if (convContainer.firstElementChild !== activeCard) {
+            convContainer.prepend(activeCard);
+        }
     }
 
     try {
