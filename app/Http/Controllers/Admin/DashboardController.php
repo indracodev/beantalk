@@ -1298,6 +1298,54 @@ class DashboardController extends Controller
     }
 
     /**
+     * Dedicated Integration Detail & Full Settings Page
+     * GET /admin/integrations/{id}
+     */
+    public function integrationDetail(Request $request, $id): View
+    {
+        $tenantId = $request->user()->tenant_id;
+        $project = Project::where('tenant_id', $tenantId)
+            ->with(['domains', 'widgetSetting', 'activeApiKey'])
+            ->withCount(['conversations', 'visitors'])
+            ->findOrFail($id);
+
+        $widgetSetting = $project->widgetSetting ?: WidgetSetting::firstOrCreate(
+            ['project_id' => $project->id],
+            [
+                'primary_color'     => '#0071E3',
+                'greeting_title'    => 'Hallo!',
+                'greeting_subtitle' => 'Ada yang bisa kami bantu? Tanyakan informasi apapun di sini!',
+                'is_online'         => true,
+            ]
+        );
+
+        $availableChannels = [
+            'whatsapp'  => ['name' => 'WhatsApp', 'placeholder' => '08123456789 atau https://wa.me/...', 'icon' => 'whatsapp'],
+            'instagram' => ['name' => 'Instagram', 'placeholder' => '@username atau https://instagram.com/...', 'icon' => 'instagram'],
+            'messenger' => ['name' => 'Facebook Messenger', 'placeholder' => 'username atau https://m.me/...', 'icon' => 'messenger'],
+            'telegram'  => ['name' => 'Telegram', 'placeholder' => '@username atau https://t.me/...', 'icon' => 'telegram'],
+            'shopee'    => ['name' => 'Shopee Store', 'placeholder' => 'https://shopee.co.id/...', 'icon' => 'shopee'],
+            'tokopedia' => ['name' => 'Tokopedia Store', 'placeholder' => 'https://tokopedia.com/...', 'icon' => 'tokopedia'],
+        ];
+
+        // Format rules array
+        $botRules = is_array($widgetSetting->bot_rules) ? $widgetSetting->bot_rules : [];
+
+        // Recent activity logs for this project
+        $recentLogs = ActivityLog::where('tenant_id', $tenantId)
+            ->where(function ($q) use ($project) {
+                $q->where(function ($sub) use ($project) {
+                    $sub->where('subject_type', Project::class)->where('subject_id', $project->id);
+                })->orWhere('properties->project_id', $project->id);
+            })
+            ->latest('id')
+            ->take(8)
+            ->get();
+
+        return view('admin.integration-detail', compact('project', 'widgetSetting', 'availableChannels', 'botRules', 'recentLogs'));
+    }
+
+    /**
      * Update Widget & Social Channels Settings for a Project
      * PUT /admin/integrations/{id}/settings
      */
@@ -1363,7 +1411,7 @@ class DashboardController extends Controller
         $widgetSetting = WidgetSetting::firstOrCreate(
             ['project_id' => $project->id],
             [
-                'primary_color'     => '#C59B27',
+                'primary_color'     => '#0071E3',
                 'greeting_title'    => 'Hallo!',
                 'greeting_subtitle' => 'Ada yang bisa kami bantu? Tanyakan informasi apapun di sini!',
                 'is_online'         => true,
@@ -1385,10 +1433,10 @@ class DashboardController extends Controller
             'primary_color'       => $request->input('primary_color', $widgetSetting->primary_color),
             'greeting_title'      => $request->input('greeting_title', $widgetSetting->greeting_title),
             'greeting_subtitle'   => $request->input('greeting_subtitle', $widgetSetting->greeting_subtitle),
-            'support_title'       => $request->input('support_title', $widgetSetting->support_title ?: 'Support'),
-            'find_us_title'       => $request->input('find_us_title', 'Reach Us Anywhere Else'),
+            'support_title'       => $request->input('support_title', $widgetSetting->support_title ?: 'Customer Support'),
+            'find_us_title'       => $request->input('find_us_title', 'Find Us Somewhere Else'),
             'social_channels'     => $formattedChannels,
-            'bot_enabled'         => $request->has('bot_enabled') ? (bool) $request->input('bot_enabled') : $widgetSetting->bot_enabled,
+            'bot_enabled'         => $request->has('bot_enabled') ? (bool) $request->input('bot_enabled') : false,
             'bot_name'            => $request->input('bot_name', $widgetSetting->bot_name ?: 'BeanBot'),
             'bot_welcome_message' => $request->input('bot_welcome_message', $widgetSetting->bot_welcome_message),
             'bot_offline_message' => $request->input('bot_offline_message', $widgetSetting->bot_offline_message),
@@ -1402,7 +1450,7 @@ class DashboardController extends Controller
             ['project_id' => $project->id, 'bot_enabled' => (bool)$widgetSetting->bot_enabled]
         );
 
-        return redirect()->route('admin.integrations')->with('success', "Pengaturan widget & bot asisten untuk '{$project->name}' berhasil disimpan!");
+        return redirect()->route('admin.integrations.detail', $project->id)->with('success', "Pengaturan integrasi & smart bot untuk '{$project->name}' berhasil disimpan!");
     }
 
     /**

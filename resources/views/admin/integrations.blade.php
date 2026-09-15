@@ -81,9 +81,10 @@
                         <button type="button" onclick="copySnippet('snippet_{{ $p->id }}', this)" class="px-2.5 py-1 text-[11px] font-medium rounded-md border border-apple-border text-apple-textPrimary hover:bg-apple-canvas transition shadow-2xs">
                             Copy Code
                         </button>
-                        <button type="button" onclick="openModal('modalSettings_{{ $p->id }}')" class="px-2.5 py-1 text-[11px] font-medium rounded-md bg-apple-canvas text-apple-textSecondary hover:text-apple-textPrimary transition">
-                            Settings
-                        </button>
+                        <a href="{{ route('admin.integrations.detail', $p->id) }}" class="px-2.5 py-1 text-[11px] font-medium rounded-md bg-apple-blue/10 text-apple-blue hover:bg-apple-blue hover:text-white transition inline-flex items-center gap-1">
+                            <span>Settings &amp; Bot</span>
+                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </a>
                     </div>
 
                     <form action="{{ route('admin.integrations.regenerate', $p->id) }}" method="POST" class="m-0" onsubmit="return confirm('Regenerate API Key untuk {{ $p->name }}?\n\nKey lama akan dinonaktifkan. Anda harus memperbarui kode embed di website klien.')">

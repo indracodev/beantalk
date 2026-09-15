@@ -735,5 +735,19 @@ class AdminDashboardTest extends TestCase
         $this->assertTrue($tg['enabled']);
         $this->assertEquals('https://t.me/indracocare', $tg['url']);
     }
+
+    /**
+     * Test Authenticated Admin can view dedicated integration detail page
+     */
+    public function testAuthenticatedUserCanViewIntegrationDetail()
+    {
+        $response = $this->actingAs($this->superadmin)->get("/admin/integrations/{$this->project->id}");
+
+        $response->assertStatus(200)
+            ->assertSee($this->project->name)
+            ->assertSee('Smart Bot &amp; FAQ Rules', false)
+            ->assertSee('Tampilan &amp; Branding Widget', false)
+            ->assertSee('Saluran Sosial &amp; Marketplace', false);
+    }
 }
 
