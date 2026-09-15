@@ -135,6 +135,11 @@ class Handler extends ExceptionHandler
                 $tenantId = $project->tenant_id ?? null;
             }
 
+            // Hanya catat ke activity_logs jika tenant_id valid (tabel activity_logs tenant-scoped)
+            if (!$tenantId) {
+                return;
+            }
+
             $description = $this->buildErrorDescription($exception, $statusCode, $action);
 
             ActivityLog::create([
@@ -175,6 +180,21 @@ class Handler extends ExceptionHandler
         }
         if ($exception instanceof ThrottleRequestsException) {
             return 429;
+        }
+        if ($exception instanceof \Illuminate\Auth\AuthenticationException) {
+            return 401;
+        }
+        if ($exception instanceof \Illuminate\Auth\Access\AuthorizationException) {
+            return 403;
+        }
+        if ($exception instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
+            return 404;
+        }
+        if ($exception instanceof \Illuminate\Validation\ValidationException) {
+            return 422;
+        }
+        if ($exception instanceof \Illuminate\Session\TokenMismatchException) {
+            return 419;
         }
         if ($exception instanceof \Illuminate\Database\QueryException || $exception instanceof \PDOException) {
             return 500;
