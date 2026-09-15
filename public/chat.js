@@ -274,7 +274,7 @@
     .welcome-body {
       flex: 1;
       padding: 0 16px 16px 16px;
-      margin-top: -18px;
+      margin-top: -30px;
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -286,6 +286,7 @@
       background: #FFFFFF;
       border-radius: 14px;
       padding: 16px;
+      margin-top: 10px;
       border: 1px solid #E2E8F0;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
       cursor: pointer;
