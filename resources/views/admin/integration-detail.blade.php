@@ -43,7 +43,7 @@
             </div>
 
             <div class="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                <a href="/demo-store.html" target="_blank" class="inline-flex items-center gap-1.5 bg-white border border-apple-border hover:bg-apple-canvas text-apple-textPrimary px-3 py-1.5 rounded-lg text-[11.5px] font-medium transition shadow-2xs">
+                <a href="/demo-store.html?key={{ $project->activeApiKey->public_key ?? 'pk_live_' . $project->slug }}" target="_blank" class="inline-flex items-center gap-1.5 bg-white border border-apple-border hover:bg-apple-canvas text-apple-textPrimary px-3 py-1.5 rounded-lg text-[11.5px] font-medium transition shadow-2xs">
                     <svg class="w-3.5 h-3.5 text-apple-textSecondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                         <polyline points="15 3 21 3 21 9"></polyline>
@@ -565,7 +565,7 @@ function renderSocialChannelsList() {
                 </div>
 
                 <div class="flex items-center gap-3 shrink-0 self-end md:self-center">
-                    <label class="flex items-center gap-1.5 text-[11.5px] font-semibold cursor-pointer ${isEnabled ? 'text-emerald-700' : 'text-neutral-500'}">
+                    <label class="inline-flex items-center gap-1.5 text-[11.5px] font-bold px-2.5 py-1 rounded-lg border transition cursor-pointer ${isEnabled ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-neutral-100 border-neutral-200 text-neutral-500'}">
                         <input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="updateSocialChannelField(${idx}, 'enabled', this.checked)" class="rounded text-emerald-600 focus:ring-0 cursor-pointer">
                         <span>${isEnabled ? 'Aktif' : 'Nonaktif'}</span>
                     </label>
@@ -602,6 +602,12 @@ function updateSocialPlatform(index, newPlatform) {
 function updateSocialChannelField(index, field, value) {
     if (currentSocialChannels[index]) {
         currentSocialChannels[index][field] = value;
+        // Auto-enable if user entered URL
+        if (field === 'url' && value && value.trim().length > 0 && !currentSocialChannels[index].enabled) {
+            currentSocialChannels[index].enabled = true;
+            renderSocialChannelsList();
+            return;
+        }
         if (field === 'enabled') {
             renderSocialChannelsList();
         } else {

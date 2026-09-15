@@ -410,12 +410,17 @@
     }
   </script>
 
-  <!-- BeanTalk Chat SDK Embed Tag -->
-  <script 
-    src="/chat-widget.js" 
-    data-project-key="pk_live_supresso_8819" 
-    data-store-name="Supresso Coffee"
-    data-color="#1E1E1E">
+  <!-- BeanTalk Chat SDK Embed Tag (Dynamically detects ?key=... or defaults to Supresso) -->
+  <script>
+    (function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectKey = urlParams.get('key') || urlParams.get('project_key') || 'pk_live_supresso_8819';
+      const script = document.createElement('script');
+      script.src = '/chat-widget.js';
+      script.setAttribute('data-project-key', projectKey);
+      script.setAttribute('data-api-url', window.location.origin);
+      document.body.appendChild(script);
+    })();
   </script>
 
 </body>

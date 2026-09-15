@@ -1338,12 +1338,18 @@ class DashboardController extends Controller
         if (is_array($rawChannels)) {
             foreach ($rawChannels as $key => $item) {
                 if (!is_array($item)) continue;
+                $url = trim($item['url'] ?? '');
+                // Skip completely empty legacy items with no URL
+                if ($url === '' && empty($item['enabled'])) {
+                    continue;
+                }
+
                 $platform = strtolower(trim($item['platform'] ?? $item['icon'] ?? (is_string($key) ? $key : 'whatsapp')));
                 $socialChannelsList[] = [
                     'id'       => $item['id'] ?? (is_string($key) ? $key : ('ch_' . uniqid())),
                     'platform' => $platform,
                     'name'     => $item['name'] ?? ($availableChannels[$platform]['name'] ?? ucfirst($platform)),
-                    'url'      => $item['url'] ?? '',
+                    'url'      => $url,
                     'enabled'  => !empty($item['enabled']),
                     'icon'     => $item['icon'] ?? ($availableChannels[$platform]['icon'] ?? $platform),
                 ];
