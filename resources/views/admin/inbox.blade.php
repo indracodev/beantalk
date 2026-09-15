@@ -181,14 +181,12 @@
                     $assignedStaffName = $activeConversation->assignedUser->name ?? 'Unassigned';
                 @endphp
 
-                <!-- Subtle Top Accent Line with Store Branding -->
-                <div class="h-[2.5px] w-full shrink-0" id="threadTopAccent" style="background-color: {{ $activeProjectColor }};"></div>
-
-                <!-- Thread Toolbar -->
-                <div class="h-11 md:h-12 border-b border-apple-border glass-acrylic px-2.5 md:px-3.5 flex items-center justify-between z-10 shrink-0 gap-2">
-                    <div class="flex items-center gap-2 min-w-0 flex-1">
+                <!-- Thread Toolbar with Full Integration Brand Color -->
+                <div id="threadHeaderToolbar" class="h-12 md:h-13 px-2.5 md:px-3.5 flex items-center justify-between z-10 shrink-0 gap-2 shadow-xs transition-colors"
+                     style="background-color: {{ $activeProjectColor }}; border-bottom: 1px solid rgba(0,0,0,0.12);">
+                    <div class="flex items-center gap-2.5 min-w-0 flex-1">
                         <button type="button" onclick="mobileBackToList()"
-                            class="md:hidden p-1.5 -ml-1 rounded-lg text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 flex items-center justify-center shrink-0 cursor-pointer active:scale-95 transition"
+                            class="md:hidden p-1.5 -ml-1 rounded-lg text-white/90 hover:text-white hover:bg-white/15 flex items-center justify-center shrink-0 cursor-pointer active:scale-95 transition"
                             title="Kembali ke Daftar Chat">
                             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                 <polyline points="15 18 9 12 15 6" />
@@ -197,34 +195,33 @@
 
                         <div class="relative shrink-0">
                             <div id="threadCustomerAvatar"
-                                class="w-7 h-7 rounded-full bg-neutral-200 text-apple-textPrimary font-semibold text-[11px] flex items-center justify-center border"
-                                style="border-color: {{ $activeProjectColor }}55;">
+                                class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-xs text-white font-bold text-[11px] flex items-center justify-center border border-white/30 shadow-2xs">
                                 {{ $activeInitials }}
                             </div>
-                            <span class="w-2 h-2 rounded-full bg-apple-green absolute bottom-0 right-0 ring-1 ring-white"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-apple-green absolute bottom-0 right-0 ring-2 ring-white"></span>
                         </div>
 
-                        <div class="truncate min-w-0 flex-1">
+                        <div class="truncate min-w-0 flex-1 text-white">
                             <div class="flex items-center gap-1.5">
-                                <h3 id="threadCustomerName" class="font-semibold text-[12.5px] text-apple-textPrimary truncate">
+                                <h3 id="threadCustomerName" class="font-bold text-[13px] text-white truncate drop-shadow-xs">
                                     {{ $activeDisplayName }}
                                 </h3>
-                                <span id="threadOriginBadge" class="hidden sm:inline-block text-[9px] font-semibold tracking-tight uppercase px-1.5 py-0.5 rounded truncate max-w-[120px]" style="background-color: {{ $activeProjectColor }}14; color: {{ $activeProjectColor }}; border: 1px solid {{ $activeProjectColor }}30;">
+                                <span id="threadOriginBadge" class="hidden sm:inline-block text-[9px] font-bold tracking-tight uppercase px-2 py-0.5 rounded-full truncate max-w-[120px] bg-white/20 text-white border border-white/30 backdrop-blur-xs shadow-2xs">
                                     {{ $activeSiteName }}
                                 </span>
                             </div>
-                            <div id="threadMetaSub" class="text-[10px] text-apple-textTertiary truncate">
-                                {{ $activeCustomerCode }} • CS: <span id="assignedStaffText">{{ $assignedStaffName }}</span>
+                            <div id="threadMetaSub" class="text-[10px] text-white/80 truncate font-medium">
+                                {{ $activeCustomerCode }} • CS: <span id="assignedStaffText" class="text-white font-semibold">{{ $assignedStaffName }}</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Actions Right -->
-                    <div class="flex items-center gap-1 shrink-0">
+                    <div class="flex items-center gap-1.5 shrink-0">
                         <!-- Assign Dropdown -->
                         <div class="relative">
                             <select id="assignCsSelect" onchange="handleAssign(this.value)"
-                                class="max-w-[105px] sm:max-w-[130px] px-1.5 py-1 text-[10.5px] rounded-lg border border-apple-border bg-white text-apple-textPrimary hover:bg-apple-canvas focus:outline-none focus:ring-1 focus:ring-apple-blue font-medium shadow-2xs cursor-pointer truncate">
+                                class="max-w-[110px] sm:max-w-[135px] px-2 py-1 text-[10.5px] rounded-lg border border-white/40 bg-white text-apple-textPrimary hover:bg-white/95 focus:outline-none focus:ring-2 focus:ring-white/50 font-medium shadow-2xs cursor-pointer truncate">
                                 <option value="">Tugaskan CS</option>
                                 @foreach ($staffMembers as $staff)
                                     <option value="{{ $staff->id }}"
@@ -237,15 +234,15 @@
 
                         <!-- Status Toggle / Resolve Button -->
                         <button type="button" id="btnToggleStatus" onclick="handleToggleStatus()"
-                            class="px-2 py-1 text-[10.5px] rounded-lg border border-apple-border/80 bg-white {{ $activeConversation->status === 'open' ? 'text-apple-red hover:bg-red-50' : 'text-apple-green hover:bg-emerald-50' }} active:scale-95 transition font-medium shadow-2xs">
+                            class="px-2.5 py-1 text-[10.5px] rounded-lg border border-white/40 bg-white {{ $activeConversation->status === 'open' ? 'text-apple-red hover:bg-red-50' : 'text-apple-green hover:bg-emerald-50' }} active:scale-95 transition font-semibold shadow-2xs">
                             <span>{{ $activeConversation->status === 'open' ? 'Resolve' : 'Reopen' }}</span>
                         </button>
 
                         <!-- Inspector Toggle for Customer Context -->
                         <button type="button" onclick="toggleInspectorMode()"
-                            class="p-1.5 rounded-lg border border-apple-border bg-white text-apple-textSecondary hover:text-apple-textPrimary hover:bg-apple-canvas transition shadow-2xs"
+                            class="p-1.5 rounded-lg border border-white/30 bg-white/20 hover:bg-white/30 text-white transition shadow-2xs"
                             title="Detail Customer">
-                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                                 <circle cx="12" cy="12" r="10" />
                                 <path d="M12 16v-4" />
                                 <path d="M12 8h.01" />
@@ -255,11 +252,11 @@
                 </div>
 
                 <!-- Active Page Context Sticky Banner -->
-                <div class="bg-apple-canvas/80 border-b border-apple-border/60 px-3 py-1 flex items-center justify-between text-[10.5px] shrink-0">
+                <div class="bg-apple-canvas/90 border-b border-apple-border/60 px-3 py-1 flex items-center justify-between text-[10.5px] shrink-0">
                     <div class="flex items-center gap-1.5 truncate">
                         <span class="text-apple-textTertiary font-medium shrink-0">Page:</span>
                         <span class="font-medium text-apple-textPrimary flex items-center gap-1 truncate">
-                            <svg class="w-3 h-3 text-apple-blue shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="w-3 h-3 shrink-0" style="color: {{ $activeProjectColor }};" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect x="2" y="3" width="20" height="14" rx="2" />
                                 <line x1="8" y1="21" x2="16" y2="21" />
                                 <line x1="12" y1="17" x2="12" y2="21" />
@@ -267,7 +264,7 @@
                             <span id="activePageTitle" class="truncate">{{ $activeConversation->page_title ?? 'Halaman Toko' }}</span>
                         </span>
                     </div>
-                    <span class="text-apple-blue font-medium shrink-0 ml-2 text-[10px]">● Live</span>
+                    <span class="font-semibold shrink-0 ml-2 text-[10px]" style="color: {{ $activeProjectColor }};">● Live</span>
                 </div>
 
                 <!-- Message History Feed -->
