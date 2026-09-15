@@ -180,8 +180,27 @@ class DashboardController extends Controller
             ? round(($closedCount / $totalConversationsCurrent) * 100, 1)
             : 98.4;
 
-        // 4. KPI: Assisted Cart & Inquiries Value
-        $assistedRevenueFormatted = 'Rp ' . number_format($totalConversationsCurrent * 95000, 0, ',', '.');
+        // 4. KPI: Active Unique Visitors in Period
+        $uniqueVisitorsCurrent = Visitor::where('tenant_id', $tenantId)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->count();
+
+        $uniqueVisitorsPrev = Visitor::where('tenant_id', $tenantId)
+            ->whereBetween('created_at', [$prevStartDate, $prevEndDate])
+            ->count();
+
+        if ($uniqueVisitorsPrev > 0) {
+            $visDeltaVal = round((($uniqueVisitorsCurrent - $uniqueVisitorsPrev) / $uniqueVisitorsPrev) * 100, 1);
+            $visDelta = ($visDeltaVal >= 0 ? '+' : '') . $visDeltaVal . '%';
+        } else {
+            $visDelta = $uniqueVisitorsCurrent > 0 ? '+100%' : '0%';
+        }
+
+        $identifiedVisitors = Visitor::where('tenant_id', $tenantId)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereNotNull('name')
+            ->where('name', '!=', '')
+            ->count();
 
         $summary = [
             'period' => $period,
@@ -200,10 +219,10 @@ class DashboardController extends Controller
                 'delta' => '4.95 / 5.0',
                 'subtext' => "Berdasarkan " . max($totalConversationsCurrent, 1) . " percakapan • {$closedCount} Selesai",
             ],
-            'assistedRevenue' => [
-                'value' => $totalConversationsCurrent > 0 ? $assistedRevenueFormatted : 'Rp 0',
-                'delta' => $convDelta,
-                'subtext' => "{$totalConversationsCurrent} sesi chat aktif terintegrasi",
+            'uniqueVisitors' => [
+                'value' => number_format($uniqueVisitorsCurrent),
+                'delta' => $visDelta,
+                'subtext' => "vs " . number_format($uniqueVisitorsPrev) . " periode sebelumnya • {$identifiedVisitors} teridentifikasi",
             ],
         ];
 

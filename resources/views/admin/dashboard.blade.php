@@ -178,26 +178,27 @@
             </div>
         </div>
 
-        <!-- KPI 4: Assisted Cart Revenue -->
+        <!-- KPI 4: Total Unique Visitors -->
         <div class="bg-white border border-apple-border/80 rounded-2xl p-4 sm:p-4.5 shadow-apple-card hover:shadow-apple-popover transition duration-200 flex flex-col justify-between group">
             <div class="flex items-center justify-between mb-2">
-                <span class="text-[12px] font-medium text-apple-textSecondary">Assisted Cart Revenue</span>
+                <span class="text-[12px] font-medium text-apple-textSecondary">Total Unique Visitors</span>
                 <div class="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <path d="M16 10a4 4 0 0 1-8 0"></path>
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                     </svg>
                 </div>
             </div>
             <div>
                 <div class="flex items-baseline gap-2">
-                    <span class="text-[20px] sm:text-[22px] font-bold tracking-tight text-apple-textPrimary font-mono leading-none">{{ $summary['assistedRevenue']['value'] }}</span>
+                    <span class="text-[26px] sm:text-[28px] font-bold tracking-tight text-apple-textPrimary font-mono leading-none">{{ $summary['uniqueVisitors']['value'] }}</span>
                     <span class="inline-flex items-center text-[10.5px] font-semibold text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.2 rounded-md">
-                        {{ $summary['assistedRevenue']['delta'] }}
+                        {{ $summary['uniqueVisitors']['delta'] }}
                     </span>
                 </div>
-                <p class="text-[11px] text-apple-textTertiary mt-1.5 leading-snug">{{ $summary['assistedRevenue']['subtext'] }}</p>
+                <p class="text-[11px] text-apple-textTertiary mt-1.5 leading-snug">{{ $summary['uniqueVisitors']['subtext'] }}</p>
             </div>
         </div>
 
