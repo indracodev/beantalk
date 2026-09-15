@@ -104,13 +104,24 @@ CREATE TABLE widget_settings (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     project_id BIGINT UNSIGNED NOT NULL UNIQUE,
     title VARCHAR(100) DEFAULT 'Customer Support',
-    greeting VARCHAR(255) DEFAULT 'Hi! How can we help you today?',
+    support_title VARCHAR(100) DEFAULT 'Customer Support',
+    find_us_title VARCHAR(100) DEFAULT 'Find Us Somewhere Else',
+    greeting_title VARCHAR(100) DEFAULT 'Hallo!',
+    greeting_subtitle VARCHAR(255) DEFAULT 'Apakah ada yang bisa kami bantu?',
     primary_color VARCHAR(20) DEFAULT '#0F172A',
-    text_color VARCHAR(20) DEFAULT '#FFFFFF',
+    accent_color VARCHAR(20) DEFAULT '#FFFFFF',
     position ENUM('bottom-right', 'bottom-left') DEFAULT 'bottom-right',
     avatar_url VARCHAR(500) NULL,
     show_branding BOOLEAN DEFAULT TRUE,
-    offline_message VARCHAR(255) DEFAULT 'We are currently offline. Please leave your message!',
+    is_online BOOLEAN DEFAULT TRUE,
+    social_channels JSON NULL,                   -- WhatsApp, Instagram, FB Messenger, Telegram, Shopee, Tokopedia
+    bot_enabled BOOLEAN DEFAULT FALSE,           -- Master bot toggle for this website
+    bot_name VARCHAR(100) DEFAULT 'BeanBot',     -- Display name for the automated assistant
+    bot_welcome_message TEXT NULL,               -- Initial auto-greeting on first contact
+    bot_offline_message TEXT NULL,               -- Auto-responder when outside operating hours
+    bot_rules JSON NULL,                         -- Array of {keywords, response} FAQ rules
+    bot_ai_enabled BOOLEAN DEFAULT FALSE,        -- AI Smart Responder flag
+    bot_ai_prompt TEXT NULL,                     -- Optional system prompt for LLM integration
     language VARCHAR(10) DEFAULT 'en',
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
@@ -167,10 +178,13 @@ CREATE TABLE conversations (
     contact_id BIGINT UNSIGNED NULL,
     assigned_user_id BIGINT UNSIGNED NULL,
     status ENUM('open', 'pending', 'closed') DEFAULT 'open',
-    source VARCHAR(50) DEFAULT 'website',
-    unread_admin_count INT UNSIGNED DEFAULT 0,
+    channel VARCHAR(50) DEFAULT 'widget',
+    is_bot_active BOOLEAN DEFAULT TRUE,          -- Per-ticket Bot active status (toggled by CS or auto-yield)
+    bot_handoff_at TIMESTAMP NULL,               -- Timestamp when conversation transferred to human agent
+    unread_agent_count INT UNSIGNED DEFAULT 0,
     unread_visitor_count INT UNSIGNED DEFAULT 0,
     last_message_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_message_preview VARCHAR(500) NULL,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,

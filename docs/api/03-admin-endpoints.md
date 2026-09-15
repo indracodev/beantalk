@@ -157,6 +157,31 @@ Mengubah status percakapan (`open`, `pending`, `closed`).
 
 ---
 
+## 5.1 POST /admin/inbox/{id}/toggle-bot (atau /api/v1/admin/conversations/{id}/toggle-bot)
+
+Mengaktifkan atau menjeda status Smart Bot untuk percakapan spesifik.
+
+### Request Body
+```json
+{
+  "is_bot_active": false
+}
+```
+
+### Response (`200 OK`)
+```json
+{
+  "success": true,
+  "data": {
+    "conversation_id": 403,
+    "is_bot_active": false,
+    "bot_handoff_at": "2026-09-15T03:30:00Z"
+  }
+}
+```
+
+---
+
 ## 6. GET /api/v1/admin/realtime/poll
 
 Endpoint polling realtime dashboard admin untuk memperbarui daftar inbox dan badge notifikasi tanpa reload halaman.

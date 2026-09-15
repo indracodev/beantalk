@@ -77,7 +77,13 @@ Repositori ini dikendalikan oleh triad dokumentasi operasional yang saling melen
 - **Fixed Layout & Shape (Identik)**: Seluruh chat widget memiliki bentuk kurva, tombol pemicu, struktur bubble, dan composer yang identik di semua website. Kustomisasi per chat/project **hanya terbatas pada warna core UI (Primary Accent Color)**.
 - **Zero Framework Bloat**: Dilarang memasukkan React/Vue runtime ke dalam bundle widget. Murni Vanilla TypeScript + Web Components Shadow DOM.
 - **Shadow DOM Isolation**: Seluruh elemen UI widget wajib di-render di dalam `#shadow-root (open)` untuk isolasi total dari CSS website host.
-- **Adaptive Polling**: Selalu dengarkan event `visibilitychange` dan `online`/`offline`. Turunkan interval polling dari 2 detik ke 15–30 detik saat tab diminimize atau tidak aktif.
+### 3.3 Smart Bot & Auto-Responder Architecture
+- **Dual-Level Activation**: Status bot dikontrol pada 2 level:
+  1. *Project Level (`widget_settings.bot_enabled`)*: Toggle master untuk mengaktifkan/menonaktifkan bot pada suatu website.
+  2. *Conversation Level (`conversations.is_bot_active`)*: Toggle per-tiket obrolan yang dapat dinyalakan/dijeda oleh staf CS di Admin Inbox.
+- **Smart CS Auto-Yielding**: Saat staf CS mengirim balasan manual dari inbox, sistem wajib otomatis menonaktifkan bot (`is_bot_active = false`, `bot_handoff_at = now()`) agar bot tidak menginterupsi percakapan manusia.
+- **Smart Handoff**: Deteksi otomatis kata kunci eskalasi (misal: "cs", "manusia", "bantuan staf") untuk memicu pengalihan ke agen CS dan menonaktifkan bot secara otomatis.
+- **Zero-Daemon Rule Engine**: Evaluasi aturan keyword FAQ & welcome greeting dijalankan secara instan via `BotService` tanpa memerlukan background daemon eksternal.
 
 ---
 
@@ -85,7 +91,8 @@ Repositori ini dikendalikan oleh triad dokumentasi operasional yang saling melen
 
 Sebelum menandai tugas selesai:
 1. Pastikan seluruh pengujian backend lolos (`php artisan test`).
-2. Pastikan tidak ada runtime console error di browser saat widget dimuat.
-3. Pastikan alur chat end-to-end terbukti bekerja:
+2. **Test Performance Budget**: Seluruh test suite harus berjalan cepat (< 5 detik total, rata-rata < 50ms per test). Manfaatkan SQLite PRAGMA memory optimizations dan minimalisir N+1 loop di agregasi dashboard.
+3. Pastikan tidak ada runtime console error di browser saat widget dimuat.
+4. Pastikan alur chat end-to-end terbukti bekerja:
    `Visitor Widget` ──► `Laravel API` ──► `MySQL` ──► `Admin Inbox` ──► `Balasan Agen` ──► `Visitor Widget`.
-4. Rujuk dokumentasi lengkap di folder `docs/` untuk spesifikasi detail arsitektur, skema DB, dan API.
+5. Rujuk dokumentasi lengkap di folder `docs/` untuk spesifikasi detail arsitektur, skema DB, dan API.

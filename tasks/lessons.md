@@ -129,12 +129,22 @@ Dokumen ini mencatat koreksi, pola desain, dan aturan teknis yang dipelajari sel
   2. **Script Attribute Aliasing**: Dukung atribut sematan universal seperti `data-brand-name` dan `data-support-title` dengan tetap mempertahankan fallback backward-compatible `data-store-name`.
   3. **Default Label Netral**: Gunakan `'Customer Support'` sebagai default teks layanan di seluruh migration, model, view, dan SDK.
 
-### 19. Scoping Global Swiss Loader (Navigasi Utama vs Workspace Internal)
-- **Pelajaran**: Pemisahan eksekusi loader global Swiss antara navigasi utama (menu Sidebar/Bottom-Nav Inbox, Websites, Team, Logs) dan workspace interaktif internal (klik kartu percakapan chat, ganti filter scope status `Semua/Open/Mine/Selesai`, pencarian tiket) harus dilakukan berdasarkan *asal klik (click origin)*, bukan pemblokiran rute URL secara membabi-buta (`href.includes('/admin/inbox')`). Jika diblokir berdasarkan rute, klik menu "Inbox" dari sidebar/bottom-nav tidak akan menampilkan loader sama sekali.
+### 20. Smart Bot Engine, Dual-Level Switch, dan Auto-Yielding CS
+- **Pelajaran**: Bot customer service sering kali terasa kaku dan mengganggu jika terus membalas saat percakapan sudah diambil alih oleh agen manusia. Di sisi lain, pemilik toko membutuhkan kontrol mudah untuk menyalakan/mematikan bot baik secara global (per-project) maupun per-tiket obrolan.
 - **Pola**:
-  1. **Capture Phase Click Interceptor**: Pasang listener `document.addEventListener('click', handler, true)` (capture phase) pada `admin.js` agar klik navigasi menu utama tidak terblokir oleh `stopPropagation` elemen anak.
-  2. **Navigasi Utama Prioritas Tinggi**: Deteksi klik menu utama (`link.closest('#main-sidebar')`, `link.closest('#mobile-bottom-nav')`, `#navItemInbox`, `#bottomNavItemInbox`, `.sidebar-item`) dan panggil `BeanTalkLoader.show('Memuat Inbox...')`.
-  3. **Pengecualian Khusus Workspace Internal**: Jika klik berasal dari dalam workspace obrolan (`#inboxWorkspace`, `#convListContainer`, `#pane-conv-list`, `.conv-item`, `.conv-row`, `.inbox-scope-btn`, `[data-conv-id]`, `.no-loader`), hapus flag `sessionStorage` dan jangan panggil loader, sehingga perpindahan antar ruang chat terasa instan seperti SPA tanpa kedip.
-  4. **Asset Versioning**: Selalu sertakan query string timestamp `?v={{ filemtime(...) }}` pada pemanggilan file CSS dan JS di layout blade agar perbaikan logika loader langsung diterapkan browser tanpa tertahan browser cache.
+  1. **Dual-Level Active/Inactive Toggle**:
+     - *Global Level*: Kolom `bot_enabled` di `widget_settings` dikonfigurasi melalui Integrations Hub untuk mengaktifkan/mematikan bot pada website tertentu.
+     - *Conversation Level*: Kolom `is_bot_active` di `conversations` yang dapat dinyalakan/dijeda oleh CS langsung di Admin Inbox via `#btnToggleBot`.
+  2. **Smart CS Auto-Yielding**: Saat staf CS mengirim balasan manual (`/admin/inbox/{id}/reply`), sistem secara otomatis menyetel `is_bot_active = false` dan `bot_handoff_at = now()`, menghentikan intervensi bot seketika.
+  3. **Keyword FAQ & Smart Handoff**: Bot memvalidasi kata kunci FAQ yang fleksibel (koma terpisah) serta kata kunci eskalasi manusia ("cs", "manusia", "bantuan staf") untuk mentransfer tiket dan menonaktifkan bot secara otomatis.
+  4. **Pembedaan Visual di SDK**: Pesan bot dikirim dengan `sender_type: 'bot'` dan dirender dengan avatar robot serta nama bot kustom di widget obrolan.
+
+### 21. Profiling Waktu Eksekusi Unit Test & Eliminasi N+1 Dashboard Loop
+- **Pelajaran**: Eksekusi test suite yang lambat (10+ detik) menghambat siklus iterasi development dan menyembunyikan bottleneck query nyata pada kode produksi (seperti loop query N+1 pada komputasi statistik dashboard).
+- **Pola**:
+  1. **Precision Execution Timer**: Pasang timer `microtime(true)` di `TestCase.php` dengan peringatan otomatis `⏱️ [SLOW TEST]` jika sebuah unit test melebihi batas waktu toleransi (> 200ms).
+  2. **SQLite In-Memory Pragmas**: Terapkan `PRAGMA synchronous = OFF; PRAGMA journal_mode = MEMORY; PRAGMA temp_store = MEMORY;` pada database SQLite testing untuk mengeliminasi disk I/O lock di Windows OS, memangkas waktu test hingga 75% lebih cepat (dari 11.2s menjadi 2.7s).
+  3. **Single Grouped Aggregation vs N+1 Loop**: Ganti perulangan query per-staf di `DashboardController` (`foreach ($staffUsers as $user) { Conversation::where('assigned_user_id', ...)->count(); }`) dengan satu query agregasi terkonsentrasi `groupBy('assigned_user_id')`, memotong puluhan database round-trips menjadi satu query efisien.
+
 
 
