@@ -347,6 +347,64 @@ class TelegramService
     }
 
     /**
+     * Registers the Webhook URL directly to Telegram Bot API
+     */
+    public function setWebhook(string $botToken, string $webhookUrl): array
+    {
+        $botToken = trim($botToken);
+        $webhookUrl = trim($webhookUrl);
+
+        if (empty($botToken)) {
+            return [
+                'success' => false,
+                'message' => 'Telegram Bot Token wajib diisi terlebih dahulu.',
+            ];
+        }
+
+        if (empty($webhookUrl)) {
+            return [
+                'success' => false,
+                'message' => 'Webhook URL wajib diisi.',
+            ];
+        }
+
+        if (!str_starts_with(strtolower($webhookUrl), 'https://')) {
+            return [
+                'success' => false,
+                'message' => 'Telegram mewajibkan Webhook URL menggunakan protokol HTTPS aman (SSL aktif). Jika di lokal, gunakan tunnel seperti Ngrok.',
+            ];
+        }
+
+        try {
+            $response = $this->http(8)->post("{$this->apiBase}{$botToken}/setWebhook", [
+                'url'                  => $webhookUrl,
+                'drop_pending_updates' => false,
+            ]);
+
+            $data = $response->json();
+
+            if ($response->successful() && !empty($data['ok'])) {
+                return [
+                    'success'     => true,
+                    'message'     => 'Webhook berhasil didaftarkan ke server Telegram! Pesan balasan dari Telegram sekarang otomatis tersinkron ke BeanTalk.',
+                    'description' => $data['description'] ?? 'Webhook was set',
+                ];
+            } else {
+                $err = $data['description'] ?? 'Gagal mendaftarkan webhook ke Telegram.';
+                return [
+                    'success' => false,
+                    'message' => "Telegram menolak webhook: {$err}",
+                ];
+            }
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menghubungkan ke Telegram: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
      * Helper to verify if settings have required Telegram credentials
      */
     protected function isConfigured(?WidgetSetting $setting): bool

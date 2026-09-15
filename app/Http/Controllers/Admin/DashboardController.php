@@ -1561,6 +1561,24 @@ class DashboardController extends Controller
     }
 
     /**
+     * Register Webhook URL to Telegram
+     * POST /admin/integrations/{id}/set-telegram-webhook
+     */
+    public function setTelegramWebhook(Request $request, $id): JsonResponse
+    {
+        $tenantId = $request->user()->tenant_id;
+        $project = Project::where('tenant_id', $tenantId)->findOrFail($id);
+
+        $token = $request->input('telegram_bot_token') ?: ($project->widgetSetting->telegram_bot_token ?? '');
+        $webhookUrl = $request->input('webhook_url') ?: url('/api/v1/telegram/webhook');
+
+        $telegramService = app(TelegramService::class);
+        $result = $telegramService->setWebhook($token, $webhookUrl);
+
+        return response()->json($result);
+    }
+
+    /**
      * Store New Team Member
      * POST /admin/team
      */

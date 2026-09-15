@@ -455,27 +455,49 @@
                 </div>
 
                 <!-- Webhook Sync Box -->
-                <div class="pt-3 border-t border-apple-border flex flex-col gap-2">
-                    <div class="flex items-center justify-between text-[11.5px] font-semibold text-apple-textPrimary">
-                        <span>Telegram Webhook URL (Untuk Balas 2-Arah dari Telegram)</span>
-                        <button type="button" onclick="copySnippetText('telegramWebhookUrl', this)" class="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-apple-border rounded-lg text-[10.5px] font-semibold hover:bg-apple-canvas transition shadow-2xs cursor-pointer">
-                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                            <span>Salin Webhook URL</span>
-                        </button>
+                <div class="pt-3 border-t border-apple-border flex flex-col gap-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-[12px] font-bold text-apple-textPrimary block">Telegram Webhook URL (Balas 2-Arah via Telegram)</span>
+                            <p class="text-[11px] text-apple-textSecondary mt-0.5">Daftarkan URL ini ke server Telegram agar setiap pesan balasan dari staf CS di aplikasi Telegram otomatis tersinkron ke BeanTalk.</p>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button type="button" onclick="setTelegramWebhookDirectly()" id="btnSetWebhook" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold transition shadow-apple-sm cursor-pointer">
+                                <span>⚡ Daftarkan Webhook Otomatis</span>
+                            </button>
+                            <button type="button" onclick="copySnippetText('telegramWebhookUrl', this)" class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-white border border-apple-border rounded-lg text-[11px] font-semibold hover:bg-apple-canvas transition shadow-2xs cursor-pointer">
+                                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                <span>Salin URL</span>
+                            </button>
+                        </div>
                     </div>
+
                     <div id="telegramWebhookUrl" class="bg-[#1C1C1E] text-neutral-200 font-mono text-[11px] p-2.5 rounded-xl select-all break-all shadow-inner">{{ url('/api/v1/telegram/webhook') }}</div>
+
+                    <!-- Live Webhook Set Result Box -->
+                    <div id="telegramWebhookResult" class="hidden p-3 rounded-xl text-[12px]"></div>
+
+                    <!-- Browser Manual Link Helper -->
+                    <div class="p-3 bg-neutral-50 border border-apple-border rounded-xl text-[11px] text-apple-textSecondary flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5">
+                            <span>💡 Atau buka link registrasi manual di browser:</span>
+                        </div>
+                        <a id="linkManualWebhook" href="https://api.telegram.org/bot{{ $widgetSetting->telegram_bot_token ?? '' }}/setWebhook?url={{ urlencode(url('/api/v1/telegram/webhook')) }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-sky-600 hover:text-sky-700 font-semibold underline break-all">
+                            <span>🔗 Buka Link Registrasi Webhook Telegram &rarr;</span>
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Step-by-Step Setup Guide Card -->
                 <div class="p-3.5 bg-sky-50/70 border border-sky-200 rounded-xl text-[11.5px] text-sky-950 flex flex-col gap-2">
                     <div class="font-bold text-sky-900 flex items-center gap-1.5">
                         <svg class="w-4 h-4 text-sky-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                        <span>Panduan Cepat 3 Langkah Menghubungkan Telegram</span>
+                        <span>Panduan 3 Langkah Cepat Integrasi Telegram</span>
                     </div>
                     <ol class="list-decimal list-inside space-y-1 text-[11px] text-sky-900/90 leading-relaxed pl-1">
-                        <li>Buka aplikasi Telegram, cari <strong>@BotFather</strong>, ketik <code>/newbot</code>, lalu ikuti instruksi hingga mendapatkan <strong>HTTP API Token</strong>.</li>
-                        <li>Buat Grup Telegram baru bersama tim CS Anda, jadikan grup bertipe <strong>Topics (Forum)</strong> di pengaturan grup, lalu <strong>undang Bot Anda ke dalam grup</strong> dan jadikan Administrator.</li>
-                        <li>Masukkan Token &amp; Chat ID di atas, lalu klik tombol <strong>"⚡ Test Kirim Pesan"</strong> untuk memastikan notifikasi masuk ke grup Anda.</li>
+                        <li>Buka <strong>@BotFather</strong> di Telegram, ketik <code>/newbot</code> untuk mendapatkan <strong>Token API</strong>. Kemudian matikan privasi dengan mengetik <code>/setprivacy</code> &rarr; pilih bot &rarr; <strong>Disable</strong>.</li>
+                        <li>Buat Grup Telegram baru bersama tim CS, aktifkan <strong>Topics (Forum)</strong> di pengaturan grup, lalu undang bot Anda dan jadikan <strong>Administrator</strong> (centang <em>Manage Topics</em>).</li>
+                        <li>Masukkan Token &amp; Chat ID di form ini, klik <strong>"⚡ Test Kirim Pesan"</strong>, lalu klik <strong>"⚡ Daftarkan Webhook Otomatis"</strong>.</li>
                     </ol>
                 </div>
 
@@ -602,6 +624,78 @@ function testTelegramConnection() {
         }
     });
 }
+
+// 1.2 Direct One-Click Telegram Webhook Registration
+function setTelegramWebhookDirectly() {
+    const token = document.getElementById('inputTelegramBotToken')?.value.trim();
+    const btn = document.getElementById('btnSetWebhook');
+    const resultBox = document.getElementById('telegramWebhookResult');
+
+    if (!token) {
+        if (resultBox) {
+            resultBox.className = 'p-3 rounded-xl text-[12px] bg-amber-50 border border-amber-200 text-amber-800';
+            resultBox.innerHTML = '⚠️ Mohon isi <strong>Telegram Bot Token</strong> terlebih dahulu.';
+            resultBox.classList.remove('hidden');
+        }
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="animate-spin inline-block mr-1">⏳</span> Mendaftarkan Webhook...';
+    }
+
+    fetch('{{ route("admin.integrations.set-telegram-webhook", $project->id) }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+            telegram_bot_token: token,
+            webhook_url: '{{ url("/api/v1/telegram/webhook") }}'
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<span>⚡ Daftarkan Webhook Otomatis</span>';
+        }
+
+        if (resultBox) {
+            resultBox.classList.remove('hidden');
+            if (data.success) {
+                resultBox.className = 'p-3 rounded-xl text-[12px] bg-emerald-50 border border-emerald-200 text-emerald-800';
+                resultBox.innerHTML = '✅ <strong>' + data.message + '</strong>';
+            } else {
+                resultBox.className = 'p-3 rounded-xl text-[12px] bg-red-50 border border-red-200 text-red-800';
+                resultBox.innerHTML = '❌ <strong>Gagal:</strong> ' + data.message;
+            }
+        }
+    })
+    .catch(err => {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<span>⚡ Daftarkan Webhook Otomatis</span>';
+        }
+        if (resultBox) {
+            resultBox.classList.remove('hidden');
+            resultBox.className = 'p-3 rounded-xl text-[12px] bg-red-50 border border-red-200 text-red-800';
+            resultBox.innerHTML = '❌ Gagal mendaftarkan webhook: ' + err.message;
+        }
+    });
+}
+
+// Update manual link dynamically when token changes
+document.getElementById('inputTelegramBotToken')?.addEventListener('input', function() {
+    const token = this.value.trim();
+    const link = document.getElementById('linkManualWebhook');
+    if (link) {
+        link.href = 'https://api.telegram.org/bot' + encodeURIComponent(token) + '/setWebhook?url=' + encodeURIComponent('{{ url("/api/v1/telegram/webhook") }}');
+    }
+});
 
 // 2. Render FAQ Rules List
 function renderFaqRulesList() {

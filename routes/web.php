@@ -45,6 +45,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('integrations/{id}/regenerate', 'Admin\DashboardController@regenerateKey')->name('integrations.regenerate');
     Route::put('integrations/{id}/settings', 'Admin\DashboardController@updateWidgetSettings')->name('integrations.settings');
     Route::post('integrations/{id}/test-telegram', 'Admin\DashboardController@testTelegramAlert')->name('integrations.test-telegram');
+    Route::post('integrations/{id}/set-telegram-webhook', 'Admin\DashboardController@setTelegramWebhook')->name('integrations.set-telegram-webhook');
 
     Route::get('team', 'Admin\DashboardController@team')->name('team');
     Route::post('team', 'Admin\DashboardController@storeTeam')->name('team.store');
