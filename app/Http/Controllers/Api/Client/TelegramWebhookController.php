@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use App\Models\Project;
+use App\Models\User;
 use App\Models\WidgetSetting;
 use App\Services\ConversationService;
 use Illuminate\Http\JsonResponse;
@@ -47,14 +48,14 @@ class TelegramWebhookController extends Controller
         $conversation = null;
 
         if ($topicId) {
-            $conversation = Conversation::where('telegram_topic_id', $topicId)->with('project')->first();
+            $conversation = Conversation::where('telegram_topic_id', $topicId)->with('project.widgetSetting')->first();
         }
 
         // Fallback jika bukan mode forum tapi reply ke bubble customer
         if (!$conversation && $replyTo) {
             $replyTopicId = $replyTo['message_thread_id'] ?? null;
             if ($replyTopicId) {
-                $conversation = Conversation::where('telegram_topic_id', $replyTopicId)->with('project')->first();
+                $conversation = Conversation::where('telegram_topic_id', $replyTopicId)->with('project.widgetSetting')->first();
             }
         }
 
@@ -62,13 +63,46 @@ class TelegramWebhookController extends Controller
             return response()->json(['ok' => true, 'note' => 'no_matching_conversation']);
         }
 
-        // 3. Ekstrak nama staf CS yang membalas dari Telegram
-        $from = $msg['from'] ?? [];
-        $firstName = $from['first_name'] ?? 'Staf';
-        $lastName = $from['last_name'] ?? '';
-        $senderName = trim("{$firstName} {$lastName}") ?: 'Staf CS';
+        // 3. Validasi Toggle ON/OFF Telegram di Project
+        $widgetSetting = $conversation->project->widgetSetting ?? null;
+        if (!$widgetSetting || (!$widgetSetting->telegram_topic_mode_enabled && !$widgetSetting->telegram_notifications_enabled)) {
+            return response()->json(['ok' => true, 'note' => 'telegram_mode_disabled']);
+        }
 
-        // 4. Update Conversation: Auto-yield bot dan pastikan status open
+        // 4. Validasi Keamanan: Cocokkan Akun Pengirim Telegram dengan Akun Staf CS di Web
+        $from = $msg['from'] ?? [];
+        $fromUserId = !empty($from['id']) ? (string) $from['id'] : null;
+        $fromUsername = !empty($from['username']) ? ltrim(trim($from['username']), '@') : null;
+
+        $matchedAgent = null;
+        if ($fromUserId || $fromUsername) {
+            $matchedAgent = User::where('tenant_id', $conversation->tenant_id)
+                ->where(function ($q) use ($fromUserId, $fromUsername) {
+                    if ($fromUserId) {
+                        $q->where('telegram_user_id', $fromUserId);
+                    }
+                    if ($fromUsername) {
+                        $q->orWhere('telegram_username', $fromUsername);
+                    }
+                })
+                ->first();
+        }
+
+        // Jika pengirim bukan staf CS resmi terdaftar, abaikan pesan (tidak dikirim ke customer)
+        if (!$matchedAgent) {
+            Log::info('[TelegramWebhook] Pesan diabaikan: Pengirim Telegram tidak terdaftar sebagai staf CS resmi.', [
+                'from'            => $from,
+                'conversation_id' => $conversation->id,
+            ]);
+
+            return response()->json([
+                'ok'      => true,
+                'note'    => 'unauthorized_telegram_sender',
+                'message' => 'Pengirim Telegram bukan akun staf CS yang terdaftar di BeanTalk.'
+            ]);
+        }
+
+        // 5. Update Conversation: Auto-yield bot dan pastikan status open
         $updates = [];
         if ($conversation->is_bot_active) {
             $updates['is_bot_active'] = false;
@@ -81,19 +115,21 @@ class TelegramWebhookController extends Controller
             $conversation->update($updates);
         }
 
-        // 5. Append message as agent
+        // 6. Append message: Tampil dengan nama resmi agen tanpa label "(via Telegram)"
         $this->conversationService->appendMessage($conversation, [
             'sender_type'       => 'agent',
-            'sender_name'       => $senderName,
+            'sender_name'       => $matchedAgent->name,
             'content'           => $text,
             'client_message_id' => 'tg_' . ($msg['message_id'] ?? time()),
             'metadata'          => [
                 'from_telegram'       => true,
                 'telegram_message_id' => $msg['message_id'] ?? null,
                 'telegram_user_id'    => $from['id'] ?? null,
+                'agent_id'            => $matchedAgent->id,
+                'telegram_username'   => $from['username'] ?? null,
             ],
         ]);
 
-        return response()->json(['ok' => true, 'conversation_id' => $conversation->id]);
+        return response()->json(['ok' => true, 'conversation_id' => $conversation->id, 'agent_name' => $matchedAgent->name]);
     }
 }

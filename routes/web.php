@@ -49,6 +49,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     Route::get('team', 'Admin\DashboardController@team')->name('team');
     Route::post('team', 'Admin\DashboardController@storeTeam')->name('team.store');
+    Route::put('team/{id}', 'Admin\DashboardController@updateTeam')->name('team.update');
     Route::post('team/{id}/impersonate', 'Admin\DashboardController@impersonate')->name('team.impersonate');
     Route::match(['get', 'post'], 'impersonate/leave', 'Admin\DashboardController@leaveImpersonation')->name('impersonate.leave');
 

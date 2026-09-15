@@ -96,12 +96,13 @@
                                 <span>Status</span> {!! $sortIcon('status') !!}
                             </a>
                         </th>
+                        <th class="px-4 py-2.5">Telegram Synced</th>
                         <th class="px-4 py-2.5">
                             <a href="{{ $sortUrl('conversations_count') }}" class="inline-flex items-center hover:text-apple-textPrimary transition">
                                 <span>Active Tickets</span> {!! $sortIcon('conversations_count') !!}
                             </a>
                         </th>
-                        <th class="px-4 py-2.5 text-right">Action / Impersonate</th>
+                        <th class="px-4 py-2.5 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-apple-subtleBorder">
@@ -144,30 +145,50 @@
                                     <span>{{ $isOnline ? 'Online' : 'Offline' }}</span>
                                 </div>
                             </td>
+                            <td class="px-4 py-3">
+                                @if($m->telegram_username)
+                                    <a href="https://t.me/{{ $m->telegram_username }}" target="_blank" rel="noreferrer" class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 border border-sky-200 text-[11px] font-mono hover:bg-sky-100 transition shadow-2xs">
+                                        <svg class="w-3 h-3 text-[#229ED9]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.77-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .37z"/></svg>
+                                        <span>&#64;{{ $m->telegram_username }}</span>
+                                    </a>
+                                @else
+                                    <span class="text-apple-textTertiary text-[11px] italic">Belum terhubung</span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3 text-apple-textSecondary font-mono">
                                 {{ $m->conversations_count }} percakapan
                             </td>
                             <td class="px-4 py-3 text-right">
-                                @if($m->id !== Auth::id())
-                                    <form action="{{ route('admin.team.impersonate', $m->id) }}" method="POST" class="inline-block m-0" onsubmit="return confirm('Masuk dan bertindak sebagai {{ $m->name }} ({{ $m->role }})?')">
-                                        @csrf
-                                        <button type="submit" class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] rounded-lg border border-apple-border text-apple-textPrimary bg-white hover:bg-apple-canvas transition font-medium shadow-2xs" title="Login sebagai {{ $m->name }}">
-                                            <svg class="w-3.5 h-3.5 text-apple-textSecondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                                                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-                                                <polyline points="10 17 15 12 10 7"></polyline>
-                                                <line x1="15" y1="12" x2="3" y2="12"></line>
-                                            </svg>
-                                            <span>Login As</span>
-                                        </button>
-                                    </form>
-                                @else
-                                    <span class="text-[11px] text-apple-textTertiary font-medium px-2 py-0.5 rounded bg-black/5">Akun Anda</span>
-                                @endif
+                                <div class="inline-flex items-center justify-end gap-1.5">
+                                    <button type="button" onclick="openEditModal({{ json_encode(['id' => $m->id, 'name' => $m->name, 'username' => $m->username, 'email' => $m->email, 'role' => $m->role, 'telegram_username' => $m->telegram_username]) }})" class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] rounded-lg border border-apple-border text-apple-textPrimary bg-white hover:bg-apple-canvas transition font-medium shadow-2xs" title="Edit Profil & Telegram">
+                                        <svg class="w-3 h-3 text-apple-textSecondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 20h9"></path>
+                                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                        </svg>
+                                        <span>Edit</span>
+                                    </button>
+
+                                    @if($m->id !== Auth::id())
+                                        <form action="{{ route('admin.team.impersonate', $m->id) }}" method="POST" class="inline-block m-0" onsubmit="return confirm('Masuk dan bertindak sebagai {{ $m->name }} ({{ $m->role }})?')">
+                                            @csrf
+                                            <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] rounded-lg border border-apple-border text-apple-textPrimary bg-white hover:bg-apple-canvas transition font-medium shadow-2xs" title="Login sebagai {{ $m->name }}">
+                                                <svg class="w-3 h-3 text-apple-textSecondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                                                    <polyline points="10 17 15 12 10 7"></polyline>
+                                                    <line x1="15" y1="12" x2="3" y2="12"></line>
+                                                </svg>
+                                                <span>Login As</span>
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="text-[10.5px] text-apple-textTertiary font-medium px-2 py-0.5 rounded bg-black/5">Akun Anda</span>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-4 py-12 text-center text-apple-textTertiary">
+                            <td colspan="6" class="px-4 py-12 text-center text-apple-textTertiary">
                                 Tidak ada anggota tim yang sesuai dengan kriteria pencarian.
                             </td>
                         </tr>
@@ -218,15 +239,29 @@
                         </div>
                     </div>
 
-                    <!-- Bottom: Stats & Quick Impersonate Action -->
+                    @if($m->telegram_username)
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[10.5px] text-apple-textTertiary">Telegram:</span>
+                            <a href="https://t.me/{{ $m->telegram_username }}" target="_blank" rel="noreferrer" class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200 text-[10.5px] font-mono">
+                                <svg class="w-2.5 h-2.5 text-[#229ED9]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.52 2.77-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .37z"/></svg>
+                                <span>&#64;{{ $m->telegram_username }}</span>
+                            </a>
+                        </div>
+                    @endif
+
+                    <!-- Bottom: Stats & Quick Actions -->
                     <div class="flex items-center justify-between pt-1 border-t border-apple-subtleBorder/60 text-[11px]">
                         <div class="flex items-center gap-1.5 text-apple-textSecondary">
                             <span class="w-1.5 h-1.5 rounded-full bg-apple-blue"></span>
                             <span class="font-medium text-apple-textPrimary font-mono">{{ $m->conversations_count }}</span>
-                            <span class="text-apple-textTertiary">Tiket Percakapan</span>
+                            <span class="text-apple-textTertiary">Tiket</span>
                         </div>
 
-                        <div>
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" onclick="openEditModal({{ json_encode(['id' => $m->id, 'name' => $m->name, 'username' => $m->username, 'email' => $m->email, 'role' => $m->role, 'telegram_username' => $m->telegram_username]) }})" class="inline-flex items-center gap-1 px-2 py-1 text-[10.5px] rounded-lg border border-apple-border text-apple-textPrimary bg-white hover:bg-apple-canvas transition font-medium shadow-2xs">
+                                <span>Edit</span>
+                            </button>
+
                             @if($m->id !== Auth::id())
                                 <form action="{{ route('admin.team.impersonate', $m->id) }}" method="POST" class="inline-block m-0" onsubmit="return confirm('Masuk dan bertindak sebagai {{ $m->name }} ({{ $m->role }})?')">
                                     @csrf
@@ -304,6 +339,15 @@
                 </div>
 
                 <div>
+                    <label class="block font-medium text-apple-textPrimary mb-1" for="staffTelegram">Telegram Username <span class="text-[10.5px] font-normal text-sky-600">(Sinkronisasi CS via Telegram)</span></label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1.5 text-apple-textTertiary font-mono text-[11.5px]">&#64;</span>
+                        <input type="text" id="staffTelegram" name="telegram_username" class="w-full pl-7 pr-3 py-1.5 border border-apple-border rounded-lg font-mono text-[11.5px] focus:outline-none focus:ring-2 focus:ring-apple-blue/20" placeholder="username_telegram">
+                    </div>
+                    <span class="text-[10.5px] text-apple-textTertiary mt-0.5 block">Saat staf membalas di Telegram, sistem akan otomatis mencocokkan identitas akun CS ini.</span>
+                </div>
+
+                <div>
                     <label class="block font-medium text-apple-textPrimary mb-1" for="staffPassword">Password Awal</label>
                     <input type="password" id="staffPassword" name="password" class="w-full px-3 py-1.5 border border-apple-border rounded-lg focus:outline-none focus:ring-2 focus:ring-apple-blue/20" placeholder="Minimal 6 karakter" required minlength="6">
                 </div>
@@ -323,5 +367,76 @@
         </form>
     </div>
 </div>
+
+<!-- MODAL EDIT ANGGOTA TIM -->
+<div class="modal-backdrop fixed inset-0 bg-black/30 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden" id="modalEditTeamMember" onclick="if(event.target===this) closeModal('modalEditTeamMember')">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-apple-modal border border-apple-border overflow-hidden">
+        <div class="px-4 py-3.5 border-b border-apple-border flex items-center justify-between bg-apple-canvas/50">
+            <h4 class="font-semibold text-[14px] text-apple-textPrimary">Edit Profil &amp; Akun Staf</h4>
+            <button type="button" class="w-6 h-6 rounded-full bg-black/5 hover:bg-black/10 flex items-center justify-center text-apple-textSecondary transition text-[12px]" onclick="closeModal('modalEditTeamMember')">✕</button>
+        </div>
+        <form id="formEditTeamMember" method="POST">
+            @csrf
+            @method('PUT')
+            <div class="p-4 flex flex-col gap-3.5 text-[12px]">
+                <div>
+                    <label class="block font-medium text-apple-textPrimary mb-1" for="editStaffName">Nama Lengkap</label>
+                    <input type="text" id="editStaffName" name="name" class="w-full px-3 py-1.5 border border-apple-border rounded-lg focus:outline-none focus:ring-2 focus:ring-apple-blue/20" required>
+                </div>
+
+                <div>
+                    <label class="block font-medium text-apple-textPrimary mb-1" for="editStaffUsername">Username</label>
+                    <input type="text" id="editStaffUsername" name="username" class="w-full px-3 py-1.5 border border-apple-border rounded-lg font-mono text-[11.5px] focus:outline-none focus:ring-2 focus:ring-apple-blue/20">
+                </div>
+
+                <div>
+                    <label class="block font-medium text-apple-textPrimary mb-1" for="editStaffEmail">Alamat Email</label>
+                    <input type="email" id="editStaffEmail" name="email" class="w-full px-3 py-1.5 border border-apple-border rounded-lg focus:outline-none focus:ring-2 focus:ring-apple-blue/20" required>
+                </div>
+
+                <div>
+                    <label class="block font-medium text-apple-textPrimary mb-1" for="editStaffTelegram">Telegram Username <span class="text-[10.5px] font-normal text-sky-600">(Sinkronisasi CS via Telegram)</span></label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1.5 text-apple-textTertiary font-mono text-[11.5px]">&#64;</span>
+                        <input type="text" id="editStaffTelegram" name="telegram_username" class="w-full pl-7 pr-3 py-1.5 border border-apple-border rounded-lg font-mono text-[11.5px] focus:outline-none focus:ring-2 focus:ring-apple-blue/20" placeholder="username_telegram">
+                    </div>
+                    <span class="text-[10.5px] text-apple-textTertiary mt-0.5 block">Hanya akun Telegram terdaftar yang dapat membalas tiket obrolan pelanggan via Telegram.</span>
+                </div>
+
+                <div>
+                    <label class="block font-medium text-apple-textPrimary mb-1" for="editStaffPassword">Ganti Password <span class="text-[10.5px] text-apple-textTertiary font-normal">(Kosongkan jika tidak diubah)</span></label>
+                    <input type="password" id="editStaffPassword" name="password" class="w-full px-3 py-1.5 border border-apple-border rounded-lg focus:outline-none focus:ring-2 focus:ring-apple-blue/20" placeholder="Minimal 6 karakter" minlength="6">
+                </div>
+
+                <div>
+                    <label class="block font-medium text-apple-textPrimary mb-1" for="editStaffRole">Peran / Role</label>
+                    <select id="editStaffRole" name="role" class="w-full px-3 py-1.5 border border-apple-border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-apple-blue/20 cursor-pointer" required>
+                        <option value="agent">Agent (Staf CS Operasional)</option>
+                        <option value="admin">Admin</option>
+                        <option value="superadmin">Superadmin (Akses Penuh Manajemen)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="px-4 py-3 border-t border-apple-border flex justify-end gap-2 bg-apple-canvas/40">
+                <button type="button" class="px-3 py-1.5 rounded-lg border border-apple-border text-apple-textSecondary hover:bg-white text-[11.5px] font-medium" onclick="closeModal('modalEditTeamMember')">Batal</button>
+                <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-apple-blue text-white hover:bg-apple-blueHover text-[11.5px] font-medium shadow-apple-sm">Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openEditModal(member) {
+        const form = document.getElementById('formEditTeamMember');
+        form.action = '/admin/team/' + member.id;
+        document.getElementById('editStaffName').value = member.name || '';
+        document.getElementById('editStaffUsername').value = member.username || '';
+        document.getElementById('editStaffEmail').value = member.email || '';
+        document.getElementById('editStaffTelegram').value = member.telegram_username || '';
+        document.getElementById('editStaffPassword').value = '';
+        document.getElementById('editStaffRole').value = member.role || 'agent';
+        openModal('modalEditTeamMember');
+    }
+</script>
 @endsection
 

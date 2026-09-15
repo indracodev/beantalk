@@ -1589,11 +1589,12 @@ class DashboardController extends Controller
         }
 
         $request->validate([
-            'name'     => 'required|string|max:100',
-            'username' => 'nullable|string|min:3|max:50|alpha_dash|unique:users,username',
-            'email'    => 'required|email|max:255|unique:users,email',
-            'role'     => 'required|in:superadmin,agent',
-            'password' => 'required|string|min:6',
+            'name'              => 'required|string|max:100',
+            'username'          => 'nullable|string|min:3|max:50|alpha_dash|unique:users,username',
+            'email'             => 'required|email|max:255|unique:users,email',
+            'role'              => 'required|in:superadmin,agent',
+            'password'          => 'required|string|min:6',
+            'telegram_username' => 'nullable|string|max:50',
         ]);
 
         $tenantId = $request->user()->tenant_id;
@@ -1608,37 +1609,106 @@ class DashboardController extends Controller
             }
         }
 
+        $telegramUsername = $request->input('telegram_username')
+            ? ltrim(trim($request->input('telegram_username')), '@')
+            : null;
+
         $user = User::create([
-            'tenant_id'  => $tenantId,
-            'name'       => $request->input('name'),
-            'username'   => $username,
-            'email'      => $request->input('email'),
-            'role'       => $request->input('role'),
-            'password'   => Hash::make($request->input('password')),
-            'status'     => 'offline',
-            'avatar_url' => 'https://ui-avatars.com/api/?name=' . urlencode($request->input('name')) . '&background=random',
+            'tenant_id'         => $tenantId,
+            'name'              => $request->input('name'),
+            'username'          => $username,
+            'email'             => $request->input('email'),
+            'role'              => $request->input('role'),
+            'password'          => Hash::make($request->input('password')),
+            'telegram_username' => $telegramUsername,
+            'status'            => 'offline',
+            'avatar_url'        => 'https://ui-avatars.com/api/?name=' . urlencode($request->input('name')) . '&background=random',
         ]);
 
         ActivityLogger::log(
             'team.invited',
             "Menambahkan anggota tim baru: {$user->name} ({$user->email}) sebagai {$user->role}",
             $user,
-            ['invited_user_id' => $user->id, 'email' => $user->email, 'role' => $user->role]
+            ['invited_user_id' => $user->id, 'email' => $user->email, 'role' => $user->role, 'telegram_username' => $telegramUsername]
         );
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'id'    => $user->id,
-                    'name'  => $user->name,
-                    'email' => $user->email,
-                    'role'  => $user->role,
+                    'id'                => $user->id,
+                    'name'              => $user->name,
+                    'email'             => $user->email,
+                    'role'              => $user->role,
+                    'telegram_username' => $user->telegram_username,
                 ]
             ], 201);
         }
 
         return redirect()->route('admin.team')->with('success', "Staf CS '{$user->name}' berhasil didaftarkan sebagai {$user->role}!");
+    }
+
+    /**
+     * Update Team Member Profile & Roles
+     * PUT /admin/team/{id}
+     */
+    public function updateTeam(Request $request, $id)
+    {
+        if (!$request->user()->isSuperAdmin()) {
+            abort(403, 'Akses terbatas hanya untuk Superadmin.');
+        }
+
+        $tenantId = $request->user()->tenant_id;
+        $user = User::where('tenant_id', $tenantId)->findOrFail($id);
+
+        $request->validate([
+            'name'              => 'required|string|max:100',
+            'username'          => 'nullable|string|min:3|max:50|alpha_dash|unique:users,username,' . $user->id,
+            'email'             => 'required|email|max:255|unique:users,email,' . $user->id,
+            'role'              => 'required|in:superadmin,admin,agent',
+            'password'          => 'nullable|string|min:6',
+            'telegram_username' => 'nullable|string|max:50',
+        ]);
+
+        $telegramUsername = $request->input('telegram_username')
+            ? ltrim(trim($request->input('telegram_username')), '@')
+            : null;
+
+        $updateData = [
+            'name'              => $request->input('name'),
+            'username'          => $request->input('username') ?: $user->username,
+            'email'             => $request->input('email'),
+            'role'              => $request->input('role'),
+            'telegram_username' => $telegramUsername,
+        ];
+
+        if ($request->filled('password')) {
+            $updateData['password'] = Hash::make($request->input('password'));
+        }
+
+        $user->update($updateData);
+
+        ActivityLogger::log(
+            'team.updated',
+            "Memperbarui profil anggota tim: {$user->name} ({$user->role})",
+            $user,
+            ['updated_user_id' => $user->id, 'email' => $user->email, 'role' => $user->role, 'telegram_username' => $telegramUsername]
+        );
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id'                => $user->id,
+                    'name'              => $user->name,
+                    'email'             => $user->email,
+                    'role'              => $user->role,
+                    'telegram_username' => $user->telegram_username,
+                ]
+            ]);
+        }
+
+        return redirect()->route('admin.team')->with('success', "Profil staf '{$user->name}' berhasil diperbarui!");
     }
 
     /**
