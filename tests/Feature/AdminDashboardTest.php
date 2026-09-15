@@ -29,7 +29,10 @@ class AdminDashboardTest extends TestCase
             ['name' => 'Dashboard Test Tenant', 'plan' => 'enterprise']
         );
 
-        User::where('tenant_id', $this->tenant->id)->delete();
+        User::whereIn('username', ['dashsuper', 'dashagent'])
+            ->orWhereIn('email', ['dashsuper@indraco.com', 'dashagent@indraco.com'])
+            ->orWhere('tenant_id', $this->tenant->id)
+            ->delete();
 
         $this->superadmin = User::create([
             'tenant_id' => $this->tenant->id,
@@ -89,6 +92,36 @@ class AdminDashboardTest extends TestCase
     public function testAuthenticatedUserCanExportDashboardReport()
     {
         $response = $this->actingAs($this->superadmin)->get('/admin/dashboard/export?period=7d');
+
+        $response->assertStatus(200)
+            ->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+    }
+
+    /**
+     * Test Authenticated User can filter Executive Dashboard by custom date range
+     */
+    public function testAuthenticatedUserCanFilterDashboardByCustomDateRange()
+    {
+        $start = now()->subDays(10)->format('Y-m-d');
+        $end = now()->format('Y-m-d');
+
+        $response = $this->actingAs($this->superadmin)->get("/admin?start_date={$start}&end_date={$end}");
+
+        $response->assertStatus(200)
+            ->assertSee('Executive Dashboard')
+            ->assertSee($start)
+            ->assertSee($end);
+    }
+
+    /**
+     * Test Authenticated User can export custom date range report
+     */
+    public function testAuthenticatedUserCanExportCustomDateRangeReport()
+    {
+        $start = now()->subDays(5)->format('Y-m-d');
+        $end = now()->format('Y-m-d');
+
+        $response = $this->actingAs($this->superadmin)->get("/admin/dashboard/export?start_date={$start}&end_date={$end}");
 
         $response->assertStatus(200)
             ->assertHeader('Content-Type', 'text/csv; charset=UTF-8');

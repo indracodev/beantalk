@@ -33,40 +33,70 @@ class DashboardController extends Controller
         $tenantId = $request->user()->tenant_id;
         $now = now();
         $period = $request->input('period', '7d');
+        $startDateInput = $request->input('start_date');
+        $endDateInput = $request->input('end_date');
+        $isCustomDate = false;
 
-        // Determine date range and comparison periods
-        switch ($period) {
-            case 'today':
-                $startDate = $now->copy()->startOfDay();
-                $endDate = $now->copy()->endOfDay();
-                $prevStartDate = $now->copy()->subDay()->startOfDay();
-                $prevEndDate = $now->copy()->subDay()->endOfDay();
-                $chartPoints = 7;
-                break;
-            case '30d':
-                $startDate = $now->copy()->subDays(29)->startOfDay();
-                $endDate = $now->copy()->endOfDay();
-                $prevStartDate = $now->copy()->subDays(59)->startOfDay();
-                $prevEndDate = $now->copy()->subDays(30)->endOfDay();
-                $chartPoints = 15;
-                break;
-            case 'quarter':
-                $startDate = $now->copy()->subDays(89)->startOfDay();
-                $endDate = $now->copy()->endOfDay();
-                $prevStartDate = $now->copy()->subDays(179)->startOfDay();
-                $prevEndDate = $now->copy()->subDays(90)->endOfDay();
-                $chartPoints = 13;
-                break;
-            case '7d':
-            default:
-                $period = '7d';
-                $startDate = $now->copy()->subDays(6)->startOfDay();
-                $endDate = $now->copy()->endOfDay();
-                $prevStartDate = $now->copy()->subDays(13)->startOfDay();
-                $prevEndDate = $now->copy()->subDays(7)->endOfDay();
-                $chartPoints = 7;
-                break;
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            try {
+                $startDate = \Carbon\Carbon::parse($startDateInput)->startOfDay();
+                $endDate = \Carbon\Carbon::parse($endDateInput)->endOfDay();
+                if ($startDate > $endDate) {
+                    $tmp = $startDate;
+                    $startDate = $endDate->copy()->startOfDay();
+                    $endDate = $tmp->copy()->endOfDay();
+                }
+                $daysDiff = max(1, $startDate->diffInDays($endDate) + 1);
+                $prevStartDate = $startDate->copy()->subDays($daysDiff)->startOfDay();
+                $prevEndDate = $startDate->copy()->subDay()->endOfDay();
+                $period = 'custom';
+                $isCustomDate = true;
+                $chartPoints = min((int) $daysDiff, 30);
+            } catch (\Exception $e) {
+                $isCustomDate = false;
+            }
         }
+
+        if (!$isCustomDate) {
+            // Determine date range and comparison periods
+            switch ($period) {
+                case 'today':
+                    $startDate = $now->copy()->startOfDay();
+                    $endDate = $now->copy()->endOfDay();
+                    $prevStartDate = $now->copy()->subDay()->startOfDay();
+                    $prevEndDate = $now->copy()->subDay()->endOfDay();
+                    $chartPoints = 7;
+                    break;
+                case '30d':
+                    $startDate = $now->copy()->subDays(29)->startOfDay();
+                    $endDate = $now->copy()->endOfDay();
+                    $prevStartDate = $now->copy()->subDays(59)->startOfDay();
+                    $prevEndDate = $now->copy()->subDays(30)->endOfDay();
+                    $chartPoints = 15;
+                    break;
+                case 'quarter':
+                    $startDate = $now->copy()->subDays(89)->startOfDay();
+                    $endDate = $now->copy()->endOfDay();
+                    $prevStartDate = $now->copy()->subDays(179)->startOfDay();
+                    $prevEndDate = $now->copy()->subDays(90)->endOfDay();
+                    $chartPoints = 13;
+                    break;
+                case '7d':
+                default:
+                    $period = '7d';
+                    $startDate = $now->copy()->subDays(6)->startOfDay();
+                    $endDate = $now->copy()->endOfDay();
+                    $prevStartDate = $now->copy()->subDays(13)->startOfDay();
+                    $prevEndDate = $now->copy()->subDays(7)->endOfDay();
+                    $chartPoints = 7;
+                    break;
+            }
+        }
+
+        $startDateFormatted = $startDate->format('Y-m-d');
+        $endDateFormatted = $endDate->format('Y-m-d');
+        $startDateLabel = $startDate->format('d M Y');
+        $endDateLabel = $endDate->format('d M Y');
 
         // Projects & Connected Channels
         $projects = Project::where('tenant_id', $tenantId)
@@ -237,14 +267,20 @@ class DashboardController extends Controller
             // Default 7d uses Senin - Minggu daily data
             $chartData = $weeklyChartData;
         } else {
-            $stepDays = $period === '30d' ? 2 : ($period === 'quarter' ? 7 : 1);
-            for ($i = 0; $i < $chartPoints; $i++) {
+            $stepDays = $period === '30d' ? 2 : ($period === 'quarter' ? 7 : ($isCustomDate ? max(1, (int) ceil($daysDiff / 30)) : 1));
+            $calculatedPoints = $isCustomDate ? (int) ceil($daysDiff / $stepDays) : $chartPoints;
+            for ($i = 0; $i < $calculatedPoints; $i++) {
                 $ptDay = $startDate->copy()->addDays($i * $stepDays);
                 if ($ptDay > $endDate) {
                     $ptDay = $endDate->copy();
                 }
                 $ptStart = $ptDay->copy()->startOfDay();
-                $ptEnd = $ptDay->copy()->endOfDay();
+                $ptEnd = ($stepDays > 1 && $i < $calculatedPoints - 1)
+                    ? $ptDay->copy()->addDays($stepDays - 1)->endOfDay()
+                    : $ptDay->copy()->endOfDay();
+                if ($ptEnd > $endDate) {
+                    $ptEnd = $endDate->copy();
+                }
                 $ptLabel = $ptDay->format('d M');
                 $chartData[] = [
                     'date' => $ptLabel,
@@ -458,7 +494,12 @@ class DashboardController extends Controller
             'specialists',
             'topPagesByProject',
             'highIntentProducts',
-            'period'
+            'period',
+            'startDateFormatted',
+            'endDateFormatted',
+            'startDateLabel',
+            'endDateLabel',
+            'isCustomDate'
         ));
     }
 
@@ -470,14 +511,28 @@ class DashboardController extends Controller
     {
         $tenantId = $request->user()->tenant_id;
         $period = $request->input('period', '7d');
-        $filename = 'beantalk-telemetry-' . $period . '-' . date('Y-m-d') . '.csv';
+        $startDateInput = $request->input('start_date');
+        $endDateInput = $request->input('end_date');
 
-        $conversations = Conversation::where('tenant_id', $tenantId)
+        $query = Conversation::where('tenant_id', $tenantId)
             ->whereHas('messages')
             ->with(['visitor', 'project', 'assignedUser'])
-            ->orderByDesc('id')
-            ->limit(2000)
-            ->get();
+            ->orderByDesc('id');
+
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            try {
+                $startDate = \Carbon\Carbon::parse($startDateInput)->startOfDay();
+                $endDate = \Carbon\Carbon::parse($endDateInput)->endOfDay();
+                $query->whereBetween('created_at', [$startDate, $endDate]);
+                $filename = 'beantalk-telemetry-' . $startDate->format('Ymd') . '-to-' . $endDate->format('Ymd') . '.csv';
+            } catch (\Exception $e) {
+                $filename = 'beantalk-telemetry-' . $period . '-' . date('Y-m-d') . '.csv';
+            }
+        } else {
+            $filename = 'beantalk-telemetry-' . $period . '-' . date('Y-m-d') . '.csv';
+        }
+
+        $conversations = $query->limit(3000)->get();
 
         $headers = [
             'Content-Type' => 'text/csv',
