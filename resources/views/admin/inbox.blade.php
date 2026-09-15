@@ -324,6 +324,17 @@
 
                     <!-- Actions Right -->
                     <div class="flex items-center gap-1.5 shrink-0">
+                        <!-- Bot Active / Inactive Toggle -->
+                        @php
+                            $isBotActive = (bool) ($activeConversation->is_bot_active ?? true);
+                        @endphp
+                        <button type="button" id="btnToggleBot" onclick="handleToggleBot()"
+                            class="px-2.5 py-1 text-[10.5px] rounded-lg border border-white/40 bg-white/20 hover:bg-white/30 text-white active:scale-95 transition font-semibold shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                            title="{{ $isBotActive ? 'Bot aktif membalas otomatis. Klik untuk menjeda bot.' : 'Bot sedang dijeda. Staf CS menangani percakapan ini. Klik untuk mengaktifkan kembali bot.' }}">
+                            <span class="w-2 h-2 rounded-full {{ $isBotActive ? 'bg-emerald-300 animate-pulse' : 'bg-amber-300' }}" id="botStatusDot"></span>
+                            <span id="botToggleText">{{ $isBotActive ? 'Bot: On' : 'Bot: Off' }}</span>
+                        </button>
+
                         <!-- Assign Dropdown -->
                         <div class="relative">
                             <select id="assignCsSelect" onchange="handleAssign(this.value)"
@@ -340,13 +351,13 @@
 
                         <!-- Status Toggle / Resolve Button -->
                         <button type="button" id="btnToggleStatus" onclick="handleToggleStatus()"
-                            class="px-2.5 py-1 text-[10.5px] rounded-lg border border-white/40 bg-white {{ $activeConversation->status === 'open' ? 'text-apple-red hover:bg-red-50' : 'text-apple-green hover:bg-emerald-50' }} active:scale-95 transition font-semibold shadow-2xs">
+                            class="px-2.5 py-1 text-[10.5px] rounded-lg border border-white/40 bg-white {{ $activeConversation->status === 'open' ? 'text-apple-red hover:bg-red-50' : 'text-apple-green hover:bg-emerald-50' }} active:scale-95 transition font-semibold shadow-2xs cursor-pointer">
                             <span>{{ $activeConversation->status === 'open' ? 'Resolve' : 'Reopen' }}</span>
                         </button>
 
                         <!-- Inspector Toggle for Customer Context -->
                         <button type="button" onclick="toggleInspectorMode()"
-                            class="p-1.5 rounded-lg border border-white/30 bg-white/20 hover:bg-white/30 text-white transition shadow-2xs"
+                            class="p-1.5 rounded-lg border border-white/30 bg-white/20 hover:bg-white/30 text-white transition shadow-2xs cursor-pointer"
                             title="Detail Customer">
                             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                                 <circle cx="12" cy="12" r="10" />
@@ -419,6 +430,19 @@
                                     {{ $msg->content }}
                                 </div>
                                 <span class="msg-time-display text-[9.5px] text-apple-textTertiary mt-0.5 pl-1 font-mono" data-created-at="{{ $msg->created_at ? $msg->created_at->toIso8601String() : '' }}">{{ $msgCreatedAt ? $msgCreatedAt->format('H:i') : '-' }}</span>
+                            </div>
+                        @elseif ($msg->sender_type === 'bot')
+                            <!-- Bot Bubble -->
+                            <div class="flex flex-col items-end self-end max-w-[85%] sm:max-w-[70%]"
+                                data-id="{{ $msg->id }}" data-date-key="{{ $msgDateKey }}" data-created-at="{{ $msg->created_at ? $msg->created_at->toIso8601String() : '' }}">
+                                <span class="text-[10.5px] text-indigo-600 font-medium mb-0.5 pr-1 flex items-center gap-1">
+                                    <span>🤖 {{ $msg->sender_name ?: 'BeanBot' }}</span>
+                                    <span class="text-[9px] px-1 py-0.2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded font-semibold">BOT AUTO</span>
+                                </span>
+                                <div class="bubble-bot bg-indigo-600 text-white px-3 py-2 text-[12.5px] rounded-2xl shadow-apple-sm leading-relaxed" style="border-bottom-right-radius: 4px;">
+                                    {{ $msg->content }}
+                                </div>
+                                <span class="msg-time-display text-[9.5px] text-apple-textTertiary mt-0.5 pr-1 font-mono" data-created-at="{{ $msg->created_at ? $msg->created_at->toIso8601String() : '' }}">{{ $msgCreatedAt ? $msgCreatedAt->format('H:i') : '-' }} • Bot Replied</span>
                             </div>
                         @else
                             <!-- Agent Bubble -->

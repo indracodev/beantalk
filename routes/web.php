@@ -33,6 +33,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('inbox/feed/updates', 'Admin\DashboardController@pollUpdates')->name('inbox.updates');
     Route::get('inbox/{id?}', 'Admin\DashboardController@inbox')->name('inbox');
     Route::post('inbox/{id}/reply', 'Admin\DashboardController@reply')->name('inbox.reply');
+    Route::post('inbox/{id}/toggle-bot', 'Admin\DashboardController@toggleBot')->name('inbox.toggle-bot');
     Route::get('inbox/{id}/messages', 'Admin\DashboardController@messages')->name('inbox.messages');
     Route::put('inbox/{id}/status', 'Admin\DashboardController@updateStatus')->name('inbox.status');
     Route::put('inbox/{id}/assign', 'Admin\DashboardController@assign')->name('inbox.assign');

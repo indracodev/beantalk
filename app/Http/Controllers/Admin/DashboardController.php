@@ -841,8 +841,17 @@ class DashboardController extends Controller
         $user = $request->user();
 
         // Otomatis assign percakapan ke agen yang pertama kali membalas jika belum ditugaskan
+        // dan jeda bot otomatis agar tidak tumpang tindih dengan CS manusia
+        $updates = [];
         if (empty($conversation->assigned_user_id)) {
-            $conversation->update(['assigned_user_id' => $user->id]);
+            $updates['assigned_user_id'] = $user->id;
+        }
+        if ($conversation->is_bot_active) {
+            $updates['is_bot_active'] = false;
+            $updates['bot_handoff_at'] = now();
+        }
+        if (!empty($updates)) {
+            $conversation->update($updates);
         }
 
         $result = $conversationService->appendMessage($conversation, [
@@ -871,8 +880,43 @@ class DashboardController extends Controller
                 'created_at'         => $msg->created_at ? $msg->created_at->toIso8601String() : null,
                 'assigned_user_id'   => $conversation->assigned_user_id,
                 'assigned_user_name' => $user->name,
+                'is_bot_active'      => (bool) ($conversation->is_bot_active ?? false),
             ]
         ], 201);
+    }
+
+    /**
+     * Toggle Bot Active/Inactive State for a specific Conversation
+     * POST /admin/inbox/{id}/toggle-bot
+     */
+    public function toggleBot(Request $request, $id): JsonResponse
+    {
+        $tenantId = $request->user()->tenant_id;
+        $conversation = Conversation::where('tenant_id', $tenantId)->findOrFail($id);
+
+        $currentState = (bool) ($conversation->is_bot_active ?? true);
+        $newState = $request->has('active') ? (bool) $request->input('active') : !$currentState;
+
+        $conversation->update([
+            'is_bot_active'  => $newState,
+            'bot_handoff_at' => $newState ? null : now(),
+        ]);
+
+        ActivityLogger::log(
+            'bot.toggle',
+            $newState ? "Mengaktifkan kembali bot pada percakapan #{$conversation->id}" : "Menjeda bot pada percakapan #{$conversation->id}",
+            $conversation,
+            ['is_bot_active' => $newState]
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'conversation_id' => $conversation->id,
+                'is_bot_active'   => $newState,
+                'message'         => $newState ? 'Bot berhasil diaktifkan kembali untuk tiket ini.' : 'Bot berhasil dijeda. Staf CS menangani percakapan ini.',
+            ]
+        ]);
     }
 
     /**
@@ -920,9 +964,10 @@ class DashboardController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'messages'     => $formatted,
-                'last_id'      => $newMessages->isNotEmpty() ? $newMessages->last()->id : $afterId,
-                'unread_total' => $totalUnread,
+                'messages'      => $formatted,
+                'last_id'       => $newMessages->isNotEmpty() ? $newMessages->last()->id : $afterId,
+                'unread_total'  => $totalUnread,
+                'is_bot_active' => (bool) ($conversation->is_bot_active ?? true),
             ]
         ]);
     }
@@ -1006,6 +1051,7 @@ class DashboardController extends Controller
                 'unread_agent_count'   => (int) $conv->unread_agent_count,
                 'is_unread'            => (bool) ($conv->unread_agent_count > 0),
                 'status'               => $conv->status,
+                'is_bot_active'        => (bool) ($conv->is_bot_active ?? true),
                 'assigned_user_id'     => $conv->assigned_user_id,
             ];
         });
@@ -1325,23 +1371,39 @@ class DashboardController extends Controller
             ]
         );
 
+        $botRulesRaw = $request->input('bot_rules');
+        $botRules = [];
+        if (is_string($botRulesRaw)) {
+            $decoded = json_decode($botRulesRaw, true);
+            if (is_array($decoded)) {
+                $botRules = $decoded;
+            }
+        } elseif (is_array($botRulesRaw)) {
+            $botRules = $botRulesRaw;
+        }
+
         $widgetSetting->update([
-            'primary_color'     => $request->input('primary_color', $widgetSetting->primary_color),
-            'greeting_title'    => $request->input('greeting_title', $widgetSetting->greeting_title),
-            'greeting_subtitle' => $request->input('greeting_subtitle', $widgetSetting->greeting_subtitle),
-            'support_title'     => $request->input('support_title', $widgetSetting->support_title ?: 'Support'),
-            'find_us_title'     => $request->input('find_us_title', 'Reach Us Anywhere Else'),
-            'social_channels'   => $formattedChannels,
+            'primary_color'       => $request->input('primary_color', $widgetSetting->primary_color),
+            'greeting_title'      => $request->input('greeting_title', $widgetSetting->greeting_title),
+            'greeting_subtitle'   => $request->input('greeting_subtitle', $widgetSetting->greeting_subtitle),
+            'support_title'       => $request->input('support_title', $widgetSetting->support_title ?: 'Support'),
+            'find_us_title'       => $request->input('find_us_title', 'Reach Us Anywhere Else'),
+            'social_channels'     => $formattedChannels,
+            'bot_enabled'         => $request->has('bot_enabled') ? (bool) $request->input('bot_enabled') : $widgetSetting->bot_enabled,
+            'bot_name'            => $request->input('bot_name', $widgetSetting->bot_name ?: 'BeanBot'),
+            'bot_welcome_message' => $request->input('bot_welcome_message', $widgetSetting->bot_welcome_message),
+            'bot_offline_message' => $request->input('bot_offline_message', $widgetSetting->bot_offline_message),
+            'bot_rules'           => $botRules,
         ]);
 
         ActivityLogger::log(
             'widget.updated',
-            "Memperbarui pengaturan tampilan widget dan saluran sosial untuk: {$project->name}",
+            "Memperbarui pengaturan tampilan widget dan bot asisten untuk: {$project->name}",
             $project,
-            ['project_id' => $project->id, 'channels_active' => count(array_filter($formattedChannels, fn($c) => $c['enabled']))]
+            ['project_id' => $project->id, 'bot_enabled' => (bool)$widgetSetting->bot_enabled]
         );
 
-        return redirect()->route('admin.integrations')->with('success', "Pengaturan widget & saluran untuk '{$project->name}' berhasil disimpan!");
+        return redirect()->route('admin.integrations')->with('success', "Pengaturan widget & bot asisten untuk '{$project->name}' berhasil disimpan!");
     }
 
     /**

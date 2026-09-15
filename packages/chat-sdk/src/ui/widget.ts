@@ -696,14 +696,16 @@ export class ChatWidgetUi {
 
   private renderMessageBubble(msg: Message): void {
     const isVisitor = msg.sender_type === 'visitor';
+    const isBot = msg.sender_type === 'bot';
     const row = document.createElement('div');
     row.className = `msg-bubble-row ${isVisitor ? 'is-visitor' : 'is-agent'}`;
 
     const timeStr = this.formatTime(msg.created_at);
     const text = msg.content || msg.message || '';
+    const senderTitle = isVisitor ? 'Anda' : (isBot ? ('🤖 ' + (msg.sender_name || 'BeanBot')) : (msg.sender_name || 'Agent'));
 
     row.innerHTML = `
-      <div class="msg-sender-name">${isVisitor ? 'Anda' : (msg.sender_name || 'Agent')}</div>
+      <div class="msg-sender-name" style="${isBot ? 'color: #5856D6; font-weight: 600;' : ''}">${escapeHtml(senderTitle)}</div>
       <div class="msg-bubble">${escapeHtml(text)}</div>
       <div class="msg-time-status">
         <span>${timeStr}</span>

@@ -18,6 +18,8 @@ class Conversation extends Model
         'contact_id',
         'assigned_user_id',
         'status',
+        'is_bot_active',
+        'bot_handoff_at',
         'priority',
         'channel',
         'page_url',
@@ -29,8 +31,10 @@ class Conversation extends Model
     ];
 
     protected $casts = [
-        'last_message_at' => 'datetime',
-        'unread_agent_count' => 'integer',
+        'is_bot_active'        => 'boolean',
+        'bot_handoff_at'       => 'datetime',
+        'last_message_at'      => 'datetime',
+        'unread_agent_count'   => 'integer',
         'unread_visitor_count' => 'integer',
     ];
 

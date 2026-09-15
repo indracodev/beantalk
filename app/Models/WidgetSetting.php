@@ -20,11 +20,21 @@ class WidgetSetting extends Model
         'auto_reply_offline',
         'find_us_title',
         'social_channels',
+        'bot_enabled',
+        'bot_name',
+        'bot_welcome_message',
+        'bot_offline_message',
+        'bot_rules',
+        'bot_ai_enabled',
+        'bot_ai_prompt',
     ];
 
     protected $casts = [
         'is_online'       => 'boolean',
         'social_channels' => 'array',
+        'bot_enabled'     => 'boolean',
+        'bot_rules'       => 'array',
+        'bot_ai_enabled'  => 'boolean',
     ];
 
     public function project()

@@ -13,13 +13,16 @@ class MessageController extends Controller
 {
     protected $conversationService;
     protected $pollingService;
+    protected $botService;
 
     public function __construct(
         ConversationService $conversationService,
-        PollingService $pollingService
+        PollingService $pollingService,
+        \App\Services\BotService $botService
     ) {
         $this->conversationService = $conversationService;
         $this->pollingService = $pollingService;
+        $this->botService = $botService;
     }
 
     /**
@@ -151,6 +154,15 @@ class MessageController extends Controller
         ]);
 
         $msg = $result['message'];
+
+        // Trigger Bot Auto-Responder jika pesan bukan duplikasi
+        if (!$result['is_duplicate']) {
+            try {
+                $this->botService->processInboundMessage($conversation, $msg);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('[BotService] Inbound processing warning: ' . $e->getMessage());
+            }
+        }
 
         return response()->json([
             'success' => true,

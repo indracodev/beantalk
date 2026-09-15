@@ -200,10 +200,85 @@
                                 <input type="text" name="channels[tokopedia][url]" value="{{ $tkp['url'] ?? '' }}" placeholder="https://tokopedia.com/storeanda" class="w-full px-2.5 py-1 text-[11.5px] border border-apple-border rounded-md bg-white">
                             </div>
 
+                            <hr class="border-apple-border my-1">
+
+                            <!-- 4. Smart Bot & Auto-Responder Settings -->
+                            <div class="rounded-xl border border-indigo-100 bg-indigo-50/40 p-3 flex flex-col gap-3">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-6 h-6 rounded-md bg-indigo-600 text-white flex items-center justify-center font-bold text-[11px] shadow-2xs">
+                                            🤖
+                                        </div>
+                                        <div>
+                                            <span class="font-semibold text-apple-textPrimary text-[12.5px]">Smart Bot &amp; Auto-Responder</span>
+                                            <p class="text-[10px] text-apple-textTertiary">Balas chat pengunjung otomatis 24/7 berbasis kata kunci &amp; FAQ.</p>
+                                        </div>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" name="bot_enabled" value="1" class="sr-only peer" {{ !empty($p->widgetSetting->bot_enabled) ? 'checked' : '' }} onchange="toggleBotSection('{{ $p->id }}', this.checked)">
+                                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                                    </label>
+                                </div>
+
+                                <div id="botFields_{{ $p->id }}" class="flex flex-col gap-2.5 pt-2 border-t border-indigo-100 {{ empty($p->widgetSetting->bot_enabled) ? 'hidden' : '' }}">
+                                    <!-- Bot Name -->
+                                    <div>
+                                        <label class="block font-medium text-apple-textPrimary text-[11px] mb-1">Nama Asisten Bot</label>
+                                        <input type="text" name="bot_name" class="w-full px-2.5 py-1.5 text-[11.5px] border border-apple-border rounded-lg bg-white" value="{{ $p->widgetSetting->bot_name ?? 'BeanBot' }}" placeholder="e.g. BeanBot / Asisten CS">
+                                    </div>
+
+                                    <!-- Welcome Message -->
+                                    <div>
+                                        <label class="block font-medium text-apple-textPrimary text-[11px] mb-1">Pesan Sambutan Otomatis (First Inbound Greeting)</label>
+                                        <textarea name="bot_welcome_message" rows="2" class="w-full px-2.5 py-1.5 text-[11.5px] border border-apple-border rounded-lg bg-white resize-none" placeholder="Halo! Ada yang bisa kami bantu seputar produk atau pesanan Anda?">{{ $p->widgetSetting->bot_welcome_message ?? '' }}</textarea>
+                                        <span class="text-[9.5px] text-apple-textTertiary">Dikirimkan otomatis saat pengunjung pertama kali mengirim pesan.</span>
+                                    </div>
+
+                                    <!-- Offline Message -->
+                                    <div>
+                                        <label class="block font-medium text-apple-textPrimary text-[11px] mb-1">Pesan Luar Jam Operasional (Offline Auto-Reply)</label>
+                                        <textarea name="bot_offline_message" rows="2" class="w-full px-2.5 py-1.5 text-[11.5px] border border-apple-border rounded-lg bg-white resize-none" placeholder="Halo! Toko kami saat ini sedang tutup. Tinggalkan pesan Anda, staf kami akan segera merespons saat kembali online.">{{ $p->widgetSetting->bot_offline_message ?? '' }}</textarea>
+                                    </div>
+
+                                    <!-- FAQ & Keyword Rules Builder -->
+                                    <div>
+                                        <div class="flex items-center justify-between mb-1">
+                                            <label class="font-medium text-apple-textPrimary text-[11px]">Aturan FAQ &amp; Kata Kunci</label>
+                                            <button type="button" onclick="addBotRule('{{ $p->id }}')" class="text-[10px] text-indigo-600 hover:text-indigo-800 font-semibold cursor-pointer">+ Tambah Aturan</button>
+                                        </div>
+                                        
+                                        <div id="rulesContainer_{{ $p->id }}" class="flex flex-col gap-2">
+                                            @php
+                                                $botRules = is_array($p->widgetSetting->bot_rules ?? null) ? $p->widgetSetting->bot_rules : [];
+                                            @endphp
+                                            @forelse($botRules as $idx => $r)
+                                                @php
+                                                    $kwStr = is_array($r['keywords'] ?? null) ? implode(', ', $r['keywords']) : ($r['keywords'] ?? '');
+                                                    $respStr = $r['response'] ?? ($r['response_text'] ?? '');
+                                                @endphp
+                                                <div class="p-2 bg-white rounded-lg border border-indigo-100 flex flex-col gap-1.5 rule-item shadow-2xs relative">
+                                                    <button type="button" onclick="this.closest('.rule-item').remove(); syncBotRules('{{ $p->id }}');" class="absolute top-1.5 right-1.5 text-gray-400 hover:text-red-500 text-[11px] font-bold cursor-pointer">✕</button>
+                                                    <input type="text" placeholder="Kata kunci (pisah koma: ongkir, tarif, kirim)" value="{{ $kwStr }}" class="w-[90%] px-2 py-1 text-[11px] border border-apple-border rounded font-mono rule-keywords" oninput="syncBotRules('{{ $p->id }}')">
+                                                    <textarea rows="1" placeholder="Jawaban otomatis bot..." class="w-full px-2 py-1 text-[11px] border border-apple-border rounded resize-none rule-response" oninput="syncBotRules('{{ $p->id }}')">{{ $respStr }}</textarea>
+                                                </div>
+                                            @empty
+                                                <!-- Default example rule if none -->
+                                                <div class="p-2 bg-white rounded-lg border border-indigo-100 flex flex-col gap-1.5 rule-item shadow-2xs relative">
+                                                    <button type="button" onclick="this.closest('.rule-item').remove(); syncBotRules('{{ $p->id }}');" class="absolute top-1.5 right-1.5 text-gray-400 hover:text-red-500 text-[11px] font-bold cursor-pointer">✕</button>
+                                                    <input type="text" placeholder="Kata kunci (pisah koma: ongkir, tarif, kirim)" value="ongkir, pengiriman, tarif" class="w-[90%] px-2 py-1 text-[11px] border border-apple-border rounded font-mono rule-keywords" oninput="syncBotRules('{{ $p->id }}')">
+                                                    <textarea rows="1" placeholder="Jawaban otomatis bot..." class="w-full px-2 py-1 text-[11px] border border-apple-border rounded resize-none rule-response" oninput="syncBotRules('{{ $p->id }}')">Pesanan sebelum jam 15:00 WIB dikirim pada hari yang sama! Ongkir otomatis dihitung saat checkout.</textarea>
+                                                </div>
+                                            @endforelse
+                                        </div>
+                                        <input type="hidden" name="bot_rules" id="botRulesJson_{{ $p->id }}" value="{{ json_encode($botRules) }}">
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                         <div class="px-4 py-3 border-t border-apple-border flex justify-end gap-2 bg-apple-canvas/40">
-                            <button type="button" class="px-3 py-1.5 rounded-lg border border-apple-border text-apple-textSecondary hover:bg-white text-[11.5px] font-medium" onclick="closeModal('modalSettings_{{ $p->id }}')">Batal</button>
-                            <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-apple-blue text-white hover:bg-apple-blueHover text-[11.5px] font-medium shadow-apple-sm">Simpan Perubahan</button>
+                            <button type="button" class="px-3 py-1.5 rounded-lg border border-apple-border text-apple-textSecondary hover:bg-white text-[11.5px] font-medium cursor-pointer" onclick="closeModal('modalSettings_{{ $p->id }}')">Batal</button>
+                            <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-apple-blue text-white hover:bg-apple-blueHover text-[11.5px] font-medium shadow-apple-sm cursor-pointer">Simpan Perubahan</button>
                         </div>
                     </form>
                 </div>
@@ -276,6 +351,52 @@
         if (typeof showToast === 'function') {
             showToast('Copied!', 'Widget embed code copied to clipboard.');
         }
+    }
+
+    function toggleBotSection(projectId, isChecked) {
+        const el = document.getElementById('botFields_' + projectId);
+        if (el) {
+            el.classList.toggle('hidden', !isChecked);
+        }
+    }
+
+    function addBotRule(projectId) {
+        const container = document.getElementById('rulesContainer_' + projectId);
+        if (!container) return;
+
+        const div = document.createElement('div');
+        div.className = 'p-2 bg-white rounded-lg border border-indigo-100 flex flex-col gap-1.5 rule-item shadow-2xs relative';
+        div.innerHTML = `
+            <button type="button" onclick="this.closest('.rule-item').remove(); syncBotRules('${projectId}');" class="absolute top-1.5 right-1.5 text-gray-400 hover:text-red-500 text-[11px] font-bold cursor-pointer">✕</button>
+            <input type="text" placeholder="Kata kunci (pisah koma: ongkir, tarif, kirim)" class="w-[90%] px-2 py-1 text-[11px] border border-apple-border rounded font-mono rule-keywords" oninput="syncBotRules('${projectId}')">
+            <textarea rows="1" placeholder="Jawaban otomatis bot..." class="w-full px-2 py-1 text-[11px] border border-apple-border rounded resize-none rule-response" oninput="syncBotRules('${projectId}')"></textarea>
+        `;
+        container.appendChild(div);
+        div.querySelector('input').focus();
+    }
+
+    function syncBotRules(projectId) {
+        const container = document.getElementById('rulesContainer_' + projectId);
+        const hiddenInput = document.getElementById('botRulesJson_' + projectId);
+        if (!container || !hiddenInput) return;
+
+        const rules = [];
+        container.querySelectorAll('.rule-item').forEach(item => {
+            const kwInput = item.querySelector('.rule-keywords');
+            const respInput = item.querySelector('.rule-response');
+            const kwVal = kwInput ? kwInput.value.trim() : '';
+            const respVal = respInput ? respInput.value.trim() : '';
+
+            if (kwVal && respVal) {
+                const kwArray = kwVal.split(',').map(s => s.trim()).filter(Boolean);
+                rules.push({
+                    keywords: kwArray,
+                    response: respVal
+                });
+            }
+        });
+
+        hiddenInput.value = JSON.stringify(rules);
     }
 </script>
 @endpush
