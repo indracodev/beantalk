@@ -131,6 +131,7 @@ class BotService
                         $bestMatch = [
                             'response' => $responseTemplate,
                             'keyword'  => $kwLower,
+                            'options'  => $rule['options'] ?? null,
                         ];
                     }
                 }
@@ -147,6 +148,7 @@ class BotService
                     'is_bot'          => true,
                     'matched_keyword' => $bestMatch['keyword'],
                     'inbound_msg_id'  => $inboundMessage->id,
+                    'options'         => $bestMatch['options'] ?? null,
                 ],
             ]);
 
@@ -159,6 +161,17 @@ class BotService
             ->exists();
 
         if (!$hasBotReplied && !empty($widgetSetting->bot_welcome_message)) {
+            // Find root menu options if available
+            $welcomeOptions = null;
+            if (!empty($widgetSetting->bot_rules) && is_array($widgetSetting->bot_rules)) {
+                foreach ($widgetSetting->bot_rules as $r) {
+                    if (($r['name'] ?? '') === 'Menu Utama' && !empty($r['options'])) {
+                        $welcomeOptions = $r['options'];
+                        break;
+                    }
+                }
+            }
+
             $res = $this->conversationService->appendMessage($conversation, [
                 'sender_type'       => 'bot',
                 'sender_name'       => $botName,
@@ -168,6 +181,7 @@ class BotService
                     'is_bot'         => true,
                     'is_welcome'     => true,
                     'inbound_msg_id' => $inboundMessage->id,
+                    'options'        => $welcomeOptions,
                 ],
             ]);
 

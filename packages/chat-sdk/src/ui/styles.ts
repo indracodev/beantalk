@@ -931,9 +931,20 @@ export function generateWidgetCss(primaryColor: string = '#1E1E1E'): string {
       padding: 10px 14px;
       border-radius: 14px;
       font-size: 13px;
-      line-height: 1.45;
+      line-height: 1.5;
       word-break: break-word;
       position: relative;
+      white-space: pre-line;
+    }
+
+    .msg-bubble a {
+      color: #0071E3;
+      text-decoration: underline;
+      font-weight: 500;
+    }
+
+    .msg-bubble strong {
+      font-weight: 700;
     }
 
     .msg-bubble-row.is-visitor .msg-bubble {
@@ -948,6 +959,74 @@ export function generateWidgetCss(primaryColor: string = '#1E1E1E'): string {
       border: 1px solid #E2E8F0;
       border-bottom-left-radius: 3px;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    /* INTERACTIVE QUICK-REPLY OPTION BUTTONS */
+    .msg-options-container {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+      width: 100%;
+    }
+
+    .msg-option-btn {
+      background: #FFFFFF;
+      border: 1.5px solid var(--chat-primary, #1A1A1A);
+      color: var(--chat-primary, #1A1A1A);
+      padding: 9px 13px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      transition: all 0.16s ease;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+      outline: none;
+      user-select: none;
+      line-height: 1.35;
+    }
+
+    .msg-option-btn:hover:not(:disabled) {
+      background: var(--chat-primary, #1A1A1A);
+      color: var(--chat-primary-text, #FFFFFF);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    .msg-option-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .msg-option-btn.is-selected {
+      background: var(--chat-primary, #1A1A1A);
+      color: var(--chat-primary-text, #FFFFFF);
+      border-color: var(--chat-primary, #1A1A1A);
+      opacity: 0.95;
+    }
+
+    .msg-option-btn:disabled:not(.is-selected) {
+      opacity: 0.55;
+      cursor: default;
+      border-color: #CBD5E1;
+      color: #64748B;
+      background: #F8FAFC;
+    }
+
+    .msg-option-arrow {
+      font-size: 13px;
+      font-weight: bold;
+      opacity: 0.6;
+      transition: transform 0.15s ease;
+    }
+
+    .msg-option-btn:hover .msg-option-arrow {
+      opacity: 1;
+      transform: translateX(2px);
     }
 
     .msg-time-status {

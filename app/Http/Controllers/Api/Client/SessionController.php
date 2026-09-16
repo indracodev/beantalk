@@ -85,8 +85,11 @@ class SessionController extends Controller
                     'greeting_subtitle' => $widgetSetting ? $widgetSetting->greeting_subtitle : 'Apakah ada yang bisa kami bantu? Tanyakan informasi apapun di sini!',
                     'support_title'     => $widgetSetting ? ($widgetSetting->support_title ?: 'Customer Support') : 'Customer Support',
                     'is_online'         => $widgetSetting ? $widgetSetting->is_online : true,
-                    'find_us_title'     => $widgetSetting ? ($widgetSetting->find_us_title ?: 'Reach Us Anywhere Else') : 'Reach Us Anywhere Else',
-                    'social_channels'   => $widgetSetting && is_array($widgetSetting->social_channels) ? $widgetSetting->social_channels : [],
+                    'find_us_title'       => $widgetSetting ? ($widgetSetting->find_us_title ?: 'Reach Us Anywhere Else') : 'Reach Us Anywhere Else',
+                    'social_channels'     => $widgetSetting && is_array($widgetSetting->social_channels) ? $widgetSetting->social_channels : [],
+                    'bot_enabled'         => $widgetSetting ? (bool) $widgetSetting->bot_enabled : false,
+                    'bot_name'            => $widgetSetting ? $widgetSetting->bot_name : 'BeanBot',
+                    'bot_welcome_message' => $widgetSetting ? $widgetSetting->bot_welcome_message : null,
                 ]
             ]
         ]);

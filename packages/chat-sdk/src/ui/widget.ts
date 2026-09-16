@@ -603,28 +603,36 @@ export class ChatWidgetUi {
     }
   }
 
-  private handleSend(): void {
-    const text = this.composerInput.value.trim();
-    if (!text) return;
+  handleSendText(sendValue: string, displayLabel?: string): void {
+    const textToSend = (sendValue || '').trim();
+    if (!textToSend) return;
 
     // Reset composer
     this.composerInput.value = '';
     this.composerInput.style.height = '24px';
     this.composerSendBtn.disabled = true;
 
-    // Optimistic UI Append
+    // Optimistic UI Append with displayLabel or sendValue
+    const displayText = displayLabel || textToSend;
     const tempMsg: Message = {
       id: Date.now(),
       conversation_id: this.sessionData?.conversation?.id || 0,
       client_message_id: generateClientMessageId(),
       sender_type: 'visitor',
       sender_name: this.customerName || 'Anda',
-      message: text,
+      content: displayText,
+      message: textToSend,
       created_at: new Date().toISOString(),
     };
 
     this.appendMessage(tempMsg);
     this.emitter.emit('ui:send', tempMsg);
+  }
+
+  private handleSend(): void {
+    const text = this.composerInput.value.trim();
+    if (!text) return;
+    this.handleSendText(text);
   }
 
   goToStage(stage: 'welcome' | 'identity' | 'chat' | 'social-picker'): void {
@@ -655,6 +663,35 @@ export class ChatWidgetUi {
       if (this.stageIdentity) this.stageIdentity.style.display = 'none';
       if (this.stageSocialPicker) this.stageSocialPicker.style.display = 'none';
       this.stageChat.style.display = 'flex';
+
+      // Auto-render bot welcome message with interactive options if messages area is empty
+      if (this.messages.length === 0) {
+        const settings = (this.sessionData as any)?.widget || this.sessionData?.widget_settings;
+        if (settings && settings.bot_enabled && settings.bot_welcome_message) {
+          const welcomeOptions = [
+            { label: '📦 1. Pembelian Produk', value: '1' },
+            { label: '🤝 2. Informasi & Kerjasama', value: '2' },
+            { label: '🛠️ 3. Kendala Belanja Online', value: '3' },
+            { label: '💬 Bicara dengan CS (YA)', value: 'YA' },
+          ];
+          const initialBotMsg: Message = {
+            id: 0,
+            conversation_id: this.sessionData?.conversation?.id || 0,
+            sender_type: 'bot' as any,
+            sender_name: settings.bot_name || 'INDRACO Assistant',
+            content: settings.bot_welcome_message,
+            message: settings.bot_welcome_message,
+            metadata: {
+              is_bot: true,
+              is_welcome: true,
+              options: welcomeOptions,
+            },
+            created_at: new Date().toISOString(),
+          };
+          this.appendMessage(initialBotMsg);
+        }
+      }
+
       this.scrollToBottom();
       setTimeout(() => this.composerInput.focus(), 150);
     }
@@ -839,19 +876,67 @@ export class ChatWidgetUi {
     row.className = `msg-bubble-row ${isVisitor ? 'is-visitor' : 'is-agent'}`;
 
     const timeStr = this.formatTime(msg.created_at);
-    const text = msg.content || msg.message || '';
+    const rawText = msg.content || msg.message || '';
+    const formattedHtml = this.formatMessageContent(rawText);
     const senderTitle = isVisitor ? 'Anda' : (isBot ? ('🤖 ' + (msg.sender_name || 'BeanBot')) : (msg.sender_name || 'Agent'));
+
+    const options = msg.metadata && Array.isArray(msg.metadata.options) ? msg.metadata.options : null;
+    let optionsHtml = '';
+    if (options && options.length > 0 && !isVisitor) {
+      optionsHtml = `
+        <div class="msg-options-container">
+          ${options.map((opt: any, idx: number) => `
+            <button type="button" class="msg-option-btn" data-idx="${idx}">
+              <span>${escapeHtml(opt.label || opt.value || '')}</span>
+              <span class="msg-option-arrow">→</span>
+            </button>
+          `).join('')}
+        </div>
+      `;
+    }
 
     row.innerHTML = `
       <div class="msg-sender-name" style="${isBot ? 'color: #5856D6; font-weight: 600;' : ''}">${escapeHtml(senderTitle)}</div>
-      <div class="msg-bubble">${escapeHtml(text)}</div>
+      <div class="msg-bubble">${formattedHtml}</div>
+      ${optionsHtml}
       <div class="msg-time-status">
         <span>${timeStr}</span>
         ${isVisitor ? `<span style="display:inline-flex;">${ICONS.check}</span>` : ''}
       </div>
     `;
 
+    // Bind click events on option buttons
+    if (options && options.length > 0 && !isVisitor) {
+      const btns = row.querySelectorAll('.msg-option-btn');
+      btns.forEach((btn, idx) => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const opt = options[idx];
+          if (!opt) return;
+
+          // Disable siblings in this container and mark selected
+          btns.forEach((b) => (b as HTMLButtonElement).disabled = true);
+          btn.classList.add('is-selected');
+
+          // Send chosen option to conversation
+          this.handleSendText(opt.value || opt.label, opt.label || opt.value);
+        });
+      });
+    }
+
     this.messagesArea.appendChild(row);
+  }
+
+  private formatMessageContent(rawText: string): string {
+    if (!rawText) return '';
+    let escaped = escapeHtml(rawText);
+    // Convert *bold* to <strong>bold</strong>
+    escaped = escaped.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
+    // Convert URLs to clickable links
+    escaped = escaped.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+    // Convert standalone www.xxx to links
+    escaped = escaped.replace(/(^|[\s])(www\.[^\s]+)/g, '$1<a href="https://$2" target="_blank" rel="noopener noreferrer">$2</a>');
+    return escaped;
   }
 
   private updateSnippet(): void {

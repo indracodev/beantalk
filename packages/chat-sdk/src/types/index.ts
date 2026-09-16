@@ -47,6 +47,9 @@ export interface WidgetSettings {
   channel_whatsapp?: string;
   channel_messenger?: string;
   channel_instagram?: string;
+  bot_enabled?: boolean;
+  bot_name?: string;
+  bot_welcome_message?: string;
 }
 
 export interface ProjectInfo {
@@ -67,10 +70,11 @@ export interface Message {
   id: number;
   conversation_id: number;
   client_message_id?: string;
-  sender_type: 'visitor' | 'agent' | 'system';
+  sender_type: 'visitor' | 'agent' | 'bot' | 'system';
   sender_name: string;
   content?: string;
   message?: string;
+  metadata?: any;
   attachment_url?: string;
   attachment_type?: string;
   created_at: string;
