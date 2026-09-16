@@ -131,7 +131,13 @@ Jalankan instalasi paket backend tanpa paket development (`--no-dev`) dan dengan
 composer install --no-dev --optimize-autoloader --no-interaction
 ```
 
-> Output harus menampilkan `Generating optimized autoload files` dan `Discovering packages` dengan status **DONE**.
+> **Catatan Khusus cPanel / Niagahoster (Shared Hosting):**  
+> Jika muncul error `escapeshellarg() has been disabled for security reasons`, tambahkan flag `--no-scripts`:
+> ```bash
+> composer install --no-dev --optimize-autoloader --no-scripts
+> php artisan package:discover
+> ```
+> *Atau masuk ke cPanel &rarr; **Select PHP Version** &rarr; **Options** &rarr; hapus `escapeshellarg` dan `proc_open` dari baris `disable_functions`.*
 
 ---
 
