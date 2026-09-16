@@ -158,9 +158,16 @@
                 </div>
 
                 <div class="flex items-center gap-1 sidebar-text">
+                    <button type="button" onclick="openModal('modalChangeMyPassword')" class="p-1 text-apple-textTertiary hover:text-apple-blue rounded transition cursor-pointer" title="Ubah Password Akun">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                    </button>
+
                     <form action="{{ route('logout') }}" method="POST" class="m-0 inline">
                         @csrf
-                        <button type="submit" class="p-1 text-apple-textTertiary hover:text-apple-red rounded transition" title="Logout / Keluar">
+                        <button type="submit" class="p-1 text-apple-textTertiary hover:text-apple-red rounded transition cursor-pointer" title="Logout / Keluar">
                             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                                 <polyline points="16 17 21 12 16 7"></polyline>

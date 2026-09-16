@@ -115,6 +115,7 @@ class ConversationService
                 'tenant_id' => $project->tenant_id,
                 'project_id' => $project->id,
                 'visitor_id' => $visitor->id,
+                'assigned_user_id' => $project->assigned_user_id,
                 'status' => 'open',
                 'channel' => 'widget',
                 'page_url' => $context['page_url'] ?? null,

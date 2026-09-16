@@ -66,6 +66,20 @@
                     </div>
                 </div>
 
+                <!-- Assigned CS Agent Info -->
+                <div class="flex items-center justify-between text-[11px] px-2.5 py-1.5 rounded-lg bg-apple-canvas/40 border border-apple-subtleBorder">
+                    <span class="text-apple-textTertiary text-[10.5px]">Agent CS:</span>
+                    @if($p->assignedUsers->isEmpty())
+                        <span class="inline-flex items-center gap-1 font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[10.5px]">
+                            <span>👥 Semua Agent (All)</span>
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1 font-medium text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 text-[10.5px] truncate max-w-[200px]" title="{{ $p->assignedUsers->pluck('name')->implode(', ') }}">
+                            <span>👤 {{ $p->assignedUsers->pluck('name')->implode(', ') }}</span>
+                        </span>
+                    @endif
+                </div>
+
                 <!-- Code Snippet Box -->
                 <div>
                     <div class="flex items-center justify-between text-[10px] text-apple-textTertiary mb-1">
@@ -333,6 +347,30 @@
                 <div>
                     <label class="block font-medium text-apple-textPrimary mb-1">Greeting Subtitle</label>
                     <input type="text" name="greeting_subtitle" value="Ada yang bisa kami bantu? Tanyakan informasi apapun di sini!" class="w-full px-3 py-1.5 border border-apple-border rounded-lg focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block font-medium text-apple-textPrimary mb-1">Agent CS Penanggung Jawab</label>
+                    <div class="flex flex-col gap-2">
+                        <label class="flex items-center gap-2 cursor-pointer text-[11.5px] text-apple-textPrimary">
+                            <input type="radio" name="agent_scope" value="all" checked onchange="document.getElementById('newIntegAgentList').classList.add('hidden')" class="text-apple-blue focus:ring-apple-blue/20">
+                            <span>Semua Agent (Default &mdash; All CS)</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-[11.5px] text-apple-textPrimary">
+                            <input type="radio" name="agent_scope" value="selected" onchange="document.getElementById('newIntegAgentList').classList.remove('hidden')" class="text-apple-blue focus:ring-apple-blue/20">
+                            <span>Pilih Agent Tertentu (Multi-Select)</span>
+                        </label>
+                        <div id="newIntegAgentList" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-1.5 p-2 rounded-lg border border-apple-border bg-apple-canvas/40 max-h-36 overflow-y-auto">
+                            @if(isset($agents))
+                                @foreach($agents as $ag)
+                                    <label class="flex items-center gap-2 p-1 text-[11px] text-apple-textPrimary hover:bg-white rounded cursor-pointer">
+                                        <input type="checkbox" name="agent_ids[]" value="{{ $ag->id }}" class="rounded border-apple-border text-apple-blue focus:ring-apple-blue/20">
+                                        <span class="truncate">{{ $ag->name }}</span>
+                                    </label>
+                                @endforeach
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="px-4 py-3 border-t border-apple-border flex justify-end gap-2 bg-apple-canvas/40">

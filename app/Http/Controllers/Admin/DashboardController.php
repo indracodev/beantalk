@@ -723,12 +723,14 @@ class DashboardController extends Controller
         $tenantId = $request->user()->tenant_id;
 
         $projects = Project::where('tenant_id', $tenantId)
-            ->with(['domains', 'activeApiKey', 'widgetSetting'])
+            ->with(['domains', 'activeApiKey', 'widgetSetting', 'assignedUsers'])
             ->withCount(['conversations', 'visitors'])
             ->orderBy('id', 'asc')
             ->get();
 
-        return view('admin.integrations', compact('projects'));
+        $agents = User::where('tenant_id', $tenantId)->orderBy('name', 'asc')->get();
+
+        return view('admin.integrations', compact('projects', 'agents'));
     }
 
     /**
@@ -1253,6 +1255,17 @@ class DashboardController extends Controller
             'is_online'         => true,
         ]);
 
+        if ($request->input('agent_scope') === 'selected' && $request->filled('agent_ids')) {
+            $validAgentIds = User::where('tenant_id', $tenantId)
+                ->whereIn('id', (array) $request->input('agent_ids'))
+                ->pluck('id')
+                ->toArray();
+            if (!empty($validAgentIds)) {
+                $project->assignedUsers()->sync($validAgentIds);
+                $project->update(['assigned_user_id' => $validAgentIds[0]]);
+            }
+        }
+
         ActivityLogger::log(
             'integration.created',
             "Membuat integrasi website baru: {$project->name} ({$cleanDomain})",
@@ -1321,9 +1334,11 @@ class DashboardController extends Controller
     {
         $tenantId = $request->user()->tenant_id;
         $project = Project::where('tenant_id', $tenantId)
-            ->with(['domains', 'widgetSetting', 'activeApiKey'])
+            ->with(['domains', 'widgetSetting', 'activeApiKey', 'assignedUsers'])
             ->withCount(['conversations', 'visitors'])
             ->findOrFail($id);
+
+        $agents = User::where('tenant_id', $tenantId)->orderBy('name', 'asc')->get();
 
         $widgetSetting = $project->widgetSetting ?: WidgetSetting::firstOrCreate(
             ['project_id' => $project->id],
@@ -1389,7 +1404,7 @@ class DashboardController extends Controller
             ->take(8)
             ->get();
 
-        return view('admin.integration-detail', compact('project', 'widgetSetting', 'availableChannels', 'botRules', 'socialChannelsList', 'recentLogs'));
+        return view('admin.integration-detail', compact('project', 'widgetSetting', 'availableChannels', 'botRules', 'socialChannelsList', 'recentLogs', 'agents'));
     }
 
     /**
@@ -1402,12 +1417,64 @@ class DashboardController extends Controller
         $project = Project::where('tenant_id', $tenantId)->findOrFail($id);
 
         $request->validate([
+            'name'              => 'nullable|string|max:100',
+            'domains'           => 'nullable|string',
+            'agent_scope'       => 'nullable|string|in:all,selected',
+            'agent_ids'         => 'nullable|array',
             'primary_color'     => 'required|string|max:20',
             'greeting_title'    => 'nullable|string|max:100',
             'greeting_subtitle' => 'nullable|string|max:255',
             'support_title'     => 'nullable|string|max:100',
             'find_us_title'     => 'nullable|string|max:100',
         ]);
+
+        // 1. Update Project Name jika diisi
+        if ($request->filled('name')) {
+            $project->update(['name' => $request->input('name')]);
+        }
+
+        // 2. Update Whitelist Domains jika dikirim
+        if ($request->filled('domains')) {
+            $domainsInput = $request->input('domains');
+            $rawList = preg_split('/[,\r\n]+/', $domainsInput);
+            $cleanDomains = [];
+            foreach ($rawList as $d) {
+                $d = trim($d);
+                if ($d === '') continue;
+                $clean = preg_replace('#^https?://#i', '', $d);
+                $clean = rtrim($clean, '/');
+                $clean = strtolower($clean);
+                if ($clean !== '' && !in_array($clean, $cleanDomains)) {
+                    $cleanDomains[] = $clean;
+                }
+            }
+            if (!empty($cleanDomains)) {
+                $project->domains()->whereNotIn('domain', $cleanDomains)->delete();
+                foreach ($cleanDomains as $cd) {
+                    $project->domains()->firstOrCreate(
+                        ['domain' => $cd],
+                        ['is_verified' => true]
+                    );
+                }
+            }
+        }
+
+        // 3. Update Agent Assignment (Default: All Agents)
+        if ($request->has('agent_scope')) {
+            $scope = $request->input('agent_scope', 'all');
+            if ($scope === 'selected' && $request->filled('agent_ids')) {
+                $validAgentIds = User::where('tenant_id', $tenantId)
+                    ->whereIn('id', (array) $request->input('agent_ids'))
+                    ->pluck('id')
+                    ->toArray();
+                $project->assignedUsers()->sync($validAgentIds);
+                $project->update(['assigned_user_id' => $validAgentIds[0] ?? null]);
+            } else {
+                // Semua CS (All Agents)
+                $project->assignedUsers()->detach();
+                $project->update(['assigned_user_id' => null]);
+            }
+        }
 
         $formattedChannels = [];
         $socialChannelsRaw = $request->input('social_channels');
@@ -1861,5 +1928,40 @@ class DashboardController extends Controller
         } catch (\Throwable $e) {
             // Silently recover if query fails
         }
+    }
+
+    /**
+     * Update Password for Current Authenticated User
+     * PUT /admin/profile/password
+     */
+    public function updateMyPassword(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'password'         => 'required|string|min:6|confirmed',
+        ], [
+            'current_password.required' => 'Password saat ini wajib diisi.',
+            'password.required'         => 'Password baru wajib diisi.',
+            'password.min'              => 'Password baru minimal 6 karakter.',
+            'password.confirmed'        => 'Konfirmasi password baru tidak cocok.',
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($request->input('current_password'), $user->password)) {
+            return redirect()->back()->withErrors(['current_password' => 'Password saat ini yang Anda masukkan salah.'])->withInput();
+        }
+
+        $user->update([
+            'password' => Hash::make($request->input('password')),
+        ]);
+
+        ActivityLogger::log(
+            'profile.password_changed',
+            "Pengguna {$user->name} ({$user->email}) berhasil memperbarui kata sandi akunnya",
+            $user
+        );
+
+        return redirect()->back()->with('success', 'Password akun Anda berhasil diperbarui!');
     }
 }

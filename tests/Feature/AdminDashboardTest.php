@@ -58,6 +58,7 @@ class AdminDashboardTest extends TestCase
             ['tenant_id' => $this->tenant->id, 'slug' => 'test-dash-project'],
             ['name' => 'Test Dashboard Project']
         );
+        $this->project->update(['name' => 'Test Dashboard Project']);
     }
 
     /**
@@ -811,6 +812,109 @@ class AdminDashboardTest extends TestCase
             ->assertSee('Tampilan &amp; Branding', false)
             ->assertSee('Saluran Sosial &amp; Marketplace', false);
     }
+
+    /**
+     * Test Admin can update integration name and domains whitelist
+     */
+    public function testAdminCanUpdateIntegrationNameAndDomains()
+    {
+        $response = $this->actingAs($this->superadmin)->put("/admin/integrations/{$this->project->id}/settings", [
+            'name'          => 'Updated Brand Name',
+            'domains'       => 'https://newdomain.com/, www.newdomain.com, api.newdomain.com',
+            'primary_color' => '#0071E3',
+        ]);
+
+        $response->assertRedirect("/admin/integrations/{$this->project->id}");
+
+        $this->project->refresh();
+        $this->assertEquals('Updated Brand Name', $this->project->name);
+
+        $domains = $this->project->domains()->pluck('domain')->toArray();
+        $this->assertContains('newdomain.com', $domains);
+        $this->assertContains('www.newdomain.com', $domains);
+        $this->assertContains('api.newdomain.com', $domains);
+    }
+
+    /**
+     * Test Admin can assign multiple agents or default to all
+     */
+    public function testAdminCanAssignMultipleAgentsToProject()
+    {
+        // 1. Assign specific agent
+        $response = $this->actingAs($this->superadmin)->put("/admin/integrations/{$this->project->id}/settings", [
+            'name'          => $this->project->name,
+            'primary_color' => '#0071E3',
+            'agent_scope'   => 'selected',
+            'agent_ids'     => [$this->agent->id],
+        ]);
+
+        $response->assertRedirect("/admin/integrations/{$this->project->id}");
+        $this->project->refresh();
+        $this->assertCount(1, $this->project->assignedUsers);
+        $this->assertEquals($this->agent->id, $this->project->assignedUsers->first()->id);
+
+        // 2. Set back to all agents (default)
+        $responseAll = $this->actingAs($this->superadmin)->put("/admin/integrations/{$this->project->id}/settings", [
+            'name'          => $this->project->name,
+            'primary_color' => '#0071E3',
+            'agent_scope'   => 'all',
+        ]);
+
+        $responseAll->assertRedirect("/admin/integrations/{$this->project->id}");
+        $this->project->refresh();
+        $this->assertCount(0, $this->project->assignedUsers);
+        $this->assertNull($this->project->assigned_user_id);
+    }
+
+    /**
+     * Test User can update their own password
+     */
+    public function testUserCanUpdateOwnPassword()
+    {
+        $response = $this->actingAs($this->superadmin)->put('/admin/profile/password', [
+            'current_password'      => 'password',
+            'password'              => 'new-secret-123',
+            'password_confirmation' => 'new-secret-123',
+        ]);
+
+        $response->assertSessionHas('success');
+        $this->superadmin->refresh();
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('new-secret-123', $this->superadmin->password));
+    }
+
+    /**
+     * Test User cannot update own password with incorrect current password
+     */
+    public function testUserCannotUpdateOwnPasswordWithInvalidCurrentPassword()
+    {
+        $response = $this->actingAs($this->superadmin)->put('/admin/profile/password', [
+            'current_password'      => 'wrongpassword',
+            'password'              => 'new-secret-123',
+            'password_confirmation' => 'new-secret-123',
+        ]);
+
+        $response->assertSessionHasErrors('current_password');
+        $this->superadmin->refresh();
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('password', $this->superadmin->password));
+    }
+
+    /**
+     * Test Admin can update staff password in team management
+     */
+    public function testAdminCanUpdateStaffPassword()
+    {
+        $response = $this->actingAs($this->superadmin)->put("/admin/team/{$this->agent->id}", [
+            'name'     => $this->agent->name,
+            'email'    => $this->agent->email,
+            'role'     => 'agent',
+            'password' => 'new-agent-secret',
+        ]);
+
+        $response->assertSessionHas('success');
+        $this->agent->refresh();
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('new-agent-secret', $this->agent->password));
+    }
 }
+
 
 

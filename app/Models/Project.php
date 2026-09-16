@@ -13,6 +13,7 @@ class Project extends Model
 
     protected $fillable = [
         'tenant_id',
+        'assigned_user_id',
         'name',
         'slug',
         'is_active',
@@ -21,6 +22,16 @@ class Project extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    public function assignedUser()
+    {
+        return $this->belongsTo(User::class, 'assigned_user_id');
+    }
+
+    public function assignedUsers()
+    {
+        return $this->belongsToMany(User::class, 'project_users');
+    }
 
     public function domains()
     {
