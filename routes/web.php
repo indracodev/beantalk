@@ -17,7 +17,7 @@ Route::get('/', 'Auth\LoginController@root');
 
 // Authentication Web Routes (Login via Email or Username)
 Route::get('login', 'Auth\LoginController@showLoginForm')->name('login');
-Route::post('login', 'Auth\LoginController@login');
+Route::post('login', 'Auth\LoginController@login')->middleware('throttle:15,1');
 Route::post('logout', 'Auth\LoginController@logout')->name('logout');
 
 // Admin Dashboard Web Routes (Protected by Auth Session)

@@ -26,11 +26,25 @@
 
 # Security Headers & Hardening
 <IfModule mod_headers.c>
+    # 1. Anti-Crawler & Indexing Protection: Never index internal app in search engines
+    Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate"
+
+    # 2. Anti-Clickjacking: Prevent embedding into unauthorized third-party frames
+    Header set X-Frame-Options "SAMEORIGIN"
+
+    # 3. MIME Sniffing Prevention
     Header set X-Content-Type-Options "nosniff"
+
+    # 4. Browser XSS Filter
     Header set X-XSS-Protection "1; mode=block"
+
+    # 5. Referrer Policy
     Header set Referrer-Policy "strict-origin-when-cross-origin"
 
-    # Allow CORS for Universal Chat Widget & Static Assets across any storefront
+    # 6. Permissions Policy
+    Header set Permissions-Policy "geolocation=(), camera=(), microphone=()"
+
+    # 7. Allow CORS for Universal Chat Widget & Static Assets across any storefront
     <FilesMatch "\.(js|css|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|webp|ico)$">
         Header set Access-Control-Allow-Origin "*"
         Header set Access-Control-Allow-Methods "GET, OPTIONS"
@@ -38,5 +52,28 @@
     </FilesMatch>
 </IfModule>
 
+# Block direct access to hidden files and directories (.env, .git, etc.)
+<FilesMatch "^\.">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Block access to backup, log, configuration, and sensitive development files
+<FilesMatch "(^#.*#|\.(bak|config|dist|fla|inc|ini|log|psd|sh|sql|sw[op]|md|yml|yaml|env))$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
 # Disable Directory Browsing
 Options -Indexes
+

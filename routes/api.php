@@ -14,7 +14,7 @@ Route::prefix('v1')->group(function () {
     // 0. AUTHENTICATION ROUTES (Login via Email or Username)
     // ========================================================================
     Route::prefix('auth')->group(function () {
-        Route::post('login', 'Api\Auth\AuthController@login');
+        Route::post('login', 'Api\Auth\AuthController@login')->middleware('throttle:15,1');
         Route::post('logout', 'Api\Auth\AuthController@logout');
         Route::get('me', 'Api\Auth\AuthController@me')->middleware(['tenant.scope']);
     });
