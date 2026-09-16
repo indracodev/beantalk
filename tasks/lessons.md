@@ -146,5 +146,9 @@ Dokumen ini mencatat koreksi, pola desain, dan aturan teknis yang dipelajari sel
   2. **SQLite In-Memory Pragmas**: Terapkan `PRAGMA synchronous = OFF; PRAGMA journal_mode = MEMORY; PRAGMA temp_store = MEMORY;` pada database SQLite testing untuk mengeliminasi disk I/O lock di Windows OS, memangkas waktu test hingga 75% lebih cepat (dari 11.2s menjadi 2.7s).
   3. **Single Grouped Aggregation vs N+1 Loop**: Ganti perulangan query per-staf di `DashboardController` (`foreach ($staffUsers as $user) { Conversation::where('assigned_user_id', ...)->count(); }`) dengan satu query agregasi terkonsentrasi `groupBy('assigned_user_id')`, memotong puluhan database round-trips menjadi satu query efisien.
 
-
-
+### 22. Ekstensi Saluran Media Sosial (TikTok, YouTube, Facebook Murni) & Custom Icons
+- **Pelajaran**: Setiap brand atau bisnis memiliki channel komunikasi dan media sosial yang berbeda (TikTok, YouTube, Facebook Page, dll), serta terkadang memerlukan icon brand kustom daripada sekadar icon default. Penamaan "Facebook Messenger" juga tidak selalu tepat jika pemilik website ingin mengarahkan ke halaman Facebook profil/fanpage resmi.
+- **Pola**:
+  1. **Platform Naming Konsisten**: Ubah channel identifier `messenger` menjadi `facebook` dengan label murni "Facebook", tetap menjaga backward compatibility terhadap konfigurasi lama.
+  2. **Dukungan Saluran Video & Sosmed Modern**: Tambahkan `tiktok` (normalisasi `https://tiktok.com/@...`) dan `youtube` (normalisasi `https://youtube.com/@...`).
+  3. **Dual Icon Engine (Default Asli vs Custom)**: Sediakan opsi `icon_type` ('default' | 'custom') dan `custom_icon` (URL gambar PNG/SVG). Jika memilih default, sistem merender SVG resmi platform asli dengan warna brand otentik. Jika kustom, sistem merender `<img>` / SVG kustom dengan live preview instan di admin builder dan widget pengunjung.

@@ -798,10 +798,76 @@ async function handleAssign(userId) {
 // ======================================================================
 // 6. TICKET CONTROLS: TOGGLE OPEN / CLOSED
 // ======================================================================
+// 6. TICKET CONTROLS: RESOLVE WITH CLOSING GREETING TEMPLATE / REOPEN
+// ======================================================================
+const CLOSING_TEMPLATES = {
+    ramah: 'Terima kasih telah menghubungi kami. Semoga harimu menyenangkan! Jika ada pertanyaan lain, jangan ragu untuk chat kami kembali.',
+    solutif: 'Senang dapat membantu Anda hari ini. Tiket percakapan ini kami tandai telah selesai. Semoga solusi yang kami berikan bermanfaat!',
+    singkat: 'Terima kasih telah menghubungi Customer Support. Selamat beraktivitas kembali!'
+};
+
+function applyClosingTemplate(key) {
+    const textarea = document.getElementById('resolveClosingMessage');
+    if (textarea && CLOSING_TEMPLATES[key]) {
+        textarea.value = CLOSING_TEMPLATES[key];
+        textarea.focus();
+    }
+}
+
+function openResolveModal() {
+    const modal = document.getElementById('resolveTicketModal');
+    if (!modal) return;
+    const textarea = document.getElementById('resolveClosingMessage');
+    if (textarea && !textarea.value.trim()) {
+        textarea.value = CLOSING_TEMPLATES.ramah;
+    }
+    modal.classList.remove('hidden');
+}
+
+function closeResolveModal() {
+    const modal = document.getElementById('resolveTicketModal');
+    if (modal) modal.classList.add('hidden');
+}
+
 async function handleToggleStatus() {
     if (typeof activeConversationId === 'undefined' || !activeConversationId) return;
 
+    if (conversationStatus === 'open') {
+        openResolveModal();
+    } else {
+        // Reopen ticket directly
+        await executeStatusUpdate('open', null);
+    }
+}
+
+async function confirmResolveTicket() {
+    const btn = document.getElementById('btnConfirmResolve');
+    const textarea = document.getElementById('resolveClosingMessage');
+    const check = document.getElementById('resolveSendClosingCheck');
+    
+    let closingMessage = null;
+    if (check && check.checked && textarea) {
+        closingMessage = textarea.value.trim();
+    }
+
+    if (btn) btn.disabled = true;
     try {
+        await executeStatusUpdate('closed', closingMessage);
+        closeResolveModal();
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
+async function executeStatusUpdate(targetStatus, closingMsg) {
+    if (typeof activeConversationId === 'undefined' || !activeConversationId) return;
+
+    try {
+        const payload = { status: targetStatus };
+        if (closingMsg) {
+            payload.closing_message = closingMsg;
+        }
+
         const res = await fetch(`/admin/inbox/${activeConversationId}/status`, {
             method: 'PUT',
             headers: {
@@ -809,36 +875,31 @@ async function handleToggleStatus() {
                 'X-CSRF-TOKEN': getCsrfToken(),
                 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
-            }
+            },
+            body: JSON.stringify(payload)
         });
 
         const json = await res.json();
         if (json.success && json.data) {
             const newStatus = json.data.status;
-            const badge = document.getElementById('threadStatusBadge');
+            conversationStatus = newStatus;
+
             const btn = document.getElementById('btnToggleStatus');
-
-            if (badge) {
-                badge.textContent = '● ' + newStatus;
-                badge.className = `thread-status-badge ${newStatus === 'open' ? 'status-open' : 'status-closed'}`;
-            }
-
             if (btn) {
                 if (newStatus === 'open') {
-                    btn.innerHTML = `
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                        <span>Tutup Tiket</span>
-                    `;
+                    btn.className = 'px-2.5 py-1 text-[10.5px] rounded-lg border border-white/40 bg-white text-apple-red hover:bg-red-50 active:scale-95 transition font-semibold shadow-2xs cursor-pointer';
+                    btn.innerHTML = '<span>Resolve</span>';
                 } else {
-                    btn.innerHTML = `
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"></path><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
-                        <span>Buka Kembali</span>
-                    `;
+                    btn.className = 'px-2.5 py-1 text-[10.5px] rounded-lg border border-white/40 bg-white text-apple-green hover:bg-emerald-50 active:scale-95 transition font-semibold shadow-2xs cursor-pointer';
+                    btn.innerHTML = '<span>Reopen</span>';
                 }
             }
+
+            // Immediately trigger poll to fetch newly appended closing message & refresh feed
+            setTimeout(runScheduledPoll, 200);
         }
     } catch (err) {
-        console.error('Error toggle status:', err);
+        console.error('Error updating status:', err);
     }
 }
 

@@ -422,6 +422,34 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Widget Language -->
+                    <div class="md:col-span-2 pb-3 border-b border-apple-border/60">
+                        <label class="block text-[11.5px] font-semibold text-apple-textPrimary mb-1.5">Bahasa Tampilan Widget (Widget UI Language)</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="flex items-center gap-3 p-3 rounded-xl border border-apple-border bg-apple-canvas/30 hover:bg-white cursor-pointer transition-all has-[:checked]:border-apple-blue has-[:checked]:bg-blue-50/40 has-[:checked]:ring-1 has-[:checked]:ring-apple-blue">
+                                <input type="radio" name="language" value="id" {{ ($widgetSetting->language ?? 'id') === 'id' ? 'checked' : '' }} class="w-4 h-4 text-apple-blue focus:ring-apple-blue">
+                                <div>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-[15px]">🇮🇩</span>
+                                        <span class="text-[12.5px] font-bold text-apple-textPrimary">Bahasa Indonesia</span>
+                                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600 font-medium">Default</span>
+                                    </div>
+                                    <p class="text-[10.5px] text-apple-textSecondary mt-0.5">Teks balon chat, salam sapa, formulir nama, aksi selesaikan tiket, dan riwayat obrolan dalam Bahasa Indonesia.</p>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-3 p-3 rounded-xl border border-apple-border bg-apple-canvas/30 hover:bg-white cursor-pointer transition-all has-[:checked]:border-apple-blue has-[:checked]:bg-blue-50/40 has-[:checked]:ring-1 has-[:checked]:ring-apple-blue">
+                                <input type="radio" name="language" value="en" {{ ($widgetSetting->language ?? 'id') === 'en' ? 'checked' : '' }} class="w-4 h-4 text-apple-blue focus:ring-apple-blue">
+                                <div>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-[15px]">🇬🇧</span>
+                                        <span class="text-[12.5px] font-bold text-apple-textPrimary">English</span>
+                                    </div>
+                                    <p class="text-[10.5px] text-apple-textSecondary mt-0.5">Chat bubble, greeting prompts, visitor name intro, resolve ticket button, and tickets history in English.</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
                     <!-- Brand Color -->
                     <div>
                         <label class="block text-[11.5px] font-semibold text-apple-textPrimary mb-1">Warna Aksen Utama (Primary Brand Color)</label>
@@ -480,7 +508,7 @@
                             <h3 class="text-[14px] font-bold text-apple-textPrimary">Saluran Sosial, Kontak &amp; Marketplace</h3>
                             <span id="labelSocialCount" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">{{ collect($socialChannelsList)->where('enabled', true)->count() }} Aktif</span>
                         </div>
-                        <p class="text-[11.5px] text-apple-textSecondary mt-0.5">Tambahkan saluran komunikasi resmi atau toko Anda (WhatsApp, Instagram, Telegram, Shopee, Tokopedia, Custom Link, dsb). Mendukung banyak kontak untuk platform yang sama.</p>
+                        <p class="text-[11.5px] text-apple-textSecondary mt-0.5">Tambahkan saluran komunikasi resmi atau media sosial Anda (WhatsApp, Instagram, Facebook, TikTok, YouTube, Telegram, Shopee, Tokopedia, Custom Link, dsb). Mendukung icon resmi platform maupun icon kustom.</p>
                     </div>
 
                     <button type="button" onclick="addNewSocialChannel()" class="inline-flex items-center gap-1.5 bg-apple-blue hover:bg-apple-blueHover text-white px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition shadow-apple-sm cursor-pointer self-start sm:self-auto">
@@ -826,12 +854,41 @@ let draggedNodeId = null;
 const PLATFORM_OPTIONS = [
     { value: 'whatsapp', name: 'WhatsApp', placeholder: '08123456789 atau https://wa.me/...', badgeClass: 'bg-emerald-100 text-emerald-800' },
     { value: 'instagram', name: 'Instagram', placeholder: '@username atau https://instagram.com/...', badgeClass: 'bg-pink-100 text-pink-800' },
+    { value: 'facebook', name: 'Facebook', placeholder: 'username atau https://facebook.com/...', badgeClass: 'bg-blue-100 text-blue-800' },
+    { value: 'tiktok', name: 'TikTok', placeholder: '@username atau https://tiktok.com/@...', badgeClass: 'bg-neutral-900 text-white' },
+    { value: 'youtube', name: 'YouTube', placeholder: '@channel atau https://youtube.com/@...', badgeClass: 'bg-red-100 text-red-800' },
     { value: 'telegram', name: 'Telegram', placeholder: '@username atau https://t.me/...', badgeClass: 'bg-sky-100 text-sky-800' },
-    { value: 'messenger', name: 'Facebook Messenger', placeholder: 'username atau https://m.me/...', badgeClass: 'bg-blue-100 text-blue-800' },
     { value: 'shopee', name: 'Shopee Store', placeholder: 'https://shopee.co.id/...', badgeClass: 'bg-orange-100 text-orange-800' },
     { value: 'tokopedia', name: 'Tokopedia Store', placeholder: 'https://tokopedia.com/...', badgeClass: 'bg-green-100 text-green-800' },
     { value: 'custom', name: 'Custom Link / Website', placeholder: 'https://...', badgeClass: 'bg-slate-100 text-slate-800' }
 ];
+
+const BRAND_ICONS_SVG = {
+    whatsapp: `<svg class="w-4 h-4 text-[#25D366]" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24zm4.52 11.53c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.03-1.25-.75-.67-1.26-1.5-1.41-1.75-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.44.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.15-1.18-.07-.12-.23-.19-.48-.32z"/></svg>`,
+    instagram: `<svg class="w-4 h-4 text-[#E1306C]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>`,
+    facebook: `<svg class="w-4 h-4 text-[#1877F2]" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`,
+    messenger: `<svg class="w-4 h-4 text-[#1877F2]" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`,
+    tiktok: `<svg class="w-4 h-4 text-neutral-900" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg>`,
+    youtube: `<svg class="w-4 h-4 text-[#FF0000]" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>`,
+    telegram: `<svg class="w-4 h-4 text-[#229ED9]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .37z"/></svg>`,
+    shopee: `<svg class="w-4 h-4 text-[#EE4D2D]" viewBox="0 0 24 24" fill="currentColor"><path d="M19.78 7.37c-.36-.58-.87-1.04-1.53-1.37-.66-.33-1.42-.5-2.28-.5H8.03c-.86 0-1.62.17-2.28.5-.66.33-1.17.79-1.53 1.37-.36.58-.54 1.25-.54 2.01v9.23c0 .76.18 1.43.54 2.01.36.58.87 1.04 1.53 1.37.66.33 1.42.5 2.28.5h7.94c.86 0 1.62-.17 2.28-.5.66-.33 1.17-.79 1.53-1.37.36-.58.54-1.25.54-2.01V9.38c0-.76-.18-1.43-.54-2.01zm-7.78-4.87c1.38 0 2.5.89 2.78 2.1h-5.56c.28-1.21 1.4-2.1 2.78-2.1z"/></svg>`,
+    tokopedia: `<svg class="w-4 h-4 text-[#03AC0E]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>`,
+    custom: `<svg class="w-4 h-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`
+};
+
+function getSocialPreviewIconHtml(chan, platform) {
+    if (chan && chan.icon_type === 'custom' && chan.custom_icon) {
+        const custom = (chan.custom_icon || '').trim();
+        if (custom) {
+            if (custom.startsWith('<svg') && custom.endsWith('</svg>')) {
+                return custom;
+            }
+            return `<img src="${escapeHtml(custom)}" alt="icon" class="w-4 h-4 object-contain rounded" onerror="this.onerror=null; this.parentElement.innerHTML=BRAND_ICONS_SVG['${platform}'] || BRAND_ICONS_SVG.custom;" />`;
+        }
+    }
+    const p = platform || 'whatsapp';
+    return BRAND_ICONS_SVG[p] || BRAND_ICONS_SVG.custom;
+}
 
 // 1. Tab Switching Function (Zero dependencies, Bulletproof inline display toggle)
 function switchDetailTab(tabName) {
@@ -1749,10 +1806,11 @@ function renderSocialChannelsList() {
         currentSocialChannels.forEach((chan, idx) => {
             const row = document.createElement('div');
             const isEnabled = Boolean(chan.enabled);
-            const currentPlatform = chan.platform || chan.icon || 'whatsapp';
+            const currentPlatform = (chan.platform || chan.icon || 'whatsapp').toLowerCase();
             const matchedOpt = PLATFORM_OPTIONS.find(o => o.value === currentPlatform) || PLATFORM_OPTIONS[0];
+            const isCustomIcon = (chan.icon_type === 'custom') || (Boolean(chan.custom_icon) && chan.icon_type !== 'default');
 
-            row.className = 'p-3.5 rounded-xl border border-apple-border bg-white shadow-2xs hover:border-emerald-300 transition flex flex-col md:flex-row items-start md:items-center gap-3';
+            row.className = 'p-3.5 rounded-xl border border-apple-border bg-white shadow-2xs hover:border-emerald-300 transition flex flex-col gap-3';
             
             let platformOptionsHtml = '';
             PLATFORM_OPTIONS.forEach(opt => {
@@ -1761,35 +1819,64 @@ function renderSocialChannelsList() {
             });
 
             row.innerHTML = `
-                <div class="flex items-center gap-2 shrink-0 self-start md:self-center">
-                    <span class="w-6 h-6 rounded-full bg-apple-canvas border border-apple-border text-[11px] font-bold text-apple-textSecondary flex items-center justify-center">
-                        ${idx + 1}
-                    </span>
-                    <select onchange="updateSocialPlatform(${idx}, this.value)" class="text-[11.5px] font-semibold py-1.5 px-2.5 bg-apple-canvas/60 border border-apple-border rounded-lg focus:bg-white focus:outline-none cursor-pointer">
-                        ${platformOptionsHtml}
-                    </select>
+                <!-- Baris Utama: Platform, Nama, URL, Status & Hapus -->
+                <div class="flex flex-col md:flex-row items-start md:items-center gap-3">
+                    <div class="flex items-center gap-2 shrink-0 self-start md:self-center">
+                        <span class="w-6 h-6 rounded-full bg-apple-canvas border border-apple-border text-[11px] font-bold text-apple-textSecondary flex items-center justify-center">
+                            ${idx + 1}
+                        </span>
+                        <div id="socialIconPreview_${idx}" class="w-7 h-7 rounded-lg border border-apple-border bg-apple-canvas/60 flex items-center justify-center shrink-0 shadow-2xs">
+                            ${getSocialPreviewIconHtml(chan, currentPlatform)}
+                        </div>
+                        <select onchange="updateSocialPlatform(${idx}, this.value)" class="text-[11.5px] font-semibold py-1.5 px-2.5 bg-apple-canvas/60 border border-apple-border rounded-lg focus:bg-white focus:outline-none cursor-pointer">
+                            ${platformOptionsHtml}
+                        </select>
+                    </div>
+
+                    <div class="flex-1 w-full grid grid-cols-1 md:grid-cols-12 gap-2.5">
+                        <div class="md:col-span-5">
+                            <label class="block text-[10.5px] font-semibold text-apple-textSecondary mb-1">Nama / Label Kontak</label>
+                            <input type="text" value="${escapeHtml(chan.name || '')}" oninput="updateSocialChannelField(${idx}, 'name', this.value)" placeholder="Contoh: CS Sales, Akun Resmi, CS Retur..." class="w-full text-[12px] px-3 py-1.5 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                        </div>
+                        <div class="md:col-span-7">
+                            <label class="block text-[10.5px] font-semibold text-apple-textSecondary mb-1">Nomor HP / URL Tautan</label>
+                            <input type="text" value="${escapeHtml(chan.url || '')}" oninput="updateSocialChannelField(${idx}, 'url', this.value)" placeholder="${matchedOpt.placeholder}" class="w-full text-[12px] px-3 py-1.5 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2.5 shrink-0 self-end md:self-center">
+                        <label class="inline-flex items-center gap-1.5 text-[11.5px] font-bold px-2.5 py-1 rounded-lg border transition cursor-pointer ${isEnabled ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-neutral-100 border-neutral-200 text-neutral-500'}">
+                            <input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="updateSocialChannelField(${idx}, 'enabled', this.checked)" class="rounded text-emerald-600 focus:ring-0 cursor-pointer">
+                            <span>${isEnabled ? 'Aktif' : 'Nonaktif'}</span>
+                        </label>
+
+                        <button type="button" onclick="removeSocialChannel(${idx})" class="text-neutral-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition cursor-pointer" title="Hapus Kontak Ini">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="flex-1 w-full grid grid-cols-1 md:grid-cols-12 gap-2.5">
-                    <div class="md:col-span-5">
-                        <label class="block text-[10.5px] font-semibold text-apple-textSecondary mb-1">Nama / Label Kontak</label>
-                        <input type="text" value="${escapeHtml(chan.name || '')}" oninput="updateSocialChannelField(${idx}, 'name', this.value)" placeholder="Contoh: CS Sales, Akun Resmi, CS Retur..." class="w-full text-[12px] px-3 py-1.5 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                <!-- Baris Opsi Icon: Default Asli vs Custom Icon -->
+                <div class="pt-2 border-t border-apple-border/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-apple-canvas/20 -mx-3.5 -mb-3.5 p-2.5 px-3.5 rounded-b-xl text-[11px]">
+                    <div class="flex items-center gap-3">
+                        <span class="font-semibold text-apple-textSecondary flex items-center gap-1">
+                            🎨 Pilihan Icon:
+                        </span>
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                            <input type="radio" name="icon_type_${idx}" value="default" ${!isCustomIcon ? 'checked' : ''} onchange="updateSocialChannelField(${idx}, 'icon_type', 'default')" class="text-apple-blue focus:ring-0">
+                            <span class="${!isCustomIcon ? 'font-bold text-apple-textPrimary' : 'text-apple-textSecondary'}">Default Icon Asli (${matchedOpt.name})</span>
+                        </label>
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                            <input type="radio" name="icon_type_${idx}" value="custom" ${isCustomIcon ? 'checked' : ''} onchange="updateSocialChannelField(${idx}, 'icon_type', 'custom')" class="text-apple-blue focus:ring-0">
+                            <span class="${isCustomIcon ? 'font-bold text-apple-textPrimary' : 'text-apple-textSecondary'}">Custom Icon</span>
+                        </label>
                     </div>
-                    <div class="md:col-span-7">
-                        <label class="block text-[10.5px] font-semibold text-apple-textSecondary mb-1">Nomor HP / URL Tautan</label>
-                        <input type="text" value="${escapeHtml(chan.url || '')}" oninput="updateSocialChannelField(${idx}, 'url', this.value)" placeholder="${matchedOpt.placeholder}" class="w-full text-[12px] px-3 py-1.5 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
-                    </div>
-                </div>
 
-                <div class="flex items-center gap-3 shrink-0 self-end md:self-center">
-                    <label class="inline-flex items-center gap-1.5 text-[11.5px] font-bold px-2.5 py-1 rounded-lg border transition cursor-pointer ${isEnabled ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-neutral-100 border-neutral-200 text-neutral-500'}">
-                        <input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="updateSocialChannelField(${idx}, 'enabled', this.checked)" class="rounded text-emerald-600 focus:ring-0 cursor-pointer">
-                        <span>${isEnabled ? 'Aktif' : 'Nonaktif'}</span>
-                    </label>
-
-                    <button type="button" onclick="removeSocialChannel(${idx})" class="text-neutral-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition cursor-pointer" title="Hapus Kontak Ini">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                    </button>
+                    ${isCustomIcon ? `
+                        <div class="flex-1 sm:max-w-md flex items-center gap-2">
+                            <input type="text" value="${escapeHtml(chan.custom_icon || '')}" oninput="updateSocialChannelField(${idx}, 'custom_icon', this.value)" placeholder="URL Gambar / SVG (cth: https://.../logo.png)" class="w-full text-[11px] px-2.5 py-1 bg-white border border-apple-border rounded-md focus:ring-2 focus:ring-apple-blue/20 focus:border-apple-blue focus:outline-none">
+                        </div>
+                    ` : ''}
                 </div>
             `;
             container.appendChild(row);
@@ -1806,11 +1893,9 @@ function updateSocialPlatform(index, newPlatform) {
     if (currentSocialChannels[index]) {
         currentSocialChannels[index].platform = newPlatform;
         currentSocialChannels[index].icon = newPlatform;
-        if (!currentSocialChannels[index].name || currentSocialChannels[index].name.startsWith('CS') || currentSocialChannels[index].name.includes('WhatsApp')) {
-            const opt = PLATFORM_OPTIONS.find(o => o.value === newPlatform);
-            if (opt) {
-                currentSocialChannels[index].name = opt.name;
-            }
+        const opt = PLATFORM_OPTIONS.find(o => o.value === newPlatform);
+        if (opt && (!currentSocialChannels[index].name || PLATFORM_OPTIONS.some(p => p.name === currentSocialChannels[index].name))) {
+            currentSocialChannels[index].name = opt.name;
         }
         renderSocialChannelsList();
     }
@@ -1825,8 +1910,14 @@ function updateSocialChannelField(index, field, value) {
             renderSocialChannelsList();
             return;
         }
-        if (field === 'enabled') {
+        if (field === 'enabled' || field === 'icon_type') {
             renderSocialChannelsList();
+        } else if (field === 'custom_icon') {
+            const previewEl = document.getElementById('socialIconPreview_' + index);
+            if (previewEl) {
+                previewEl.innerHTML = getSocialPreviewIconHtml(currentSocialChannels[index], currentSocialChannels[index].platform);
+            }
+            serializeSocialChannels();
         } else {
             serializeSocialChannels();
         }
@@ -1847,7 +1938,9 @@ function addNewSocialChannel(platform = 'whatsapp', name = '', url = '') {
         name: defaultName,
         url: url,
         enabled: true,
-        icon: platform
+        icon: platform,
+        icon_type: 'default',
+        custom_icon: ''
     });
 
     renderSocialChannelsList();

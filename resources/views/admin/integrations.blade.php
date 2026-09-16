@@ -125,6 +125,21 @@
                         @csrf
                         @method('PUT')
                         <div class="p-4 flex flex-col gap-3.5 text-[12px] max-h-[70vh] overflow-y-auto">
+                            <!-- 0. Widget Language -->
+                            <div>
+                                <label class="block font-medium text-apple-textPrimary mb-1">Widget Language</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="flex items-center gap-2 p-2 border border-apple-border rounded-lg bg-apple-canvas/30 cursor-pointer text-[11px] font-medium">
+                                        <input type="radio" name="language" value="id" {{ ($p->widgetSetting->language ?? 'id') === 'id' ? 'checked' : '' }} class="text-apple-blue">
+                                        <span>🇮🇩 Indonesia</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-2 border border-apple-border rounded-lg bg-apple-canvas/30 cursor-pointer text-[11px] font-medium">
+                                        <input type="radio" name="language" value="en" {{ ($p->widgetSetting->language ?? 'id') === 'en' ? 'checked' : '' }} class="text-apple-blue">
+                                        <span>🇬🇧 English</span>
+                                    </label>
+                                </div>
+                            </div>
+
                             <!-- 1. Primary Color -->
                             <div>
                                 <label class="block font-medium text-apple-textPrimary mb-1">Primary Accent Color</label>
@@ -157,7 +172,9 @@
                                 $channelsMap = collect($p->widgetSetting->social_channels ?? [])->keyBy('id');
                                 $wa = $channelsMap->get('whatsapp');
                                 $ig = $channelsMap->get('instagram');
-                                $fb = $channelsMap->get('messenger');
+                                $fb = $channelsMap->get('facebook') ?? $channelsMap->get('messenger');
+                                $tt = $channelsMap->get('tiktok');
+                                $yt = $channelsMap->get('youtube');
                                 $tg = $channelsMap->get('telegram');
                                 $shp = $channelsMap->get('shopee');
                                 $tkp = $channelsMap->get('tokopedia');
@@ -189,6 +206,42 @@
                                     </label>
                                 </div>
                                 <input type="text" name="channels[instagram][url]" value="{{ $ig['url'] ?? '' }}" placeholder="https://instagram.com/akunanda atau @akunanda" class="w-full px-2.5 py-1 text-[11.5px] border border-apple-border rounded-md bg-white">
+                            </div>
+
+                            <!-- Facebook -->
+                            <div class="p-2.5 border border-apple-border rounded-lg bg-apple-canvas/30 flex flex-col gap-1.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-medium text-[#1877F2]">Facebook</span>
+                                    <label class="flex items-center gap-1.5 text-[11px] cursor-pointer">
+                                        <input type="checkbox" name="channels[facebook][enabled]" value="1" {{ !empty($fb['enabled']) ? 'checked' : '' }}>
+                                        <span>Aktif</span>
+                                    </label>
+                                </div>
+                                <input type="text" name="channels[facebook][url]" value="{{ $fb['url'] ?? '' }}" placeholder="https://facebook.com/akunanda atau username" class="w-full px-2.5 py-1 text-[11.5px] border border-apple-border rounded-md bg-white">
+                            </div>
+
+                            <!-- TikTok -->
+                            <div class="p-2.5 border border-apple-border rounded-lg bg-apple-canvas/30 flex flex-col gap-1.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-medium text-neutral-900">TikTok</span>
+                                    <label class="flex items-center gap-1.5 text-[11px] cursor-pointer">
+                                        <input type="checkbox" name="channels[tiktok][enabled]" value="1" {{ !empty($tt['enabled']) ? 'checked' : '' }}>
+                                        <span>Aktif</span>
+                                    </label>
+                                </div>
+                                <input type="text" name="channels[tiktok][url]" value="{{ $tt['url'] ?? '' }}" placeholder="https://tiktok.com/@akunanda atau @akunanda" class="w-full px-2.5 py-1 text-[11.5px] border border-apple-border rounded-md bg-white">
+                            </div>
+
+                            <!-- YouTube -->
+                            <div class="p-2.5 border border-apple-border rounded-lg bg-apple-canvas/30 flex flex-col gap-1.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-medium text-[#FF0000]">YouTube</span>
+                                    <label class="flex items-center gap-1.5 text-[11px] cursor-pointer">
+                                        <input type="checkbox" name="channels[youtube][enabled]" value="1" {{ !empty($yt['enabled']) ? 'checked' : '' }}>
+                                        <span>Aktif</span>
+                                    </label>
+                                </div>
+                                <input type="text" name="channels[youtube][url]" value="{{ $yt['url'] ?? '' }}" placeholder="https://youtube.com/@channelanda atau @channelanda" class="w-full px-2.5 py-1 text-[11.5px] border border-apple-border rounded-md bg-white">
                             </div>
 
                             <!-- Shopee -->

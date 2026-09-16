@@ -1091,7 +1091,7 @@ class DashboardController extends Controller
      * Update Conversation Status (Open / Closed)
      * PUT /admin/inbox/{id}/status
      */
-    public function updateStatus(Request $request, $id)
+    public function updateStatus(Request $request, $id, ConversationService $conversationService)
     {
         $tenantId = $request->user()->tenant_id;
         $conversation = Conversation::where('tenant_id', $tenantId)->findOrFail($id);
@@ -1099,6 +1099,33 @@ class DashboardController extends Controller
         $newStatus = $request->input('status');
         if (!$newStatus) {
             $newStatus = ($conversation->status === 'open') ? 'closed' : 'open';
+        }
+
+        $appendedMessage = null;
+        // Jika tiket diselesaikan dan ada pesan/sapaan penutup yang diisi agen
+        if ($newStatus === 'closed' && $request->filled('closing_message')) {
+            $closingText = trim($request->input('closing_message'));
+            if (!empty($closingText)) {
+                $user = $request->user();
+                $result = $conversationService->appendMessage($conversation, [
+                    'sender_type' => 'agent',
+                    'sender_id'   => $user->id,
+                    'sender_name' => $user->name,
+                    'content'     => $closingText,
+                ]);
+                $appendedMessage = $result['message'];
+
+                try {
+                    app(\App\Services\TelegramService::class)->forwardAgentReply($conversation, $appendedMessage);
+                } catch (\Throwable $e) {}
+
+                ActivityLogger::log(
+                    'message.replied',
+                    "Mengirim pesan penutup tiket #{$conversation->id}",
+                    $appendedMessage,
+                    ['conversation_id' => $conversation->id, 'message_id' => $appendedMessage->id]
+                );
+            }
         }
 
         $conversation->update(['status' => $newStatus]);
@@ -1122,7 +1149,15 @@ class DashboardController extends Controller
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'data' => ['status' => $newStatus]
+                'data' => [
+                    'status' => $newStatus,
+                    'closing_message' => $appendedMessage ? [
+                        'id'          => $appendedMessage->id,
+                        'content'     => $appendedMessage->content,
+                        'sender_name' => $appendedMessage->sender_name,
+                        'created_at'  => $appendedMessage->created_at ? $appendedMessage->created_at->toIso8601String() : null,
+                    ] : null,
+                ]
             ]);
         }
 
@@ -1353,7 +1388,9 @@ class DashboardController extends Controller
         $availableChannels = [
             'whatsapp'  => ['name' => 'WhatsApp', 'placeholder' => '08123456789 atau https://wa.me/...', 'icon' => 'whatsapp'],
             'instagram' => ['name' => 'Instagram', 'placeholder' => '@username atau https://instagram.com/...', 'icon' => 'instagram'],
-            'messenger' => ['name' => 'Facebook Messenger', 'placeholder' => 'username atau https://m.me/...', 'icon' => 'messenger'],
+            'facebook'  => ['name' => 'Facebook', 'placeholder' => 'username atau https://facebook.com/...', 'icon' => 'facebook'],
+            'tiktok'    => ['name' => 'TikTok', 'placeholder' => '@username atau https://tiktok.com/@...', 'icon' => 'tiktok'],
+            'youtube'   => ['name' => 'YouTube', 'placeholder' => '@channel atau https://youtube.com/@...', 'icon' => 'youtube'],
             'telegram'  => ['name' => 'Telegram', 'placeholder' => '@username atau https://t.me/...', 'icon' => 'telegram'],
             'shopee'    => ['name' => 'Shopee Store', 'placeholder' => 'https://shopee.co.id/...', 'icon' => 'shopee'],
             'tokopedia' => ['name' => 'Tokopedia Store', 'placeholder' => 'https://tokopedia.com/...', 'icon' => 'tokopedia'],
@@ -1376,13 +1413,21 @@ class DashboardController extends Controller
                 }
 
                 $platform = strtolower(trim($item['platform'] ?? $item['icon'] ?? (is_string($key) ? $key : 'whatsapp')));
+                if ($platform === 'messenger') {
+                    $platform = 'facebook';
+                }
+                $customIcon = trim($item['custom_icon'] ?? '');
+                $iconType = trim($item['icon_type'] ?? ($customIcon !== '' ? 'custom' : 'default'));
+
                 $socialChannelsList[] = [
-                    'id'       => $item['id'] ?? (is_string($key) ? $key : ('ch_' . uniqid())),
-                    'platform' => $platform,
-                    'name'     => $item['name'] ?? ($availableChannels[$platform]['name'] ?? ucfirst($platform)),
-                    'url'      => $url,
-                    'enabled'  => !empty($item['enabled']),
-                    'icon'     => $item['icon'] ?? ($availableChannels[$platform]['icon'] ?? $platform),
+                    'id'          => $item['id'] ?? (is_string($key) ? $key : ('ch_' . uniqid())),
+                    'platform'    => $platform,
+                    'name'        => $item['name'] ?? ($availableChannels[$platform]['name'] ?? ucfirst($platform)),
+                    'url'         => $url,
+                    'enabled'     => !empty($item['enabled']),
+                    'icon'        => $item['icon'] ?? ($availableChannels[$platform]['icon'] ?? $platform),
+                    'icon_type'   => $iconType,
+                    'custom_icon' => $customIcon,
                 ];
             }
         }
@@ -1421,6 +1466,7 @@ class DashboardController extends Controller
             'domains'           => 'nullable|string',
             'agent_scope'       => 'nullable|string|in:all,selected',
             'agent_ids'         => 'nullable|array',
+            'language'          => 'nullable|string|in:id,en',
             'primary_color'     => 'required|string|max:20',
             'greeting_title'    => 'nullable|string|max:100',
             'greeting_subtitle' => 'nullable|string|max:255',
@@ -1491,10 +1537,15 @@ class DashboardController extends Controller
                 foreach ($socialChannelsRaw as $idx => $item) {
                     if (!is_array($item)) continue;
                     $platform = strtolower(trim($item['platform'] ?? $item['icon'] ?? 'whatsapp'));
+                    if ($platform === 'messenger') {
+                        $platform = 'facebook';
+                    }
                     $name = trim($item['name'] ?? ucfirst($platform));
                     $url = trim($item['url'] ?? '');
                     $enabled = !empty($item['enabled']);
                     $idStr = trim($item['id'] ?? ($platform . '_' . ($idx + 1)));
+                    $customIcon = trim($item['custom_icon'] ?? '');
+                    $iconType = trim($item['icon_type'] ?? ($customIcon !== '' ? 'custom' : 'default'));
 
                     // Normalisasi URL
                     if ($platform === 'whatsapp' && $url && !str_starts_with($url, 'http')) {
@@ -1505,19 +1556,25 @@ class DashboardController extends Controller
                         $url = 'https://wa.me/' . $cleanNumber;
                     } elseif ($platform === 'instagram' && $url && !str_starts_with($url, 'http')) {
                         $url = 'https://instagram.com/' . ltrim($url, '@');
+                    } elseif ($platform === 'facebook' && $url && !str_starts_with($url, 'http')) {
+                        $url = 'https://facebook.com/' . ltrim($url, '@/');
+                    } elseif ($platform === 'tiktok' && $url && !str_starts_with($url, 'http')) {
+                        $url = 'https://tiktok.com/@' . ltrim($url, '@');
+                    } elseif ($platform === 'youtube' && $url && !str_starts_with($url, 'http')) {
+                        $url = 'https://youtube.com/@' . ltrim($url, '@');
                     } elseif ($platform === 'telegram' && $url && !str_starts_with($url, 'http')) {
                         $url = 'https://t.me/' . ltrim($url, '@');
-                    } elseif ($platform === 'messenger' && $url && !str_starts_with($url, 'http')) {
-                        $url = 'https://m.me/' . ltrim($url, '/');
                     }
 
                     $formattedChannels[] = [
-                        'id'       => $idStr,
-                        'platform' => $platform,
-                        'name'     => $name,
-                        'url'      => $url,
-                        'enabled'  => $enabled && !empty($url),
-                        'icon'     => $platform,
+                        'id'          => $idStr,
+                        'platform'    => $platform,
+                        'name'        => $name,
+                        'url'         => $url,
+                        'enabled'     => $enabled && !empty($url),
+                        'icon'        => $platform,
+                        'icon_type'   => $iconType,
+                        'custom_icon' => $customIcon,
                     ];
                 }
             }
@@ -1527,15 +1584,19 @@ class DashboardController extends Controller
             $availableChannels = [
                 'whatsapp'  => ['name' => 'WhatsApp', 'icon' => 'whatsapp'],
                 'instagram' => ['name' => 'Instagram', 'icon' => 'instagram'],
-                'messenger' => ['name' => 'Facebook Messenger', 'icon' => 'messenger'],
+                'facebook'  => ['name' => 'Facebook', 'icon' => 'facebook'],
+                'tiktok'    => ['name' => 'TikTok', 'icon' => 'tiktok'],
+                'youtube'   => ['name' => 'YouTube', 'icon' => 'youtube'],
                 'telegram'  => ['name' => 'Telegram', 'icon' => 'telegram'],
                 'shopee'    => ['name' => 'Shopee', 'icon' => 'shopee'],
                 'tokopedia' => ['name' => 'Tokopedia', 'icon' => 'tokopedia'],
             ];
 
             foreach ($availableChannels as $key => $meta) {
-                $enabled = !empty($channelsInput[$key]['enabled']);
-                $url = trim($channelsInput[$key]['url'] ?? '');
+                // Support legacy 'messenger' input mapped to 'facebook'
+                $inputData = $channelsInput[$key] ?? ($key === 'facebook' ? ($channelsInput['messenger'] ?? null) : null);
+                $enabled = !empty($inputData['enabled']);
+                $url = trim($inputData['url'] ?? '');
 
                 if ($key === 'whatsapp' && $url && !str_starts_with($url, 'http')) {
                     $cleanNumber = preg_replace('/[^0-9]/', '', $url);
@@ -1545,19 +1606,25 @@ class DashboardController extends Controller
                     $url = 'https://wa.me/' . $cleanNumber;
                 } elseif ($key === 'instagram' && $url && !str_starts_with($url, 'http')) {
                     $url = 'https://instagram.com/' . ltrim($url, '@');
+                } elseif ($key === 'facebook' && $url && !str_starts_with($url, 'http')) {
+                    $url = 'https://facebook.com/' . ltrim($url, '@/');
+                } elseif ($key === 'tiktok' && $url && !str_starts_with($url, 'http')) {
+                    $url = 'https://tiktok.com/@' . ltrim($url, '@');
+                } elseif ($key === 'youtube' && $url && !str_starts_with($url, 'http')) {
+                    $url = 'https://youtube.com/@' . ltrim($url, '@');
                 } elseif ($key === 'telegram' && $url && !str_starts_with($url, 'http')) {
                     $url = 'https://t.me/' . ltrim($url, '@');
-                } elseif ($key === 'messenger' && $url && !str_starts_with($url, 'http')) {
-                    $url = 'https://m.me/' . ltrim($url, '/');
                 }
 
                 $formattedChannels[] = [
-                    'id'       => $key,
-                    'platform' => $key,
-                    'name'     => $meta['name'],
-                    'enabled'  => $enabled && !empty($url),
-                    'url'      => $url,
-                    'icon'     => $meta['icon'],
+                    'id'          => $key,
+                    'platform'    => $key,
+                    'name'        => $meta['name'],
+                    'enabled'     => $enabled && !empty($url),
+                    'url'         => $url,
+                    'icon'        => $meta['icon'],
+                    'icon_type'   => 'default',
+                    'custom_icon' => '',
                 ];
             }
         }
@@ -1606,6 +1673,7 @@ class DashboardController extends Controller
         }
 
         $widgetSetting->update([
+            'language'                       => $request->input('language', $widgetSetting->language ?: 'id'),
             'primary_color'                  => $request->input('primary_color', $widgetSetting->primary_color),
             'greeting_title'                 => $request->input('greeting_title', $widgetSetting->greeting_title),
             'greeting_subtitle'              => $request->input('greeting_subtitle', $widgetSetting->greeting_subtitle),

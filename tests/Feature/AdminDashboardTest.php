@@ -713,7 +713,7 @@ class AdminDashboardTest extends TestCase
 
         $channels = $setting->social_channels;
         $this->assertIsArray($channels);
-        $this->assertCount(6, $channels);
+        $this->assertCount(8, $channels);
 
         $activeChannels = array_filter($channels, function ($c) {
             return !empty($c['enabled']);
@@ -797,6 +797,92 @@ class AdminDashboardTest extends TestCase
         $ig = collect($channels)->firstWhere('platform', 'instagram');
         $this->assertNotNull($ig);
         $this->assertEquals('https://instagram.com/supresso_coffee', $ig['url']);
+    }
+
+    /**
+     * Test Admin can save TikTok, YouTube, Facebook, and Custom Icon social channels
+     */
+    public function testAdminCanSaveTikTokYouTubeFacebookAndCustomIconChannels()
+    {
+        $payload = [
+            'primary_color'   => '#0071E3',
+            'find_us_title'   => 'Ikuti Kami di Media Sosial',
+            'social_channels' => json_encode([
+                [
+                    'id'          => 'fb_1',
+                    'platform'    => 'facebook',
+                    'name'        => 'Facebook Resmi',
+                    'url'         => 'supressocoffee',
+                    'enabled'     => true,
+                    'icon_type'   => 'default',
+                    'custom_icon' => '',
+                ],
+                [
+                    'id'          => 'tt_1',
+                    'platform'    => 'tiktok',
+                    'name'        => 'TikTok Official',
+                    'url'         => '@supresso.id',
+                    'enabled'     => true,
+                    'icon_type'   => 'default',
+                    'custom_icon' => '',
+                ],
+                [
+                    'id'          => 'yt_1',
+                    'platform'    => 'youtube',
+                    'name'        => 'YouTube Channel',
+                    'url'         => '@SupressoCoffee',
+                    'enabled'     => true,
+                    'icon_type'   => 'default',
+                    'custom_icon' => '',
+                ],
+                [
+                    'id'          => 'custom_1',
+                    'platform'    => 'custom',
+                    'name'        => 'Katalog Produk Spesial',
+                    'url'         => 'https://supresso.com/catalog',
+                    'enabled'     => true,
+                    'icon_type'   => 'custom',
+                    'custom_icon' => 'https://supresso.com/images/catalog-icon.svg',
+                ],
+            ]),
+        ];
+
+        $response = $this->actingAs($this->superadmin)
+            ->put("/admin/integrations/{$this->project->id}/settings", $payload);
+
+        $response->assertSessionHas('success');
+
+        $setting = \App\Models\WidgetSetting::where('project_id', $this->project->id)->first();
+        $this->assertNotNull($setting);
+
+        $channels = $setting->social_channels;
+        $this->assertIsArray($channels);
+        $this->assertCount(4, $channels);
+
+        // Verify Facebook
+        $fb = collect($channels)->firstWhere('platform', 'facebook');
+        $this->assertNotNull($fb);
+        $this->assertEquals('Facebook Resmi', $fb['name']);
+        $this->assertEquals('https://facebook.com/supressocoffee', $fb['url']);
+        $this->assertEquals('default', $fb['icon_type']);
+
+        // Verify TikTok
+        $tt = collect($channels)->firstWhere('platform', 'tiktok');
+        $this->assertNotNull($tt);
+        $this->assertEquals('TikTok Official', $tt['name']);
+        $this->assertEquals('https://tiktok.com/@supresso.id', $tt['url']);
+
+        // Verify YouTube
+        $yt = collect($channels)->firstWhere('platform', 'youtube');
+        $this->assertNotNull($yt);
+        $this->assertEquals('YouTube Channel', $yt['name']);
+        $this->assertEquals('https://youtube.com/@SupressoCoffee', $yt['url']);
+
+        // Verify Custom Channel with custom_icon
+        $custom = collect($channels)->firstWhere('platform', 'custom');
+        $this->assertNotNull($custom);
+        $this->assertEquals('custom', $custom['icon_type']);
+        $this->assertEquals('https://supresso.com/images/catalog-icon.svg', $custom['custom_icon']);
     }
 
     /**
