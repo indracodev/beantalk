@@ -90,6 +90,9 @@ class SessionController extends Controller
                     'bot_enabled'         => $widgetSetting ? (bool) $widgetSetting->bot_enabled : false,
                     'bot_name'            => $widgetSetting ? $widgetSetting->bot_name : 'BeanBot',
                     'bot_welcome_message' => $widgetSetting ? $widgetSetting->bot_welcome_message : null,
+                    'bot_mode_query'      => $widgetSetting ? (bool) $widgetSetting->bot_mode_query : true,
+                    'bot_mode_options'    => $widgetSetting ? (bool) $widgetSetting->bot_mode_options : true,
+                    'bot_welcome_options' => $widgetSetting ? $widgetSetting->bot_welcome_options : null,
                 ]
             ]
         ]);

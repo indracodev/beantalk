@@ -287,4 +287,103 @@ class BotEngineTest extends TestCase
         $this->assertFalse((bool)$conversation->is_bot_active);
         $this->assertNotNull($conversation->bot_handoff_at);
     }
+
+    /**
+     * Test 7: Bot respects bot_mode_query toggle
+     */
+    public function testBotRespectsModeQueryToggle()
+    {
+        $this->widgetSetting->update([
+            'bot_enabled'      => true,
+            'bot_mode_query'   => false, // Query matching disabled
+            'bot_mode_options' => true,
+        ]);
+
+        $visitorUuid = 'bot-test-visitor-noquery-' . uniqid();
+
+        // Send loose query containing keyword 'ongkir'
+        $msgRes = $this->withHeaders([
+            'X-Project-Key' => $this->apiKey->public_key,
+        ])->postJson("/api/v1/client/conversations/0/messages", [
+            'visitor_uuid' => $visitorUuid,
+            'content' => 'Berapa tarif ongkir ke Jakarta?',
+            'client_message_id' => 'msg-bot-noquery-' . uniqid(),
+        ]);
+
+        $msgRes->assertStatus(201);
+        $conversationId = $msgRes->json('data.conversation_id');
+
+        // Since mode_query is false, it should NOT match the 'ongkir' rule via loose substring,
+        // it falls back to welcome message on first message
+        $botMsg = Message::where('conversation_id', $conversationId)
+            ->where('sender_type', 'bot')
+            ->first();
+
+        $this->assertNotNull($botMsg);
+        $this->assertEquals($this->widgetSetting->bot_welcome_message, $botMsg->content);
+    }
+
+    /**
+     * Test 8: Bot strips options when bot_mode_options is disabled
+     */
+    public function testBotStripsOptionsWhenModeOptionsDisabled()
+    {
+        $this->widgetSetting->update([
+            'bot_enabled'         => true,
+            'bot_mode_query'      => true,
+            'bot_mode_options'    => false, // Options disabled
+            'bot_welcome_options' => [
+                ['label' => 'Tombol Test', 'value' => 'test']
+            ]
+        ]);
+
+        $visitorUuid = 'bot-test-visitor-nooptions-' . uniqid();
+
+        $msgRes = $this->withHeaders([
+            'X-Project-Key' => $this->apiKey->public_key,
+        ])->postJson("/api/v1/client/conversations/0/messages", [
+            'visitor_uuid' => $visitorUuid,
+            'content' => 'Halo kak',
+            'client_message_id' => 'msg-bot-noopt-' . uniqid(),
+        ]);
+
+        $msgRes->assertStatus(201);
+        $conversationId = $msgRes->json('data.conversation_id');
+
+        $botMsg = Message::where('conversation_id', $conversationId)
+            ->where('sender_type', 'bot')
+            ->first();
+
+        $this->assertNotNull($botMsg);
+        $this->assertNull($botMsg->metadata['options'] ?? null);
+    }
+
+    /**
+     * Test 9: Admin can save bot modes and dynamic welcome options
+     */
+    public function testAdminCanSaveBotModesAndWelcomeOptions()
+    {
+        $welcomeOptions = [
+            ['label' => '📦 Beli Kopi', 'value' => 'kopi'],
+            ['label' => '💬 Tanya CS', 'value' => 'cs'],
+        ];
+
+        $res = $this->actingAs($this->adminUser)->put("/admin/integrations/{$this->project->id}/settings", [
+            'primary_color'       => '#222222',
+            'bot_enabled'         => '1',
+            'bot_mode_query'      => '1',
+            'bot_mode_options'    => '1',
+            'bot_name'            => 'SuperBot',
+            'bot_welcome_message' => 'Halo dari SuperBot!',
+            'bot_welcome_options' => json_encode($welcomeOptions),
+        ]);
+
+        $res->assertRedirect();
+
+        $this->widgetSetting->refresh();
+        $this->assertTrue((bool)$this->widgetSetting->bot_mode_query);
+        $this->assertTrue((bool)$this->widgetSetting->bot_mode_options);
+        $this->assertEquals($welcomeOptions, $this->widgetSetting->bot_welcome_options);
+        $this->assertEquals('SuperBot', $this->widgetSetting->bot_name);
+    }
 }

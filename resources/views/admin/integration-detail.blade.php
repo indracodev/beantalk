@@ -14,6 +14,7 @@
         <!-- Hidden Inputs to serialize rules & social channels into JSON -->
         <input type="hidden" name="bot_rules" id="hiddenBotRules" value="{{ json_encode($botRules) }}">
         <input type="hidden" name="social_channels" id="hiddenSocialChannels" value="{{ json_encode($socialChannelsList) }}">
+        <input type="hidden" name="bot_welcome_options" id="hiddenBotWelcomeOptions" value="{{ json_encode($widgetSetting->bot_welcome_options ?? []) }}">
 
         <!-- Header Action Bar -->
         <div class="bg-white border border-apple-border rounded-xl p-3.5 sm:p-4 shadow-apple-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -203,6 +204,82 @@
                         <label class="block text-[11.5px] font-semibold text-apple-textPrimary mb-1">Pesan Di Luar Jam Kerja (Offline Auto-Reply)</label>
                         <input type="text" name="bot_offline_message" value="{{ old('bot_offline_message', $widgetSetting->bot_offline_message ?: 'Terima kasih telah menghubungi kami. Staf kami sedang offline saat ini dan akan segera membalas begitu kembali.') }}" placeholder="Pesan otomatis saat customer chat di luar jam operasional" class="w-full text-[12px] px-3 py-2 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500">
                     </div>
+                </div>
+            </div>
+
+            <!-- Bot Modes Selection Card (Query / FAQ Chat vs Interactive Options) -->
+            <div class="bg-white border border-apple-border rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col gap-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-apple-border">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-[14px] font-bold text-apple-textPrimary">Mode Interaksi Bot (Pilihan Respon)</h3>
+                            <span id="badgeBotModeStatus" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-700">
+                                {{ ($widgetSetting->bot_mode_query ?? true) && ($widgetSetting->bot_mode_options ?? true) ? '⚡ Mode Hybrid (Query + Opsi)' : (($widgetSetting->bot_mode_options ?? true) ? '🔘 Mode Opsi Tombol' : '💬 Mode Query Kata Kunci') }}
+                            </span>
+                        </div>
+                        <p class="text-[11.5px] text-apple-textSecondary mt-0.5">Tentukan bagaimana pelanggan berinteraksi dengan asisten bot. Anda dapat mengaktifkan salah satu atau keduanya (Hybrid Mode).</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    <!-- Mode 1: By Query -->
+                    <label class="relative flex items-start gap-3.5 p-4 rounded-xl border border-apple-border bg-apple-canvas/30 hover:bg-purple-50/20 hover:border-purple-200 transition cursor-pointer">
+                        <div class="pt-0.5">
+                            <input type="checkbox" name="bot_mode_query" value="1" id="toggleBotModeQuery" {{ ($widgetSetting->bot_mode_query ?? true) ? 'checked' : '' }} onchange="updateBotModeBadge()" class="rounded text-purple-600 focus:ring-purple-500 w-4 h-4 cursor-pointer">
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[13px] font-bold text-apple-textPrimary">Mode 1: By Query (Kata Kunci FAQ)</span>
+                                <span class="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-purple-100 text-purple-800">Chat Bebas</span>
+                            </div>
+                            <p class="text-[11.5px] text-apple-textSecondary leading-relaxed">
+                                Pelanggan mengetik pesan bebas di kolom chat. Bot otomatis mencari dan mencocokkan kata kunci FAQ yang terdaftar untuk memberi jawaban instan.
+                            </p>
+                        </div>
+                    </label>
+
+                    <!-- Mode 2: By Opsi -->
+                    <label class="relative flex items-start gap-3.5 p-4 rounded-xl border border-apple-border bg-apple-canvas/30 hover:bg-purple-50/20 hover:border-purple-200 transition cursor-pointer">
+                        <div class="pt-0.5">
+                            <input type="checkbox" name="bot_mode_options" value="1" id="toggleBotModeOptions" {{ ($widgetSetting->bot_mode_options ?? true) ? 'checked' : '' }} onchange="updateBotModeBadge()" class="rounded text-purple-600 focus:ring-purple-500 w-4 h-4 cursor-pointer">
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[13px] font-bold text-apple-textPrimary">Mode 2: By Opsi (Pilihan Tombol Interaktif)</span>
+                                <span class="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800">Tombol / Menu</span>
+                            </div>
+                            <p class="text-[11.5px] text-apple-textSecondary leading-relaxed">
+                                Bot menampilkan tombol-tombol pilihan interaktif yang dapat diklik langsung tanpa mengetik. Sangat efisien untuk navigasi produk &amp; bantuan cepat.
+                            </p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Welcome Options Manager Card (Tombol Sambutan Awal) -->
+            <div class="bg-white border border-apple-border rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col gap-3.5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-apple-border">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-[14px] font-bold text-apple-textPrimary">Tombol Pilihan Sambutan Awal (Welcome Options)</h3>
+                            <span id="labelWelcomeOptionCount" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-700">0 Tombol</span>
+                        </div>
+                        <p class="text-[11.5px] text-apple-textSecondary mt-0.5">Daftar tombol pilihan cepat yang disajikan di bawah Pesan Sambutan Awal saat customer pertama kali membuka obrolan.</p>
+                    </div>
+
+                    <button type="button" onclick="addNewWelcomeOptionRow()" class="inline-flex items-center gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 px-3 py-1.5 rounded-lg text-[11.5px] font-semibold transition cursor-pointer self-start sm:self-auto">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <span>Tambah Tombol Sambutan</span>
+                    </button>
+                </div>
+
+                <div id="welcomeOptionsListContainer" class="flex flex-col gap-2.5">
+                    <!-- Dynamic Welcome Option Rows Managed by JS -->
+                </div>
+
+                <div id="welcomeOptionsEmptyState" class="hidden p-4 text-center border-2 border-dashed border-apple-border rounded-xl text-[12px] text-apple-textTertiary bg-apple-canvas/20">
+                    <p class="font-medium text-apple-textSecondary">Belum ada tombol opsi sambutan.</p>
+                    <p class="mt-0.5 text-apple-textTertiary text-[11px]">Klik <strong>"Tambah Tombol Sambutan"</strong> di atas untuk menambahkan tombol pilihan cepat saat awal chat.</p>
                 </div>
             </div>
 
@@ -540,6 +617,11 @@ if (!Array.isArray(currentSocialChannels)) {
     currentSocialChannels = [];
 }
 
+let currentWelcomeOptions = @json($widgetSetting->bot_welcome_options ?? []);
+if (!Array.isArray(currentWelcomeOptions)) {
+    currentWelcomeOptions = [];
+}
+
 const PLATFORM_OPTIONS = [
     { value: 'whatsapp', name: 'WhatsApp', placeholder: '08123456789 atau https://wa.me/...', badgeClass: 'bg-emerald-100 text-emerald-800' },
     { value: 'instagram', name: 'Instagram', placeholder: '@username atau https://instagram.com/...', badgeClass: 'bg-pink-100 text-pink-800' },
@@ -748,6 +830,99 @@ function updateTelegramToggleBadges() {
     }
 }
 
+// 1.5 Welcome Options Manager (Tombol Sambutan Awal)
+function renderWelcomeOptionsList() {
+    const container = document.getElementById('welcomeOptionsListContainer');
+    const emptyState = document.getElementById('welcomeOptionsEmptyState');
+    const labelCount = document.getElementById('labelWelcomeOptionCount');
+
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (!Array.isArray(currentWelcomeOptions) || currentWelcomeOptions.length === 0) {
+        if (emptyState) emptyState.classList.remove('hidden');
+    } else {
+        if (emptyState) emptyState.classList.add('hidden');
+
+        currentWelcomeOptions.forEach((opt, idx) => {
+            const row = document.createElement('div');
+            row.className = 'p-2.5 rounded-xl border border-apple-border bg-white shadow-2xs flex items-center gap-2.5';
+            row.innerHTML = `
+                <span class="w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-[11px] font-bold flex items-center justify-center shrink-0">
+                    ${idx + 1}
+                </span>
+                <div class="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-2">
+                    <div class="sm:col-span-7">
+                        <input type="text" value="${escapeHtml(opt.label || '')}" oninput="updateWelcomeOptionField(${idx}, 'label', this.value)" placeholder="Label Tombol (cth: 📦 1. Pembelian Produk)" class="w-full text-[12px] px-3 py-1.5 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500">
+                    </div>
+                    <div class="sm:col-span-5">
+                        <input type="text" value="${escapeHtml(opt.value || '')}" oninput="updateWelcomeOptionField(${idx}, 'value', this.value)" placeholder="Nilai / Kata Kunci (cth: 1 atau produk)" class="w-full text-[12px] px-3 py-1.5 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500">
+                    </div>
+                </div>
+                <button type="button" onclick="removeWelcomeOptionRow(${idx})" class="text-neutral-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition cursor-pointer shrink-0" title="Hapus Tombol Sambutan Ini">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    if (labelCount) labelCount.innerText = (currentWelcomeOptions ? currentWelcomeOptions.length : 0) + ' Tombol';
+    serializeWelcomeOptions();
+}
+
+function addNewWelcomeOptionRow() {
+    if (!Array.isArray(currentWelcomeOptions)) currentWelcomeOptions = [];
+    currentWelcomeOptions.push({ label: '', value: '' });
+    renderWelcomeOptionsList();
+    setTimeout(() => {
+        const inputs = document.querySelectorAll('#welcomeOptionsListContainer input');
+        if (inputs.length > 0) inputs[inputs.length - 2].focus();
+    }, 50);
+}
+
+function updateWelcomeOptionField(index, field, value) {
+    if (currentWelcomeOptions[index]) {
+        currentWelcomeOptions[index][field] = value;
+        serializeWelcomeOptions();
+    }
+}
+
+function removeWelcomeOptionRow(index) {
+    if (Array.isArray(currentWelcomeOptions) && currentWelcomeOptions[index]) {
+        currentWelcomeOptions.splice(index, 1);
+        renderWelcomeOptionsList();
+    }
+}
+
+function serializeWelcomeOptions() {
+    const hidden = document.getElementById('hiddenBotWelcomeOptions');
+    if (hidden) {
+        hidden.value = JSON.stringify(currentWelcomeOptions);
+    }
+}
+
+function updateBotModeBadge() {
+    const isQuery = document.getElementById('toggleBotModeQuery')?.checked;
+    const isOptions = document.getElementById('toggleBotModeOptions')?.checked;
+    const badge = document.getElementById('badgeBotModeStatus');
+    if (!badge) return;
+
+    if (isQuery && isOptions) {
+        badge.innerText = '⚡ Mode Hybrid (Query + Opsi)';
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-700';
+    } else if (isOptions) {
+        badge.innerText = '🔘 Mode Opsi Tombol';
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800';
+    } else if (isQuery) {
+        badge.innerText = '💬 Mode Query Kata Kunci';
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800';
+    } else {
+        badge.innerText = '⚠️ Nonaktif (Hanya CS Handoff)';
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-neutral-100 text-neutral-600';
+    }
+}
+
 // 2. Render FAQ Rules List
 function renderFaqRulesList() {
     const container = document.getElementById('faqRulesListContainer');
@@ -766,24 +941,62 @@ function renderFaqRulesList() {
 
         currentFaqRules.forEach((rule, idx) => {
             const row = document.createElement('div');
-            row.className = 'p-3.5 rounded-xl border border-apple-border bg-white shadow-2xs hover:border-purple-300 transition flex flex-col md:flex-row items-start md:items-center gap-3';
+            const ruleOptions = Array.isArray(rule.options) ? rule.options : [];
+            row.className = 'p-3.5 rounded-xl border border-apple-border bg-white shadow-2xs hover:border-purple-300 transition flex flex-col gap-3';
+            
+            let optionsSectionHtml = '';
+            if (ruleOptions.length > 0) {
+                optionsSectionHtml = `
+                    <div class="mt-1 pt-2.5 border-t border-apple-border/70 flex flex-col gap-2 bg-apple-canvas/30 p-2.5 rounded-lg">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] font-bold text-apple-textSecondary flex items-center gap-1.5">
+                                🔘 Tombol Opsi Balasan (${ruleOptions.length})
+                            </span>
+                            <button type="button" onclick="addOptionToRule(${idx})" class="text-purple-600 hover:text-purple-700 font-semibold text-[10.5px] cursor-pointer">
+                                + Tambah Tombol
+                            </button>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            ${ruleOptions.map((opt, optIdx) => `
+                                <div class="flex items-center gap-2">
+                                    <input type="text" value="${escapeHtml(opt.label || '')}" oninput="updateRuleOption(${idx}, ${optIdx}, 'label', this.value)" placeholder="Label Tombol (cth: 📦 Pilihan A)" class="text-[11px] px-2.5 py-1 bg-white border border-apple-border rounded-md flex-1">
+                                    <input type="text" value="${escapeHtml(opt.value || '')}" oninput="updateRuleOption(${idx}, ${optIdx}, 'value', this.value)" placeholder="Nilai / Kata Kunci (cth: A)" class="text-[11px] px-2.5 py-1 bg-white border border-apple-border rounded-md w-36">
+                                    <button type="button" onclick="removeOptionFromRule(${idx}, ${optIdx})" class="text-neutral-400 hover:text-red-600 p-1 text-[12px] cursor-pointer" title="Hapus Tombol">✕</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                optionsSectionHtml = `
+                    <div class="flex items-center justify-end">
+                        <button type="button" onclick="addOptionToRule(${idx})" class="text-[10.5px] font-semibold text-purple-600 hover:text-purple-700 hover:underline flex items-center gap-1 cursor-pointer">
+                            <span>+ Pasang Tombol Pilihan Interaktif untuk Jawaban Ini</span>
+                        </button>
+                    </div>
+                `;
+            }
+
             row.innerHTML = `
-                <div class="w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-[11px] font-bold flex items-center justify-center shrink-0">
-                    ${idx + 1}
-                </div>
-                <div class="flex-1 w-full grid grid-cols-1 md:grid-cols-12 gap-2.5">
-                    <div class="md:col-span-5">
-                        <label class="block text-[10.5px] font-semibold text-apple-textSecondary mb-1">Kata Kunci Pemicu (Koma terpisah)</label>
-                        <input type="text" value="${escapeHtml(rule.keywords || '')}" oninput="updateRuleField(${idx}, 'keywords', this.value)" placeholder="Contoh: ongkir, tarif, kurir, jne" class="w-full text-[12px] px-3 py-1.5 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500">
+                <div class="flex flex-col md:flex-row items-start md:items-center gap-3">
+                    <div class="w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-[11px] font-bold flex items-center justify-center shrink-0">
+                        ${idx + 1}
                     </div>
-                    <div class="md:col-span-7">
-                        <label class="block text-[10.5px] font-semibold text-apple-textSecondary mb-1">Template Jawaban Bot</label>
-                        <textarea oninput="updateRuleField(${idx}, 'response', this.value)" rows="2" placeholder="Tulis jawaban otomatis lengkap untuk customer..." class="w-full text-[12px] px-3 py-1.5 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 resize-none leading-relaxed">${escapeHtml(rule.response || '')}</textarea>
+                    <div class="flex-1 w-full grid grid-cols-1 md:grid-cols-12 gap-2.5">
+                        <div class="md:col-span-5">
+                            <label class="block text-[10.5px] font-semibold text-apple-textSecondary mb-1">Kata Kunci Pemicu (Koma terpisah)</label>
+                            <input type="text" value="${escapeHtml(rule.keywords || '')}" oninput="updateRuleField(${idx}, 'keywords', this.value)" placeholder="Contoh: ongkir, tarif, kurir, jne" class="w-full text-[12px] px-3 py-1.5 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500">
+                        </div>
+                        <div class="md:col-span-7">
+                            <label class="block text-[10.5px] font-semibold text-apple-textSecondary mb-1">Template Jawaban Bot</label>
+                            <textarea oninput="updateRuleField(${idx}, 'response', this.value)" rows="2" placeholder="Tulis jawaban otomatis lengkap untuk customer..." class="w-full text-[12px] px-3 py-1.5 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 resize-none leading-relaxed">${escapeHtml(rule.response || '')}</textarea>
+                        </div>
                     </div>
+                    <button type="button" onclick="removeFaqRuleRow(${idx})" class="text-neutral-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition shrink-0 cursor-pointer self-end md:self-center" title="Hapus Aturan FAQ Ini">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
                 </div>
-                <button type="button" onclick="removeFaqRuleRow(${idx})" class="text-neutral-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition shrink-0 cursor-pointer self-end md:self-center" title="Hapus Aturan FAQ Ini">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                </button>
+                ${optionsSectionHtml}
             `;
             container.appendChild(row);
         });
@@ -799,6 +1012,31 @@ function updateRuleField(index, field, value) {
     if (currentFaqRules[index]) {
         currentFaqRules[index][field] = value;
         serializeBotRules();
+    }
+}
+
+function addOptionToRule(ruleIdx) {
+    if (!currentFaqRules[ruleIdx].options || !Array.isArray(currentFaqRules[ruleIdx].options)) {
+        currentFaqRules[ruleIdx].options = [];
+    }
+    currentFaqRules[ruleIdx].options.push({ label: '', value: '' });
+    renderFaqRulesList();
+}
+
+function updateRuleOption(ruleIdx, optIdx, field, value) {
+    if (currentFaqRules[ruleIdx] && currentFaqRules[ruleIdx].options && currentFaqRules[ruleIdx].options[optIdx]) {
+        currentFaqRules[ruleIdx].options[optIdx][field] = value;
+        serializeBotRules();
+    }
+}
+
+function removeOptionFromRule(ruleIdx, optIdx) {
+    if (currentFaqRules[ruleIdx] && currentFaqRules[ruleIdx].options && currentFaqRules[ruleIdx].options[optIdx]) {
+        currentFaqRules[ruleIdx].options.splice(optIdx, 1);
+        if (currentFaqRules[ruleIdx].options.length === 0) {
+            delete currentFaqRules[ruleIdx].options;
+        }
+        renderFaqRulesList();
     }
 }
 
@@ -981,6 +1219,7 @@ function serializeSocialChannels() {
 function serializeAllSettings() {
     serializeBotRules();
     serializeSocialChannels();
+    serializeWelcomeOptions();
 }
 
 function escapeHtml(text) {
@@ -1086,8 +1325,10 @@ function copySnippetText(elementId, btn) {
 
 // Initial Boot
 document.addEventListener('DOMContentLoaded', function() {
+    renderWelcomeOptionsList();
     renderFaqRulesList();
     renderSocialChannelsList();
+    updateBotModeBadge();
 });
 </script>
 @endsection

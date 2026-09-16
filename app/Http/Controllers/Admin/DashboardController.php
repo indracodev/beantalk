@@ -1516,6 +1516,17 @@ class DashboardController extends Controller
             $botRules = $botRulesRaw;
         }
 
+        $botWelcomeOptions = $widgetSetting->bot_welcome_options;
+        if ($request->has('bot_welcome_options')) {
+            $welcomeOptRaw = $request->input('bot_welcome_options');
+            if (is_string($welcomeOptRaw)) {
+                $trimmed = trim($welcomeOptRaw);
+                $botWelcomeOptions = $trimmed === '' ? null : json_decode($trimmed, true);
+            } elseif (is_array($welcomeOptRaw)) {
+                $botWelcomeOptions = $welcomeOptRaw;
+            }
+        }
+
         $widgetSetting->update([
             'primary_color'                  => $request->input('primary_color', $widgetSetting->primary_color),
             'greeting_title'                 => $request->input('greeting_title', $widgetSetting->greeting_title),
@@ -1524,8 +1535,11 @@ class DashboardController extends Controller
             'find_us_title'                  => $request->input('find_us_title', 'Find Us Somewhere Else'),
             'social_channels'                => $formattedChannels,
             'bot_enabled'                    => $request->has('bot_enabled') ? (bool) $request->input('bot_enabled') : false,
+            'bot_mode_query'                 => $request->has('bot_mode_query'),
+            'bot_mode_options'               => $request->has('bot_mode_options'),
             'bot_name'                       => $request->input('bot_name', $widgetSetting->bot_name ?: 'BeanBot'),
             'bot_welcome_message'            => $request->input('bot_welcome_message', $widgetSetting->bot_welcome_message),
+            'bot_welcome_options'            => $botWelcomeOptions,
             'bot_offline_message'            => $request->input('bot_offline_message', $widgetSetting->bot_offline_message),
             'bot_rules'                      => $botRules,
             'telegram_bot_token'             => $request->input('telegram_bot_token', $widgetSetting->telegram_bot_token),

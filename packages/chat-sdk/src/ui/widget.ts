@@ -668,17 +668,16 @@ export class ChatWidgetUi {
       if (this.messages.length === 0) {
         const settings = (this.sessionData as any)?.widget || this.sessionData?.widget_settings;
         if (settings && settings.bot_enabled && settings.bot_welcome_message) {
-          const welcomeOptions = [
-            { label: '📦 1. Pembelian Produk', value: '1' },
-            { label: '🤝 2. Informasi & Kerjasama', value: '2' },
-            { label: '🛠️ 3. Kendala Belanja Online', value: '3' },
-            { label: '💬 Bicara dengan CS (YA)', value: 'YA' },
-          ];
+          const isOptionsEnabled = settings.bot_mode_options !== false;
+          const welcomeOptions = (isOptionsEnabled && Array.isArray(settings.bot_welcome_options) && settings.bot_welcome_options.length > 0)
+            ? settings.bot_welcome_options
+            : null;
+
           const initialBotMsg: Message = {
             id: 0,
             conversation_id: this.sessionData?.conversation?.id || 0,
             sender_type: 'bot' as any,
-            sender_name: settings.bot_name || 'INDRACO Assistant',
+            sender_name: settings.bot_name || 'Assistant',
             content: settings.bot_welcome_message,
             message: settings.bot_welcome_message,
             metadata: {
@@ -880,7 +879,9 @@ export class ChatWidgetUi {
     const formattedHtml = this.formatMessageContent(rawText);
     const senderTitle = isVisitor ? 'Anda' : (isBot ? ('🤖 ' + (msg.sender_name || 'BeanBot')) : (msg.sender_name || 'Agent'));
 
-    const options = msg.metadata && Array.isArray(msg.metadata.options) ? msg.metadata.options : null;
+    const widgetSettings = (this.sessionData as any)?.widget || this.sessionData?.widget_settings;
+    const isOptionsEnabled = widgetSettings ? widgetSettings.bot_mode_options !== false : true;
+    const options = (isOptionsEnabled && msg.metadata && Array.isArray(msg.metadata.options)) ? msg.metadata.options : null;
     let optionsHtml = '';
     if (options && options.length > 0 && !isVisitor) {
       optionsHtml = `

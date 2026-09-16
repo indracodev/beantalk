@@ -3068,8 +3068,11 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
                 'greeting_subtitle'   => 'Layanan Pelanggan & Tanya Jawab Produk',
                 'is_online'           => true,
                 'bot_enabled'         => true,
+                'bot_mode_query'       => true,
+                'bot_mode_options'     => true,
                 'bot_name'            => 'INDRACO Assistant',
                 'bot_welcome_message' => $welcomeMessage,
+                'bot_welcome_options' => $rules[0]['options'],
                 'bot_offline_message' => 'Halo! Layanan konsultasi CS kami saat ini di luar jam operasional. Anda tetap dapat menggunakan bot otomatis atau meninggalkan pesan & nomor WhatsApp. Tim kami akan segera menghubungi Anda kembali.',
                 'bot_rules'           => $rules,
             ]

@@ -82,57 +82,71 @@ class BotService
             return $res['message'];
         }
 
+        $modeQuery = isset($widgetSetting->bot_mode_query) ? (bool)$widgetSetting->bot_mode_query : true;
+        $modeOptions = isset($widgetSetting->bot_mode_options) ? (bool)$widgetSetting->bot_mode_options : true;
+
         // 2. KEYWORD & FAQ MATCHING (Rule-Based Engine with Longest-Match Specificity Priority)
+        // If mode_query is false and mode_options is false, bot rules matching is skipped.
         $rules = is_array($widgetSetting->bot_rules) ? $widgetSetting->bot_rules : [];
         $bestMatch = null;
         $longestMatchLen = 0;
 
-        foreach ($rules as $rule) {
-            $keywords = [];
-            if (!empty($rule['keywords'])) {
-                if (is_array($rule['keywords'])) {
-                    $keywords = $rule['keywords'];
-                } elseif (is_string($rule['keywords'])) {
-                    $keywords = array_map('trim', explode(',', $rule['keywords']));
+        if ($modeQuery || $modeOptions) {
+            foreach ($rules as $rule) {
+                $keywords = [];
+                if (!empty($rule['keywords'])) {
+                    if (is_array($rule['keywords'])) {
+                        $keywords = $rule['keywords'];
+                    } elseif (is_string($rule['keywords'])) {
+                        $keywords = array_map('trim', explode(',', $rule['keywords']));
+                    }
                 }
-            }
 
-            $responseTemplate = $rule['response'] ?? ($rule['response_text'] ?? null);
-            if (empty($responseTemplate)) {
-                continue;
-            }
-
-            foreach ($keywords as $kw) {
-                $kwLower = mb_strtolower(trim($kw));
-                if ($kwLower === '') {
+                $responseTemplate = $rule['response'] ?? ($rule['response_text'] ?? null);
+                if (empty($responseTemplate)) {
                     continue;
                 }
 
-                $isMatch = false;
-                if (mb_strlen($kwLower) <= 4 || is_numeric($kwLower)) {
-                    if ($text === $kwLower || preg_match('/(^|\s|[.,!?])' . preg_quote($kwLower, '/') . '($|\s|[.,!?])/iu', $text)) {
-                        $isMatch = true;
-                    }
-                } else {
-                    if (Str::contains($text, $kwLower)) {
-                        $isMatch = true;
-                    }
-                }
-
-                if ($isMatch) {
-                    $matchWeight = mb_strlen($kwLower);
-                    // Prioritize exact full text match highest
-                    if ($text === $kwLower) {
-                        $matchWeight += 1000;
+                foreach ($keywords as $kw) {
+                    $kwLower = mb_strtolower(trim($kw));
+                    if ($kwLower === '') {
+                        continue;
                     }
 
-                    if ($matchWeight > $longestMatchLen) {
-                        $longestMatchLen = $matchWeight;
-                        $bestMatch = [
-                            'response' => $responseTemplate,
-                            'keyword'  => $kwLower,
-                            'options'  => $rule['options'] ?? null,
-                        ];
+                    $isMatch = false;
+                    // If mode_query is false (Options only), only allow exact match (from option clicks or button values)
+                    if (!$modeQuery) {
+                        if ($text === $kwLower) {
+                            $isMatch = true;
+                        }
+                    } else {
+                        // mode_query is true: allow free-form phrase and keyword matching
+                        if (mb_strlen($kwLower) <= 4 || is_numeric($kwLower)) {
+                            if ($text === $kwLower || preg_match('/(^|\s|[.,!?])' . preg_quote($kwLower, '/') . '($|\s|[.,!?])/iu', $text)) {
+                                $isMatch = true;
+                            }
+                        } else {
+                            if (Str::contains($text, $kwLower)) {
+                                $isMatch = true;
+                            }
+                        }
+                    }
+
+                    if ($isMatch) {
+                        $matchWeight = mb_strlen($kwLower);
+                        // Prioritize exact full text match highest
+                        if ($text === $kwLower) {
+                            $matchWeight += 1000;
+                        }
+
+                        if ($matchWeight > $longestMatchLen) {
+                            $longestMatchLen = $matchWeight;
+                            $bestMatch = [
+                                'response' => $responseTemplate,
+                                'keyword'  => $kwLower,
+                                'options'  => $modeOptions ? ($rule['options'] ?? null) : null,
+                            ];
+                        }
                     }
                 }
             }
@@ -148,7 +162,7 @@ class BotService
                     'is_bot'          => true,
                     'matched_keyword' => $bestMatch['keyword'],
                     'inbound_msg_id'  => $inboundMessage->id,
-                    'options'         => $bestMatch['options'] ?? null,
+                    'options'         => $bestMatch['options'],
                 ],
             ]);
 
@@ -161,13 +175,17 @@ class BotService
             ->exists();
 
         if (!$hasBotReplied && !empty($widgetSetting->bot_welcome_message)) {
-            // Find root menu options if available
+            // Find welcome options dynamically from DB
             $welcomeOptions = null;
-            if (!empty($widgetSetting->bot_rules) && is_array($widgetSetting->bot_rules)) {
-                foreach ($widgetSetting->bot_rules as $r) {
-                    if (($r['name'] ?? '') === 'Menu Utama' && !empty($r['options'])) {
-                        $welcomeOptions = $r['options'];
-                        break;
+            if ($modeOptions) {
+                if (!empty($widgetSetting->bot_welcome_options) && is_array($widgetSetting->bot_welcome_options)) {
+                    $welcomeOptions = $widgetSetting->bot_welcome_options;
+                } elseif (!empty($widgetSetting->bot_rules) && is_array($widgetSetting->bot_rules)) {
+                    foreach ($widgetSetting->bot_rules as $r) {
+                        if (($r['name'] ?? '') === 'Menu Utama' && !empty($r['options'])) {
+                            $welcomeOptions = $r['options'];
+                            break;
+                        }
                     }
                 }
             }
