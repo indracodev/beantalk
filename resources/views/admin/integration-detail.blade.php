@@ -15,6 +15,7 @@
         <input type="hidden" name="bot_rules" id="hiddenBotRules" value="{{ json_encode($botRules) }}">
         <input type="hidden" name="social_channels" id="hiddenSocialChannels" value="{{ json_encode($socialChannelsList) }}">
         <input type="hidden" name="bot_welcome_options" id="hiddenBotWelcomeOptions" value="{{ json_encode($widgetSetting->bot_welcome_options ?? []) }}">
+        <input type="hidden" name="bot_tree" id="hiddenBotTree" value="{{ json_encode($widgetSetting->bot_tree ?? []) }}">
 
         <!-- Header Action Bar -->
         <div class="bg-white border border-apple-border rounded-xl p-3.5 sm:p-4 shadow-apple-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -207,120 +208,205 @@
                 </div>
             </div>
 
-            <!-- Bot Modes Selection Card (Query / FAQ Chat vs Interactive Options) -->
-            <div class="bg-white border border-apple-border rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col gap-4">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-apple-border">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h3 class="text-[14px] font-bold text-apple-textPrimary">Mode Interaksi Bot (Pilihan Respon)</h3>
-                            <span id="badgeBotModeStatus" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-700">
-                                {{ ($widgetSetting->bot_mode_query ?? true) && ($widgetSetting->bot_mode_options ?? true) ? '⚡ Mode Hybrid (Query + Opsi)' : (($widgetSetting->bot_mode_options ?? true) ? '🔘 Mode Opsi Tombol' : '💬 Mode Query Kata Kunci') }}
-                            </span>
-                        </div>
-                        <p class="text-[11.5px] text-apple-textSecondary mt-0.5">Tentukan bagaimana pelanggan berinteraksi dengan asisten bot. Anda dapat mengaktifkan salah satu atau keduanya (Hybrid Mode).</p>
-                    </div>
-                </div>
+            <!-- Sub-Tab Navigation Bar inside Smart Bot -->
+            <div class="bg-white p-1.5 rounded-xl border border-apple-border shadow-apple-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                    <button type="button" onclick="switchBotSubTab('query')" id="btn-botsubtab-query" class="px-3.5 py-2 rounded-lg text-[12px] font-semibold flex items-center gap-2 transition cursor-pointer bg-purple-600 text-white shadow-2xs">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        <span>1. Mode Query (Kata Kunci FAQ)</span>
+                        <span id="dotQueryStatus" class="w-2 h-2 rounded-full {{ ($widgetSetting->bot_mode_query ?? true) ? 'bg-emerald-300 animate-pulse' : 'bg-neutral-300' }}"></span>
+                    </button>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                    <!-- Mode 1: By Query -->
-                    <label class="relative flex items-start gap-3.5 p-4 rounded-xl border border-apple-border bg-apple-canvas/30 hover:bg-purple-50/20 hover:border-purple-200 transition cursor-pointer">
-                        <div class="pt-0.5">
-                            <input type="checkbox" name="bot_mode_query" value="1" id="toggleBotModeQuery" {{ ($widgetSetting->bot_mode_query ?? true) ? 'checked' : '' }} onchange="updateBotModeBadge()" class="rounded text-purple-600 focus:ring-purple-500 w-4 h-4 cursor-pointer">
-                        </div>
-                        <div class="flex flex-col gap-1">
-                            <div class="flex items-center gap-2">
-                                <span class="text-[13px] font-bold text-apple-textPrimary">Mode 1: By Query (Kata Kunci FAQ)</span>
-                                <span class="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-purple-100 text-purple-800">Chat Bebas</span>
-                            </div>
-                            <p class="text-[11.5px] text-apple-textSecondary leading-relaxed">
-                                Pelanggan mengetik pesan bebas di kolom chat. Bot otomatis mencari dan mencocokkan kata kunci FAQ yang terdaftar untuk memberi jawaban instan.
-                            </p>
-                        </div>
-                    </label>
-
-                    <!-- Mode 2: By Opsi -->
-                    <label class="relative flex items-start gap-3.5 p-4 rounded-xl border border-apple-border bg-apple-canvas/30 hover:bg-purple-50/20 hover:border-purple-200 transition cursor-pointer">
-                        <div class="pt-0.5">
-                            <input type="checkbox" name="bot_mode_options" value="1" id="toggleBotModeOptions" {{ ($widgetSetting->bot_mode_options ?? true) ? 'checked' : '' }} onchange="updateBotModeBadge()" class="rounded text-purple-600 focus:ring-purple-500 w-4 h-4 cursor-pointer">
-                        </div>
-                        <div class="flex flex-col gap-1">
-                            <div class="flex items-center gap-2">
-                                <span class="text-[13px] font-bold text-apple-textPrimary">Mode 2: By Opsi (Pilihan Tombol Interaktif)</span>
-                                <span class="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800">Tombol / Menu</span>
-                            </div>
-                            <p class="text-[11.5px] text-apple-textSecondary leading-relaxed">
-                                Bot menampilkan tombol-tombol pilihan interaktif yang dapat diklik langsung tanpa mengetik. Sangat efisien untuk navigasi produk &amp; bantuan cepat.
-                            </p>
-                        </div>
-                    </label>
-                </div>
-            </div>
-
-            <!-- Welcome Options Manager Card (Tombol Sambutan Awal) -->
-            <div class="bg-white border border-apple-border rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col gap-3.5">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-apple-border">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h3 class="text-[14px] font-bold text-apple-textPrimary">Tombol Pilihan Sambutan Awal (Welcome Options)</h3>
-                            <span id="labelWelcomeOptionCount" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-700">0 Tombol</span>
-                        </div>
-                        <p class="text-[11.5px] text-apple-textSecondary mt-0.5">Daftar tombol pilihan cepat yang disajikan di bawah Pesan Sambutan Awal saat customer pertama kali membuka obrolan.</p>
-                    </div>
-
-                    <button type="button" onclick="addNewWelcomeOptionRow()" class="inline-flex items-center gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 px-3 py-1.5 rounded-lg text-[11.5px] font-semibold transition cursor-pointer self-start sm:self-auto">
-                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        <span>Tambah Tombol Sambutan</span>
+                    <button type="button" onclick="switchBotSubTab('options')" id="btn-botsubtab-options" class="px-3.5 py-2 rounded-lg text-[12px] font-semibold flex items-center gap-2 transition cursor-pointer text-apple-textSecondary hover:text-apple-textPrimary hover:bg-apple-canvas">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        <span>2. Mode Opsi (Decision Tree Navigasi)</span>
+                        <span id="dotOptionsStatus" class="w-2 h-2 rounded-full {{ ($widgetSetting->bot_mode_options ?? true) ? 'bg-emerald-300 animate-pulse' : 'bg-neutral-300' }}"></span>
                     </button>
                 </div>
 
-                <div id="welcomeOptionsListContainer" class="flex flex-col gap-2.5">
-                    <!-- Dynamic Welcome Option Rows Managed by JS -->
-                </div>
-
-                <div id="welcomeOptionsEmptyState" class="hidden p-4 text-center border-2 border-dashed border-apple-border rounded-xl text-[12px] text-apple-textTertiary bg-apple-canvas/20">
-                    <p class="font-medium text-apple-textSecondary">Belum ada tombol opsi sambutan.</p>
-                    <p class="mt-0.5 text-apple-textTertiary text-[11px]">Klik <strong>"Tambah Tombol Sambutan"</strong> di atas untuk menambahkan tombol pilihan cepat saat awal chat.</p>
+                <div class="flex items-center gap-2 text-[11px] text-apple-textSecondary px-2">
+                    <span>Status:</span>
+                    <span id="badgeBotModeStatus" class="px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-purple-100 text-purple-700">
+                        {{ ($widgetSetting->bot_mode_query ?? true) && ($widgetSetting->bot_mode_options ?? true) ? '⚡ Hybrid (Query + Opsi)' : (($widgetSetting->bot_mode_options ?? true) ? '🔘 Hanya Mode Opsi' : '💬 Hanya Mode Query') }}
+                    </span>
                 </div>
             </div>
 
-            <!-- Dynamic Interactive FAQ Rules Builder Card -->
-            <div class="bg-white border border-apple-border rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col gap-4">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-apple-border">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h3 class="text-[14px] font-bold text-apple-textPrimary">Aturan Kata Kunci &amp; Template Jawaban FAQ</h3>
-                            <span id="labelRuleCount" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-700">{{ count($botRules) }} Aturan</span>
+            <!-- ============================================================ -->
+            <!-- SUB-TAB 1: MODE QUERY (KATA KUNCI FAQ)                       -->
+            <!-- ============================================================ -->
+            <div id="pane-botsubtab-query" class="flex flex-col gap-4" style="display: flex;">
+                <!-- Independent Active Toggle Card for Query Mode -->
+                <div class="bg-white border border-apple-border rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-start gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                         </div>
-                        <p class="text-[11.5px] text-apple-textSecondary mt-0.5">Jika pesan pelanggan mengandung salah satu kata kunci, bot akan membalas dengan template jawaban otomatis.</p>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h4 class="text-[13.5px] font-bold text-apple-textPrimary">Aktivasi Mode Query (Pencarian Kata Kunci FAQ)</h4>
+                                <span id="badgeQueryActiveLabel" class="px-2 py-0.5 rounded-full text-[10.5px] font-bold {{ ($widgetSetting->bot_mode_query ?? true) ? 'bg-blue-100 text-blue-700' : 'bg-neutral-100 text-neutral-500' }}">
+                                    {{ ($widgetSetting->bot_mode_query ?? true) ? 'Aktif (ON)' : 'Nonaktif (OFF)' }}
+                                </span>
+                            </div>
+                            <p class="text-[11.5px] text-apple-textSecondary mt-0.5">Customer mengetik pesan bebas di kolom chat, bot otomatis mendeteksi kata kunci FAQ yang cocok dan membalas seketika.</p>
+                        </div>
                     </div>
 
-                    <button type="button" onclick="addNewFaqRuleRow()" class="inline-flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg text-[11.5px] font-semibold transition shadow-apple-sm cursor-pointer self-start sm:self-auto">
-                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        <span>Tambah Aturan FAQ Baru</span>
-                    </button>
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input type="checkbox" name="bot_mode_query" value="1" id="toggleBotModeQuery" {{ ($widgetSetting->bot_mode_query ?? true) ? 'checked' : '' }} onchange="updateSubTabToggleStates()" class="sr-only peer">
+                        <div class="w-10 h-5 bg-neutral-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
                 </div>
 
-                <!-- Container Baris Aturan FAQ (Vanilla JS Managed) -->
-                <div id="faqRulesListContainer" class="flex flex-col gap-3">
-                    <!-- Dynamic Rows Rendered Here by JavaScript -->
-                </div>
+                <!-- FAQ Rules Builder Card -->
+                <div class="bg-white border border-apple-border rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-apple-border">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-[14px] font-bold text-apple-textPrimary">Daftar Kata Kunci &amp; Jawaban Otomatis FAQ</h3>
+                                <span id="labelRuleCount" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-700">0 Aturan</span>
+                            </div>
+                            <p class="text-[11.5px] text-apple-textSecondary mt-0.5">Tentukan kata kunci pemicu (pisahkan koma) dan template jawaban otomatis bot.</p>
+                        </div>
 
-                <!-- Empty State -->
-                <div id="faqEmptyState" class="{{ count($botRules) > 0 ? 'hidden' : '' }} p-6 text-center border-2 border-dashed border-apple-border rounded-xl text-[12px] text-apple-textTertiary bg-apple-canvas/20">
-                    <svg class="w-7 h-7 text-neutral-300 mx-auto mb-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                    <p class="font-medium text-apple-textSecondary">Belum ada aturan kata kunci FAQ.</p>
-                    <p class="mt-0.5 text-apple-textTertiary text-[11px]">Klik tombol <strong>"Tambah Aturan FAQ Baru"</strong> di atas untuk membuat auto-responder kata kunci pertama Anda.</p>
-                </div>
-
-                <!-- Info Box Smart CS Handoff -->
-                <div class="p-3.5 bg-blue-50/70 border border-blue-200 rounded-xl text-[11.5px] text-blue-900 flex items-start gap-2.5">
-                    <svg class="w-4 h-4 text-blue-600 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                    <div>
-                        <span class="font-bold">Smart CS Auto-Handoff &amp; Auto-Yielding</span>
-                        <p class="mt-0.5 text-blue-800 leading-relaxed text-[11px]">
-                            Jika pelanggan mengetik kata kunci eskalasi manusia seperti <em>"cs"</em>, <em>"manusia"</em>, <em>"bicara dengan staf"</em>, atau saat staf CS membalas manual dari Admin Live Inbox, sistem secara otomatis menonaktifkan bot untuk tiket tersebut agar tidak menginterupsi percakapan manusia.
-                        </p>
+                        <button type="button" onclick="addNewFaqRuleRow()" class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-[11.5px] font-semibold transition shadow-apple-sm cursor-pointer self-start sm:self-auto">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            <span>Tambah Aturan FAQ Baru</span>
+                        </button>
                     </div>
+
+                    <!-- FAQ Rules Container -->
+                    <div id="faqRulesListContainer" class="flex flex-col gap-3"></div>
+
+                    <!-- Empty State -->
+                    <div id="faqEmptyState" class="hidden p-6 text-center border-2 border-dashed border-apple-border rounded-xl text-[12px] text-apple-textTertiary bg-apple-canvas/20">
+                        <p class="font-medium text-apple-textSecondary">Belum ada aturan kata kunci FAQ.</p>
+                        <p class="mt-0.5 text-apple-textTertiary text-[11px]">Klik <strong>"Tambah Aturan FAQ Baru"</strong> di atas untuk membuat kata kunci pertama Anda.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- SUB-TAB 2: MODE OPSI (DECISION TREE NAVIGASI)                -->
+            <!-- ============================================================ -->
+            <div id="pane-botsubtab-options" class="flex flex-col gap-4" style="display: none;">
+                <!-- Independent Active Toggle Card for Options Mode -->
+                <div class="bg-white border border-apple-border rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-start gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h4 class="text-[13.5px] font-bold text-apple-textPrimary">Aktivasi Mode Opsi (Pohon Keputusan / Decision Tree)</h4>
+                                <span id="badgeOptionsActiveLabel" class="px-2 py-0.5 rounded-full text-[10.5px] font-bold {{ ($widgetSetting->bot_mode_options ?? true) ? 'bg-emerald-100 text-emerald-700' : 'bg-neutral-100 text-neutral-500' }}">
+                                    {{ ($widgetSetting->bot_mode_options ?? true) ? 'Aktif (ON)' : 'Nonaktif (OFF)' }}
+                                </span>
+                            </div>
+                            <p class="text-[11.5px] text-apple-textSecondary mt-0.5">Bot menyajikan menu tombol pilihan terstruktur (menu bertingkat). Customer cukup mengklik tombol cabang materi yang diinginkan.</p>
+                        </div>
+                    </div>
+
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input type="checkbox" name="bot_mode_options" value="1" id="toggleBotModeOptions" {{ ($widgetSetting->bot_mode_options ?? true) ? 'checked' : '' }} onchange="updateSubTabToggleStates()" class="sr-only peer">
+                        <div class="w-10 h-5 bg-neutral-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                </div>
+
+                <!-- Decision Tree Manager Card -->
+                <div class="bg-white border border-apple-border rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-apple-border">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-[14px] font-bold text-apple-textPrimary">Pohon Navigasi Materi Bot (Decision Tree)</h3>
+                                <span id="badgeTreeStats" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700">0 Cabang</span>
+                            </div>
+                            <p class="text-[11.5px] text-apple-textSecondary mt-0.5">Kelola struktur hirarki menu bot secara visual. Tambah sub-cabang, atur urutan (drag &amp; drop atau tombol naik/turun), dan ubah jawaban bot.</p>
+                        </div>
+
+                        <div class="flex items-center gap-2 flex-wrap self-start sm:self-auto">
+                            <button type="button" onclick="expandAllTreeNodes()" class="px-2.5 py-1.5 rounded-lg border border-apple-border bg-apple-canvas/40 hover:bg-white text-[11px] font-medium text-apple-textSecondary transition cursor-pointer">
+                                📂 Buka Semua
+                            </button>
+                            <button type="button" onclick="collapseAllTreeNodes()" class="px-2.5 py-1.5 rounded-lg border border-apple-border bg-apple-canvas/40 hover:bg-white text-[11px] font-medium text-apple-textSecondary transition cursor-pointer">
+                                📁 Tutup Semua
+                            </button>
+                            <button type="button" onclick="addRootTreeNode()" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-[11.5px] font-semibold transition shadow-apple-sm cursor-pointer">
+                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                <span>Tambah Menu Utama Baru</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Live Quick Search in Tree -->
+                    <div class="relative">
+                        <input type="text" id="inputSearchTree" oninput="filterDecisionTree(this.value)" placeholder="Cari cabang materi dalam pohon (cth: Kopi, Supresso, Distributor, Retur)..." class="w-full text-[12px] pl-9 pr-4 py-2 bg-apple-canvas/50 border border-apple-border rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition">
+                        <svg class="w-4 h-4 text-apple-textTertiary absolute left-3 top-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </div>
+
+                    <!-- Visual Tree Container -->
+                    <div id="treeContainer" class="flex flex-col gap-2.5 bg-apple-canvas/20 p-3 rounded-xl border border-apple-border/70 min-h-[220px]">
+                        <!-- Rendered recursively by JS -->
+                    </div>
+
+                    <!-- Empty State Tree -->
+                    <div id="treeEmptyState" class="hidden p-8 text-center border-2 border-dashed border-apple-border rounded-xl text-[12px] text-apple-textTertiary bg-apple-canvas/20">
+                        <p class="font-medium text-apple-textSecondary">Belum ada cabang menu pada Decision Tree.</p>
+                        <p class="mt-0.5 text-apple-textTertiary text-[11px]">Klik <strong>"Tambah Menu Utama Baru"</strong> di atas untuk membuat menu cabang pertama.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global Tree Node Edit Modal -->
+            <div id="modalEditTreeNode" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+                <div class="bg-white rounded-2xl border border-apple-border shadow-2xl max-w-lg w-full p-5 flex flex-col gap-4 animate-in fade-in zoom-in duration-150">
+                    <div class="flex items-center justify-between pb-3 border-b border-apple-border">
+                        <div class="flex items-center gap-2">
+                            <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-[13px]">🌲</span>
+                            <div>
+                                <h4 class="text-[14px] font-bold text-apple-textPrimary">Edit Cabang Materi Bot</h4>
+                                <p class="text-[11px] text-apple-textSecondary">Konfigurasi teks tombol dan jawaban balasan bot.</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="closeEditTreeNodeModal()" class="text-neutral-400 hover:text-neutral-600 p-1 rounded-lg">✕</button>
+                    </div>
+
+                    <input type="hidden" id="modalEditNodeId">
+
+                    <div class="flex flex-col gap-3">
+                        <div>
+                            <label class="block text-[11.5px] font-semibold text-apple-textPrimary mb-1">Label Tombol Menu</label>
+                            <input type="text" id="modalEditNodeLabel" placeholder="Contoh: ☕ 1.1 Kopi" class="w-full text-[12px] px-3 py-2 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-[11.5px] font-semibold text-apple-textPrimary mb-1">Nilai / Trigger Pemicu (Key)</label>
+                            <input type="text" id="modalEditNodeValue" placeholder="Contoh: 1.1 atau kopi" class="w-full text-[12px] px-3 py-2 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                            <p class="text-[10.5px] text-apple-textTertiary mt-0.5">Teks yang dikirimkan saat customer mengklik tombol ini.</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11.5px] font-semibold text-apple-textPrimary mb-1">Jawaban Balasan Bot</label>
+                            <textarea id="modalEditNodeResponse" rows="4" placeholder="Tulis jawaban lengkap bot saat cabang ini dipilih..." class="w-full text-[12px] px-3 py-2 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 leading-relaxed"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-3 border-t border-apple-border">
+                        <button type="button" onclick="closeEditTreeNodeModal()" class="px-3 py-1.5 text-[11.5px] font-semibold text-apple-textSecondary hover:bg-apple-canvas rounded-lg transition">Batal</button>
+                        <button type="button" onclick="saveEditedTreeNode()" class="px-4 py-1.5 text-[12px] font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-apple-sm transition">Simpan Perubahan</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Smart CS Auto-Handoff Info Box -->
+            <div class="p-3.5 bg-blue-50/70 border border-blue-200 rounded-xl text-[11.5px] text-blue-900 flex items-start gap-2.5">
+                <svg class="w-4 h-4 text-blue-600 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <div>
+                    <span class="font-bold">Smart CS Auto-Handoff &amp; Auto-Yielding</span>
+                    <p class="mt-0.5 text-blue-800 leading-relaxed text-[11px]">
+                        Jika pelanggan mengetik kata kunci eskalasi manusia seperti <em>"cs"</em>, <em>"manusia"</em>, <em>"bicara dengan staf"</em>, atau saat staf CS membalas manual dari Admin Live Inbox, sistem secara otomatis menonaktifkan bot untuk tiket tersebut agar tidak menginterupsi percakapan manusia.
+                    </p>
                 </div>
             </div>
         </div>
@@ -622,6 +708,31 @@ if (!Array.isArray(currentWelcomeOptions)) {
     currentWelcomeOptions = [];
 }
 
+let currentBotTree = @json($widgetSetting->bot_tree ?? []);
+if (!Array.isArray(currentBotTree)) {
+    currentBotTree = [];
+}
+
+// Ensure every node in tree has a unique ID and children array
+function ensureTreeIds(nodes) {
+    if (!Array.isArray(nodes)) return [];
+    nodes.forEach((node, idx) => {
+        if (!node.id) {
+            node.id = 'node_' + Math.random().toString(36).substr(2, 7) + '_' + (Date.now() + idx);
+        }
+        if (node.children && Array.isArray(node.children)) {
+            ensureTreeIds(node.children);
+        } else {
+            node.children = [];
+        }
+    });
+    return nodes;
+}
+ensureTreeIds(currentBotTree);
+
+let collapsedNodes = new Set();
+let draggedNodeId = null;
+
 const PLATFORM_OPTIONS = [
     { value: 'whatsapp', name: 'WhatsApp', placeholder: '08123456789 atau https://wa.me/...', badgeClass: 'bg-emerald-100 text-emerald-800' },
     { value: 'instagram', name: 'Instagram', placeholder: '@username atau https://instagram.com/...', badgeClass: 'bg-pink-100 text-pink-800' },
@@ -830,96 +941,553 @@ function updateTelegramToggleBadges() {
     }
 }
 
-// 1.5 Welcome Options Manager (Tombol Sambutan Awal)
-function renderWelcomeOptionsList() {
-    const container = document.getElementById('welcomeOptionsListContainer');
-    const emptyState = document.getElementById('welcomeOptionsEmptyState');
-    const labelCount = document.getElementById('labelWelcomeOptionCount');
+// ============================================================
+// 1.5 SMART BOT SUB-TABS & DECISION TREE MANAGER
+// ============================================================
 
-    if (!container) return;
-    container.innerHTML = '';
+// Switch between Sub-Tab 1 (Query) and Sub-Tab 2 (Options)
+function switchBotSubTab(subTab) {
+    const queryPane = document.getElementById('pane-botsubtab-query');
+    const optionsPane = document.getElementById('pane-botsubtab-options');
+    const queryBtn = document.getElementById('btn-botsubtab-query');
+    const optionsBtn = document.getElementById('btn-botsubtab-options');
 
-    if (!Array.isArray(currentWelcomeOptions) || currentWelcomeOptions.length === 0) {
-        if (emptyState) emptyState.classList.remove('hidden');
+    if (subTab === 'query') {
+        if (queryPane) queryPane.style.display = 'flex';
+        if (optionsPane) optionsPane.style.display = 'none';
+        if (queryBtn) {
+            queryBtn.className = 'px-3.5 py-2 rounded-lg text-[12px] font-semibold flex items-center gap-2 transition cursor-pointer bg-purple-600 text-white shadow-2xs';
+        }
+        if (optionsBtn) {
+            optionsBtn.className = 'px-3.5 py-2 rounded-lg text-[12px] font-semibold flex items-center gap-2 transition cursor-pointer text-apple-textSecondary hover:text-apple-textPrimary hover:bg-apple-canvas';
+        }
     } else {
-        if (emptyState) emptyState.classList.add('hidden');
-
-        currentWelcomeOptions.forEach((opt, idx) => {
-            const row = document.createElement('div');
-            row.className = 'p-2.5 rounded-xl border border-apple-border bg-white shadow-2xs flex items-center gap-2.5';
-            row.innerHTML = `
-                <span class="w-6 h-6 rounded-full bg-purple-100 text-purple-700 text-[11px] font-bold flex items-center justify-center shrink-0">
-                    ${idx + 1}
-                </span>
-                <div class="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-2">
-                    <div class="sm:col-span-7">
-                        <input type="text" value="${escapeHtml(opt.label || '')}" oninput="updateWelcomeOptionField(${idx}, 'label', this.value)" placeholder="Label Tombol (cth: 📦 1. Pembelian Produk)" class="w-full text-[12px] px-3 py-1.5 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500">
-                    </div>
-                    <div class="sm:col-span-5">
-                        <input type="text" value="${escapeHtml(opt.value || '')}" oninput="updateWelcomeOptionField(${idx}, 'value', this.value)" placeholder="Nilai / Kata Kunci (cth: 1 atau produk)" class="w-full text-[12px] px-3 py-1.5 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500">
-                    </div>
-                </div>
-                <button type="button" onclick="removeWelcomeOptionRow(${idx})" class="text-neutral-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition cursor-pointer shrink-0" title="Hapus Tombol Sambutan Ini">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                </button>
-            `;
-            container.appendChild(row);
-        });
-    }
-
-    if (labelCount) labelCount.innerText = (currentWelcomeOptions ? currentWelcomeOptions.length : 0) + ' Tombol';
-    serializeWelcomeOptions();
-}
-
-function addNewWelcomeOptionRow() {
-    if (!Array.isArray(currentWelcomeOptions)) currentWelcomeOptions = [];
-    currentWelcomeOptions.push({ label: '', value: '' });
-    renderWelcomeOptionsList();
-    setTimeout(() => {
-        const inputs = document.querySelectorAll('#welcomeOptionsListContainer input');
-        if (inputs.length > 0) inputs[inputs.length - 2].focus();
-    }, 50);
-}
-
-function updateWelcomeOptionField(index, field, value) {
-    if (currentWelcomeOptions[index]) {
-        currentWelcomeOptions[index][field] = value;
-        serializeWelcomeOptions();
+        if (queryPane) queryPane.style.display = 'none';
+        if (optionsPane) optionsPane.style.display = 'flex';
+        if (optionsBtn) {
+            optionsBtn.className = 'px-3.5 py-2 rounded-lg text-[12px] font-semibold flex items-center gap-2 transition cursor-pointer bg-emerald-600 text-white shadow-2xs';
+        }
+        if (queryBtn) {
+            queryBtn.className = 'px-3.5 py-2 rounded-lg text-[12px] font-semibold flex items-center gap-2 transition cursor-pointer text-apple-textSecondary hover:text-apple-textPrimary hover:bg-apple-canvas';
+        }
     }
 }
 
-function removeWelcomeOptionRow(index) {
-    if (Array.isArray(currentWelcomeOptions) && currentWelcomeOptions[index]) {
-        currentWelcomeOptions.splice(index, 1);
-        renderWelcomeOptionsList();
-    }
-}
+// Update badges and dots for independent sub-tab toggles
+function updateSubTabToggleStates() {
+    const isQuery = Boolean(document.getElementById('toggleBotModeQuery')?.checked);
+    const isOptions = Boolean(document.getElementById('toggleBotModeOptions')?.checked);
 
-function serializeWelcomeOptions() {
-    const hidden = document.getElementById('hiddenBotWelcomeOptions');
-    if (hidden) {
-        hidden.value = JSON.stringify(currentWelcomeOptions);
+    const dotQuery = document.getElementById('dotQueryStatus');
+    const dotOptions = document.getElementById('dotOptionsStatus');
+    const badgeQuery = document.getElementById('badgeQueryActiveLabel');
+    const badgeOptions = document.getElementById('badgeOptionsActiveLabel');
+
+    if (dotQuery) {
+        dotQuery.className = 'w-2 h-2 rounded-full ' + (isQuery ? 'bg-emerald-300 animate-pulse' : 'bg-neutral-300');
     }
+    if (dotOptions) {
+        dotOptions.className = 'w-2 h-2 rounded-full ' + (isOptions ? 'bg-emerald-300 animate-pulse' : 'bg-neutral-300');
+    }
+
+    if (badgeQuery) {
+        badgeQuery.className = 'px-2 py-0.5 rounded-full text-[10.5px] font-bold ' + (isQuery ? 'bg-blue-100 text-blue-700' : 'bg-neutral-100 text-neutral-500');
+        badgeQuery.textContent = isQuery ? 'Aktif (ON)' : 'Nonaktif (OFF)';
+    }
+
+    if (badgeOptions) {
+        badgeOptions.className = 'px-2 py-0.5 rounded-full text-[10.5px] font-bold ' + (isOptions ? 'bg-emerald-100 text-emerald-700' : 'bg-neutral-100 text-neutral-500');
+        badgeOptions.textContent = isOptions ? 'Aktif (ON)' : 'Nonaktif (OFF)';
+    }
+
+    updateBotModeBadge();
 }
 
 function updateBotModeBadge() {
-    const isQuery = document.getElementById('toggleBotModeQuery')?.checked;
-    const isOptions = document.getElementById('toggleBotModeOptions')?.checked;
+    const isQuery = Boolean(document.getElementById('toggleBotModeQuery')?.checked);
+    const isOptions = Boolean(document.getElementById('toggleBotModeOptions')?.checked);
     const badge = document.getElementById('badgeBotModeStatus');
     if (!badge) return;
 
     if (isQuery && isOptions) {
         badge.innerText = '⚡ Mode Hybrid (Query + Opsi)';
-        badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-700';
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-purple-100 text-purple-700';
     } else if (isOptions) {
-        badge.innerText = '🔘 Mode Opsi Tombol';
-        badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800';
+        badge.innerText = '🔘 Hanya Mode Opsi';
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-100 text-emerald-800';
     } else if (isQuery) {
-        badge.innerText = '💬 Mode Query Kata Kunci';
-        badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800';
+        badge.innerText = '💬 Hanya Mode Query';
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-blue-100 text-blue-800';
     } else {
         badge.innerText = '⚠️ Nonaktif (Hanya CS Handoff)';
-        badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-neutral-100 text-neutral-600';
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-neutral-100 text-neutral-600';
+    }
+}
+
+// Tree Traversal & Search Helper
+function findNodeAndParent(nodes, targetId, parent = null) {
+    if (!Array.isArray(nodes)) return null;
+    for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i].id === targetId) {
+            return { node: nodes[i], parent: parent, index: i, siblings: nodes };
+        }
+        if (nodes[i].children && nodes[i].children.length > 0) {
+            const res = findNodeAndParent(nodes[i].children, targetId, nodes[i]);
+            if (res) return res;
+        }
+    }
+    return null;
+}
+
+function countTotalNodes(nodes) {
+    let count = 0;
+    if (!Array.isArray(nodes)) return count;
+    nodes.forEach(n => {
+        count += 1;
+        if (n.children && n.children.length > 0) {
+            count += countTotalNodes(n.children);
+        }
+    });
+    return count;
+}
+
+// Visual Decision Tree Renderer
+function renderDecisionTree(filterText = '') {
+    const container = document.getElementById('treeContainer');
+    const emptyState = document.getElementById('treeEmptyState');
+    const badgeStats = document.getElementById('badgeTreeStats');
+
+    if (!container) return;
+    container.innerHTML = '';
+
+    const totalNodes = countTotalNodes(currentBotTree);
+    if (badgeStats) badgeStats.innerText = totalNodes + ' Cabang';
+
+    if (!Array.isArray(currentBotTree) || currentBotTree.length === 0) {
+        if (emptyState) emptyState.classList.remove('hidden');
+        serializeBotTree();
+        return;
+    }
+
+    if (emptyState) emptyState.classList.add('hidden');
+
+    const cleanFilter = filterText ? filterText.trim().toLowerCase() : '';
+
+    function renderBranch(nodes, depth = 0, parentNode = null) {
+        nodes.forEach((node, idx) => {
+            const hasChildren = node.children && node.children.length > 0;
+            const isCollapsed = collapsedNodes.has(node.id);
+            
+            // Check match filter
+            const matchesThis = !cleanFilter || 
+                (node.label && node.label.toLowerCase().includes(cleanFilter)) ||
+                (node.value && node.value.toLowerCase().includes(cleanFilter)) ||
+                (node.response && node.response.toLowerCase().includes(cleanFilter));
+
+            let hasMatchingChild = false;
+            if (cleanFilter && hasChildren) {
+                const checkChildrenMatch = (ch) => {
+                    for (let c of ch) {
+                        if ((c.label && c.label.toLowerCase().includes(cleanFilter)) ||
+                            (c.value && c.value.toLowerCase().includes(cleanFilter)) ||
+                            (c.response && c.response.toLowerCase().includes(cleanFilter))) {
+                            return true;
+                        }
+                        if (c.children && checkChildrenMatch(c.children)) return true;
+                    }
+                    return false;
+                };
+                hasMatchingChild = checkChildrenMatch(node.children);
+            }
+
+            if (cleanFilter && !matchesThis && !hasMatchingChild) {
+                return;
+            }
+
+            const card = document.createElement('div');
+            card.className = 'tree-node-item flex flex-col gap-1 transition select-none';
+            card.id = 'tree-node-' + node.id;
+            card.setAttribute('data-node-id', node.id);
+
+            // Layer badge
+            let layerBadge = '';
+            if (depth === 0) {
+                layerBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800">Menu Utama (Lvl 1)</span>';
+            } else if (depth === 1) {
+                layerBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">Sub-Menu (Lvl 2)</span>';
+            } else {
+                layerBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">Cabang (Lvl ${depth + 1})</span>`;
+            }
+
+            const indentMargin = depth * 28;
+            const cleanResponse = (node.response || '').replace(/\s+/g, ' ').trim();
+            const responsePreview = cleanResponse.length > 70 ? cleanResponse.substring(0, 70) + '...' : cleanResponse;
+
+            const isFirst = idx === 0;
+            const isLast = idx === nodes.length - 1;
+
+            card.innerHTML = `
+                <div class="tree-card relative flex flex-col md:flex-row items-start md:items-center justify-between gap-2.5 p-3 rounded-xl border border-apple-border bg-white shadow-2xs hover:border-emerald-400 transition"
+                     style="margin-left: ${indentMargin}px;"
+                     draggable="true"
+                     ondragstart="handleTreeDragStart(event, '${node.id}')"
+                     ondragover="handleTreeDragOver(event, '${node.id}')"
+                     ondragleave="handleTreeDragLeave(event, '${node.id}')"
+                     ondrop="handleTreeDrop(event, '${node.id}')">
+                    
+                    ${depth > 0 ? `<div class="absolute -left-4 top-1/2 -translate-y-1/2 w-4 h-0.5 bg-neutral-300 pointer-events-none"></div>` : ''}
+
+                    <div class="flex items-center gap-2.5 flex-1 min-w-0">
+                        <span class="cursor-grab active:cursor-grabbing text-neutral-400 hover:text-neutral-700 font-mono text-[14px] px-1 py-0.5 rounded hover:bg-neutral-100" title="Seret untuk memindahkan posisi / urutan">⠿</span>
+                        
+                        ${hasChildren ? `
+                            <button type="button" onclick="toggleTreeNodeCollapse('${node.id}')" class="w-5 h-5 flex items-center justify-center rounded hover:bg-neutral-100 text-neutral-500 font-mono text-[10px] cursor-pointer" title="${isCollapsed ? 'Buka Sub-Cabang' : 'Tutup Sub-Cabang'}">
+                                ${isCollapsed ? '▶' : '▼'}
+                            </button>
+                        ` : `
+                            <span class="w-5 h-5 flex items-center justify-center text-neutral-300 text-[10px]">&bull;</span>
+                        `}
+
+                        <div class="flex flex-col gap-0.5 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                ${layerBadge}
+                                <span class="font-bold text-[12.5px] text-apple-textPrimary truncate">${escapeHtml(node.label || 'Tanpa Label')}</span>
+                                <span class="px-1.5 py-0.2 rounded bg-apple-canvas text-neutral-600 font-mono text-[10.5px] border border-apple-border" title="Trigger Key: ${escapeHtml(node.value || '')}">${escapeHtml(node.value || '-')}</span>
+                                ${hasChildren ? `<span class="px-1.5 py-0.2 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-semibold">${node.children.length} Sub-Pilihan</span>` : ''}
+                            </div>
+                            ${responsePreview ? `
+                                <div class="text-[11px] text-apple-textSecondary flex items-center gap-1 truncate max-w-xl">
+                                    <span class="text-neutral-400">💬</span>
+                                    <span class="truncate">${escapeHtml(responsePreview)}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-1.5 shrink-0 self-end md:self-center">
+                        <button type="button" onclick="addChildTreeNode('${node.id}')" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-[11px] border border-emerald-200 transition cursor-pointer" title="Tambah Sub-Cabang ke menu ini">
+                            <span>➕ Sub-Cabang</span>
+                        </button>
+
+                        <button type="button" onclick="openEditTreeNodeModal('${node.id}')" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-apple-canvas/70 hover:bg-apple-canvas text-apple-textPrimary font-semibold text-[11px] border border-apple-border transition cursor-pointer" title="Edit Teks & Jawaban">
+                            <span>✏️ Edit</span>
+                        </button>
+
+                        <div class="flex items-center rounded-lg border border-apple-border bg-apple-canvas/40 overflow-hidden">
+                            <button type="button" onclick="moveTreeNode('${node.id}', 'up')" ${isFirst ? 'disabled' : ''} class="px-1.5 py-1 text-[10px] text-neutral-600 hover:bg-white disabled:opacity-30 disabled:hover:bg-transparent transition cursor-pointer" title="Geser ke Atas">▲</button>
+                            <span class="w-[1px] h-3 bg-apple-border"></span>
+                            <button type="button" onclick="moveTreeNode('${node.id}', 'down')" ${isLast ? 'disabled' : ''} class="px-1.5 py-1 text-[10px] text-neutral-600 hover:bg-white disabled:opacity-30 disabled:hover:bg-transparent transition cursor-pointer" title="Geser ke Bawah">▼</button>
+                        </div>
+
+                        <button type="button" onclick="deleteTreeNode('${node.id}')" class="p-1 rounded-lg text-neutral-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer" title="Hapus Cabang Ini">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(card);
+
+            if (hasChildren && (!isCollapsed || (cleanFilter && hasMatchingChild))) {
+                renderBranch(node.children, depth + 1, node);
+            }
+        });
+    }
+
+    renderBranch(currentBotTree, 0, null);
+    serializeBotTree();
+}
+
+// Drag and Drop Logic
+function handleTreeDragStart(e, nodeId) {
+    draggedNodeId = nodeId;
+    e.dataTransfer.setData('text/plain', nodeId);
+    e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleTreeDragOver(e, targetNodeId) {
+    e.preventDefault();
+    if (draggedNodeId === targetNodeId) return;
+    const targetCard = e.currentTarget;
+    if (targetCard) {
+        targetCard.classList.add('ring-2', 'ring-emerald-500', 'bg-emerald-50/40');
+    }
+}
+
+function handleTreeDragLeave(e, targetNodeId) {
+    const targetCard = e.currentTarget;
+    if (targetCard) {
+        targetCard.classList.remove('ring-2', 'ring-emerald-500', 'bg-emerald-50/40');
+    }
+}
+
+function handleTreeDrop(e, targetNodeId) {
+    e.preventDefault();
+    const targetCard = e.currentTarget;
+    if (targetCard) {
+        targetCard.classList.remove('ring-2', 'ring-emerald-500', 'bg-emerald-50/40');
+    }
+
+    if (!draggedNodeId || draggedNodeId === targetNodeId) return;
+
+    const draggedInfo = findNodeAndParent(currentBotTree, draggedNodeId);
+    if (!draggedInfo) return;
+
+    const isDescendant = (parent, checkId) => {
+        if (!parent.children || parent.children.length === 0) return false;
+        for (let c of parent.children) {
+            if (c.id === checkId) return true;
+            if (isDescendant(c, checkId)) return true;
+        }
+        return false;
+    };
+
+    if (isDescendant(draggedInfo.node, targetNodeId)) {
+        alert('Tidak dapat memindahkan cabang ke dalam sub-cabangnya sendiri!');
+        return;
+    }
+
+    // Unlink dragged node from current position
+    const removedNode = draggedInfo.siblings.splice(draggedInfo.index, 1)[0];
+
+    // Re-insert adjacent to target node
+    const targetInfo = findNodeAndParent(currentBotTree, targetNodeId);
+    if (targetInfo) {
+        targetInfo.siblings.splice(targetInfo.index + 1, 0, removedNode);
+    } else {
+        currentBotTree.push(removedNode);
+    }
+
+    draggedNodeId = null;
+    const searchVal = document.getElementById('inputSearchTree')?.value || '';
+    renderDecisionTree(searchVal);
+}
+
+// Reorder Up / Down
+function moveTreeNode(nodeId, direction) {
+    const info = findNodeAndParent(currentBotTree, nodeId);
+    if (!info) return;
+
+    const siblings = info.siblings;
+    const idx = info.index;
+
+    if (direction === 'up' && idx > 0) {
+        const temp = siblings[idx];
+        siblings[idx] = siblings[idx - 1];
+        siblings[idx - 1] = temp;
+    } else if (direction === 'down' && idx < siblings.length - 1) {
+        const temp = siblings[idx];
+        siblings[idx] = siblings[idx + 1];
+        siblings[idx + 1] = temp;
+    }
+
+    const searchVal = document.getElementById('inputSearchTree')?.value || '';
+    renderDecisionTree(searchVal);
+}
+
+// Add New Root Node (Layer 1)
+function addRootTreeNode() {
+    const nextVal = (currentBotTree.length + 1).toString();
+    const newNode = {
+        id: 'node_' + Math.random().toString(36).substr(2, 7) + '_' + Date.now(),
+        label: 'Menu Utama ' + nextVal,
+        value: nextVal,
+        response: 'Silakan pilih menu di bawah ini:',
+        children: []
+    };
+    currentBotTree.push(newNode);
+    renderDecisionTree();
+    openEditTreeNodeModal(newNode.id);
+}
+
+// Add New Sub-Branch Node
+function addChildTreeNode(parentId) {
+    const info = findNodeAndParent(currentBotTree, parentId);
+    if (!info) return;
+    const parent = info.node;
+    if (!Array.isArray(parent.children)) parent.children = [];
+
+    const nextVal = (parent.value ? parent.value + '.' : '') + (parent.children.length + 1);
+    const newChild = {
+        id: 'node_' + Math.random().toString(36).substr(2, 7) + '_' + Date.now(),
+        label: 'Sub-Pilihan ' + nextVal,
+        value: nextVal,
+        response: 'Berikut informasi untuk pilihan ini:',
+        children: []
+    };
+    parent.children.push(newChild);
+    collapsedNodes.delete(parentId);
+    renderDecisionTree();
+    openEditTreeNodeModal(newChild.id);
+}
+
+// Delete Node
+function deleteTreeNode(nodeId) {
+    if (!confirm('Apakah Anda yakin ingin menghapus cabang materi ini beserta seluruh sub-cabangnya?')) return;
+    const info = findNodeAndParent(currentBotTree, nodeId);
+    if (!info) return;
+    info.siblings.splice(info.index, 1);
+    const searchVal = document.getElementById('inputSearchTree')?.value || '';
+    renderDecisionTree(searchVal);
+}
+
+// Open Edit Modal
+function openEditTreeNodeModal(nodeId) {
+    const info = findNodeAndParent(currentBotTree, nodeId);
+    if (!info) return;
+    const node = info.node;
+
+    document.getElementById('modalEditNodeId').value = node.id;
+    document.getElementById('modalEditNodeLabel').value = node.label || '';
+    document.getElementById('modalEditNodeValue').value = node.value || '';
+    document.getElementById('modalEditNodeResponse').value = node.response || '';
+
+    const modal = document.getElementById('modalEditTreeNode');
+    if (modal) modal.classList.remove('hidden');
+    setTimeout(() => {
+        document.getElementById('modalEditNodeLabel')?.focus();
+    }, 50);
+}
+
+function closeEditTreeNodeModal() {
+    const modal = document.getElementById('modalEditTreeNode');
+    if (modal) modal.classList.add('hidden');
+}
+
+function saveEditedTreeNode() {
+    const id = document.getElementById('modalEditNodeId')?.value;
+    const label = document.getElementById('modalEditNodeLabel')?.value.trim();
+    const val = document.getElementById('modalEditNodeValue')?.value.trim();
+    const response = document.getElementById('modalEditNodeResponse')?.value.trim();
+
+    if (!label) {
+        alert('Label tombol menu tidak boleh kosong!');
+        return;
+    }
+
+    const info = findNodeAndParent(currentBotTree, id);
+    if (info) {
+        info.node.label = label;
+        info.node.value = val || label;
+        info.node.response = response;
+    }
+
+    closeEditTreeNodeModal();
+    const searchVal = document.getElementById('inputSearchTree')?.value || '';
+    renderDecisionTree(searchVal);
+}
+
+// Expand / Collapse
+function toggleTreeNodeCollapse(nodeId) {
+    if (collapsedNodes.has(nodeId)) {
+        collapsedNodes.delete(nodeId);
+    } else {
+        collapsedNodes.add(nodeId);
+    }
+    const searchVal = document.getElementById('inputSearchTree')?.value || '';
+    renderDecisionTree(searchVal);
+}
+
+function expandAllTreeNodes() {
+    collapsedNodes.clear();
+    const searchVal = document.getElementById('inputSearchTree')?.value || '';
+    renderDecisionTree(searchVal);
+}
+
+function collapseAllTreeNodes() {
+    collapsedNodes.clear();
+    const markCollapsed = (nodes) => {
+        nodes.forEach(n => {
+            if (n.children && n.children.length > 0) {
+                collapsedNodes.add(n.id);
+                markCollapsed(n.children);
+            }
+        });
+    };
+    markCollapsed(currentBotTree);
+    const searchVal = document.getElementById('inputSearchTree')?.value || '';
+    renderDecisionTree(searchVal);
+}
+
+function filterDecisionTree(query) {
+    renderDecisionTree(query);
+}
+
+// Tree Synchronization & Compilation
+function serializeBotTree() {
+    // 1. Simpan struktur Tree utuh ke #hiddenBotTree
+    const hiddenTree = document.getElementById('hiddenBotTree');
+    if (hiddenTree) {
+        hiddenTree.value = JSON.stringify(currentBotTree);
+    }
+
+    // 2. Ekstrak Root Level (Layer 1) menjadi Welcome Options
+    const rootOptions = currentBotTree.map(n => ({
+        label: n.label,
+        value: n.value
+    }));
+    const hiddenWelcome = document.getElementById('hiddenBotWelcomeOptions');
+    if (hiddenWelcome) {
+        hiddenWelcome.value = JSON.stringify(rootOptions);
+    }
+
+    // 3. Compile Tree menjadi Flat Bot Rules (lengkap dengan navigasi opsi tombol)
+    const treeRules = [];
+    const compileNodeToRule = (node, parentNode = null) => {
+        const options = [];
+        if (node.children && node.children.length > 0) {
+            node.children.forEach(c => {
+                options.push({ label: c.label, value: c.value });
+            });
+            if (parentNode) {
+                options.push({ label: '⬅️ Kembali', value: parentNode.value });
+            }
+            options.push({ label: '🏠 Menu Utama', value: 'MENU' });
+        }
+
+        const keywords = [node.value];
+        if (node.label) {
+            const cleanLabel = node.label.replace(/^[^\w\d]+/, '').trim().toLowerCase();
+            if (cleanLabel && !keywords.includes(cleanLabel)) {
+                keywords.push(cleanLabel);
+            }
+        }
+
+        treeRules.push({
+            name: node.label,
+            keywords: keywords,
+            response: node.response || '',
+            options: options.length > 0 ? options : undefined
+        });
+
+        if (node.children && node.children.length > 0) {
+            node.children.forEach(c => compileNodeToRule(c, node));
+        }
+    };
+
+    currentBotTree.forEach(rootNode => compileNodeToRule(rootNode, null));
+
+    // Tambahkan Menu Utama rule
+    treeRules.unshift({
+        name: 'Menu Utama',
+        keywords: ['menu', 'menu utama', 'bantuan', 'help', 'mulai', 'start', 'halo', 'hai', 'pilihan'],
+        response: document.querySelector('input[name="bot_welcome_message"]')?.value || 'Halo! Silakan pilih menu di bawah ini:',
+        options: rootOptions
+    });
+
+    // Gabungkan dengan currentFaqRules (Mode Query FAQ)
+    const combinedRules = [...treeRules];
+    if (Array.isArray(currentFaqRules)) {
+        currentFaqRules.forEach(faq => {
+            if (faq.keywords && faq.response) {
+                combinedRules.push(faq);
+            }
+        });
+    }
+
+    const hiddenRules = document.getElementById('hiddenBotRules');
+    if (hiddenRules) {
+        hiddenRules.value = JSON.stringify(combinedRules);
     }
 }
 
@@ -1217,9 +1785,9 @@ function serializeSocialChannels() {
 }
 
 function serializeAllSettings() {
+    serializeBotTree();
     serializeBotRules();
     serializeSocialChannels();
-    serializeWelcomeOptions();
 }
 
 function escapeHtml(text) {
@@ -1284,7 +1852,7 @@ function toggleTelegramTopicSwitch(checkbox) {
 
     if (badge) {
         badge.innerText = isChecked ? 'ON (Aktif)' : 'OFF';
-        badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold ' + (isChecked ? 'bg-sky-100 text-sky-800' : 'bg-neutral-100 text-neutral-600');
+        badge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold ' + (isChecked ? 'bg-sky-100 text-sky-800' : 'bg-neutral-100 text-neutral-600');
     }
 
     if (cardText) {
@@ -1325,10 +1893,10 @@ function copySnippetText(elementId, btn) {
 
 // Initial Boot
 document.addEventListener('DOMContentLoaded', function() {
-    renderWelcomeOptionsList();
+    renderDecisionTree();
     renderFaqRulesList();
     renderSocialChannelsList();
-    updateBotModeBadge();
+    updateSubTabToggleStates();
 });
 </script>
 @endsection

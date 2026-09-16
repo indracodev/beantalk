@@ -3057,7 +3057,53 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
   ),
 );
 
-        // 6. Save or Update Widget Settings
+        // 6. Build Hierarchical Tree for Visual Decision Tree Management
+        $findRule = function($val) use ($rules) {
+            $valLower = mb_strtolower(trim($val));
+            foreach ($rules as $r) {
+                $kws = is_array($r['keywords']) ? $r['keywords'] : explode(',', $r['keywords']);
+                foreach ($kws as $kw) {
+                    if (mb_strtolower(trim($kw)) === $valLower) return $r;
+                }
+            }
+            return null;
+        };
+
+        $visited = [];
+        $buildNode = function($label, $value) use (&$buildNode, $findRule, &$visited) {
+            $nodeKey = $value . '|' . $label;
+            if (in_array($nodeKey, $visited) || (in_array($value, ['MENU', 'menu', '1', '2', '3']) && count($visited) > 10)) {
+                return null;
+            }
+            $visited[] = $nodeKey;
+            $rule = $findRule($value);
+            $response = $rule ? $rule['response'] : '';
+            $children = [];
+            if ($rule && !empty($rule['options']) && is_array($rule['options'])) {
+                foreach ($rule['options'] as $opt) {
+                    $optVal = $opt['value'] ?? '';
+                    if (in_array(strtoupper($optVal), ['MENU', 'YA', '1', '2', '3'])) continue;
+                    $child = $buildNode($opt['label'] ?? $optVal, $optVal);
+                    if ($child) $children[] = $child;
+                }
+            }
+            return [
+                'id'       => 'node_' . substr(md5($value . $label), 0, 8),
+                'label'    => $label,
+                'value'    => $value,
+                'response' => $response,
+                'children' => $children,
+            ];
+        };
+
+        $tree = [];
+        foreach ($rules[0]['options'] as $ro) {
+            $visited = [];
+            $node = $buildNode($ro['label'], $ro['value']);
+            if ($node) $tree[] = $node;
+        }
+
+        // 7. Save or Update Widget Settings
         $widgetSetting = WidgetSetting::updateOrCreate(
             ['project_id' => $project->id],
             [
@@ -3075,6 +3121,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
                 'bot_welcome_options' => $rules[0]['options'],
                 'bot_offline_message' => 'Halo! Layanan konsultasi CS kami saat ini di luar jam operasional. Anda tetap dapat menggunakan bot otomatis atau meninggalkan pesan & nomor WhatsApp. Tim kami akan segera menghubungi Anda kembali.',
                 'bot_rules'           => $rules,
+                'bot_tree'            => $tree,
             ]
         );
 

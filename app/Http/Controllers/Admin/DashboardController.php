@@ -1527,6 +1527,17 @@ class DashboardController extends Controller
             }
         }
 
+        $botTree = $widgetSetting->bot_tree;
+        if ($request->has('bot_tree')) {
+            $botTreeRaw = $request->input('bot_tree');
+            if (is_string($botTreeRaw)) {
+                $trimmed = trim($botTreeRaw);
+                $botTree = $trimmed === '' ? null : json_decode($trimmed, true);
+            } elseif (is_array($botTreeRaw)) {
+                $botTree = $botTreeRaw;
+            }
+        }
+
         $widgetSetting->update([
             'primary_color'                  => $request->input('primary_color', $widgetSetting->primary_color),
             'greeting_title'                 => $request->input('greeting_title', $widgetSetting->greeting_title),
@@ -1542,6 +1553,7 @@ class DashboardController extends Controller
             'bot_welcome_options'            => $botWelcomeOptions,
             'bot_offline_message'            => $request->input('bot_offline_message', $widgetSetting->bot_offline_message),
             'bot_rules'                      => $botRules,
+            'bot_tree'                       => $botTree,
             'telegram_bot_token'             => $request->input('telegram_bot_token', $widgetSetting->telegram_bot_token),
             'telegram_chat_id'               => $request->input('telegram_chat_id', $widgetSetting->telegram_chat_id),
             'telegram_notifications_enabled' => $request->has('telegram_notifications_enabled'),

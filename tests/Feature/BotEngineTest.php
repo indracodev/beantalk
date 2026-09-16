@@ -386,4 +386,44 @@ class BotEngineTest extends TestCase
         $this->assertEquals($welcomeOptions, $this->widgetSetting->bot_welcome_options);
         $this->assertEquals('SuperBot', $this->widgetSetting->bot_name);
     }
+
+    /**
+     * Test 10: Admin can save hierarchical decision tree (bot_tree)
+     */
+    public function testAdminCanSaveBotTreeStructure()
+    {
+        $botTree = [
+            [
+                'id' => 'node_root_1',
+                'label' => '☕ 1. Kopi',
+                'value' => '1',
+                'response' => 'Pilih kategori kopi:',
+                'children' => [
+                    [
+                        'id' => 'node_child_1_1',
+                        'label' => '1.1 Robusta',
+                        'value' => '1.1',
+                        'response' => 'Informasi kopi robusta...',
+                        'children' => []
+                    ]
+                ]
+            ]
+        ];
+
+        $res = $this->actingAs($this->adminUser)->put("/admin/integrations/{$this->project->id}/settings", [
+            'primary_color'       => '#222222',
+            'bot_enabled'         => '1',
+            'bot_mode_query'      => '1',
+            'bot_mode_options'    => '1',
+            'bot_tree'            => json_encode($botTree),
+        ]);
+
+        $res->assertRedirect();
+
+        $this->widgetSetting->refresh();
+        $this->assertIsArray($this->widgetSetting->bot_tree);
+        $this->assertEquals('node_root_1', $this->widgetSetting->bot_tree[0]['id']);
+        $this->assertEquals('☕ 1. Kopi', $this->widgetSetting->bot_tree[0]['label']);
+        $this->assertEquals('node_child_1_1', $this->widgetSetting->bot_tree[0]['children'][0]['id']);
+    }
 }
