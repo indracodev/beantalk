@@ -2,12 +2,7 @@
  * BEANTALK LOGIN PAGE JAVASCRIPT
  */
 
-function fillCredentials(user, pass) {
-    const loginInput = document.getElementById('login');
-    const passInput = document.getElementById('password');
-    if (loginInput) loginInput.value = user;
-    if (passInput) passInput.value = pass;
-}
+
 
 function getInitialTheme() {
     return localStorage.getItem('beantalk_theme') === 'dark' ? 'dark' : 'light';

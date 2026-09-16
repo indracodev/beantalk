@@ -125,25 +125,6 @@
                 </svg>
             </button>
         </form>
-
-        <!-- Quick Fill Helpers -->
-        <div class="quick-accounts">
-            <div class="quick-title">Akun Bawaan (Klik untuk Isi Cepat)</div>
-            <div class="account-chips" style="grid-template-columns: 1.1fr 1fr 1fr;">
-                <button type="button" class="account-chip" onclick="fillCredentials('superadmin', 'password')">
-                    <span class="chip-role">Superadmin</span>
-                    <span class="chip-user">superadmin / ...</span>
-                </button>
-                <button type="button" class="account-chip" onclick="fillCredentials('sarah', 'password')">
-                    <span class="chip-role">Staff CS (Sarah)</span>
-                    <span class="chip-user">sarah / sarah@...</span>
-                </button>
-                <button type="button" class="account-chip" onclick="fillCredentials('budi', 'password')">
-                    <span class="chip-role">Staff CS (Budi)</span>
-                    <span class="chip-user">budi / budi@...</span>
-                </button>
-            </div>
-        </div>
     </div>
 
     <!-- External Script for Login -->
