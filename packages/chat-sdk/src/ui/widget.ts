@@ -622,11 +622,15 @@ export class ChatWidgetUi {
       btn.addEventListener('click', () => this.close());
     });
 
-    // Stage 1 Card Click -> Go to Stage 1.5 Identity Form
+    // Stage 1 Card Click -> Skip identity if name already known, else show form
     const activeCard = this.shadowRoot.querySelector('.card-active-chat');
     if (activeCard) {
       activeCard.addEventListener('click', () => {
-        this.goToStage('identity');
+        if (this.customerName) {
+          this.goToStage('chat');
+        } else {
+          this.goToStage('identity');
+        }
       });
     }
 
