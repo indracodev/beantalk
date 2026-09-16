@@ -85,7 +85,7 @@ export class BeanTalk {
           visitor_uuid: visitorUuid,
           client_message_id: msg.client_message_id || generateClientMessageId(),
           message: msg.content || msg.message || '',
-          sender_name: msg.sender_name || storedName || 'Tamu',
+          sender_name: msg.sender_name || storedName || (this.options.language === 'en' ? 'Guest' : 'Tamu'),
           page_url: window.location.href,
           page_title: document.title,
         });
@@ -148,6 +148,87 @@ export class BeanTalk {
     this.emitter.on('widget:closed', () => {
       this.transport.setWidgetOpen(false);
     });
+
+    // Customer Resolves Conversation -> Call backend and update UI
+    this.emitter.on('conversation:resolve', async (convId: number) => {
+      const visitorUuid = this.options.visitorUuid || getOrCreateVisitorUuid();
+      try {
+        const res = await this.api.resolveConversation(convId, visitorUuid);
+        if (res.success) {
+          if (this.sessionData && this.sessionData.conversation) {
+            this.sessionData.conversation.status = 'closed';
+          }
+          this.ui.updateResolvedUI(true);
+          const isEn = this.options.language === 'en';
+          this.ui.appendMessage({
+            id: Date.now(),
+            conversation_id: convId,
+            sender_type: 'system',
+            sender_name: 'System',
+            content: isEn
+              ? 'You have marked this conversation as resolved. Click "Start New Chat" to open a new ticket.'
+              : 'Percakapan ini telah Anda tandai selesai. Klik "Mulai Chat Baru" untuk membuat tiket baru.',
+            created_at: new Date().toISOString(),
+          });
+          // Refresh conversation list
+          const listRes = await this.api.getConversations(visitorUuid);
+          if (listRes.success && listRes.data?.conversations) {
+            this.sessionData = {
+              ...(this.sessionData as any),
+              conversations: listRes.data.conversations,
+            };
+            this.ui.renderTicketsHistory(listRes.data.conversations);
+          }
+        }
+      } catch (e) {
+        console.error('[BeanTalk] Gagal menyelesaikan tiket:', e);
+      }
+    });
+
+    // Start New Chat / Fresh Ticket Thread
+    this.emitter.on('conversation:start-new', () => {
+      if (this.sessionData) {
+        this.sessionData.conversation = null;
+      }
+      setLastConversationId(0);
+      this.transport.stop();
+      this.ui.setMessages([]);
+      this.ui.updateResolvedUI(false);
+
+      const storedName = getStoredCustomerName();
+      if (!storedName) {
+        this.ui.goToStage('identity');
+      } else {
+        this.ui.goToStage('chat');
+      }
+    });
+
+    // Switch to Past Conversation / Old Ticket
+    this.emitter.on('conversation:switch', async (convId: number) => {
+      try {
+        const res = await this.api.pollMessages(convId, 0);
+        if (res.success && res.data) {
+          if (!this.sessionData) {
+            this.sessionData = {} as any;
+          }
+          const ticket = (this.sessionData?.conversations || []).find((c: any) => c.id === convId);
+          const status = ticket?.status || 'open';
+          this.sessionData.conversation = { id: convId, status } as any;
+          setLastConversationId(convId);
+          this.ui.setMessages(res.data.messages || []);
+          this.ui.updateResolvedUI(status === 'closed');
+          this.ui.goToStage('chat');
+
+          if (status !== 'closed') {
+            this.transport.start(convId, res.data.last_id || 0);
+          } else {
+            this.transport.stop();
+          }
+        }
+      } catch (e) {
+        console.error('[BeanTalk] Gagal memuat percakapan tiket:', e);
+      }
+    });
   }
 
   private async bootstrap(): Promise<void> {
@@ -159,6 +240,10 @@ export class BeanTalk {
 
       if (response.success && response.data) {
         this.sessionData = response.data;
+        const widgetSettings = (response.data as any).widget || response.data.widget_settings;
+        if (widgetSettings && (widgetSettings.language === 'en' || widgetSettings.language === 'id')) {
+          this.options.language = widgetSettings.language;
+        }
         this.ui.setSessionData(response.data);
 
         const conv = response.data.conversation;

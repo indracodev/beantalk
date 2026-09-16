@@ -80,7 +80,7 @@ class ChatApiTest extends TestCase
                          'visitor' => ['uuid'],
                          'conversation' => ['id', 'status'],
                          'project' => ['id', 'name'],
-                         'widget' => ['primary_color', 'greeting_title', 'greeting_subtitle', 'support_title', 'find_us_title', 'social_channels'],
+                         'widget' => ['language', 'primary_color', 'greeting_title', 'greeting_subtitle', 'support_title', 'find_us_title', 'social_channels'],
                      ]
                  ]);
     }
@@ -323,5 +323,166 @@ class ChatApiTest extends TestCase
         $conv = \App\Models\Conversation::find($convId);
         $this->assertNotNull($conv);
         $this->assertEquals('Halo kak, apakah ada promo diskon hari ini?', $conv->last_message_preview);
+    }
+
+    /**
+     * Test 12: Customer can resolve ticket, view ticket history, and start a fresh ticket
+     */
+    public function testCustomerCanResolveConversationAndStartNewTicket()
+    {
+        $uuid = 'visitor-multi-ticket-' . uniqid();
+
+        // 1. Kirim pesan pertama untuk membuat tiket #1
+        $res1 = $this->withHeaders([
+            'X-Project-Key' => 'pk_live_supresso_8819',
+        ])->postJson('/api/v1/client/conversations/0/messages', [
+            'visitor_uuid' => $uuid,
+            'sender_name'  => 'Pelanggan 1',
+            'content'      => 'Pertanyaan tiket pertama',
+        ]);
+        $res1->assertStatus(201);
+        $conv1Id = $res1->json('data.conversation_id');
+
+        // 2. Pelanggan menyelesaikan tiket #1
+        $resolveRes = $this->withHeaders([
+            'X-Project-Key' => 'pk_live_supresso_8819',
+        ])->postJson("/api/v1/client/conversations/{$conv1Id}/resolve", [
+            'visitor_uuid' => $uuid,
+        ]);
+        $resolveRes->assertStatus(200)
+                   ->assertJsonPath('success', true)
+                   ->assertJsonPath('data.status', 'closed');
+
+        $this->assertEquals('closed', \App\Models\Conversation::find($conv1Id)->status);
+
+        // 3. Mengirim pesan ke tiket yang sudah closed harus ditolak
+        $closedRes = $this->withHeaders([
+            'X-Project-Key' => 'pk_live_supresso_8819',
+        ])->postJson("/api/v1/client/conversations/{$conv1Id}/messages", [
+            'visitor_uuid' => $uuid,
+            'content'      => 'Pesan di tiket yang sudah tutup',
+        ]);
+        $closedRes->assertStatus(422)
+                  ->assertJsonPath('error.code', 'CONVERSATION_CLOSED');
+
+        // 4. Pelanggan membuat tiket baru (id: 0)
+        $res2 = $this->withHeaders([
+            'X-Project-Key' => 'pk_live_supresso_8819',
+        ])->postJson('/api/v1/client/conversations/0/messages', [
+            'visitor_uuid' => $uuid,
+            'sender_name'  => 'Pelanggan 1',
+            'content'      => 'Pertanyaan tiket kedua yang fresh',
+        ]);
+        $res2->assertStatus(201);
+        $conv2Id = $res2->json('data.conversation_id');
+
+        $this->assertNotEquals($conv1Id, $conv2Id, 'Harus membuat tiket percakapan baru yang terpisah.');
+        $this->assertEquals('open', \App\Models\Conversation::find($conv2Id)->status);
+
+        // 5. Cek daftar riwayat tiket pelanggan
+        $historyRes = $this->withHeaders([
+            'X-Project-Key' => 'pk_live_supresso_8819',
+        ])->getJson("/api/v1/client/conversations?visitor_uuid={$uuid}");
+
+        $historyRes->assertStatus(200)
+                   ->assertJsonPath('success', true);
+
+        $tickets = $historyRes->json('data.conversations');
+        $this->assertCount(2, $tickets);
+        $statuses = array_column($tickets, 'status');
+        $this->assertContains('closed', $statuses);
+        $this->assertContains('open', $statuses);
+    }
+
+    /**
+     * Test 13: Admin can resolve ticket with closing greeting template
+     */
+    public function testAdminCanResolveConversationWithClosingMessageTemplate()
+    {
+        $uuid = 'visitor-admin-resolve-' . uniqid();
+
+        // Buat percakapan
+        $res = $this->withHeaders([
+            'X-Project-Key' => 'pk_live_supresso_8819',
+        ])->postJson('/api/v1/client/conversations/0/messages', [
+            'visitor_uuid' => $uuid,
+            'sender_name'  => 'Ibu Siska',
+            'content'      => 'Tanya informasi garansi produk',
+        ]);
+        $convId = $res->json('data.conversation_id');
+
+        $user = \App\Models\User::first();
+        $conv = \App\Models\Conversation::find($convId);
+        $conv->update(['tenant_id' => $user->tenant_id]);
+
+        $closingText = 'Terima kasih telah menghubungi kami. Semoga harimu menyenangkan! Jika ada pertanyaan lain, jangan ragu untuk chat kembali.';
+
+        $statusRes = $this->actingAs($user)
+            ->putJson("/admin/inbox/{$convId}/status", [
+                'status'          => 'closed',
+                'closing_message' => $closingText,
+            ]);
+
+        $statusRes->assertStatus(200)
+                  ->assertJsonPath('success', true)
+                  ->assertJsonPath('data.status', 'closed')
+                  ->assertJsonPath('data.closing_message.content', $closingText);
+
+        $conv = \App\Models\Conversation::find($convId);
+        $this->assertEquals('closed', $conv->status);
+
+        // Pastikan pesan penutup tersimpan di database sebagai pesan dari agen
+        $lastMsg = $conv->latestMessage;
+        $this->assertEquals('agent', $lastMsg->sender_type);
+        $this->assertEquals($closingText, $lastMsg->content);
+    }
+
+    /**
+     * Test 15: Widget language configuration and session init integration
+     */
+    public function testWidgetLanguageConfiguration()
+    {
+        $project = \App\Models\Project::where('slug', 'supresso')->first();
+        $user = \App\Models\User::first();
+        $user->update(['tenant_id' => $project->tenant_id]);
+
+        // 1. Admin sets language to 'en'
+        $response = $this->actingAs($user)->put("/admin/integrations/{$project->id}/settings", [
+            'language'      => 'en',
+            'primary_color' => '#0071E3',
+        ]);
+        $response->assertRedirect();
+
+        // Verify setting in database
+        $setting = \App\Models\WidgetSetting::where('project_id', $project->id)->first();
+        $this->assertEquals('en', $setting->language);
+
+        // Verify client session init returns language 'en'
+        $initRes = $this->withHeaders([
+            'X-Project-Key' => 'pk_live_supresso_8819',
+        ])->postJson('/api/v1/client/session/init', [
+            'visitor_uuid' => 'visitor-test-lang-en',
+        ]);
+        $initRes->assertStatus(200)
+                ->assertJsonPath('data.widget.language', 'en');
+
+        // 2. Admin sets language back to 'id'
+        $response = $this->actingAs($user)->put("/admin/integrations/{$project->id}/settings", [
+            'language'      => 'id',
+            'primary_color' => '#0071E3',
+        ]);
+        $response->assertRedirect();
+
+        $setting->refresh();
+        $this->assertEquals('id', $setting->language);
+
+        // Verify client session init returns language 'id'
+        $initResId = $this->withHeaders([
+            'X-Project-Key' => 'pk_live_supresso_8819',
+        ])->postJson('/api/v1/client/session/init', [
+            'visitor_uuid' => 'visitor-test-lang-id',
+        ]);
+        $initResId->assertStatus(200)
+                  ->assertJsonPath('data.widget.language', 'id');
     }
 }

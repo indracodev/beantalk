@@ -13,6 +13,7 @@ class WidgetSetting extends Model
         'primary_color',
         'accent_color',
         'position',
+        'language',
         'greeting_title',
         'greeting_subtitle',
         'support_title',
