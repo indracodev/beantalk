@@ -107,4 +107,19 @@ export class ApiClient {
       }),
     });
   }
+
+  async resolveConversation(conversationId: number, visitorUuid: string): Promise<ApiResponse<{ id: number; status: string }>> {
+    return this.request<{ id: number; status: string }>(`/api/v1/client/conversations/${conversationId}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify({
+        visitor_uuid: visitorUuid,
+      }),
+    });
+  }
+
+  async getConversations(visitorUuid: string): Promise<ApiResponse<{ conversations: any[] }>> {
+    return this.request<{ conversations: any[] }>(`/api/v1/client/conversations?visitor_uuid=${encodeURIComponent(visitorUuid)}`, {
+      method: 'GET',
+    });
+  }
 }

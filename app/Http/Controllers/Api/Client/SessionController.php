@@ -45,8 +45,23 @@ class SessionController extends Controller
             $request->input('name')
         );
 
-        // 3. Resolve active conversation ONLY if one already exists with messages
+        // 3. Resolve active conversation ONLY if one already exists with messages and is active
         $conversation = $this->conversationService->getActiveConversation($project, $visitor);
+
+        // 3.5. Fetch all customer conversations/tickets (open & closed)
+        $pastConversations = $this->conversationService->getVisitorConversations($project, $visitor);
+        $conversationsData = $pastConversations->map(function ($c) {
+            return [
+                'id'                   => $c->id,
+                'status'               => $c->status,
+                'channel'              => $c->channel,
+                'channel_label'        => $c->channel_label,
+                'last_message_preview' => $c->last_message_preview ?? ($c->latestMessage ? mb_substr(strip_tags($c->latestMessage->content), 0, 75) : null),
+                'last_message_at'      => $c->last_message_at ? $c->last_message_at->toIso8601String() : ($c->created_at ? $c->created_at->toIso8601String() : null),
+                'unread_visitor_count' => (int) $c->unread_visitor_count,
+                'created_at'           => $c->created_at ? $c->created_at->toIso8601String() : null,
+            ];
+        });
 
         // 4. Widget settings (Warna core & teks)
         $widgetSetting = $project->widgetSetting;
@@ -72,12 +87,14 @@ class SessionController extends Controller
                     'customer_code' => $visitor->customer_code_formatted,
                     'display_name'  => $visitor->display_name,
                 ],
-                'conversation' => $conversationData,
+                'conversation'  => $conversationData,
+                'conversations' => $conversationsData,
                 'project' => [
                     'id'   => $project->id,
                     'name' => $project->name,
                 ],
                 'widget' => [
+                    'language'          => $widgetSetting ? ($widgetSetting->language ?: 'id') : 'id',
                     'primary_color'     => $widgetSetting ? $widgetSetting->primary_color : '#1E1E1E',
                     'accent_color'      => $widgetSetting ? $widgetSetting->accent_color : '#FFFFFF',
                     'position'          => $widgetSetting ? $widgetSetting->position : 'bottom-right',

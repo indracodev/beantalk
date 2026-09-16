@@ -26,6 +26,118 @@ class MessageController extends Controller
     }
 
     /**
+     * Lists conversation tickets for a visitor
+     * GET /api/v1/client/conversations
+     */
+    public function listConversations(Request $request)
+    {
+        /** @var Project $project */
+        $project = $request->attributes->get('project');
+
+        $visitorUuid = $request->input('visitor_uuid') ?: $request->header('X-Visitor-Uuid');
+        if (!$visitorUuid) {
+            return response()->json([
+                'success' => false,
+                'error' => [
+                    'code' => 'VISITOR_REQUIRED',
+                    'message' => 'visitor_uuid parameter is required.'
+                ]
+            ], 422);
+        }
+
+        $visitor = \App\Models\Visitor::where('project_id', $project->id)
+            ->where('visitor_uuid', $visitorUuid)
+            ->first();
+
+        if (!$visitor) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'conversations' => []
+                ]
+            ]);
+        }
+
+        $conversations = $this->conversationService->getVisitorConversations($project, $visitor);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'conversations' => $conversations->map(function ($c) {
+                    return [
+                        'id'                   => $c->id,
+                        'status'               => $c->status,
+                        'channel'              => $c->channel,
+                        'channel_label'        => $c->channel_label,
+                        'last_message_preview' => $c->last_message_preview ?? ($c->latestMessage ? mb_substr(strip_tags($c->latestMessage->content), 0, 75) : null),
+                        'last_message_at'      => $c->last_message_at ? $c->last_message_at->toIso8601String() : ($c->created_at ? $c->created_at->toIso8601String() : null),
+                        'unread_visitor_count' => (int) $c->unread_visitor_count,
+                        'created_at'           => $c->created_at ? $c->created_at->toIso8601String() : null,
+                    ];
+                })
+            ]
+        ]);
+    }
+
+    /**
+     * Customer resolves conversation directly from widget
+     * POST /api/v1/client/conversations/{id}/resolve
+     */
+    public function resolve(Request $request, $conversationId)
+    {
+        /** @var Project $project */
+        $project = $request->attributes->get('project');
+
+        $conversation = Conversation::where('project_id', $project->id)
+            ->where('id', $conversationId)
+            ->first();
+
+        if (!$conversation) {
+            return response()->json([
+                'success' => false,
+                'error' => [
+                    'code' => 'CONVERSATION_NOT_FOUND',
+                    'message' => 'Percakapan tidak ditemukan.'
+                ]
+            ], 404);
+        }
+
+        // Optional verify visitor ownership if visitor_uuid provided
+        $visitorUuid = $request->input('visitor_uuid') ?: $request->header('X-Visitor-Uuid');
+        if ($visitorUuid && $conversation->visitor && $conversation->visitor->visitor_uuid !== $visitorUuid) {
+            return response()->json([
+                'success' => false,
+                'error' => [
+                    'code' => 'UNAUTHORIZED',
+                    'message' => 'Anda tidak memiliki akses ke percakapan ini.'
+                ]
+            ], 403);
+        }
+
+        $conversation->update(['status' => 'closed']);
+
+        try {
+            $telegramService = app(\App\Services\TelegramService::class);
+            $telegramService->closeForumTopic($conversation);
+        } catch (\Throwable $e) {}
+
+        \App\Services\ActivityLogger::log(
+            'conversation.status_updated',
+            "Pengunjung menandai percakapan #{$conversation->id} selesai",
+            $conversation,
+            ['status' => 'closed', 'resolved_by' => 'customer']
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id'     => $conversation->id,
+                'status' => 'closed',
+            ]
+        ]);
+    }
+
+    /**
      * Polls messages with index scan: WHERE conversation_id = ? AND id > ?
      * GET /api/v1/client/conversations/{id}/messages?after_id=123
      */
@@ -105,6 +217,17 @@ class MessageController extends Controller
             $conversation = Conversation::where('project_id', $project->id)
                 ->where('id', $conversationId)
                 ->first();
+        }
+
+        // Jika percakapan lama sudah berstatus 'closed', jangan izinkan kirim ke tiket lama ini
+        if ($conversation && $conversation->status === 'closed') {
+            return response()->json([
+                'success' => false,
+                'error' => [
+                    'code' => 'CONVERSATION_CLOSED',
+                    'message' => 'Tiket percakapan ini telah selesai. Silakan buat tiket baru.',
+                ]
+            ], 422);
         }
 
         // Jika conversation belum ada (misal pesan pertama dari widget), resolve/create on demand!

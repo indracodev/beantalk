@@ -54,9 +54,9 @@ class ConversationService
     }
 
     /**
-     * Gets the active conversation for a visitor ONLY if it has messages (does not auto-create empty conversation)
+     * Gets the active conversation for a visitor ONLY if it is open/pending and has messages
      */
-    public function getActiveConversation(Project $project, Visitor $visitor): ?Conversation
+    public function getActiveConversation(Project $project, Visitor $visitor, bool $includeClosedFallback = false): ?Conversation
     {
         $conversation = Conversation::where('project_id', $project->id)
             ->where('visitor_id', $visitor->id)
@@ -68,11 +68,29 @@ class ConversationService
             return $conversation;
         }
 
+        if ($includeClosedFallback) {
+            return Conversation::where('project_id', $project->id)
+                ->where('visitor_id', $visitor->id)
+                ->whereHas('messages')
+                ->latest('id')
+                ->first();
+        }
+
+        return null;
+    }
+
+    /**
+     * Gets all conversation tickets history for a visitor
+     */
+    public function getVisitorConversations(Project $project, Visitor $visitor, int $limit = 20)
+    {
         return Conversation::where('project_id', $project->id)
             ->where('visitor_id', $visitor->id)
             ->whereHas('messages')
+            ->with(['latestMessage'])
             ->latest('id')
-            ->first();
+            ->take($limit)
+            ->get();
     }
 
     /**

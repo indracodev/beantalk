@@ -27,6 +27,12 @@ Route::prefix('v1')->group(function () {
         Route::post('session/init', 'Api\Client\SessionController@init')->middleware('throttle:100,1');
         Route::post('session/profile', 'Api\Client\SessionController@updateProfile')->middleware('throttle:100,1');
 
+        // Visitor Tickets / Conversation List
+        Route::get('conversations', 'Api\Client\MessageController@listConversations')->middleware('throttle:100,1');
+
+        // Customer self-resolve conversation
+        Route::post('conversations/{id}/resolve', 'Api\Client\MessageController@resolve')->middleware('throttle:60,1');
+
         // Message polling: 300/min per IP (safety net, normal usage ~24 req/min)
         Route::get('conversations/{id}/messages', 'Api\Client\MessageController@index')->middleware('throttle:300,1');
 

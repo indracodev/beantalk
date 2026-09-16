@@ -12,6 +12,7 @@ export interface WidgetInitOptions {
   whatsappNumber?: string;
   instagramHandle?: string;
   messengerUrl?: string;
+  language?: 'id' | 'en';
 }
 
 export interface ApiResponse<T = any> {
@@ -33,6 +34,7 @@ export interface SocialChannel {
 }
 
 export interface WidgetSettings {
+  language?: 'id' | 'en';
   primary_color: string;
   accent_color?: string;
   header_title?: string;
@@ -91,10 +93,22 @@ export interface Conversation {
   messages?: Message[];
 }
 
+export interface ConversationTicketItem {
+  id: number;
+  status: 'open' | 'closed' | 'assigned' | 'pending';
+  channel?: string;
+  channel_label?: string;
+  last_message_preview?: string;
+  last_message_at?: string;
+  unread_visitor_count?: number;
+  created_at?: string;
+}
+
 export interface SessionInitData {
   visitor: VisitorInfo;
   project: ProjectInfo;
   widget?: WidgetSettings;
   widget_settings?: WidgetSettings;
-  conversation: Conversation;
+  conversation?: Conversation | null;
+  conversations?: ConversationTicketItem[];
 }
