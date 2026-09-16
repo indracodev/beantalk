@@ -14,7 +14,10 @@ use Illuminate\Support\Facades\Log;
 
 class TelegramWebhookController extends Controller
 {
-    protected ConversationService $conversationService;
+    /**
+     * @var ConversationService
+     */
+    protected $conversationService;
 
     public function __construct(ConversationService $conversationService)
     {

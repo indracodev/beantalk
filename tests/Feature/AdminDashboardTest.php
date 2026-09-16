@@ -714,7 +714,9 @@ class AdminDashboardTest extends TestCase
         $this->assertIsArray($channels);
         $this->assertCount(6, $channels);
 
-        $activeChannels = array_filter($channels, fn($c) => !empty($c['enabled']));
+        $activeChannels = array_filter($channels, function ($c) {
+            return !empty($c['enabled']);
+        });
         $this->assertCount(4, $activeChannels);
 
         // Check WA formatted with wa.me and cleaned country code
@@ -782,7 +784,9 @@ class AdminDashboardTest extends TestCase
         $this->assertCount(3, $channels);
 
         // Verify both WA numbers are preserved and normalized
-        $waList = array_values(array_filter($channels, fn($c) => $c['platform'] === 'whatsapp'));
+        $waList = array_values(array_filter($channels, function ($c) {
+            return $c['platform'] === 'whatsapp';
+        }));
         $this->assertCount(2, $waList);
         $this->assertEquals('CS 1 - Sales & Pemesanan', $waList[0]['name']);
         $this->assertEquals('https://wa.me/6281234567890', $waList[0]['url']);

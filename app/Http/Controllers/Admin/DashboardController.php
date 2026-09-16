@@ -1377,7 +1377,13 @@ class DashboardController extends Controller
             ->where(function ($q) use ($project) {
                 $q->where(function ($sub) use ($project) {
                     $sub->where('subject_type', Project::class)->where('subject_id', $project->id);
-                })->orWhere('properties->project_id', $project->id);
+                });
+                if (\Illuminate\Support\Facades\DB::getDriverName() === 'sqlite') {
+                    $q->orWhere('properties', 'like', '%"project_id":' . (int) $project->id . '%')
+                      ->orWhere('properties', 'like', '%"project_id": "' . (int) $project->id . '"%');
+                } else {
+                    $q->orWhere('properties->project_id', $project->id);
+                }
             })
             ->latest('id')
             ->take(8)

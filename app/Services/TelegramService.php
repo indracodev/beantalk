@@ -13,8 +13,10 @@ class TelegramService
 {
     /**
      * Base URL for Telegram Bot API
+     *
+     * @var string
      */
-    protected string $apiBase = 'https://api.telegram.org/bot';
+    protected $apiBase = 'https://api.telegram.org/bot';
 
     /**
      * HTTP client with safe SSL verification for local development (avoids Windows Laragon cURL error 60)

@@ -198,7 +198,7 @@
                         $displayName = $conv->visitor->display_name ?? 'Tamu';
                         $customerCode = $conv->visitor->customer_code_formatted ?? 'CUS-0000';
                         $initials = strtoupper(
-                            substr(preg_replace('/[^a-zA-Z0-9]/', '', $conv->visitor->name ?: 'Tamu'), 0, 2),
+                            substr(preg_replace('/[^a-zA-Z0-9]/', '', $conv->visitor->name ?: 'Tamu'), 0, 2)
                         );
                         $channelLabel = $conv->channel_label ?? 'Web Chat';
                         $siteName = $conv->project->name ?? 'Website';
@@ -280,7 +280,7 @@
                     $activeDisplayName = $activeConversation->visitor->display_name ?? 'Tamu';
                     $activeCustomerCode = $activeConversation->visitor->customer_code_formatted ?? 'CUS-0000';
                     $activeInitials = strtoupper(
-                        substr(preg_replace('/[^a-zA-Z0-9]/', '', $activeConversation->visitor->name ?: 'Tamu'), 0, 2),
+                        substr(preg_replace('/[^a-zA-Z0-9]/', '', $activeConversation->visitor->name ?: 'Tamu'), 0, 2)
                     );
                     $activeSiteName = $activeConversation->project->name ?? 'Website';
                     $activeProjectColor = $activeConversation->project->widgetSetting->primary_color ?? '#0071E3';

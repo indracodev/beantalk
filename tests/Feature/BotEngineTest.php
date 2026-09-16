@@ -14,11 +14,11 @@ use Tests\TestCase;
 
 class BotEngineTest extends TestCase
 {
-    protected Tenant $tenant;
-    protected Project $project;
-    protected ApiKey $apiKey;
-    protected WidgetSetting $widgetSetting;
-    protected User $adminUser;
+    protected $tenant;
+    protected $project;
+    protected $apiKey;
+    protected $widgetSetting;
+    protected $adminUser;
 
     protected function setUp(): void
     {

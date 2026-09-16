@@ -10,18 +10,22 @@ abstract class TestCase extends BaseTestCase
 {
     use CreatesApplication;
 
-    protected static bool $migrated = false;
+    protected static $migrated = false;
 
     /**
      * Waktu mulai eksekusi test (dalam mikrodetik)
+     *
+     * @var float
      */
-    protected float $testStartTime = 0.0;
+    protected $testStartTime = 0.0;
 
     /**
      * Batas ambang batas waktu uji (ms).
      * Jika sebuah unit test melebihi batas ini, peringatan profiling akan dicetak.
+     *
+     * @var float
      */
-    protected float $slowThresholdMs = 200.0;
+    protected $slowThresholdMs = 200.0;
 
     protected function setUp(): void
     {
