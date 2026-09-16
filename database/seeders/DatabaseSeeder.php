@@ -39,5 +39,8 @@ class DatabaseSeeder extends Seeder
                 'status'   => 'online',
             ]
         );
+
+        // 3. Semai Chatbot & Widget Setting INDRACO Store
+        $this->call(IndracoStoreChatbotSeeder::class);
     }
 }

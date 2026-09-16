@@ -284,7 +284,8 @@ class TelegramIntegrationTest extends TestCase
 
     public function test_telegram_webhook_ignored_when_toggle_is_disabled(): void
     {
-        $uniqueTopicId = 92000 + rand(100, 9999);
+        $uniqueTopicId = (int) (microtime(true) * 1000) % 1000000000;
+        Conversation::where('telegram_topic_id', $uniqueTopicId)->delete();
 
         // Turn OFF Telegram notifications and topic mode
         WidgetSetting::updateOrCreate(

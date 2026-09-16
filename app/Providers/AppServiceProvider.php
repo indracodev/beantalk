@@ -16,7 +16,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        if (!class_exists('DatabaseSeeder', false)) {
+            class_alias(\Database\Seeders\DatabaseSeeder::class, 'DatabaseSeeder');
+        }
+        if (!class_exists('IndracoStoreChatbotSeeder', false)) {
+            class_alias(\Database\Seeders\IndracoStoreChatbotSeeder::class, 'IndracoStoreChatbotSeeder');
+        }
     }
 
     /**

@@ -82,8 +82,11 @@ class BotService
             return $res['message'];
         }
 
-        // 2. KEYWORD & FAQ MATCHING (Rule-Based Engine)
+        // 2. KEYWORD & FAQ MATCHING (Rule-Based Engine with Longest-Match Specificity Priority)
         $rules = is_array($widgetSetting->bot_rules) ? $widgetSetting->bot_rules : [];
+        $bestMatch = null;
+        $longestMatchLen = 0;
+
         foreach ($rules as $rule) {
             $keywords = [];
             if (!empty($rule['keywords'])) {
@@ -101,22 +104,53 @@ class BotService
 
             foreach ($keywords as $kw) {
                 $kwLower = mb_strtolower(trim($kw));
-                if ($kwLower !== '' && Str::contains($text, $kwLower)) {
-                    $res = $this->conversationService->appendMessage($conversation, [
-                        'sender_type'       => 'bot',
-                        'sender_name'       => $botName,
-                        'content'           => $responseTemplate,
-                        'client_message_id' => 'bot_rule_' . $inboundMessage->id . '_' . time(),
-                        'metadata'          => [
-                            'is_bot'            => true,
-                            'matched_keyword'   => $kwLower,
-                            'inbound_msg_id'    => $inboundMessage->id,
-                        ],
-                    ]);
+                if ($kwLower === '') {
+                    continue;
+                }
 
-                    return $res['message'];
+                $isMatch = false;
+                if (mb_strlen($kwLower) <= 4 || is_numeric($kwLower)) {
+                    if ($text === $kwLower || preg_match('/(^|\s|[.,!?])' . preg_quote($kwLower, '/') . '($|\s|[.,!?])/iu', $text)) {
+                        $isMatch = true;
+                    }
+                } else {
+                    if (Str::contains($text, $kwLower)) {
+                        $isMatch = true;
+                    }
+                }
+
+                if ($isMatch) {
+                    $matchWeight = mb_strlen($kwLower);
+                    // Prioritize exact full text match highest
+                    if ($text === $kwLower) {
+                        $matchWeight += 1000;
+                    }
+
+                    if ($matchWeight > $longestMatchLen) {
+                        $longestMatchLen = $matchWeight;
+                        $bestMatch = [
+                            'response' => $responseTemplate,
+                            'keyword'  => $kwLower,
+                        ];
+                    }
                 }
             }
+        }
+
+        if ($bestMatch) {
+            $res = $this->conversationService->appendMessage($conversation, [
+                'sender_type'       => 'bot',
+                'sender_name'       => $botName,
+                'content'           => $bestMatch['response'],
+                'client_message_id' => 'bot_rule_' . $inboundMessage->id . '_' . time(),
+                'metadata'          => [
+                    'is_bot'          => true,
+                    'matched_keyword' => $bestMatch['keyword'],
+                    'inbound_msg_id'  => $inboundMessage->id,
+                ],
+            ]);
+
+            return $res['message'];
         }
 
         // 3. FIRST INBOUND WELCOME MESSAGE (Jika tiket obrolan ini belum pernah mendapat sambutan bot)
@@ -181,12 +215,26 @@ class BotService
             'orang asli',
             'panggil cs',
             'bantuan agen',
+            'ya',
+            'iya',
+            'yes',
         ];
 
         foreach ($handoffKeywords as $kw) {
-            // Check exact whole word or exact substring
-            if (preg_match('/\b' . preg_quote($kw, '/') . '\b/i', $text) || Str::contains($text, $kw)) {
-                return true;
+            $kwLower = mb_strtolower(trim($kw));
+            if ($kwLower === '') {
+                continue;
+            }
+
+            // Word boundary check for short words (<= 3 chars, e.g. 'ya', 'cs')
+            if (mb_strlen($kwLower) <= 3) {
+                if ($text === $kwLower || preg_match('/(^|\s|[.,!?])' . preg_quote($kwLower, '/') . '($|\s|[.,!?])/iu', $text)) {
+                    return true;
+                }
+            } else {
+                if (Str::contains($text, $kwLower) || preg_match('/(^|\s|[.,!?])' . preg_quote($kwLower, '/') . '($|\s|[.,!?])/iu', $text)) {
+                    return true;
+                }
             }
         }
 
