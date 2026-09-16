@@ -991,7 +991,7 @@ class DashboardController extends Controller
         // HANYA deteksi notifikasi jika request secara eksplisit menyertakan query parameter since_message_id.
         // Jika tidak ada since_message_id, request ini adalah handshake inisialisasi (baseline sync) agar tidak membunyikan chat lama.
         $newVisitorMessages = collect();
-        if ($request->has('since_message_id')) {
+        if ($request->has('since_message_id') && (int) $request->query('since_message_id', 0) > 0) {
             $sinceMessageId = (int) $request->query('since_message_id', 0);
             $newVisitorMessages = Message::where('tenant_id', $tenantId)
                 ->where('id', '>', $sinceMessageId)
@@ -1076,8 +1076,8 @@ class DashboardController extends Controller
                 'has_new_incoming'   => $newVisitorMessages->isNotEmpty(),
                 'new_incoming_count' => $newVisitorMessages->count(),
                 'latest_incoming'    => $newVisitorMessages->last() ? [
-                    'message_id'      => $newVisitorMessages->last()->id,
-                    'conversation_id' => $newVisitorMessages->last()->conversation_id,
+                    'message_id'      => (int) $newVisitorMessages->last()->id,
+                    'conversation_id' => (int) $newVisitorMessages->last()->conversation_id,
                     'sender_name'     => $newVisitorMessages->last()->sender_name,
                     'content'         => mb_substr(strip_tags($newVisitorMessages->last()->content), 0, 70),
                 ] : null,

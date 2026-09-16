@@ -15,8 +15,10 @@ class LoginController extends Controller
     /**
      * Show the login form.
      * GET /login
+     *
+     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
      */
-    public function showLoginForm(): View|RedirectResponse
+    public function showLoginForm()
     {
         if (Auth::check()) {
             return redirect()->route('admin.inbox');
