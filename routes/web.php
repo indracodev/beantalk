@@ -13,12 +13,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    if (auth()->check()) {
-        return redirect()->route('admin.dashboard');
-    }
-    return redirect('/login');
-});
+Route::get('/', 'Auth\LoginController@root');
 
 // Authentication Web Routes (Login via Email or Username)
 Route::get('login', 'Auth\LoginController@showLoginForm')->name('login');
@@ -57,19 +52,6 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 });
 
 // Public CDN Endpoint for Embed Widget (Fallback if not directly intercepted by web server)
-Route::get('{file}.js', function ($file) {
-    $target = public_path($file . '.js');
-    if (!file_exists($target)) {
-        $target = public_path('chat-widget.js');
-    }
-    if (file_exists($target)) {
-        return response()->file($target, [
-            'Content-Type' => 'application/javascript; charset=utf-8',
-            'Access-Control-Allow-Origin' => '*',
-            'Cache-Control' => 'public, max-age=3600',
-        ]);
-    }
-    abort(404);
-})->where('file', 'chat|widget|chat-widget');
+Route::get('{file}.js', 'Auth\LoginController@widgetScript')->where('file', 'chat|widget|chat-widget');
 
 

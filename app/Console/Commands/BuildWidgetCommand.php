@@ -50,12 +50,12 @@ class BuildWidgetCommand extends Command
         });
 
         if (!$process->isSuccessful()) {
-            $this->newLine();
+            $this->line('');
             $this->error('❌ Proses build gagal.');
             return 1;
         }
 
-        $this->newLine();
+        $this->line('');
         $this->info('✨ Bundle widget berhasil dikompilasi dan disalin ke folder public/.');
         return 0;
     }

@@ -40,7 +40,7 @@ class QuickOptimizeCommand extends Command
             $this->info('🧹 Membersihkan seluruh cache aplikasi...');
             $this->call('optimize:clear');
             $duration = round((microtime(true) - $start) * 1000, 2);
-            $this->newLine();
+            $this->line('');
             $this->info("✨ Seluruh cache berhasil dibersihkan dalam {$duration}ms.");
             return 0;
         }
@@ -50,7 +50,7 @@ class QuickOptimizeCommand extends Command
         $this->call('optimize:clear');
 
         // STEP 2: BUILD NEW OPTIMIZED CACHES
-        $this->newLine();
+        $this->line('');
         $this->info('⚡ [2/2] Membangun cache baru & optimasi aplikasi...');
 
         // 1. Config Cache
@@ -71,7 +71,7 @@ class QuickOptimizeCommand extends Command
 
         $duration = round((microtime(true) - $start) * 1000, 2);
 
-        $this->newLine();
+        $this->line('');
         $this->info("🚀 SELESAI! Seluruh cache lama dibersihkan dan cache baru berhasil dibuat ({$duration}ms).");
         $this->line("   (Tip: Cukup ketik <comment>php artisan opt</comment> untuk menjalankan keduanya sekaligus)");
 

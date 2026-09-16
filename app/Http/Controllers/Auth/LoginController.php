@@ -13,6 +13,41 @@ use Illuminate\View\View;
 class LoginController extends Controller
 {
     /**
+     * Root URL redirector.
+     * GET /
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function root()
+    {
+        if (Auth::check()) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        return redirect('/login');
+    }
+
+    /**
+     * Public CDN Endpoint for Embed Widget
+     * GET /{file}.js
+     */
+    public function widgetScript($file)
+    {
+        $target = public_path($file . '.js');
+        if (!file_exists($target)) {
+            $target = public_path('chat-widget.js');
+        }
+        if (file_exists($target)) {
+            return response()->file($target, [
+                'Content-Type' => 'application/javascript; charset=utf-8',
+                'Access-Control-Allow-Origin' => '*',
+                'Cache-Control' => 'public, max-age=3600',
+            ]);
+        }
+        abort(404);
+    }
+
+    /**
      * Show the login form.
      * GET /login
      *
