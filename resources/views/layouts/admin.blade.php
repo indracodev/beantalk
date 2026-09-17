@@ -70,7 +70,7 @@
         })();
     </script>
 </head>
-<body class="h-screen h-[100dvh] max-h-[100dvh] w-full flex flex-col md:flex-row overflow-hidden font-sans select-none text-[13px] leading-normal antialiased bg-apple-canvas">
+<body class="h-screen h-[100dvh] max-h-[100dvh] w-full flex flex-col md:flex-row overflow-hidden font-sans text-[13px] leading-normal antialiased bg-apple-canvas">
 
     <!-- BeanTalk Apple Global Loader Elements -->
     <div id="beantalk-progress-bar"></div>

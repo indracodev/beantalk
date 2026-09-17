@@ -152,3 +152,40 @@ Dokumen ini mencatat koreksi, pola desain, dan aturan teknis yang dipelajari sel
   1. **Platform Naming Konsisten**: Ubah channel identifier `messenger` menjadi `facebook` dengan label murni "Facebook", tetap menjaga backward compatibility terhadap konfigurasi lama.
   2. **Dukungan Saluran Video & Sosmed Modern**: Tambahkan `tiktok` (normalisasi `https://tiktok.com/@...`) dan `youtube` (normalisasi `https://youtube.com/@...`).
   3. **Dual Icon Engine (Default Asli vs Custom)**: Sediakan opsi `icon_type` ('default' | 'custom') dan `custom_icon` (URL gambar PNG/SVG). Jika memilih default, sistem merender SVG resmi platform asli dengan warna brand otentik. Jika kustom, sistem merender `<img>` / SVG kustom dengan live preview instan di admin builder dan widget pengunjung.
+
+### 23. Pointer-Events Isolation & Collapsed Box pada Chat Wrapper Widget
+- **Pelajaran**: Menempatkan `.chat-window` (380x590px) dan `.chat-launcher-btn` (58x58px) di dalam satu wrapper flexbox `.chat-wrapper` tanpa `pointer-events: none` menyebabkan wrapper merentang menjadi kotak raksasa transparan (380x662px). Akibatnya, meskipun chat window disembunyikan (`visibility: hidden`), wrapper tetap menangkap hit-test kursor dan memblokir klik pengunjung ke elemen website (produk, tombol, link) di belakangnya.
+- **Pola**:
+  1. **Zero-Block Pointer-Events**: Pasang `pointer-events: none` pada root `:host`, `#beantalk-chat-root`, dan `.chat-wrapper`.
+  2. **Explicit Child Activation**: Pasang `pointer-events: auto` hanya pada elemen yang membutuhkan interaksi pengguna: `.chat-launcher-btn` dan `.chat-wrapper.is-open .chat-window`.
+  3. **Absolute Out-of-Flow Window Positioning**: Atur `.chat-window` menggunakan `position: absolute; bottom: 72px; right: 0;` (atau `left: 0;` pada pos-bottom-left). Ini mengeluarkan window dari flex flow sehingga saat widget tertutup, dimensi `.chat-wrapper` menyusut rapi hanya seukuran tombol launcher (58px × 58px) tanpa menghalangi konten web inang.
+
+### 24. Larangan `select-none` Global pada Layout Admin
+- **Pelajaran**: Memasang class `select-none` (`user-select: none;`) pada tag `<body>` layout utama admin melumpuhkan seleksi teks di seluruh halaman (pesan percakapan, email pelanggan, nomor order, token API, dan log aktivitas tidak bisa di-block atau di-copy oleh staf CS).
+- **Pola**:
+  1. **Jangan Pasang di Root/Body**: Biarkan tag `<body>` memiliki perilaku seleksi teks normal default browser.
+  2. **Gunakan Dinamis Hanya Saat Drag**: `user-select: none` hanya boleh diaktifkan secara dinamis saat drag/resize panel (`body.resizing` atau `document.body.style.userSelect = 'none'`) dan wajib dilepas kembali pada event `mouseup`.
+  3. **Apple-style Selection Highlight**: Tambahkan rule `::selection { background-color: rgba(0, 113, 227, 0.22); }` agar saat teks di-highlight terasa presisi dan selaras dengan estetika macOS.
+
+### 25. Direct-to-Chat Routing untuk Percakapan Belum Resolve (Anti-Kickback ke Welcome Hub)
+- **Pelajaran**: Pengunjung yang sedang aktif mengobrol atau membuka kembali widget tidak boleh dilempar kembali ke layar pembuka/Welcome Hub ("Customer Support", kartu sapaan, dan tombol Mulai Chat Baru). Hal ini memicu friksi navigasi karena pengunjung harus mengklik kartu obrolan berulang kali setiap kali membuka widget atau refresh halaman.
+- **Pola**:
+  1. **Server-Side Message Hydration**: Endpoint `session/init` langsung menyertakan riwayat pesan terbaru (`data.conversation.messages`) saat obrolan aktif ditemukan, sehingga riwayat chat tampil instan tanpa lag waktu tunggu polling pertama.
+  2. **Immediate Stage Switch on Init & Open**: Pada `setSessionData` dan `open()`, jika terdeteksi `conversation.id && status !== 'closed'`, widget langsung memanggil `goToStage('chat')`.
+  3. **Status Preserving**: Welcome Hub hanya ditampilkan bagi pengunjung baru yang belum pernah memulai percakapan, atau saat percakapan sebelumnya telah resmi diselesaikan (`status === 'closed'`) oleh pengunjung maupun agen CS.
+
+### 26. Pembeda Multi-Tiket Pelanggan di Admin Dashboard (Ticket Badge, Status Pill, & Riwayat Tiket)
+- **Pelajaran**: Jangan pernah melakukan `->unique('visitor_id')` pada query daftar percakapan inbox, karena akan menghilangkan/menelan tiket-tiket lain milik pelanggan yang sama (misal: tiket lama yang sudah selesai dan tiket baru yang sedang aktif). Selain itu, tanpa nomor tiket dan status badge di kartu percakapan, staf CS tidak dapat membedakan mana tiket baru vs tiket lama dari pelanggan yang sama.
+- **Pola**:
+  1. **Explicit Ticket Identifier**: Tampilkan nomor tiket `#ID` (misal: `#12`, `#18`) tepat di samping nama pelanggan pada setiap baris percakapan di Pane 1 dan toolbar Pane 2.
+  2. **Live Status Pill**: Sematkan badge status tiket yang kontras: `[Open]` (hijau emerald) dan `[Selesai]` (abu-abu zinc) pada meta row kartu percakapan.
+  3. **Multiple Ticket Counter Badge**: Jika seorang pelanggan memiliki lebih dari 1 tiket, tampilkan badge `[2 Tiket]` di kartu percakapan yang dihitung via in-memory `$conversations->countBy('visitor_id')` (Zero extra database query overhead).
+  4. **Customer Ticket History di Pane 3**: Sediakan kartu *"Riwayat Tiket Pelanggan"* di panel kanan (Customer Session) yang menampilkan seluruh tiket milik pelanggan aktif lengkap dengan status, tanggal, dan tombol navigasi langsung antar tiket.
+
+- **[2026-09-17] Lesson 27: Business Hours & Operational Schedules Location in Admin UI**:
+  - *Konteks*: Database dan backend service (`BusinessHoursService`) serta SDK widget telah mendukung evaluasi jam kerja & out-of-office message, namun form pengaturan jam kerja belum diekspos di Admin Dashboard.
+  - *Solusi & Lokasi Penempatan*:
+    1. Jam kerja merupakan properti per-proyek/website integrasi (`widget_settings`), sehingga ditempatkan di halaman **Integrations -> Detail Proyek** (`/admin/integrations/{id}`).
+    2. Diekspos sebagai tab dedicated: **"⏰ Jam Kerja (Business Hours)"** berdampingan dengan tab Smart Bot, Tampilan & Branding, Saluran Sosial, Embed, dan Telegram.
+    3. Dilengkapi indikator status realtime (🟢 Buka / 🌙 Tutup / ⚪ 24/7), pilihan timezone resmi (WIB, WITA, WIT, SGT, UTC), kustomisasi pesan luar jam kerja, dan template cepat (Kantor, Retail, 24 Jam) untuk jadwal harian 7 hari.
+

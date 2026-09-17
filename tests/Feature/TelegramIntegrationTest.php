@@ -43,6 +43,8 @@ class TelegramIntegrationTest extends TestCase
                 'status'    => 'online',
             ]
         );
+        $this->admin->tenant_id = $this->tenant->id;
+        $this->admin->save();
 
         $this->project = Project::firstOrCreate(
             ['project_key' => 'PK-TELEGRAMTEST123'],
@@ -54,16 +56,19 @@ class TelegramIntegrationTest extends TestCase
                 'status'    => 'active',
             ]
         );
+        $this->project->tenant_id = $this->tenant->id;
+        $this->project->save();
 
         $this->visitor = Visitor::firstOrCreate(
             ['visitor_uuid' => 'VT-TELEGRAM-12345'],
             [
-                'tenant_id'     => $this->tenant->id,
                 'project_id'    => $this->project->id,
                 'name'          => 'Budi Santoso',
                 'customer_code' => 'CUS-77889',
             ]
         );
+        $this->visitor->project_id = $this->project->id;
+        $this->visitor->save();
     }
 
     public function test_telegram_settings_can_be_saved(): void
@@ -159,7 +164,7 @@ class TelegramIntegrationTest extends TestCase
 
     public function test_telegram_webhook_receives_registered_agent_reply(): void
     {
-        $uniqueTopicId = 90000 + rand(100, 9999);
+        $uniqueTopicId = (int) (time() + rand(100000, 999999));
 
         // Register agent with telegram_user_id and telegram_username
         $agent = User::firstOrCreate(
@@ -232,7 +237,7 @@ class TelegramIntegrationTest extends TestCase
 
     public function test_telegram_webhook_rejects_unregistered_telegram_user(): void
     {
-        $uniqueTopicId = 91000 + rand(100, 9999);
+        $uniqueTopicId = (int) (time() + rand(200000, 999999));
 
         WidgetSetting::updateOrCreate(
             ['project_id' => $this->project->id],
