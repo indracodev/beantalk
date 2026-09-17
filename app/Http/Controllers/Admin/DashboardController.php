@@ -659,7 +659,10 @@ class DashboardController extends Controller
             });
         }
 
-        $conversations = $query->get()->unique('visitor_id')->values();
+        $conversations = $query->take(50)->get();
+
+        // Hitung total tiket per visitor dari koleksi memori (Zero extra query overhead)
+        $visitorTicketCounts = $conversations->countBy('visitor_id');
 
         // Tentukan percakapan aktif yang sedang dibuka (reuse instance memori jika sudah dimuat)
         $activeConversation = null;
@@ -669,7 +672,7 @@ class DashboardController extends Controller
                 $activeConversation->load(['messages.user']);
             } else {
                 $activeConversation = Conversation::where('tenant_id', $tenantId)
-                    ->with(['visitor', 'project.widgetSetting', 'assignedUser', 'messages.user'])
+                    ->with(['project.widgetSetting', 'assignedUser', 'messages.user'])
                     ->find($id);
             }
             // Tandai tiket aktif sudah dibaca HANYA saat agen secara eksplisit membuka ID chat tersebut
@@ -679,6 +682,15 @@ class DashboardController extends Controller
         } elseif ($conversations->isNotEmpty()) {
             $activeConversation = $conversations->first();
             $activeConversation->load(['messages.user']);
+        }
+
+        // Ambil riwayat tiket milik customer aktif dari koleksi yang sudah dimuat (Zero query overhead)
+        $customerAllTickets = collect();
+        if ($activeConversation && $activeConversation->visitor_id) {
+            $customerAllTickets = $conversations->where('visitor_id', $activeConversation->visitor_id)->values();
+            if (!$customerAllTickets->contains('id', $activeConversation->id)) {
+                $customerAllTickets->prepend($activeConversation);
+            }
         }
 
         // Ambil daftar agen/staff untuk penugasan
@@ -710,7 +722,9 @@ class DashboardController extends Controller
             'activeConversation',
             'staffMembers',
             'counts',
-            'maxMessageId'
+            'maxMessageId',
+            'visitorTicketCounts',
+            'customerAllTickets'
         ));
     }
 
@@ -1039,28 +1053,31 @@ class DashboardController extends Controller
             });
         }
 
-        $conversations = $query->take(50)->get()->unique('visitor_id')->values();
+        $conversations = $query->take(50)->get();
 
-        $formatted = $conversations->map(function ($conv) {
+        $visitorTicketCounts = $conversations->countBy('visitor_id');
+
+        $formatted = $conversations->map(function ($conv) use ($visitorTicketCounts) {
             $projectColor = $conv->project && $conv->project->widgetSetting ? $conv->project->widgetSetting->primary_color : '#0071E3';
             return [
-                'id'                   => $conv->id,
-                'project_id'           => $conv->project_id,
-                'project_color'        => $projectColor,
-                'visitor_id'           => $conv->visitor_id,
-                'customer_name'        => $conv->visitor ? $conv->visitor->display_name : 'Tamu',
-                'customer_code'        => $conv->visitor ? $conv->visitor->customer_code : null,
-                'initials'             => $conv->visitor ? $conv->visitor->initials : 'TM',
-                'channel_label'        => $conv->channel_label,
-                'project_name'         => $conv->project ? $conv->project->name : 'Website',
-                'last_message_preview' => $conv->last_message_preview ?: 'Percakapan baru diinisialisasi...',
-                'last_message_at'      => $conv->last_message_at ? $conv->last_message_at->toIso8601String() : null,
-                'last_message_time'    => $conv->last_message_time,
-                'unread_agent_count'   => (int) $conv->unread_agent_count,
-                'is_unread'            => (bool) ($conv->unread_agent_count > 0),
-                'status'               => $conv->status,
-                'is_bot_active'        => (bool) ($conv->is_bot_active ?? true),
-                'assigned_user_id'     => $conv->assigned_user_id,
+                'id'                     => $conv->id,
+                'project_id'             => $conv->project_id,
+                'project_color'          => $projectColor,
+                'visitor_id'             => $conv->visitor_id,
+                'customer_name'          => $conv->visitor ? $conv->visitor->display_name : 'Tamu',
+                'customer_code'          => $conv->visitor ? $conv->visitor->customer_code : null,
+                'initials'               => $conv->visitor ? $conv->visitor->initials : 'TM',
+                'channel_label'          => $conv->channel_label,
+                'project_name'           => $conv->project ? $conv->project->name : 'Website',
+                'last_message_preview'   => $conv->last_message_preview ?: 'Percakapan baru diinisialisasi...',
+                'last_message_at'        => $conv->last_message_at ? $conv->last_message_at->toIso8601String() : null,
+                'last_message_time'      => $conv->last_message_time,
+                'unread_agent_count'     => (int) $conv->unread_agent_count,
+                'is_unread'              => (bool) ($conv->unread_agent_count > 0),
+                'status'                 => $conv->status,
+                'is_bot_active'          => (bool) ($conv->is_bot_active ?? true),
+                'assigned_user_id'       => $conv->assigned_user_id,
+                'visitor_tickets_count'  => (int) ($visitorTicketCounts[$conv->visitor_id] ?? 1),
             ];
         });
 
@@ -1078,10 +1095,14 @@ class DashboardController extends Controller
                 'has_new_incoming'   => $newVisitorMessages->isNotEmpty(),
                 'new_incoming_count' => $newVisitorMessages->count(),
                 'latest_incoming'    => $newVisitorMessages->last() ? [
-                    'message_id'      => (int) $newVisitorMessages->last()->id,
-                    'conversation_id' => (int) $newVisitorMessages->last()->conversation_id,
-                    'sender_name'     => $newVisitorMessages->last()->sender_name,
-                    'content'         => mb_substr(strip_tags($newVisitorMessages->last()->content), 0, 70),
+                    'message_id'       => (int) $newVisitorMessages->last()->id,
+                    'conversation_id'  => (int) $newVisitorMessages->last()->conversation_id,
+                    'sender_name'      => $newVisitorMessages->last()->sender_name,
+                    'content'          => mb_substr(strip_tags($newVisitorMessages->last()->content), 0, 70),
+                    'sound_enabled'    => (bool) ($newVisitorMessages->last()->conversation && $newVisitorMessages->last()->conversation->project && $newVisitorMessages->last()->conversation->project->widgetSetting ? $newVisitorMessages->last()->conversation->project->widgetSetting->sound_enabled : true),
+                    'sound_type'       => ($newVisitorMessages->last()->conversation && $newVisitorMessages->last()->conversation->project && $newVisitorMessages->last()->conversation->project->widgetSetting ? $newVisitorMessages->last()->conversation->project->widgetSetting->sound_type : 'pedestrian') ?: 'pedestrian',
+                    'sound_duration'   => (int) ($newVisitorMessages->last()->conversation && $newVisitorMessages->last()->conversation->project && $newVisitorMessages->last()->conversation->project->widgetSetting ? $newVisitorMessages->last()->conversation->project->widgetSetting->sound_duration : 15) ?: 15,
+                    'sound_custom_url' => $newVisitorMessages->last()->conversation && $newVisitorMessages->last()->conversation->project && $newVisitorMessages->last()->conversation->project->widgetSetting ? $newVisitorMessages->last()->conversation->project->widgetSetting->sound_custom_url : null,
                 ] : null,
             ]
         ]);
@@ -1449,7 +1470,26 @@ class DashboardController extends Controller
             ->take(8)
             ->get();
 
-        return view('admin.integration-detail', compact('project', 'widgetSetting', 'availableChannels', 'botRules', 'socialChannelsList', 'recentLogs', 'agents'));
+        // Business hours calculation & default schedule
+        $businessHoursService = app(\App\Services\BusinessHoursService::class);
+        $isWithinBusinessHours = $businessHoursService->isWithinBusinessHours($widgetSetting);
+        $businessHoursSummary = $businessHoursService->getScheduleSummary($widgetSetting);
+
+        $defaultBusinessSchedule = [
+            'mon' => ['enabled' => true, 'start' => '08:00', 'end' => '17:00'],
+            'tue' => ['enabled' => true, 'start' => '08:00', 'end' => '17:00'],
+            'wed' => ['enabled' => true, 'start' => '08:00', 'end' => '17:00'],
+            'thu' => ['enabled' => true, 'start' => '08:00', 'end' => '17:00'],
+            'fri' => ['enabled' => true, 'start' => '08:00', 'end' => '17:00'],
+            'sat' => ['enabled' => false, 'start' => '08:00', 'end' => '17:00'],
+            'sun' => ['enabled' => false, 'start' => '08:00', 'end' => '17:00'],
+        ];
+
+        $currentSchedule = is_array($widgetSetting->business_hours) && !empty($widgetSetting->business_hours)
+            ? array_merge($defaultBusinessSchedule, $widgetSetting->business_hours)
+            : $defaultBusinessSchedule;
+
+        return view('admin.integration-detail', compact('project', 'widgetSetting', 'availableChannels', 'botRules', 'socialChannelsList', 'recentLogs', 'agents', 'isWithinBusinessHours', 'businessHoursSummary', 'currentSchedule'));
     }
 
     /**
@@ -1672,7 +1712,7 @@ class DashboardController extends Controller
             }
         }
 
-        $widgetSetting->update([
+        $updateData = [
             'language'                       => $request->input('language', $widgetSetting->language ?: 'id'),
             'primary_color'                  => $request->input('primary_color', $widgetSetting->primary_color),
             'greeting_title'                 => $request->input('greeting_title', $widgetSetting->greeting_title),
@@ -1693,7 +1733,71 @@ class DashboardController extends Controller
             'telegram_chat_id'               => $request->input('telegram_chat_id', $widgetSetting->telegram_chat_id),
             'telegram_notifications_enabled' => $request->has('telegram_notifications_enabled'),
             'telegram_topic_mode_enabled'    => $request->has('telegram_topic_mode_enabled'),
-        ]);
+        ];
+
+        // Process Business Hours if present
+        if ($request->has('has_business_hours_form') || $request->has('business_hours') || $request->has('business_hours_enabled')) {
+            $days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+            $bhSchedule = [];
+            $rawBh = $request->input('business_hours', []);
+            foreach ($days as $day) {
+                $dayInput = $rawBh[$day] ?? [];
+                $bhSchedule[$day] = [
+                    'enabled' => !empty($dayInput['enabled']),
+                    'start'   => !empty($dayInput['start']) ? trim($dayInput['start']) : '08:00',
+                    'end'     => !empty($dayInput['end']) ? trim($dayInput['end']) : '17:00',
+                ];
+            }
+
+            $updateData['business_hours_enabled']     = $request->has('business_hours_enabled');
+            $updateData['business_hours_timezone']    = $request->input('business_hours_timezone', $widgetSetting->business_hours_timezone ?: 'Asia/Jakarta');
+            $updateData['business_hours_off_message'] = $request->input('business_hours_off_message', $widgetSetting->business_hours_off_message);
+            $updateData['business_hours']             = $bhSchedule;
+        }
+
+        // Process Sound Alert Settings if present
+        if ($request->has('has_sound_settings_form') || $request->has('sound_type') || $request->has('sound_enabled')) {
+            $updateData['sound_enabled']  = $request->has('sound_enabled');
+            $updateData['sound_type']     = $request->input('sound_type', $widgetSetting->sound_type ?: 'pedestrian');
+            $updateData['sound_duration'] = max(3, min(180, (int) $request->input('sound_duration', $widgetSetting->sound_duration ?: 15)));
+
+            // Handle custom sound file upload
+            if ($request->hasFile('sound_custom_file')) {
+                $file = $request->file('sound_custom_file');
+                if ($file->isValid()) {
+                    $ext = strtolower($file->getClientOriginalExtension());
+                    if (in_array($ext, ['mp3', 'wav', 'ogg', 'm4a', 'aac'])) {
+                        $filename = 'sound_' . $project->id . '_' . time() . '.' . $ext;
+                        $path = $file->storeAs('sounds', $filename, 'public');
+                        $updateData['sound_custom_url'] = '/storage/' . $path;
+                    }
+                }
+            } elseif ($request->input('remove_custom_sound') === '1') {
+                $updateData['sound_custom_url'] = null;
+            }
+        }
+
+        // Process Customer Bubble Chat Sound Settings
+        if ($request->has('has_widget_sound_settings_form') || $request->has('widget_sound_type') || $request->has('widget_sound_enabled')) {
+            $updateData['widget_sound_enabled'] = $request->has('widget_sound_enabled');
+            $updateData['widget_sound_type']    = $request->input('widget_sound_type', $widgetSetting->widget_sound_type ?: 'chime');
+
+            if ($request->hasFile('widget_sound_custom_file')) {
+                $file = $request->file('widget_sound_custom_file');
+                if ($file->isValid()) {
+                    $ext = strtolower($file->getClientOriginalExtension());
+                    if (in_array($ext, ['mp3', 'wav', 'ogg', 'm4a', 'aac'])) {
+                        $filename = 'widget_sound_' . $project->id . '_' . time() . '.' . $ext;
+                        $path = $file->storeAs('sounds', $filename, 'public');
+                        $updateData['widget_sound_custom_url'] = '/storage/' . $path;
+                    }
+                }
+            } elseif ($request->input('remove_widget_custom_sound') === '1') {
+                $updateData['widget_sound_custom_url'] = null;
+            }
+        }
+
+        $widgetSetting->update($updateData);
 
         ActivityLogger::log(
             'widget.updated',

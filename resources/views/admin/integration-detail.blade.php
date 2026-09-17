@@ -7,7 +7,7 @@
 <div class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-20 md:pb-6 flex flex-col gap-4 sm:gap-5 bg-apple-canvas/30 w-full">
 
     <!-- MAIN FORM WRAPPER -->
-    <form id="formIntegrationSettings" action="{{ route('admin.integrations.settings', $project->id) }}" method="POST" onsubmit="serializeAllSettings()" class="flex flex-col gap-4 sm:gap-5 w-full">
+    <form id="formIntegrationSettings" action="{{ route('admin.integrations.settings', $project->id) }}" method="POST" enctype="multipart/form-data" onsubmit="serializeAllSettings()" class="flex flex-col gap-4 sm:gap-5 w-full">
         @csrf
         @method('PUT')
 
@@ -34,6 +34,9 @@
                         </span>
                         <span id="badgeBotStatus" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-semibold {{ $widgetSetting->bot_enabled ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-neutral-100 text-neutral-600 border border-neutral-200' }}">
                             {{ $widgetSetting->bot_enabled ? '🤖 Bot: Aktif' : '🤖 Bot: Nonaktif' }}
+                        </span>
+                        <span id="badgeHeaderHoursStatus" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-semibold {{ $widgetSetting->business_hours_enabled ? ($isWithinBusinessHours ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200') : 'bg-neutral-100 text-neutral-600 border border-neutral-200' }}">
+                            {{ $widgetSetting->business_hours_enabled ? ($isWithinBusinessHours ? '⏰ Jam Kerja: Buka' : '🌙 Jam Kerja: Tutup') : '⏰ Jam Kerja: 24/7' }}
                         </span>
                     </div>
                     <div class="flex items-center gap-2 text-[11px] text-apple-textSecondary mt-0.5">
@@ -149,6 +152,28 @@
                 @if(!empty($widgetSetting->telegram_notifications_enabled) && !empty($widgetSetting->telegram_bot_token))
                     <span class="w-2 h-2 rounded-full bg-sky-500"></span>
                 @endif
+            </button>
+
+            <button type="button" onclick="switchDetailTab('hours')" id="tab-btn-hours" class="tab-btn shrink-0 whitespace-nowrap px-3.5 py-2 rounded-lg text-[12px] font-medium text-apple-textSecondary hover:text-apple-textPrimary hover:bg-apple-canvas transition flex items-center gap-2 cursor-pointer">
+                <svg class="w-3.5 h-3.5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span>Jam Kerja (Business Hours)</span>
+                <span id="badgeTabHoursStatus" class="px-1.5 py-0.2 rounded-full text-[10px] {{ $widgetSetting->business_hours_enabled ? ($isWithinBusinessHours ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800') : 'bg-neutral-100 text-neutral-600' }} font-bold">
+                    {{ $widgetSetting->business_hours_enabled ? ($isWithinBusinessHours ? 'Buka' : 'Tutup') : '24/7' }}
+                </span>
+            </button>
+
+            <button type="button" onclick="switchDetailTab('sound')" id="tab-btn-sound" class="tab-btn shrink-0 whitespace-nowrap px-3.5 py-2 rounded-lg text-[12px] font-medium text-apple-textSecondary hover:text-apple-textPrimary hover:bg-apple-canvas transition flex items-center gap-2 cursor-pointer">
+                <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>
+                <span>Suara Notifikasi</span>
+                <span id="badgeTabSoundStatus" class="px-1.5 py-0.2 rounded-full text-[10px] {{ $widgetSetting->sound_enabled ? 'bg-rose-100 text-rose-800' : 'bg-neutral-100 text-neutral-600' }} font-bold">
+                    Agent: {{ $widgetSetting->sound_enabled ? ($widgetSetting->sound_duration . 's') : 'Mute' }} &bull; Cust: {{ ($widgetSetting->widget_sound_enabled ?? true) ? 'ON' : 'OFF' }}
+                </span>
             </button>
         </div>
 
@@ -508,7 +533,7 @@
                             <h3 class="text-[14px] font-bold text-apple-textPrimary">Saluran Sosial, Kontak &amp; Marketplace</h3>
                             <span id="labelSocialCount" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">{{ collect($socialChannelsList)->where('enabled', true)->count() }} Aktif</span>
                         </div>
-                        <p class="text-[11.5px] text-apple-textSecondary mt-0.5">Tambahkan saluran komunikasi resmi atau media sosial Anda (WhatsApp, Instagram, Facebook, TikTok, YouTube, Telegram, Shopee, Tokopedia, Custom Link, dsb). Mendukung icon resmi platform maupun icon kustom.</p>
+                        <p class="text-[11.5px] text-apple-textSecondary mt-0.5">Tambahkan saluran komunikasi resmi atau media sosial Anda (WhatsApp, Instagram, Threads, X / Twitter, Facebook, TikTok, YouTube, Telegram, Shopee, Tokopedia, Custom Link, dsb). Mendukung icon resmi platform maupun icon kustom.</p>
                     </div>
 
                     <button type="button" onclick="addNewSocialChannel()" class="inline-flex items-center gap-1.5 bg-apple-blue hover:bg-apple-blueHover text-white px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition shadow-apple-sm cursor-pointer self-start sm:self-auto">
@@ -805,6 +830,646 @@
             </div>
         </div>
 
+        <!-- ============================================================ -->
+        <!-- TAB 6: JAM OPERASIONAL & OUT OF OFFICE (BUSINESS HOURS)      -->
+        <!-- ============================================================ -->
+        <div id="tab-pane-hours" class="tab-pane flex flex-col gap-4" style="display: none;">
+            <input type="hidden" name="has_business_hours_form" value="1">
+
+            <!-- Master Toggle Card -->
+            <div class="bg-white border border-apple-border rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col gap-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-apple-border">
+                    <div class="flex items-start gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-[14px] font-bold text-apple-textPrimary">Aktivasi Jam Kerja &amp; Jadwal Operasional</h3>
+                            <p class="text-[11.5px] text-apple-textSecondary mt-0.5">Atur jam operasional tim CS Anda. Saat di luar jam kerja, widget otomatis menampilkan banner informasi dan mewajibkan email customer.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3 bg-apple-canvas/70 px-3.5 py-1.5 rounded-lg border border-apple-border self-start sm:self-auto">
+                        <span id="hoursToggleLabel" class="text-[12px] font-bold {{ $widgetSetting->business_hours_enabled ? 'text-amber-700' : 'text-neutral-500' }}">
+                            {{ $widgetSetting->business_hours_enabled ? 'Jam Kerja Aktif (ON)' : 'Jam Kerja Nonaktif (24/7 Selalu Buka)' }}
+                        </span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="checkboxHoursEnabled" name="business_hours_enabled" value="1" {{ $widgetSetting->business_hours_enabled ? 'checked' : '' }} onchange="toggleHoursSwitch(this)" class="sr-only peer">
+                            <div class="w-10 h-5 bg-neutral-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-600"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Current Status Telemetry Banner -->
+                <div class="p-3.5 rounded-xl border {{ $widgetSetting->business_hours_enabled ? ($isWithinBusinessHours ? 'bg-emerald-50/70 border-emerald-200' : 'bg-amber-50/70 border-amber-200') : 'bg-neutral-50 border-neutral-200' }} flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-2.5 h-2.5 rounded-full {{ $widgetSetting->business_hours_enabled ? ($isWithinBusinessHours ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500') : 'bg-neutral-400' }}"></span>
+                        <div>
+                            <span class="text-[12px] font-bold {{ $widgetSetting->business_hours_enabled ? ($isWithinBusinessHours ? 'text-emerald-900' : 'text-amber-900') : 'text-neutral-700' }}">
+                                @if(!$widgetSetting->business_hours_enabled)
+                                    Status Saat Ini: Layanan Terbuka 24 Jam Nonstop (Fitur Jam Kerja Dimatikan)
+                                @elseif($isWithinBusinessHours)
+                                    Status Saat Ini: 🟢 Sedang Dalam Jam Operasional (CS Online)
+                                @else
+                                    Status Saat Ini: 🌙 Sedang Di Luar Jam Kerja (Auto-Responder Email Aktif)
+                                @endif
+                            </span>
+                            <div class="text-[11px] {{ $widgetSetting->business_hours_enabled ? ($isWithinBusinessHours ? 'text-emerald-700' : 'text-amber-700') : 'text-neutral-500' }}">
+                                Zona Waktu: <strong>{{ $widgetSetting->business_hours_timezone ?: 'Asia/Jakarta' }}</strong> &bull; Waktu Lokal CS Saat Ini: {{ \Carbon\Carbon::now($widgetSetting->business_hours_timezone ?: 'Asia/Jakarta')->format('l, d M Y — H:i') }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timezone & Off-Hours Message Configuration -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                    <div>
+                        <label class="block text-[11.5px] font-semibold text-apple-textPrimary mb-1">Zona Waktu Operasional CS</label>
+                        <select name="business_hours_timezone" class="w-full text-[12px] px-3 py-2 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 cursor-pointer">
+                            @php
+                                $currentTimezone = $widgetSetting->business_hours_timezone ?: 'Asia/Jakarta';
+                                $tzOptions = [
+                                    'Asia/Jakarta'   => 'WIB — Waktu Indonesia Barat (Jakarta, Surabaya, Medan) [UTC+7]',
+                                    'Asia/Makassar'  => 'WITA — Waktu Indonesia Tengah (Bali, Makassar, Manado) [UTC+8]',
+                                    'Asia/Jayapura'  => 'WIT — Waktu Indonesia Timur (Papua, Ambon) [UTC+9]',
+                                    'Asia/Singapore' => 'SGT — Singapore / Malaysia [UTC+8]',
+                                    'UTC'            => 'UTC — Universal Time Coordinated [UTC+0]',
+                                ];
+                            @endphp
+                            @foreach($tzOptions as $tzVal => $tzLabel)
+                                <option value="{{ $tzVal }}" {{ $currentTimezone === $tzVal ? 'selected' : '' }}>{{ $tzLabel }}</option>
+                            @endforeach
+                        </select>
+                        <p class="text-[10.5px] text-apple-textTertiary mt-1">Perhitungan jam buka/tutup merujuk tepat pada waktu zona ini.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11.5px] font-semibold text-apple-textPrimary mb-1">Pesan Di Luar Jam Kerja (Off-Hours Banner)</label>
+                        <textarea name="business_hours_off_message" rows="2" placeholder="Saat ini di luar jam kerja. Pesan Anda tetap kami terima dan akan dibalas via email." class="w-full text-[12px] px-3 py-2 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">{{ old('business_hours_off_message', $widgetSetting->business_hours_off_message) }}</textarea>
+                        <p class="text-[10.5px] text-apple-textTertiary mt-0.5">Teks ini tampil otomatis di header banner widget saat customer chat di luar jam kerja.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weekly Schedule Card -->
+            <div class="bg-white border border-apple-border rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col gap-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-apple-border">
+                    <div>
+                        <h4 class="text-[13.5px] font-bold text-apple-textPrimary">Jadwal Jam Buka Harian (7 Hari)</h4>
+                        <p class="text-[11px] text-apple-textSecondary mt-0.5">Tentukan hari aktif serta rentang jam operasional tim CS Anda.</p>
+                    </div>
+
+                    <!-- Preset Quick Action Buttons -->
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="text-[11px] text-apple-textTertiary mr-1">Template Cepat:</span>
+                        <button type="button" onclick="applyHoursPreset('office')" class="px-2.5 py-1 text-[11px] font-medium rounded-lg bg-apple-canvas hover:bg-apple-border/50 text-apple-textPrimary border border-apple-border transition cursor-pointer shadow-2xs">
+                            🏢 Senin-Jumat (08:00 - 17:00)
+                        </button>
+                        <button type="button" onclick="applyHoursPreset('retail')" class="px-2.5 py-1 text-[11px] font-medium rounded-lg bg-apple-canvas hover:bg-apple-border/50 text-apple-textPrimary border border-apple-border transition cursor-pointer shadow-2xs">
+                            🛍️ Senin-Sabtu (09:00 - 21:00)
+                        </button>
+                        <button type="button" onclick="applyHoursPreset('always')" class="px-2.5 py-1 text-[11px] font-medium rounded-lg bg-apple-canvas hover:bg-apple-border/50 text-apple-textPrimary border border-apple-border transition cursor-pointer shadow-2xs">
+                            ⚡ 24 Jam Nonstop
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Days Schedule Grid -->
+                @php
+                    $daysMeta = [
+                        'mon' => ['name' => 'Senin', 'default' => true],
+                        'tue' => ['name' => 'Selasa', 'default' => true],
+                        'wed' => ['name' => 'Rabu', 'default' => true],
+                        'thu' => ['name' => 'Kamis', 'default' => true],
+                        'fri' => ['name' => 'Jumat', 'default' => true],
+                        'sat' => ['name' => 'Sabtu', 'default' => false],
+                        'sun' => ['name' => 'Minggu', 'default' => false],
+                    ];
+                @endphp
+
+                <div class="flex flex-col gap-2.5">
+                    @foreach($daysMeta as $key => $meta)
+                        @php
+                            $dayConfig = $currentSchedule[$key] ?? ['enabled' => $meta['default'], 'start' => '08:00', 'end' => '17:00'];
+                            $isDayEnabled = !empty($dayConfig['enabled']);
+                            $startTime = $dayConfig['start'] ?? '08:00';
+                            $endTime = $dayConfig['end'] ?? '17:00';
+                        @endphp
+                        <div id="row-day-{{ $key }}" class="p-3 rounded-xl border transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 {{ $isDayEnabled ? 'bg-white border-apple-border' : 'bg-neutral-50/70 border-neutral-200' }}">
+                            <div class="flex items-center gap-3 sm:w-44">
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="business_hours[{{ $key }}][enabled]" value="1" {{ $isDayEnabled ? 'checked' : '' }} onchange="toggleDayRow('{{ $key }}', this.checked)" class="sr-only peer day-checkbox" data-day="{{ $key }}">
+                                    <div class="w-8 h-4 bg-neutral-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-600"></div>
+                                </label>
+                                <div>
+                                    <span class="text-[12.5px] font-bold text-apple-textPrimary">{{ $meta['name'] }}</span>
+                                    <span id="badge-day-{{ $key }}" class="block text-[10.5px] font-semibold {{ $isDayEnabled ? 'text-emerald-700' : 'text-neutral-400' }}">
+                                        {{ $isDayEnabled ? 'Buka Operasional' : 'Libur / Tutup' }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div id="times-day-{{ $key }}" class="flex items-center gap-2 flex-1 sm:justify-end {{ $isDayEnabled ? '' : 'opacity-40 pointer-events-none' }}">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-[11px] text-apple-textSecondary font-medium">Mulai:</span>
+                                    <input type="time" name="business_hours[{{ $key }}][start]" value="{{ $startTime }}" class="text-[12px] font-mono px-2.5 py-1.5 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-1 focus:ring-amber-500 day-start-input" data-day="{{ $key }}">
+                                </div>
+                                <span class="text-apple-textTertiary text-[12px] font-bold">—</span>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-[11px] text-apple-textSecondary font-medium">Selesai:</span>
+                                    <input type="time" name="business_hours[{{ $key }}][end]" value="{{ $endTime }}" class="text-[12px] font-mono px-2.5 py-1.5 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-1 focus:ring-amber-500 day-end-input" data-day="{{ $key }}">
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- TAB 7: SOUND NOTIFICATION SETTINGS (AGENT & CUSTOMER)        -->
+        <!-- ============================================================ -->
+        <div id="tab-pane-sound" class="tab-pane flex flex-col gap-5" style="display: none;">
+            <input type="hidden" name="has_sound_settings_form" value="1">
+            <input type="hidden" name="has_widget_sound_settings_form" value="1">
+
+            <!-- Global Audio Settings Header Banner -->
+            <div class="bg-gradient-to-r from-rose-50 via-pink-50 to-purple-50 border border-rose-200/80 rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-600 text-white flex items-center justify-center shadow-rose-500/20 shadow-md shrink-0">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-[14.5px] font-bold text-apple-textPrimary">Pusat Pengaturan Suara Notifikasi (Audio Alert Hub)</h3>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">2 Jalur Mandiri</span>
+                        </div>
+                        <p class="text-[11.5px] text-apple-textSecondary mt-0.5">
+                            Atur suara peringatan untuk <strong>Staf CS (Notify Agent)</strong> saat ada tiket masuk, dan suara interaktif untuk <strong>Pengunjung Website (Notify Customer)</strong> saat menerima balasan di balon chat.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 self-start sm:self-auto shrink-0">
+                    <a href="#section-notify-agent" class="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-white border border-rose-200 text-rose-700 hover:bg-rose-50 transition shadow-2xs">
+                        🎧 1. Notify Agent
+                    </a>
+                    <a href="#section-notify-customer" class="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-white border border-purple-200 text-purple-700 hover:bg-purple-50 transition shadow-2xs">
+                        💬 2. Notify Customer
+                    </a>
+                </div>
+            </div>
+
+            <!-- ============================================================== -->
+            <!-- SECTION 1: NOTIFY AGENT (ADMIN & CS INBOX ALARM)               -->
+            <!-- ============================================================== -->
+            <div id="section-notify-agent" class="flex flex-col gap-4">
+                
+                <!-- Section 1 Header Badge -->
+                <div class="flex items-center justify-between pb-1 border-b border-rose-200/80">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-rose-600 text-white font-bold text-[11px] flex items-center justify-center">1</span>
+                        <h4 class="text-[14px] font-bold text-rose-950">NOTIFY AGENT: Alarm Notifikasi Staf CS (Admin Inbox)</h4>
+                    </div>
+                    <span class="text-[11px] font-semibold text-rose-600">Berdering saat customer mengirim pesan baru</span>
+                </div>
+
+                <!-- Master Toggle Card Agent -->
+                <div class="bg-white border border-apple-border rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-apple-border">
+                        <div class="flex items-start gap-3">
+                            <div class="w-9 h-9 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="text-[13.5px] font-bold text-apple-textPrimary">Aktivasi Alarm Pesan Masuk Staf CS</h4>
+                                <p class="text-[11.5px] text-apple-textSecondary mt-0.5">Bunyikan suara peringatan saat pengunjung mengirim chat baru ke inbox CS website ini.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3 bg-apple-canvas/70 px-3.5 py-1.5 rounded-lg border border-apple-border self-start sm:self-auto">
+                            <span id="soundToggleLabel" class="text-[12px] font-bold {{ $widgetSetting->sound_enabled ? 'text-rose-700' : 'text-neutral-500' }}">
+                                {{ $widgetSetting->sound_enabled ? 'Alarm CS Aktif (ON)' : 'Alarm CS Hening (MUTE)' }}
+                            </span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="checkboxSoundEnabled" name="sound_enabled" value="1" {{ $widgetSetting->sound_enabled ? 'checked' : '' }} onchange="toggleSoundSwitch(this)" class="sr-only peer">
+                                <div class="w-10 h-5 bg-neutral-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-600"></div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Info Banner Smart Auto-Mute -->
+                    <div class="p-3.5 rounded-xl bg-rose-50/70 border border-rose-200/80 text-[12px] text-rose-900 flex items-start gap-2.5 leading-relaxed">
+                        <span class="text-base shrink-0">💡</span>
+                        <div>
+                            <strong class="font-bold text-rose-950">Aturan Cerdas Pemutaran Suara CS:</strong>
+                            <ul class="list-disc list-inside mt-1 space-y-0.5 text-[11.5px] text-rose-800">
+                                <li>Jika pesan masuk dan <strong>tiket obrolan sedang dibuka aktif</strong> oleh CS di layar, suara akan <strong>otomatis mati/hening</strong> agar tidak mengganggu.</li>
+                                <li>Jika tiket pesan <strong>belum dibuka</strong> (atau CS sedang berada di tab/aplikasi lain), alarm suara akan <strong>berbunyi berulang-ulang</strong> selama batas durasi yang Anda tentukan di bawah, atau sampai CS membuka pesan tersebut.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Duration & Presets Card Agent -->
+                <div class="bg-white border border-apple-border rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-apple-border">
+                        <div>
+                            <h4 class="text-[13.5px] font-bold text-apple-textPrimary">Lama Waktu Suara Menyala (Durasi Alarm CS)</h4>
+                            <p class="text-[11px] text-apple-textSecondary mt-0.5">Berapa detik suara terus berdering jika pesan masuk belum dibuka oleh CS.</p>
+                        </div>
+
+                        <!-- Preset Duration Quick Buttons -->
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="text-[11px] text-apple-textTertiary mr-1">Preset Cepat:</span>
+                            <button type="button" onclick="setSoundDuration(5)" class="px-2.5 py-1 text-[11px] font-medium rounded-lg bg-apple-canvas hover:bg-apple-border/50 text-apple-textPrimary border border-apple-border transition cursor-pointer shadow-2xs">
+                                5 Detik
+                            </button>
+                            <button type="button" onclick="setSoundDuration(10)" class="px-2.5 py-1 text-[11px] font-medium rounded-lg bg-apple-canvas hover:bg-apple-border/50 text-apple-textPrimary border border-apple-border transition cursor-pointer shadow-2xs">
+                                10 Detik
+                            </button>
+                            <button type="button" onclick="setSoundDuration(15)" class="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition cursor-pointer shadow-2xs">
+                                ⭐ 15 Detik (Ideal)
+                            </button>
+                            <button type="button" onclick="setSoundDuration(30)" class="px-2.5 py-1 text-[11px] font-medium rounded-lg bg-apple-canvas hover:bg-apple-border/50 text-apple-textPrimary border border-apple-border transition cursor-pointer shadow-2xs">
+                                30 Detik
+                            </button>
+                            <button type="button" onclick="setSoundDuration(60)" class="px-2.5 py-1 text-[11px] font-medium rounded-lg bg-apple-canvas hover:bg-apple-border/50 text-apple-textPrimary border border-apple-border transition cursor-pointer shadow-2xs">
+                                60 Detik
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                        <div>
+                            <label class="block text-[11.5px] font-semibold text-apple-textPrimary mb-1">Durasi Menyala (Detik):</label>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="inputSoundDuration" name="sound_duration" value="{{ old('sound_duration', $widgetSetting->sound_duration ?: 15) }}" min="3" max="120" class="w-32 text-[13px] font-mono font-bold px-3 py-2 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500">
+                                <span class="text-[12px] font-semibold text-apple-textSecondary">Detik (Rentang: 3 - 120 detik)</span>
+                            </div>
+                            <p class="text-[10.5px] text-apple-textTertiary mt-1">Alarm otomatis berhenti setelah durasi ini berakhir jika pesan belum direspons.</p>
+                        </div>
+
+                        <div class="bg-apple-canvas/40 border border-apple-border rounded-xl p-3 flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 font-mono font-bold text-[12px]">
+                                ⏱️
+                            </div>
+                            <div class="text-[11.5px] text-apple-textSecondary leading-snug">
+                                Status aktif saat ini: <strong id="previewCurrentDurationLabel" class="text-rose-700 font-bold font-mono">{{ $widgetSetting->sound_duration ?: 15 }} Detik</strong> per notifikasi pesan masuk.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sound Preset Selection Card Agent -->
+                <div class="bg-white border border-apple-border rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col gap-4">
+                    <div class="pb-3 border-b border-apple-border">
+                        <h4 class="text-[13.5px] font-bold text-apple-textPrimary">Pilih Karakter &amp; Tipe Suara Alarm CS</h4>
+                        <p class="text-[11px] text-apple-textSecondary mt-0.5">Pilih preset efek suara peringatan CS atau unggah file audio khusus milik Anda.</p>
+                    </div>
+
+                    @php
+                        $currentSoundType = old('sound_type', $widgetSetting->sound_type ?: 'pedestrian');
+                    @endphp
+
+                    <!-- Sound Option Radio Cards Grid Agent -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <!-- Option 1: Pedestrian (Tot Tot) -->
+                        <label class="sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentSoundType === 'pedestrian' ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20' : 'border-apple-border hover:border-rose-300 bg-white' }}">
+                            <input type="radio" name="sound_type" value="pedestrian" {{ $currentSoundType === 'pedestrian' ? 'checked' : '' }} onchange="onSoundTypeChanged(this.value)" class="mt-1 text-rose-600 focus:ring-0">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-base">🚦</span>
+                                    <strong class="text-[13px] font-bold text-apple-textPrimary">Lampu Merah Penyeberangan</strong>
+                                    <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-amber-100 text-amber-800">"Tot-tot-tot"</span>
+                                </div>
+                                <p class="text-[11px] text-apple-textSecondary mt-1 leading-relaxed">
+                                    Suara akustik penyeberangan zebra cross dengan ketukan ritmis teratur dan frekuensi tinggi yang sangat mudah disadari.
+                                </p>
+                            </div>
+                        </label>
+
+                        <!-- Option 2: Ambulance (Ninu Ninu) -->
+                        <label class="sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentSoundType === 'ambulance' ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20' : 'border-apple-border hover:border-rose-300 bg-white' }}">
+                            <input type="radio" name="sound_type" value="ambulance" {{ $currentSoundType === 'ambulance' ? 'checked' : '' }} onchange="onSoundTypeChanged(this.value)" class="mt-1 text-rose-600 focus:ring-0">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-base">🚑</span>
+                                    <strong class="text-[13px] font-bold text-apple-textPrimary">Suara Ambulans</strong>
+                                    <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-rose-100 text-rose-800">"Ninu-ninu"</span>
+                                </div>
+                                <p class="text-[11px] text-apple-textSecondary mt-1 leading-relaxed">
+                                    Sirine dual-tone ambulans darurat (frekuensi ganda 960Hz / 770Hz) bergantian, sangat mencolok untuk situasi prioritas tinggi.
+                                </p>
+                            </div>
+                        </label>
+
+                        <!-- Option 3: Police / Mobil Dinas (Wut Wut) -->
+                        <label class="sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentSoundType === 'police' ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20' : 'border-apple-border hover:border-rose-300 bg-white' }}">
+                            <input type="radio" name="sound_type" value="police" {{ $currentSoundType === 'police' ? 'checked' : '' }} onchange="onSoundTypeChanged(this.value)" class="mt-1 text-rose-600 focus:ring-0">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-base">🚓</span>
+                                    <strong class="text-[13px] font-bold text-apple-textPrimary">Mobil Dinas / Patwal</strong>
+                                    <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-sky-100 text-sky-800">"Wut-wut"</span>
+                                </div>
+                                <p class="text-[11px] text-apple-textSecondary mt-1 leading-relaxed">
+                                    Suara sirine yelp mobil dinas pengawalan dengan frekuensi melengking cepat (sweep band-pass), terdengar energik dan tegas.
+                                </p>
+                            </div>
+                        </label>
+
+                        <!-- Option 4: Apple Harmonic Chime (Elegan) -->
+                        <label class="sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentSoundType === 'chime' ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20' : 'border-apple-border hover:border-rose-300 bg-white' }}">
+                            <input type="radio" name="sound_type" value="chime" {{ $currentSoundType === 'chime' ? 'checked' : '' }} onchange="onSoundTypeChanged(this.value)" class="mt-1 text-rose-600 focus:ring-0">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-base">🔔</span>
+                                    <strong class="text-[13px] font-bold text-apple-textPrimary">Apple Chime Harmonis</strong>
+                                    <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-emerald-100 text-emerald-800">Lembut &amp; Elegan</span>
+                                </div>
+                                <p class="text-[11px] text-apple-textSecondary mt-1 leading-relaxed">
+                                    Nada chime akustik bernuansa Apple iOS (E5 -> A5 glide + C#6 harmonic), nyaman di telinga dan cocok untuk kantor tenang.
+                                </p>
+                            </div>
+                        </label>
+
+                        <!-- Option 5: Custom Audio Upload Agent -->
+                        <label class="sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 md:col-span-2 {{ $currentSoundType === 'custom' ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20' : 'border-apple-border hover:border-rose-300 bg-white' }}">
+                            <input type="radio" name="sound_type" value="custom" {{ $currentSoundType === 'custom' ? 'checked' : '' }} onchange="onSoundTypeChanged(this.value)" class="mt-1 text-rose-600 focus:ring-0">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-base">📁</span>
+                                    <strong class="text-[13px] font-bold text-apple-textPrimary">Unggah File Audio Kustom CS (Upload Sound)</strong>
+                                    <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-purple-100 text-purple-800">MP3 / WAV / OGG</span>
+                                </div>
+                                <p class="text-[11px] text-apple-textSecondary mt-1 leading-relaxed">
+                                    Gunakan rekaman bel pintu khusus, ringtone WAV/MP3, atau efek suara perusahaan Anda sendiri untuk alarm CS (Maksimal 3MB).
+                                </p>
+
+                                <div id="containerCustomSoundUpload" class="mt-3 pt-3 border-t border-apple-border/70 flex flex-col sm:flex-row sm:items-center gap-3 {{ $currentSoundType === 'custom' ? '' : 'hidden' }}">
+                                    <div class="flex-1">
+                                        <label class="block text-[10.5px] font-semibold text-apple-textSecondary mb-1">Pilih File Audio (MP3 / WAV / OGG):</label>
+                                        <input type="file" id="inputCustomSoundFile" name="sound_custom_file" accept=".mp3,.wav,.ogg,audio/*" onchange="onCustomFileSelected(this)" class="w-full text-[11.5px] text-apple-textSecondary file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11.5px] file:font-semibold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100 cursor-pointer">
+                                    </div>
+
+                                    @if(!empty($widgetSetting->sound_custom_url))
+                                        <div class="sm:w-64 bg-white p-2 rounded-lg border border-apple-border flex flex-col gap-1">
+                                            <span class="text-[10px] font-bold text-emerald-700 flex items-center gap-1">
+                                                ✓ Audio Kustom CS Tersimpan
+                                            </span>
+                                            <audio id="existingCustomAudioEl" controls class="w-full h-7">
+                                                <source src="{{ $widgetSetting->sound_custom_url }}" type="audio/mpeg">
+                                            </audio>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Live Test Controller Card Agent -->
+                <div class="bg-white border border-apple-border rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white flex items-center justify-center shadow-rose-500/20 shadow-lg shrink-0">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="text-[13.5px] font-bold text-apple-textPrimary">Uji Coba Alarm CS (Live Test Agent)</h4>
+                            <p class="text-[11px] text-apple-textSecondary mt-0.5">Dengarkan suara alarm CS sesuai durasi waktu yang sudah ditentukan di atas.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2.5 shrink-0">
+                        <button type="button" id="btnTestPlaySound" onclick="testPlayCurrentSound()" class="inline-flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg text-[12px] font-semibold transition shadow-apple-sm cursor-pointer">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                            <span>▶ Putar Alarm CS</span>
+                        </button>
+
+                        <button type="button" id="btnTestStopSound" onclick="testStopCurrentSound()" disabled class="inline-flex items-center gap-2 bg-neutral-200 text-neutral-400 px-3.5 py-2 rounded-lg text-[12px] font-semibold transition cursor-not-allowed">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                <rect x="6" y="6" width="12" height="12" rx="2"></rect>
+                            </svg>
+                            <span>⏹ Hentikan (Stop)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Testing Status Active Banner Agent -->
+                <div id="bannerSoundTestingStatus" class="hidden p-3.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-md flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <span class="w-3 h-3 rounded-full bg-white animate-ping"></span>
+                        <span class="text-[12.5px] font-bold">
+                            🔊 Sedang Memutar Uji Coba Alarm CS: <span id="labelTestingCountdown" class="font-mono text-amber-200">15</span> detik tersisa...
+                        </span>
+                    </div>
+                    <button type="button" onclick="testStopCurrentSound()" class="px-2.5 py-1 rounded bg-white/20 hover:bg-white/30 text-white text-[11px] font-bold cursor-pointer transition">
+                        Hentikan Sekarang ✕
+                    </button>
+                </div>
+            </div>
+
+            <!-- ============================================================== -->
+            <!-- SECTION 2: NOTIFY CUSTOMER (WEBSITE BUBBLE CHAT SOUND)         -->
+            <!-- ============================================================== -->
+            <div id="section-notify-customer" class="flex flex-col gap-4 pt-4 border-t-2 border-dashed border-apple-border">
+                
+                <!-- Section 2 Header Badge -->
+                <div class="flex items-center justify-between pb-1 border-b border-purple-200/80">
+                    <div class="flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-purple-600 text-white font-bold text-[11px] flex items-center justify-center">2</span>
+                        <h4 class="text-[14px] font-bold text-purple-950">NOTIFY CUSTOMER: Suara Balasan Bubble Chat (Pengunjung Website)</h4>
+                    </div>
+                    <span class="text-[11px] font-semibold text-purple-600">Berbunyi 1x saat pengunjung menerima balasan chat</span>
+                </div>
+
+                <!-- Master Toggle Card Customer -->
+                <div class="bg-white border border-apple-border rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-apple-border">
+                        <div class="flex items-start gap-3">
+                            <div class="w-9 h-9 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="text-[13.5px] font-bold text-apple-textPrimary">Aktivasi Suara Notifikasi Bubble Chat Pengunjung</h4>
+                                <p class="text-[11.5px] text-apple-textSecondary mt-0.5">Bunyikan efek suara halus 1x ketika pengunjung menerima respon balasan dari Staf CS atau Bot di widget website.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3 bg-apple-canvas/70 px-3.5 py-1.5 rounded-lg border border-apple-border self-start sm:self-auto">
+                            <span id="widgetSoundToggleLabel" class="text-[12px] font-bold {{ ($widgetSetting->widget_sound_enabled ?? true) ? 'text-purple-700' : 'text-neutral-500' }}">
+                                {{ ($widgetSetting->widget_sound_enabled ?? true) ? 'Suara Bubble ON' : 'Suara Bubble MUTE' }}
+                            </span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="checkboxWidgetSoundEnabled" name="widget_sound_enabled" value="1" {{ ($widgetSetting->widget_sound_enabled ?? true) ? 'checked' : '' }} onchange="toggleWidgetSoundSwitch(this)" class="sr-only peer">
+                                <div class="w-10 h-5 bg-neutral-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-xl bg-purple-50/70 border border-purple-200/80 text-[12px] text-purple-900 flex items-start gap-2.5 leading-relaxed">
+                        <span class="text-base shrink-0">✨</span>
+                        <div>
+                            <strong class="font-bold text-purple-950">Kenyamanan Pengunjung:</strong>
+                            <p class="mt-0.5 text-[11.5px] text-purple-800">
+                                Suara notifikasi customer diputar sekilas (0.1 - 0.4 detik) hanya saat ada pesan baru dari pihak CS/Bot. Ini memastikan pengunjung yang sedang melihat tab lain di browser segera mengetahui bahwa chat mereka telah dibalas.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sound Preset Selection Card Customer -->
+                <div class="bg-white border border-apple-border rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col gap-4">
+                    <div class="pb-3 border-b border-apple-border">
+                        <h4 class="text-[13.5px] font-bold text-apple-textPrimary">Pilih Karakter Suara Bubble Chat Pengunjung</h4>
+                        <p class="text-[11px] text-apple-textSecondary mt-0.5">Pilih salah satu dari 4 efek suara sintetis web audio berkelas, atau unggah nada sapaan khusus.</p>
+                    </div>
+
+                    @php
+                        $currentWidgetSoundType = old('widget_sound_type', $widgetSetting->widget_sound_type ?: 'chime');
+                    @endphp
+
+                    <!-- Sound Option Radio Cards Grid Customer -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <!-- Option 1: Apple Harmonic Chime (Default) -->
+                        <label class="widget-sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentWidgetSoundType === 'chime' ? 'border-purple-500 bg-purple-50/30 ring-2 ring-purple-500/20' : 'border-apple-border hover:border-purple-300 bg-white' }}">
+                            <input type="radio" name="widget_sound_type" value="chime" {{ $currentWidgetSoundType === 'chime' ? 'checked' : '' }} onchange="onWidgetSoundTypeChanged(this.value)" class="mt-1 text-purple-600 focus:ring-0">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-base">🔔</span>
+                                    <strong class="text-[13px] font-bold text-apple-textPrimary">Apple Chime Harmonis</strong>
+                                    <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-purple-100 text-purple-800">Default &bull; Elegan</span>
+                                </div>
+                                <p class="text-[11px] text-apple-textSecondary mt-1 leading-relaxed">
+                                    Nada glide E5 &rarr; A5 khas perangkat modern iOS, terasa sangat lembut, profesional, dan menyejukkan.
+                                </p>
+                            </div>
+                        </label>
+
+                        <!-- Option 2: Aquatic Bubble Pop -->
+                        <label class="widget-sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentWidgetSoundType === 'pop' ? 'border-purple-500 bg-purple-50/30 ring-2 ring-purple-500/20' : 'border-apple-border hover:border-purple-300 bg-white' }}">
+                            <input type="radio" name="widget_sound_type" value="pop" {{ $currentWidgetSoundType === 'pop' ? 'checked' : '' }} onchange="onWidgetSoundTypeChanged(this.value)" class="mt-1 text-purple-600 focus:ring-0">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-base">🫧</span>
+                                    <strong class="text-[13px] font-bold text-apple-textPrimary">Aquatic Bubble Pop</strong>
+                                    <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-sky-100 text-sky-800">"Pop!" Renyah</span>
+                                </div>
+                                <p class="text-[11px] text-apple-textSecondary mt-1 leading-relaxed">
+                                    Letupan gelembung air instan berdurasi 0.08 detik. Segar, ramah, dan sangat pas untuk antarmuka chat modern.
+                                </p>
+                            </div>
+                        </label>
+
+                        <!-- Option 3: Crystal Ding Bell -->
+                        <label class="widget-sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentWidgetSoundType === 'ding' ? 'border-purple-500 bg-purple-50/30 ring-2 ring-purple-500/20' : 'border-apple-border hover:border-purple-300 bg-white' }}">
+                            <input type="radio" name="widget_sound_type" value="ding" {{ $currentWidgetSoundType === 'ding' ? 'checked' : '' }} onchange="onWidgetSoundTypeChanged(this.value)" class="mt-1 text-purple-600 focus:ring-0">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-base">🛎️</span>
+                                    <strong class="text-[13px] font-bold text-apple-textPrimary">Crystal Reception Ding</strong>
+                                    <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-amber-100 text-amber-800">"Ting!" Jernih</span>
+                                </div>
+                                <p class="text-[11px] text-apple-textSecondary mt-1 leading-relaxed">
+                                    Lonceng meja resepsionis kristal dengan resonansi harmonik murni (1318Hz), memberi kesan pelayanan premium.
+                                </p>
+                            </div>
+                        </label>
+
+                        <!-- Option 4: Melodic Marimba -->
+                        <label class="widget-sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentWidgetSoundType === 'marimba' ? 'border-purple-500 bg-purple-50/30 ring-2 ring-purple-500/20' : 'border-apple-border hover:border-purple-300 bg-white' }}">
+                            <input type="radio" name="widget_sound_type" value="marimba" {{ $currentWidgetSoundType === 'marimba' ? 'checked' : '' }} onchange="onWidgetSoundTypeChanged(this.value)" class="mt-1 text-purple-600 focus:ring-0">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-base">🎶</span>
+                                    <strong class="text-[13px] font-bold text-apple-textPrimary">Melodic Marimba Chord</strong>
+                                    <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-emerald-100 text-emerald-800">3-Nada Ceria</span>
+                                </div>
+                                <p class="text-[11px] text-apple-textSecondary mt-1 leading-relaxed">
+                                    Ketukan marimba kayu naik 3 nada cepat (C6 - E6 - G6), memberi nuansa hangat, ceria, dan bersahabat bagi customer.
+                                </p>
+                            </div>
+                        </label>
+
+                        <!-- Option 5: Custom Audio Upload Customer -->
+                        <label class="widget-sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 md:col-span-2 {{ $currentWidgetSoundType === 'custom' ? 'border-purple-500 bg-purple-50/30 ring-2 ring-purple-500/20' : 'border-apple-border hover:border-purple-300 bg-white' }}">
+                            <input type="radio" name="widget_sound_type" value="custom" {{ $currentWidgetSoundType === 'custom' ? 'checked' : '' }} onchange="onWidgetSoundTypeChanged(this.value)" class="mt-1 text-purple-600 focus:ring-0">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-base">📁</span>
+                                    <strong class="text-[13px] font-bold text-apple-textPrimary">Unggah Audio Kustom Pengunjung (Upload Customer Sound)</strong>
+                                    <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-violet-100 text-violet-800">MP3 / WAV / OGG</span>
+                                </div>
+                                <p class="text-[11px] text-apple-textSecondary mt-1 leading-relaxed">
+                                    Gunakan sound effect khas brand Anda sendiri untuk diputar saat customer menerima balasan (Maksimal 3MB).
+                                </p>
+
+                                <div id="containerWidgetCustomSoundUpload" class="mt-3 pt-3 border-t border-apple-border/70 flex flex-col sm:flex-row sm:items-center gap-3 {{ $currentWidgetSoundType === 'custom' ? '' : 'hidden' }}">
+                                    <div class="flex-1">
+                                        <label class="block text-[10.5px] font-semibold text-apple-textSecondary mb-1">Pilih File Audio Pengunjung (MP3 / WAV / OGG):</label>
+                                        <input type="file" id="inputWidgetCustomSoundFile" name="widget_sound_custom_file" accept=".mp3,.wav,.ogg,audio/*" onchange="onWidgetCustomFileSelected(this)" class="w-full text-[11.5px] text-apple-textSecondary file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11.5px] file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 cursor-pointer">
+                                    </div>
+
+                                    @if(!empty($widgetSetting->widget_sound_custom_url))
+                                        <div class="sm:w-64 bg-white p-2 rounded-lg border border-apple-border flex flex-col gap-1">
+                                            <span class="text-[10px] font-bold text-emerald-700 flex items-center gap-1">
+                                                ✓ Audio Kustom Pengunjung Tersimpan
+                                            </span>
+                                            <audio id="existingWidgetCustomAudioEl" controls class="w-full h-7">
+                                                <source src="{{ $widgetSetting->widget_sound_custom_url }}" type="audio/mpeg">
+                                            </audio>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Live Test Controller Card Customer -->
+                <div class="bg-white border border-apple-border rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-purple-500/20 shadow-lg shrink-0">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="text-[13.5px] font-bold text-apple-textPrimary">Uji Coba Suara Balasan Customer (Live Test Customer)</h4>
+                            <p class="text-[11px] text-apple-textSecondary mt-0.5">Dengarkan efek suara yang akan didengar oleh pengunjung website saat menerima balasan chat.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2.5 shrink-0">
+                        <button type="button" id="btnTestPlayWidgetSound" onclick="testPlayCurrentWidgetSound()" class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-[12px] font-semibold transition shadow-apple-sm cursor-pointer">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                            <span>▶ Putar Suara Customer</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
     </form>
 </div>
 
@@ -854,6 +1519,8 @@ let draggedNodeId = null;
 const PLATFORM_OPTIONS = [
     { value: 'whatsapp', name: 'WhatsApp', placeholder: '08123456789 atau https://wa.me/...', badgeClass: 'bg-emerald-100 text-emerald-800' },
     { value: 'instagram', name: 'Instagram', placeholder: '@username atau https://instagram.com/...', badgeClass: 'bg-pink-100 text-pink-800' },
+    { value: 'threads', name: 'Threads', placeholder: '@username atau https://threads.net/@...', badgeClass: 'bg-neutral-900 text-white' },
+    { value: 'x', name: 'X (Twitter)', placeholder: '@username atau https://x.com/...', badgeClass: 'bg-neutral-900 text-white' },
     { value: 'facebook', name: 'Facebook', placeholder: 'username atau https://facebook.com/...', badgeClass: 'bg-blue-100 text-blue-800' },
     { value: 'tiktok', name: 'TikTok', placeholder: '@username atau https://tiktok.com/@...', badgeClass: 'bg-neutral-900 text-white' },
     { value: 'youtube', name: 'YouTube', placeholder: '@channel atau https://youtube.com/@...', badgeClass: 'bg-red-100 text-red-800' },
@@ -866,6 +1533,9 @@ const PLATFORM_OPTIONS = [
 const BRAND_ICONS_SVG = {
     whatsapp: `<svg class="w-4 h-4 text-[#25D366]" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24zm4.52 11.53c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.03-1.25-.75-.67-1.26-1.5-1.41-1.75-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.44.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.15-1.18-.07-.12-.23-.19-.48-.32z"/></svg>`,
     instagram: `<svg class="w-4 h-4 text-[#E1306C]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>`,
+    threads: `<svg class="w-4 h-4 text-neutral-900" viewBox="0 0 24 24" fill="currentColor"><path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017C1.5 8.418 2.35 5.564 3.995 3.516 5.845 1.211 8.598.03 12.179.006h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.592 12c.024 3.088.715 5.5 2.054 7.164 1.43 1.778 3.63 2.691 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.34-.779-.963-1.4-1.785-1.816a9.93 9.93 0 0 1-.367 2.36c-.495 1.595-1.4 2.726-2.614 3.266-.966.43-2.11.5-3.201.198-1.266-.35-2.297-1.163-2.903-2.292-.507-.943-.726-2.12-.617-3.312.2-2.193 1.567-3.882 3.76-4.642.89-.309 1.832-.416 2.77-.37a9.04 9.04 0 0 1 1.588.191c-.07-.48-.172-.94-.32-1.37-.483-1.397-1.378-2.2-2.658-2.39-1.12-.166-2.24.092-3.138.725l-1.17-1.638c1.258-.886 2.77-1.27 4.278-1.07 1.944.258 3.382 1.452 4.086 3.39.258.71.42 1.5.487 2.37.654.265 1.238.595 1.74.997 1.176.94 1.926 2.277 2.17 3.868.335 2.18-.263 4.585-1.734 6.395C18.6 22.465 15.847 23.977 12.186 24zM10.57 14.545c-.076.835.06 1.576.383 2.177.382.71 1.003 1.175 1.747 1.381.672.186 1.378.14 1.978-.127.777-.345 1.383-1.117 1.748-2.29.265-.854.374-1.79.326-2.678-.94-.31-1.96-.416-2.96-.316-1.578.184-2.838 1.07-2.986 2.553l-.004.044-.002.024-.002.017.005-.037-.002.015-.002.015.002-.015z"/></svg>`,
+    x: `<svg class="w-4 h-4 text-neutral-900" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
+    twitter: `<svg class="w-4 h-4 text-neutral-900" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
     facebook: `<svg class="w-4 h-4 text-[#1877F2]" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`,
     messenger: `<svg class="w-4 h-4 text-[#1877F2]" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`,
     tiktok: `<svg class="w-4 h-4 text-neutral-900" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg>`,
@@ -892,7 +1562,7 @@ function getSocialPreviewIconHtml(chan, platform) {
 
 // 1. Tab Switching Function (Zero dependencies, Bulletproof inline display toggle)
 function switchDetailTab(tabName) {
-    const tabs = ['bot', 'appearance', 'social', 'embed', 'telegram'];
+    const tabs = ['bot', 'appearance', 'social', 'embed', 'telegram', 'hours', 'sound'];
     
     tabs.forEach(t => {
         const pane = document.getElementById('tab-pane-' + t);
@@ -908,6 +1578,10 @@ function switchDetailTab(tabName) {
                     btn.className = 'tab-btn shrink-0 whitespace-nowrap px-3.5 py-2 rounded-lg text-[12px] font-semibold transition flex items-center gap-2 bg-purple-600 text-white shadow-2xs cursor-pointer';
                 } else if (t === 'telegram') {
                     btn.className = 'tab-btn shrink-0 whitespace-nowrap px-3.5 py-2 rounded-lg text-[12px] font-semibold transition flex items-center gap-2 bg-sky-600 text-white shadow-2xs cursor-pointer';
+                } else if (t === 'hours') {
+                    btn.className = 'tab-btn shrink-0 whitespace-nowrap px-3.5 py-2 rounded-lg text-[12px] font-semibold transition flex items-center gap-2 bg-amber-600 text-white shadow-2xs cursor-pointer';
+                } else if (t === 'sound') {
+                    btn.className = 'tab-btn shrink-0 whitespace-nowrap px-3.5 py-2 rounded-lg text-[12px] font-semibold transition flex items-center gap-2 bg-rose-600 text-white shadow-2xs cursor-pointer';
                 } else {
                     btn.className = 'tab-btn shrink-0 whitespace-nowrap px-3.5 py-2 rounded-lg text-[12px] font-semibold transition flex items-center gap-2 bg-apple-blue text-white shadow-2xs cursor-pointer';
                 }
@@ -916,6 +1590,326 @@ function switchDetailTab(tabName) {
             }
         }
     });
+}
+
+// 1.05 Sound Alert Configuration Helpers
+let testSoundTimer = null;
+let testSoundCountdownInterval = null;
+
+function toggleSoundSwitch(checkbox) {
+    const isChecked = checkbox.checked;
+    const label = document.getElementById('soundToggleLabel');
+    const badgeTab = document.getElementById('badgeTabSoundStatus');
+    const duration = document.getElementById('inputSoundDuration')?.value || 15;
+
+    if (label) {
+        label.innerText = isChecked ? 'Suara Aktif (ON)' : 'Suara Hening (MUTE)';
+        label.className = 'text-[12px] font-bold ' + (isChecked ? 'text-rose-700' : 'text-neutral-500');
+    }
+    if (badgeTab) {
+        badgeTab.innerText = isChecked ? (duration + 's') : 'Mute';
+        badgeTab.className = 'px-1.5 py-0.2 rounded-full text-[10px] font-bold ' + (isChecked ? 'bg-rose-100 text-rose-800' : 'bg-neutral-100 text-neutral-600');
+    }
+}
+
+function setSoundDuration(sec) {
+    const input = document.getElementById('inputSoundDuration');
+    const preview = document.getElementById('previewCurrentDurationLabel');
+    const badgeTab = document.getElementById('badgeTabSoundStatus');
+    const isMasterOn = document.getElementById('checkboxSoundEnabled')?.checked;
+
+    if (input) input.value = sec;
+    if (preview) preview.innerText = sec + ' Detik';
+    if (badgeTab && isMasterOn) badgeTab.innerText = sec + 's';
+}
+
+document.getElementById('inputSoundDuration')?.addEventListener('input', function() {
+    let val = parseInt(this.value, 10);
+    if (isNaN(val) || val < 1) val = 1;
+    const preview = document.getElementById('previewCurrentDurationLabel');
+    const badgeTab = document.getElementById('badgeTabSoundStatus');
+    const isMasterOn = document.getElementById('checkboxSoundEnabled')?.checked;
+
+    if (preview) preview.innerText = val + ' Detik';
+    if (badgeTab && isMasterOn) badgeTab.innerText = val + 's';
+});
+
+function onSoundTypeChanged(selectedType) {
+    const containerUpload = document.getElementById('containerCustomSoundUpload');
+    if (containerUpload) {
+        if (selectedType === 'custom') {
+            containerUpload.classList.remove('hidden');
+        } else {
+            containerUpload.classList.add('hidden');
+        }
+    }
+    updateSoundOptionCardsHighlight(selectedType);
+}
+
+function updateSoundOptionCardsHighlight(activeType) {
+    document.querySelectorAll('.sound-option-card').forEach(card => {
+        const radio = card.querySelector('input[type="radio"]');
+        if (radio && radio.value === activeType) {
+            card.className = 'sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20' + (activeType === 'custom' ? ' md:col-span-2' : '');
+        } else {
+            card.className = 'sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 border-apple-border hover:border-rose-300 bg-white' + (card.querySelector('input[value="custom"]') ? ' md:col-span-2' : '');
+        }
+    });
+}
+
+function onCustomFileSelected(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const blobUrl = URL.createObjectURL(file);
+        window._pendingCustomSoundBlobUrl = blobUrl;
+    }
+}
+
+function testPlayCurrentSound() {
+    testStopCurrentSound();
+
+    const selectedRadio = document.querySelector('input[name="sound_type"]:checked');
+    const soundType = selectedRadio ? selectedRadio.value : 'pedestrian';
+    let duration = parseInt(document.getElementById('inputSoundDuration')?.value, 10);
+    if (isNaN(duration) || duration < 1) duration = 15;
+
+    let customUrl = null;
+    if (soundType === 'custom') {
+        customUrl = window._pendingCustomSoundBlobUrl || @json($widgetSetting->sound_custom_url ?? null);
+    }
+
+    if (!window.BeanTalkAudio) {
+        alert('Modul audio BeanTalk belum dimuat. Silakan refresh halaman.');
+        return;
+    }
+
+    const btnPlay = document.getElementById('btnTestPlaySound');
+    const btnStop = document.getElementById('btnTestStopSound');
+    const banner = document.getElementById('bannerSoundTestingStatus');
+    const labelCountdown = document.getElementById('labelTestingCountdown');
+
+    if (btnPlay) {
+        btnPlay.disabled = true;
+        btnPlay.classList.add('opacity-50', 'pointer-events-none');
+    }
+    if (btnStop) {
+        btnStop.disabled = false;
+        btnStop.className = 'inline-flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-2 rounded-lg text-[12px] font-semibold transition cursor-pointer shadow-apple-sm';
+    }
+    if (banner) {
+        banner.classList.remove('hidden');
+    }
+
+    let remainingSeconds = duration;
+    if (labelCountdown) labelCountdown.innerText = remainingSeconds;
+
+    testSoundCountdownInterval = setInterval(() => {
+        remainingSeconds -= 1;
+        if (labelCountdown) labelCountdown.innerText = remainingSeconds;
+        if (remainingSeconds <= 0) {
+            testStopCurrentSound();
+        }
+    }, 1000);
+
+    window.BeanTalkAudio.play(soundType, duration, customUrl);
+
+    testSoundTimer = setTimeout(() => {
+        testStopCurrentSound();
+    }, duration * 1000);
+}
+
+function testStopCurrentSound() {
+    if (testSoundTimer) {
+        clearTimeout(testSoundTimer);
+        testSoundTimer = null;
+    }
+    if (testSoundCountdownInterval) {
+        clearInterval(testSoundCountdownInterval);
+        testSoundCountdownInterval = null;
+    }
+
+    if (window.BeanTalkAudio) {
+        window.BeanTalkAudio.stop();
+    }
+
+    const btnPlay = document.getElementById('btnTestPlaySound');
+    const btnStop = document.getElementById('btnTestStopSound');
+    const banner = document.getElementById('bannerSoundTestingStatus');
+
+    if (btnPlay) {
+        btnPlay.disabled = false;
+        btnPlay.classList.remove('opacity-50', 'pointer-events-none');
+    }
+    if (btnStop) {
+        btnStop.disabled = true;
+        btnStop.className = 'inline-flex items-center gap-2 bg-neutral-200 text-neutral-400 px-3.5 py-2 rounded-lg text-[12px] font-semibold transition cursor-not-allowed';
+    }
+    if (banner) {
+        banner.classList.add('hidden');
+    }
+}
+
+// 1.06 Customer Bubble Chat Sound Helpers
+function toggleWidgetSoundSwitch(checkbox) {
+    const isChecked = checkbox.checked;
+    const label = document.getElementById('widgetSoundToggleLabel');
+    const badgeTab = document.getElementById('badgeTabSoundStatus');
+    const agentDuration = document.getElementById('inputSoundDuration')?.value || 15;
+    const isAgentOn = document.getElementById('checkboxSoundEnabled')?.checked;
+
+    if (label) {
+        label.innerText = isChecked ? 'Suara Bubble ON' : 'Suara Bubble MUTE';
+        label.className = 'text-[12px] font-bold ' + (isChecked ? 'text-purple-700' : 'text-neutral-500');
+    }
+    if (badgeTab) {
+        const agentTxt = isAgentOn ? (agentDuration + 's') : 'Mute';
+        const custTxt = isChecked ? 'ON' : 'OFF';
+        badgeTab.innerText = `Agent: ${agentTxt} • Cust: ${custTxt}`;
+    }
+}
+
+function onWidgetSoundTypeChanged(selectedType) {
+    const containerUpload = document.getElementById('containerWidgetCustomSoundUpload');
+    if (containerUpload) {
+        if (selectedType === 'custom') {
+            containerUpload.classList.remove('hidden');
+        } else {
+            containerUpload.classList.add('hidden');
+        }
+    }
+    updateWidgetSoundOptionCardsHighlight(selectedType);
+}
+
+function updateWidgetSoundOptionCardsHighlight(activeType) {
+    document.querySelectorAll('.widget-sound-option-card').forEach(card => {
+        const radio = card.querySelector('input[type="radio"]');
+        if (radio && radio.value === activeType) {
+            card.className = 'widget-sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 border-purple-500 bg-purple-50/30 ring-2 ring-purple-500/20' + (activeType === 'custom' ? ' md:col-span-2' : '');
+        } else {
+            card.className = 'widget-sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 border-apple-border hover:border-purple-300 bg-white' + (card.querySelector('input[value="custom"]') ? ' md:col-span-2' : '');
+        }
+    });
+}
+
+function onWidgetCustomFileSelected(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const blobUrl = URL.createObjectURL(file);
+        window._pendingWidgetCustomSoundBlobUrl = blobUrl;
+    }
+}
+
+function testPlayCurrentWidgetSound() {
+    const selectedRadio = document.querySelector('input[name="widget_sound_type"]:checked');
+    const soundType = selectedRadio ? selectedRadio.value : 'chime';
+
+    let customUrl = null;
+    if (soundType === 'custom') {
+        customUrl = window._pendingWidgetCustomSoundBlobUrl || @json($widgetSetting->widget_sound_custom_url ?? null);
+    }
+
+    if (!window.BeanTalkAudio || typeof window.BeanTalkAudio.playVisitorSound !== 'function') {
+        alert('Modul audio BeanTalk belum siap. Silakan refresh halaman.');
+        return;
+    }
+
+    const btnPlay = document.getElementById('btnTestPlayWidgetSound');
+    if (btnPlay) {
+        const origHtml = btnPlay.innerHTML;
+        btnPlay.innerHTML = `
+            <span class="w-2.5 h-2.5 rounded-full bg-white animate-ping"></span>
+            <span>Memutar Suara Customer...</span>
+        `;
+        btnPlay.classList.add('opacity-90');
+        setTimeout(() => {
+            btnPlay.innerHTML = origHtml;
+            btnPlay.classList.remove('opacity-90');
+        }, 800);
+    }
+
+    window.BeanTalkAudio.playVisitorSound(soundType, customUrl);
+}
+
+// 1.1 Business Hours Toggle & Day Row Controls
+function toggleHoursSwitch(checkbox) {
+    const isChecked = checkbox.checked;
+    const label = document.getElementById('hoursToggleLabel');
+    const badgeTab = document.getElementById('badgeTabHoursStatus');
+    const badgeHeader = document.getElementById('badgeHeaderHoursStatus');
+
+    if (label) {
+        label.innerText = isChecked ? 'Jam Kerja Aktif (ON)' : 'Jam Kerja Nonaktif (24/7 Selalu Buka)';
+        label.className = 'text-[12px] font-bold ' + (isChecked ? 'text-amber-700' : 'text-neutral-500');
+    }
+    if (badgeTab) {
+        badgeTab.innerText = isChecked ? 'Aktif' : '24/7';
+        badgeTab.className = 'px-1.5 py-0.2 rounded-full text-[10px] font-bold ' + (isChecked ? 'bg-amber-100 text-amber-800' : 'bg-neutral-100 text-neutral-600');
+    }
+    if (badgeHeader) {
+        badgeHeader.innerText = isChecked ? '⏰ Jam Kerja: Aktif' : '⏰ Jam Kerja: 24/7';
+        badgeHeader.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-semibold ' + (isChecked ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-neutral-100 text-neutral-600 border border-neutral-200');
+    }
+}
+
+function toggleDayRow(dayKey, isChecked) {
+    const badge = document.getElementById('badge-day-' + dayKey);
+    const times = document.getElementById('times-day-' + dayKey);
+    const row = document.getElementById('row-day-' + dayKey);
+
+    if (badge) {
+        badge.innerText = isChecked ? 'Buka Operasional' : 'Libur / Tutup';
+        badge.className = 'block text-[10.5px] font-semibold ' + (isChecked ? 'text-emerald-700' : 'text-neutral-400');
+    }
+    if (times) {
+        if (isChecked) {
+            times.classList.remove('opacity-40', 'pointer-events-none');
+        } else {
+            times.classList.add('opacity-40', 'pointer-events-none');
+        }
+    }
+    if (row) {
+        if (isChecked) {
+            row.className = 'p-3 rounded-xl border transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border-apple-border';
+        } else {
+            row.className = 'p-3 rounded-xl border transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-neutral-50/70 border-neutral-200';
+        }
+    }
+}
+
+function applyHoursPreset(preset) {
+    const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    days.forEach(d => {
+        const checkbox = document.querySelector(`.day-checkbox[data-day="${d}"]`);
+        const startInput = document.querySelector(`.day-start-input[data-day="${d}"]`);
+        const endInput = document.querySelector(`.day-end-input[data-day="${d}"]`);
+
+        if (!checkbox || !startInput || !endInput) return;
+
+        if (preset === 'office') {
+            const isWorkday = (d !== 'sat' && d !== 'sun');
+            checkbox.checked = isWorkday;
+            startInput.value = '08:00';
+            endInput.value = '17:00';
+            toggleDayRow(d, isWorkday);
+        } else if (preset === 'retail') {
+            const isWorkday = (d !== 'sun');
+            checkbox.checked = isWorkday;
+            startInput.value = '09:00';
+            endInput.value = '21:00';
+            toggleDayRow(d, isWorkday);
+        } else if (preset === 'always') {
+            checkbox.checked = true;
+            startInput.value = '00:00';
+            endInput.value = '23:59';
+            toggleDayRow(d, true);
+        }
+    });
+
+    const masterCheckbox = document.getElementById('checkboxHoursEnabled');
+    if (masterCheckbox && !masterCheckbox.checked) {
+        masterCheckbox.checked = true;
+        toggleHoursSwitch(masterCheckbox);
+    }
 }
 
 // Telegram Test Connection Helper

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Project;
+use App\Services\BusinessHoursService;
 use App\Services\ConversationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -11,10 +12,12 @@ use Illuminate\Support\Str;
 class SessionController extends Controller
 {
     protected $conversationService;
+    protected $businessHoursService;
 
-    public function __construct(ConversationService $conversationService)
+    public function __construct(ConversationService $conversationService, BusinessHoursService $businessHoursService)
     {
         $this->conversationService = $conversationService;
+        $this->businessHoursService = $businessHoursService;
     }
 
     /**
@@ -26,6 +29,7 @@ class SessionController extends Controller
         $request->validate([
             'visitor_uuid' => 'nullable|string|max:36',
             'name'         => 'nullable|string|max:100',
+            'email'        => 'nullable|email|max:255',
             'page_url'     => 'nullable|string|max:500',
             'page_title'   => 'nullable|string|max:255',
         ]);
@@ -42,7 +46,8 @@ class SessionController extends Controller
             $visitorUuid,
             $request->ip(),
             $request->userAgent(),
-            $request->input('name')
+            $request->input('name'),
+            $request->input('email')
         );
 
         // 3. Resolve active conversation ONLY if one already exists with messages and is active
@@ -68,6 +73,24 @@ class SessionController extends Controller
 
         $conversationData = null;
         if ($conversation) {
+            $recentMessages = $conversation->messages()
+                ->orderBy('id', 'asc')
+                ->take(100)
+                ->get()
+                ->map(function ($msg) {
+                    return [
+                        'id'                => $msg->id,
+                        'client_message_id' => $msg->client_message_id,
+                        'sender_type'       => $msg->sender_type,
+                        'sender_name'       => $msg->sender_name,
+                        'content'           => $msg->content,
+                        'content_type'      => $msg->content_type,
+                        'metadata'          => $msg->metadata,
+                        'status'            => $msg->status,
+                        'created_at'        => $msg->created_at ? $msg->created_at->toIso8601String() : null,
+                    ];
+                });
+
             $conversationData = [
                 'id'                  => $conversation->id,
                 'status'              => $conversation->status,
@@ -75,6 +98,7 @@ class SessionController extends Controller
                 'channel_label'       => $conversation->channel_label,
                 'last_message_at'     => $conversation->last_message_at ? $conversation->last_message_at->toIso8601String() : null,
                 'unread_visitor_count'=> $conversation->unread_visitor_count,
+                'messages'            => $recentMessages,
             ];
         }
 
@@ -84,6 +108,7 @@ class SessionController extends Controller
                 'visitor' => [
                     'uuid'          => $visitor->visitor_uuid,
                     'name'          => $visitor->name,
+                    'email'         => $visitor->email,
                     'customer_code' => $visitor->customer_code_formatted,
                     'display_name'  => $visitor->display_name,
                 ],
@@ -110,7 +135,16 @@ class SessionController extends Controller
                     'bot_mode_query'      => $widgetSetting ? (bool) $widgetSetting->bot_mode_query : true,
                     'bot_mode_options'    => $widgetSetting ? (bool) $widgetSetting->bot_mode_options : true,
                     'bot_welcome_options' => $widgetSetting ? $widgetSetting->bot_welcome_options : null,
-                ]
+                    'sound_enabled'       => $widgetSetting ? (bool) ($widgetSetting->widget_sound_enabled ?? true) : true,
+                    'sound_type'          => $widgetSetting ? ($widgetSetting->widget_sound_type ?: 'chime') : 'chime',
+                    'sound_custom_url'    => $widgetSetting ? $widgetSetting->widget_sound_custom_url : null,
+                ],
+                'business_hours' => $widgetSetting
+                    ? $this->businessHoursService->getScheduleSummary($widgetSetting)
+                    : ['enabled' => false],
+                'is_within_business_hours' => $widgetSetting
+                    ? $this->businessHoursService->isWithinBusinessHours($widgetSetting)
+                    : true,
             ]
         ]);
     }
@@ -123,8 +157,19 @@ class SessionController extends Controller
     {
         $request->validate([
             'visitor_uuid' => 'required|string|max:36',
-            'name'         => 'required|string|max:100',
+            'name'         => 'nullable|string|max:100',
+            'email'        => 'nullable|email|max:255',
         ]);
+
+        if (!$request->filled('name') && !$request->filled('email')) {
+            return response()->json([
+                'success' => false,
+                'error' => [
+                    'code' => 'VALIDATION_ERROR',
+                    'message' => 'Setidaknya nama atau email harus diisi.',
+                ]
+            ], 422);
+        }
 
         /** @var Project $project */
         $project = $request->attributes->get('project');
@@ -143,8 +188,19 @@ class SessionController extends Controller
             ], 404);
         }
 
-        $cleanName = strip_tags(trim($request->input('name')));
-        $visitor->update(['name' => $cleanName]);
+        $updates = [];
+        if ($request->filled('name')) {
+            $updates['name'] = strip_tags(trim($request->input('name')));
+        }
+        if ($request->filled('email')) {
+            $updates['email'] = strtolower(trim($request->input('email')));
+        }
+        $visitor->update($updates);
+
+        // Sync email to linked contact if exists
+        if (isset($updates['email']) && $visitor->contact_id && $visitor->contact) {
+            $visitor->contact->update(['email' => $updates['email']]);
+        }
 
         return response()->json([
             'success' => true,
@@ -152,6 +208,7 @@ class SessionController extends Controller
                 'visitor' => [
                     'uuid'          => $visitor->visitor_uuid,
                     'name'          => $visitor->name,
+                    'email'         => $visitor->email,
                     'customer_code' => $visitor->customer_code_formatted,
                     'display_name'  => $visitor->display_name,
                 ]

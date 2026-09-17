@@ -54,6 +54,14 @@ export interface WidgetSettings {
   bot_welcome_message?: string;
 }
 
+export interface BusinessHoursData {
+  enabled: boolean;
+  schedule: Record<string, { enabled: boolean; start: string | null; end: string | null }>;
+  timezone: string;
+  holidays: Array<{ date: string; label?: string }>;
+  off_message: string;
+}
+
 export interface ProjectInfo {
   id: number;
   name: string;
@@ -64,6 +72,7 @@ export interface VisitorInfo {
   id?: number;
   uuid: string;
   name?: string;
+  email?: string;
   customer_code?: string;
   display_name?: string;
 }
@@ -111,4 +120,6 @@ export interface SessionInitData {
   widget_settings?: WidgetSettings;
   conversation?: Conversation | null;
   conversations?: ConversationTicketItem[];
+  business_hours?: BusinessHoursData;
+  is_within_business_hours?: boolean;
 }

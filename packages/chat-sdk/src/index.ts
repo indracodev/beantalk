@@ -96,11 +96,15 @@ export class BeanTalk {
             if (!this.sessionData) {
               this.sessionData = {} as any;
             }
-            if (!this.sessionData.conversation) {
-              this.sessionData.conversation = { id: resConvId, status: 'open' } as any;
+            const sData = this.sessionData!;
+            if (!sData.conversation) {
+              sData.conversation = { id: resConvId, status: 'open' } as any;
             } else {
-              this.sessionData.conversation.id = resConvId;
+              sData.conversation.id = resConvId;
+              sData.conversation.status = 'open';
             }
+            this.ui.sessionData = sData;
+            this.ui.updateResolvedUI(false);
             setLastConversationId(resConvId);
             this.transport.start(resConvId, res.data.id || 0);
           }
@@ -211,9 +215,10 @@ export class BeanTalk {
           if (!this.sessionData) {
             this.sessionData = {} as any;
           }
-          const ticket = (this.sessionData?.conversations || []).find((c: any) => c.id === convId);
+          const sData = this.sessionData!;
+          const ticket = (sData.conversations || []).find((c: any) => c.id === convId);
           const status = ticket?.status || 'open';
-          this.sessionData.conversation = { id: convId, status } as any;
+          sData.conversation = { id: convId, status } as any;
           setLastConversationId(convId);
           this.ui.setMessages(res.data.messages || []);
           this.ui.updateResolvedUI(status === 'closed');
@@ -258,6 +263,14 @@ export class BeanTalk {
 
           // Start adaptive polling
           this.transport.start(conv.id, lastId);
+
+          // Chat belum di-resolve -> langsung tampilkan layar chat
+          if (conv.status !== 'closed') {
+            this.ui.goToStage('chat');
+            if (!conv.messages || conv.messages.length === 0) {
+              this.transport.pollNow();
+            }
+          }
         }
 
         this.initialized = true;
@@ -310,6 +323,12 @@ export class BeanTalk {
     this.ui.appendMessage(msg);
     this.emitter.emit('ui:send', msg);
   }
+
+  setLanguage(lang: 'id' | 'en'): void {
+    const validLang = lang === 'en' ? 'en' : 'id';
+    this.options.language = validLang;
+    this.ui.setLanguage(validLang);
+  }
 }
 
 // Backward Compatibility Alias
@@ -324,6 +343,7 @@ export const close = () => ChatWidget.close();
 export const toggle = () => ChatWidget.toggle();
 export const on = (event: string, handler: (data?: any) => void) => ChatWidget.on(event, handler);
 export const sendMessage = (text: string) => ChatWidget.sendMessage(text);
+export const setLanguage = (lang: 'id' | 'en') => ChatWidget.setLanguage(lang);
 export const getInstance = () => ChatWidget.getInstance();
 
 export const ChatWidget = {
@@ -345,6 +365,7 @@ export const ChatWidget = {
   toggle(): void { instance?.toggle(); },
   on(event: string, handler: (data?: any) => void): void { instance?.on(event, handler); },
   sendMessage(text: string): void { instance?.sendMessage(text); },
+  setLanguage(lang: 'id' | 'en'): void { instance?.setLanguage(lang); },
   getInstance(): BeanTalk | null { return instance; },
 };
 
@@ -374,8 +395,10 @@ if (typeof window !== 'undefined') {
       const color = script.getAttribute('data-color') || undefined;
       const brandName = script.getAttribute('data-brand-name') || script.getAttribute('data-store-name') || undefined;
       const supportTitle = script.getAttribute('data-support-title') || undefined;
+      const langAttr = script.getAttribute('data-lang') || script.getAttribute('data-language');
+      const language = (langAttr === 'en' || langAttr === 'id') ? (langAttr as 'id' | 'en') : undefined;
 
-      console.log('[BeanTalk] Found embed tag on page:', { projectKey, apiUrl, brandName });
+      console.log('[BeanTalk] Found embed tag on page:', { projectKey, apiUrl, brandName, language });
 
       if (projectKey && !instance) {
         ChatWidget.init({
@@ -385,6 +408,7 @@ if (typeof window !== 'undefined') {
           brandName,
           storeName: brandName,
           supportTitle,
+          language,
         });
       }
     }

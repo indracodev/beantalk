@@ -65,3 +65,13 @@ export function getStoredCustomerName(): string | null {
 export function setStoredCustomerName(name: string): void {
   safeSet(STORAGE_KEY_NAME, name);
 }
+
+const STORAGE_KEY_EMAIL = 'beantalk_customer_email';
+
+export function getStoredCustomerEmail(): string | null {
+  return safeGet(STORAGE_KEY_EMAIL);
+}
+
+export function setStoredCustomerEmail(email: string): void {
+  safeSet(STORAGE_KEY_EMAIL, email);
+}

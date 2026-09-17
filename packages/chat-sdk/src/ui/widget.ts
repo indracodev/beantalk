@@ -3,7 +3,7 @@ import { generateWidgetCss } from './styles';
 import { LOCALES, Language, WidgetLocale } from './locale';
 import { Message, SessionInitData, WidgetInitOptions } from '../types';
 import { EventEmitter } from '../core/emitter';
-import { generateClientMessageId, getStoredCustomerName, setStoredCustomerName } from '../core/storage';
+import { generateClientMessageId, getStoredCustomerName, setStoredCustomerName, getStoredCustomerEmail, setStoredCustomerEmail } from '../core/storage';
 
 export class ChatWidgetUi {
   private shadowRoot: ShadowRoot;
@@ -16,6 +16,7 @@ export class ChatWidgetUi {
   private messages: Message[] = [];
   private sessionData: SessionInitData | null = null;
   private customerName: string = '';
+  private customerEmail: string = '';
   private customerCode: string = '';
 
   private get t(): WidgetLocale {
@@ -49,6 +50,8 @@ export class ChatWidgetUi {
   // Customer Identity Elements
   private identityCustCode!: HTMLElement;
   private identityNameInput!: HTMLInputElement;
+  private identityEmailInput!: HTMLInputElement;
+  private identityEmailError!: HTMLElement;
   private identityContinueBtn!: HTMLButtonElement;
   private identityBackBtn!: HTMLButtonElement;
   private identitySupportTag!: HTMLElement;
@@ -56,7 +59,11 @@ export class ChatWidgetUi {
   private inlineIdentityInput!: HTMLInputElement;
   private inlineIdentityBtn!: HTMLButtonElement;
   private socialPickerBackBtn!: HTMLButtonElement;
+  private offHoursBanner!: HTMLElement;
   private audioCtx: AudioContext | null = null;
+  private widgetSoundEnabled: boolean = true;
+  private widgetSoundType: string = 'chime';
+  private widgetSoundCustomUrl: string | null = null;
 
   constructor(options: WidgetInitOptions, emitter: EventEmitter) {
     this.options = options;
@@ -71,7 +78,10 @@ export class ChatWidgetUi {
       hostEl.style.position = 'relative';
       hostEl.style.zIndex = '2147483647';
       hostEl.style.display = 'block';
+      hostEl.style.pointerEvents = 'none';
       document.body.appendChild(hostEl);
+    } else {
+      hostEl.style.pointerEvents = 'none';
     }
 
     // 2. Attach Open Shadow Root
@@ -87,11 +97,20 @@ export class ChatWidgetUi {
     this.bindEvents();
     this.initViewportHandler();
 
-    // Check stored customer name
+    // Check stored customer name & email
     const stored = getStoredCustomerName();
     if (stored) {
       this.applyCustomerName(stored, false);
     }
+    const storedEmail = getStoredCustomerEmail();
+    if (storedEmail) {
+      this.customerEmail = storedEmail;
+      if (this.identityEmailInput) this.identityEmailInput.value = storedEmail;
+    }
+  }
+
+  getCustomerEmail(): string {
+    return this.customerEmail;
   }
 
   updateTheming(primaryColor: string): void {
@@ -127,6 +146,25 @@ export class ChatWidgetUi {
     const footerSpan = this.shadowRoot.querySelector('.welcome-footer span');
     if (footerSpan) footerSpan.textContent = this.t.poweredBy;
 
+    // 4.5 Welcome header default greetings
+    const titleEl = this.shadowRoot.querySelector('.welcome-title');
+    if (titleEl) {
+      if (this.lang === 'en' && (titleEl.textContent === 'Hallo!' || titleEl.textContent === 'Hallo')) {
+        titleEl.textContent = this.t.defaultGreetingTitle;
+      } else if (this.lang === 'id' && (titleEl.textContent === 'Hello!' || titleEl.textContent === 'Hello')) {
+        titleEl.textContent = this.t.defaultGreetingTitle;
+      }
+    }
+
+    const subEl = this.shadowRoot.querySelector('.welcome-subtitle');
+    if (subEl) {
+      if (this.lang === 'en' && (subEl.textContent === 'Ada yang bisa kami bantu? Tanyakan informasi apapun di sini!' || subEl.textContent === 'Apakah ada yang bisa kami bantu? Tanyakan informasi apapun di sini!')) {
+        subEl.textContent = this.t.defaultGreetingSubtitle;
+      } else if (this.lang === 'id' && subEl.textContent === 'How can we help you today? Ask anything here!') {
+        subEl.textContent = this.t.defaultGreetingSubtitle;
+      }
+    }
+
     // 5. Identity stage
     if (this.identityCustCode && (!this.customerCode || this.identityCustCode.textContent === 'Tamu' || this.identityCustCode.textContent === 'Guest')) {
       this.identityCustCode.textContent = this.customerCode || this.t.identityPillGuest;
@@ -137,14 +175,30 @@ export class ChatWidgetUi {
     const idSub = this.shadowRoot.querySelector('.identity-stage-subtitle');
     if (idSub) idSub.textContent = this.t.identitySubtitle;
 
-    const idLabel = this.shadowRoot.querySelector('.identity-form-label');
+    const idLabel = this.shadowRoot.querySelector('.identity-form-label:not(.identity-email-label)');
     if (idLabel) idLabel.textContent = this.t.identityLabel;
 
     if (this.identityNameInput) this.identityNameInput.placeholder = this.t.identityPlaceholder;
 
+    const emailLabel = this.shadowRoot.querySelector('.identity-email-label');
+    if (emailLabel) emailLabel.textContent = this.t.identityEmailLabel;
+
+    if (this.identityEmailInput) this.identityEmailInput.placeholder = this.t.identityEmailPlaceholder;
+
+    if (this.identityEmailError) this.identityEmailError.textContent = this.t.identityEmailRequired;
+
     if (this.identityContinueBtn) {
       const label = this.identityContinueBtn.querySelector('span');
       if (label) label.textContent = this.t.identityContinue;
+    }
+
+    // 5.5 Off-hours banner
+    if (this.offHoursBanner) {
+      const textEl = this.offHoursBanner.querySelector('.off-hours-text');
+      const bhOff = (this.sessionData?.widget_settings as any)?.business_hours_off_message || (this.sessionData as any)?.widget?.business_hours_off_message || (this.sessionData as any)?.business_hours?.off_message;
+      if (textEl && !bhOff) {
+        textEl.textContent = this.t.offHoursBanner;
+      }
     }
 
     // 6. Chat header status & resolve button
@@ -207,6 +261,17 @@ export class ChatWidgetUi {
       this.updateTheming(settings.primary_color);
     }
 
+    // Sound notification settings
+    if (settings.sound_enabled !== undefined) {
+      this.widgetSoundEnabled = Boolean(settings.sound_enabled);
+    }
+    if (settings.sound_type) {
+      this.widgetSoundType = settings.sound_type;
+    }
+    if (settings.sound_custom_url !== undefined) {
+      this.widgetSoundCustomUrl = settings.sound_custom_url;
+    }
+
     // Update titles and greetings
     let title = settings.greeting_title || settings.header_title;
     if (!title || (this.lang === 'en' && title === 'Hallo!')) {
@@ -258,6 +323,29 @@ export class ChatWidgetUi {
       }
     }
 
+    // Pre-fill email from server or localStorage
+    const serverEmail = visitorObj.email;
+    const storedEmail = getStoredCustomerEmail();
+    const effectiveEmail = serverEmail || storedEmail;
+    if (effectiveEmail) {
+      this.customerEmail = effectiveEmail;
+      if (this.identityEmailInput) this.identityEmailInput.value = effectiveEmail;
+    }
+
+    // Apply business hours banner
+    const isWithinHours = data.is_within_business_hours !== false;
+    const bhData = data.business_hours;
+    if (this.offHoursBanner) {
+      if (!isWithinHours && bhData && bhData.enabled) {
+        const msg = bhData.off_message || this.t.offHoursBanner;
+        const textEl = this.offHoursBanner.querySelector('.off-hours-text');
+        if (textEl) textEl.textContent = msg;
+        this.offHoursBanner.style.display = 'flex';
+      } else {
+        this.offHoursBanner.style.display = 'none';
+      }
+    }
+
     // Populate initial messages if present
     if (data.conversation?.messages && data.conversation.messages.length > 0) {
       this.setMessages(data.conversation.messages);
@@ -269,6 +357,11 @@ export class ChatWidgetUi {
     // Check if active conversation is closed
     const isClosed = data.conversation ? data.conversation.status === 'closed' : false;
     this.updateResolvedUI(isClosed);
+
+    // Chat yang belum di-resolve harus langsung tampil di layar percakapan
+    if (data.conversation && data.conversation.id && !isClosed) {
+      this.goToStage('chat');
+    }
 
     // Populate social channels ("Find us somewhere else")
     const socialChannelsCard = this.shadowRoot.querySelector('#socialChannelsCard') as HTMLElement;
@@ -460,6 +553,16 @@ export class ChatWidgetUi {
                   maxlength="40" 
                   autocomplete="name"
                 />
+                <label class="identity-form-label identity-email-label" for="identityEmailInput">${this.t.identityEmailLabel}</label>
+                <input 
+                  type="email" 
+                  class="identity-email-input" 
+                  id="identityEmailInput" 
+                  placeholder="${this.t.identityEmailPlaceholder}" 
+                  maxlength="100" 
+                  autocomplete="email"
+                />
+                <div class="identity-email-error" id="identityEmailError" style="display: none;">${this.t.identityEmailRequired}</div>
                 <button type="button" class="identity-continue-btn" id="identityContinueBtn">
                   <span>${this.t.identityContinue}</span>
                   ${ICONS.chevronRight}
@@ -536,6 +639,12 @@ export class ChatWidgetUi {
               <!-- Dynamically populated -->
             </div>
 
+            <!-- OFF-HOURS BANNER -->
+            <div class="off-hours-banner" id="offHoursBanner" style="display: none;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="off-hours-text">${this.t.offHoursBanner}</span>
+            </div>
+
             <!-- RESOLVED TICKET BANNER & START NEW CHAT -->
             <div class="chat-resolved-banner" id="chatResolvedBanner" style="display: none;">
               <div class="chat-resolved-text">
@@ -595,6 +704,8 @@ export class ChatWidgetUi {
     // Customer Identity references
     this.identityCustCode = this.shadowRoot.querySelector('#identityCustCode') as HTMLElement;
     this.identityNameInput = this.shadowRoot.querySelector('#identityNameInput') as HTMLInputElement;
+    this.identityEmailInput = this.shadowRoot.querySelector('#identityEmailInput') as HTMLInputElement;
+    this.identityEmailError = this.shadowRoot.querySelector('#identityEmailError') as HTMLElement;
     this.identityContinueBtn = this.shadowRoot.querySelector('#identityContinueBtn') as HTMLButtonElement;
     this.identityBackBtn = this.shadowRoot.querySelector('#identityBackBtn') as HTMLButtonElement;
     this.identitySupportTag = this.shadowRoot.querySelector('#identitySupportTag') as HTMLElement;
@@ -602,6 +713,7 @@ export class ChatWidgetUi {
     this.inlineIdentityInput = this.shadowRoot.querySelector('#inlineIdentityInput') as HTMLInputElement;
     this.inlineIdentityBtn = this.shadowRoot.querySelector('#inlineIdentityBtn') as HTMLButtonElement;
     this.socialPickerBackBtn = this.shadowRoot.querySelector('#socialPickerBackBtn') as HTMLButtonElement;
+    this.offHoursBanner = this.shadowRoot.querySelector('#offHoursBanner') as HTMLElement;
   }
 
   private bindEvents(): void {
@@ -678,10 +790,34 @@ export class ChatWidgetUi {
 
     // Stage 1.5 Form Submit (Lanjut ke Chat)
     const handleIdentitySubmit = () => {
-      const val = this.identityNameInput ? this.identityNameInput.value.trim() : '';
-      if (val) {
-        this.applyCustomerName(val, true);
+      const nameVal = this.identityNameInput ? this.identityNameInput.value.trim() : '';
+      const emailVal = this.identityEmailInput ? this.identityEmailInput.value.trim() : '';
+
+      // Validate email (wajib)
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailVal || !emailRegex.test(emailVal)) {
+        if (this.identityEmailError) this.identityEmailError.style.display = 'block';
+        if (this.identityEmailInput) {
+          this.identityEmailInput.style.borderColor = '#ef4444';
+          this.identityEmailInput.focus();
+        }
+        return;
       }
+
+      // Clear error state
+      if (this.identityEmailError) this.identityEmailError.style.display = 'none';
+      if (this.identityEmailInput) this.identityEmailInput.style.borderColor = '';
+
+      // Apply name
+      if (nameVal) {
+        this.applyCustomerName(nameVal, true);
+      }
+
+      // Apply email
+      this.customerEmail = emailVal;
+      setStoredCustomerEmail(emailVal);
+      this.emitter.emit('customer:set-email', emailVal);
+
       this.goToStage('chat');
     };
 
@@ -692,8 +828,21 @@ export class ChatWidgetUi {
       this.identityNameInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
           e.preventDefault();
+          if (this.identityEmailInput) this.identityEmailInput.focus();
+        }
+      });
+    }
+    if (this.identityEmailInput) {
+      this.identityEmailInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
           handleIdentitySubmit();
         }
+      });
+      // Clear error on input
+      this.identityEmailInput.addEventListener('input', () => {
+        if (this.identityEmailError) this.identityEmailError.style.display = 'none';
+        if (this.identityEmailInput) this.identityEmailInput.style.borderColor = '';
       });
     }
 
@@ -970,6 +1119,12 @@ export class ChatWidgetUi {
       document.body.style.overflow = 'hidden';
     }
 
+    // Chat yang belum di-resolve harus langsung tampil di layar percakapan
+    const activeConv = this.sessionData?.conversation;
+    if (activeConv && activeConv.id && activeConv.status !== 'closed') {
+      this.goToStage('chat');
+    }
+
     if (this.currentStage === 'chat') {
       this.scrollToBottom();
       setTimeout(() => this.composerInput.focus(), 150);
@@ -1020,27 +1175,97 @@ export class ChatWidgetUi {
   }
 
   playNotificationSound(): void {
+    if (!this.widgetSoundEnabled) return;
+
+    // 1. Custom Audio playback
+    if (this.widgetSoundType === 'custom' && this.widgetSoundCustomUrl) {
+      try {
+        const audio = new Audio(this.widgetSoundCustomUrl);
+        audio.volume = 0.65;
+        audio.play().catch(() => {});
+        return;
+      } catch (e) {
+        // Fallback to synthesizer
+      }
+    }
+
+    // 2. Synthesized audio effects via Web Audio API
     try {
       this.unlockAudio();
       if (!this.audioCtx) return;
 
       const now = this.audioCtx.currentTime;
-      const osc = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
+      const type = this.widgetSoundType || 'chime';
 
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(659.25, now); // E5
-      osc.frequency.exponentialRampToValueAtTime(880, now + 0.08); // Glide to A5
+      if (type === 'pop') {
+        // Crisp bubble burst (420Hz -> 880Hz sweep, 0.08s)
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(420, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.06);
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(0.35, now + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.085);
+      } else if (type === 'ding') {
+        // Crystal desk reception bell (1318Hz E6 + 2637Hz overtone)
+        const osc1 = this.audioCtx.createOscillator();
+        const gain1 = this.audioCtx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(1318.5, now);
+        gain1.gain.setValueAtTime(0.28, now);
+        gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+        osc1.connect(gain1);
+        gain1.connect(this.audioCtx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.55);
 
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.25, now + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
-
-      osc.connect(gain);
-      gain.connect(this.audioCtx.destination);
-
-      osc.start(now);
-      osc.stop(now + 0.4);
+        const osc2 = this.audioCtx.createOscillator();
+        const gain2 = this.audioCtx.createGain();
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(2637, now);
+        gain2.gain.setValueAtTime(0.12, now);
+        gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+        osc2.connect(gain2);
+        gain2.connect(this.audioCtx.destination);
+        osc2.start(now);
+        osc2.stop(now + 0.35);
+      } else if (type === 'marimba') {
+        // Cheerful ascending 3-note marimba chord (C6, E6, G6)
+        const notes = [1046.5, 1318.5, 1567.98];
+        notes.forEach((freq, idx) => {
+          const noteTime = now + (idx * 0.08);
+          const osc = this.audioCtx!.createOscillator();
+          const gain = this.audioCtx!.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, noteTime);
+          gain.gain.setValueAtTime(0.001, noteTime);
+          gain.gain.linearRampToValueAtTime(0.25, noteTime + 0.01);
+          gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 0.22);
+          osc.connect(gain);
+          gain.connect(this.audioCtx!.destination);
+          osc.start(noteTime);
+          osc.stop(noteTime + 0.25);
+        });
+      } else {
+        // Default: Apple harmonic chime glide (E5 -> A5)
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(659.25, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.25, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.4);
+      }
     } catch (e) {
       // Audio playback ignored
     }
@@ -1271,6 +1496,9 @@ function getPlatformDisplayName(platform: string): string {
   const map: { [key: string]: string } = {
     whatsapp: 'WhatsApp',
     instagram: 'Instagram',
+    threads: 'Threads',
+    x: 'X (Twitter)',
+    twitter: 'X (Twitter)',
     facebook: 'Facebook',
     messenger: 'Facebook',
     tiktok: 'TikTok',
@@ -1296,6 +1524,22 @@ function extractContactDisplay(url: string, platform: string): string {
   } else if (plat === 'instagram') {
     if (url.includes('instagram.com/')) {
       const user = url.split('instagram.com/')[1]?.split('/')[0]?.split('?')[0] || '';
+      return user ? `@${user}` : url;
+    }
+  } else if (plat === 'threads') {
+    if (url.includes('threads.net/@')) {
+      const user = url.split('threads.net/@')[1]?.split('/')[0]?.split('?')[0] || '';
+      return user ? `@${user}` : url;
+    } else if (url.includes('threads.net/')) {
+      const user = url.split('threads.net/')[1]?.split('/')[0]?.split('?')[0] || '';
+      return user ? `@${user}` : url;
+    }
+  } else if (plat === 'x' || plat === 'twitter') {
+    if (url.includes('x.com/')) {
+      const user = url.split('x.com/')[1]?.split('/')[0]?.split('?')[0] || '';
+      return user ? `@${user}` : url;
+    } else if (url.includes('twitter.com/')) {
+      const user = url.split('twitter.com/')[1]?.split('/')[0]?.split('?')[0] || '';
       return user ? `@${user}` : url;
     }
   } else if (plat === 'facebook' || plat === 'messenger') {

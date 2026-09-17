@@ -14,6 +14,9 @@ export interface WidgetLocale {
   identitySubtitle: string;
   identityLabel: string;
   identityPlaceholder: string;
+  identityEmailLabel: string;
+  identityEmailPlaceholder: string;
+  identityEmailRequired: string;
   identityContinue: string;
 
   // Social picker
@@ -49,6 +52,7 @@ export interface WidgetLocale {
   defaultGreetingTitle: string;
   defaultGreetingSubtitle: string;
   defaultSupportTitle: string;
+  offHoursBanner: string;
 }
 
 export const LOCALES: Record<Language, WidgetLocale> = {
@@ -65,6 +69,9 @@ export const LOCALES: Record<Language, WidgetLocale> = {
     identitySubtitle: 'Boleh kami tahu nama panggilan Anda? Agar tim CS kami dapat menyapa Anda dengan ramah.',
     identityLabel: 'Nama Panggilan Anda',
     identityPlaceholder: 'Contoh: Budi, Sarah, Alex...',
+    identityEmailLabel: 'Alamat Email',
+    identityEmailPlaceholder: 'Contoh: budi@gmail.com',
+    identityEmailRequired: 'Email wajib diisi agar riwayat chat bisa dikirim ke Anda.',
     identityContinue: 'Lanjut ke Obrolan',
 
     socialPickerTitle: (plat) => `Hubungi via ${plat}`,
@@ -97,6 +104,7 @@ export const LOCALES: Record<Language, WidgetLocale> = {
     defaultGreetingTitle: 'Hallo!',
     defaultGreetingSubtitle: 'Ada yang bisa kami bantu? Tanyakan informasi apapun di sini!',
     defaultSupportTitle: 'Customer Support',
+    offHoursBanner: 'Saat ini di luar jam kerja. Pesan Anda tetap kami terima dan akan dibalas via email.',
   },
   en: {
     liveChatAvailable: 'Live Chat Available',
@@ -111,6 +119,9 @@ export const LOCALES: Record<Language, WidgetLocale> = {
     identitySubtitle: 'May we know your name so our support team can address you personally?',
     identityLabel: 'Your Name / Nickname',
     identityPlaceholder: 'E.g. Alex, Sarah, John...',
+    identityEmailLabel: 'Email Address',
+    identityEmailPlaceholder: 'E.g. alex@gmail.com',
+    identityEmailRequired: 'Email is required so we can send you the chat history.',
     identityContinue: 'Continue to Chat',
 
     socialPickerTitle: (plat) => `Contact via ${plat}`,
@@ -143,5 +154,6 @@ export const LOCALES: Record<Language, WidgetLocale> = {
     defaultGreetingTitle: 'Hello!',
     defaultGreetingSubtitle: 'How can we help you today? Ask anything here!',
     defaultSupportTitle: 'Customer Support',
+    offHoursBanner: 'Currently outside business hours. Your message will be replied to via email.',
   },
 };

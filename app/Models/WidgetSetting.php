@@ -36,6 +36,18 @@ class WidgetSetting extends Model
         'telegram_chat_id',
         'telegram_notifications_enabled',
         'telegram_topic_mode_enabled',
+        'business_hours_enabled',
+        'business_hours',
+        'business_hours_timezone',
+        'business_hours_off_message',
+        'holidays',
+        'sound_enabled',
+        'sound_type',
+        'sound_duration',
+        'sound_custom_url',
+        'widget_sound_enabled',
+        'widget_sound_type',
+        'widget_sound_custom_url',
     ];
 
     protected $casts = [
@@ -50,6 +62,12 @@ class WidgetSetting extends Model
         'bot_ai_enabled'                 => 'boolean',
         'telegram_notifications_enabled' => 'boolean',
         'telegram_topic_mode_enabled'    => 'boolean',
+        'business_hours_enabled'         => 'boolean',
+        'business_hours'                 => 'array',
+        'holidays'                       => 'array',
+        'sound_enabled'                  => 'boolean',
+        'sound_duration'                 => 'integer',
+        'widget_sound_enabled'           => 'boolean',
     ];
 
     public function project()
