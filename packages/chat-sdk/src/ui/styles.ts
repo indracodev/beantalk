@@ -5,6 +5,7 @@ export function generateWidgetCss(primaryColor: string = '#1E1E1E'): string {
       display: block !important;
       position: relative;
       z-index: 2147483647;
+      pointer-events: none;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       font-size: 14px;
       line-height: 1.5;
@@ -40,12 +41,18 @@ export function generateWidgetCss(primaryColor: string = '#1E1E1E'): string {
       flex-direction: column;
       align-items: flex-end;
       gap: 14px;
+      pointer-events: none;
     }
 
     .chat-wrapper.pos-bottom-left {
       right: auto;
       left: 24px;
       align-items: flex-start;
+    }
+
+    .chat-wrapper.pos-bottom-left .chat-window {
+      right: auto;
+      left: 0;
     }
 
     /* ==========================================================================
@@ -65,6 +72,7 @@ export function generateWidgetCss(primaryColor: string = '#1E1E1E'): string {
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
       transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s ease;
       position: relative;
+      pointer-events: auto;
     }
 
     .chat-launcher-btn:hover {
@@ -133,6 +141,9 @@ export function generateWidgetCss(primaryColor: string = '#1E1E1E'): string {
        2. WIDGET WINDOW CONTAINER
        ========================================================================== */
     .chat-window {
+      position: absolute;
+      bottom: 72px;
+      right: 0;
       width: 380px;
       height: 590px;
       max-height: calc(100vh - 110px);
@@ -436,28 +447,49 @@ export function generateWidgetCss(primaryColor: string = '#1E1E1E'): string {
     }
 
     .identity-form-label {
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
       color: #334155;
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
 
-    .identity-name-input {
+    .identity-email-label {
+      margin-top: 4px;
+    }
+
+    .identity-name-input,
+    .identity-email-input {
       width: 100%;
       padding: 11px 14px;
       font-size: 13px;
+      font-family: inherit;
       border: 1.5px solid #CBD5E1;
       border-radius: 9px;
       color: #0F172A;
+      background: #FFFFFF;
       outline: none;
       box-sizing: border-box;
       transition: border-color 0.15s, box-shadow 0.15s;
     }
 
-    .identity-name-input:focus {
+    .identity-name-input::placeholder,
+    .identity-email-input::placeholder {
+      color: #94A3B8;
+      font-size: 13px;
+    }
+
+    .identity-name-input:focus,
+    .identity-email-input:focus {
       border-color: var(--chat-primary);
-      box-shadow: 0 0 0 3px rgba(197, 155, 39, 0.18);
+      box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.12);
+    }
+
+    .identity-email-error {
+      font-size: 11.5px;
+      color: #EF4444;
+      margin-top: -4px;
+      font-weight: 500;
     }
 
     .identity-continue-btn {
@@ -567,6 +599,16 @@ export function generateWidgetCss(primaryColor: string = '#1E1E1E'): string {
       background: linear-gradient(135deg, #010101, #1e1e1e);
       color: #FFFFFF;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    }
+
+    .social-btn-threads {
+      background: #000000;
+      color: #FFFFFF;
+    }
+
+    .social-btn-x, .social-btn-twitter {
+      background: #000000;
+      color: #FFFFFF;
     }
 
     .social-btn-youtube {
@@ -1358,6 +1400,7 @@ export function generateWidgetCss(primaryColor: string = '#1E1E1E'): string {
         padding: 0 !important;
         z-index: 2147483647 !important;
         align-items: stretch !important;
+        pointer-events: auto !important;
       }
 
       .chat-wrapper.is-open .chat-window {
@@ -1384,6 +1427,7 @@ export function generateWidgetCss(primaryColor: string = '#1E1E1E'): string {
       /* iOS Auto-Zoom Prevention: min 16px on inputs */
       .composer-textarea, 
       .identity-name-input, 
+      .identity-email-input,
       .chat-identity-banner input {
         font-size: 16px !important;
       }

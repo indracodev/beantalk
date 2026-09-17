@@ -172,6 +172,8 @@
                                 $channelsMap = collect($p->widgetSetting->social_channels ?? [])->keyBy('id');
                                 $wa = $channelsMap->get('whatsapp');
                                 $ig = $channelsMap->get('instagram');
+                                $th = $channelsMap->get('threads');
+                                $x = $channelsMap->get('x') ?? $channelsMap->get('twitter');
                                 $fb = $channelsMap->get('facebook') ?? $channelsMap->get('messenger');
                                 $tt = $channelsMap->get('tiktok');
                                 $yt = $channelsMap->get('youtube');
@@ -206,6 +208,30 @@
                                     </label>
                                 </div>
                                 <input type="text" name="channels[instagram][url]" value="{{ $ig['url'] ?? '' }}" placeholder="https://instagram.com/akunanda atau @akunanda" class="w-full px-2.5 py-1 text-[11.5px] border border-apple-border rounded-md bg-white">
+                            </div>
+
+                            <!-- Threads -->
+                            <div class="p-2.5 border border-apple-border rounded-lg bg-apple-canvas/30 flex flex-col gap-1.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-medium text-neutral-900">Threads</span>
+                                    <label class="flex items-center gap-1.5 text-[11px] cursor-pointer">
+                                        <input type="checkbox" name="channels[threads][enabled]" value="1" {{ !empty($th['enabled']) ? 'checked' : '' }}>
+                                        <span>Aktif</span>
+                                    </label>
+                                </div>
+                                <input type="text" name="channels[threads][url]" value="{{ $th['url'] ?? '' }}" placeholder="https://threads.net/@akunanda atau @akunanda" class="w-full px-2.5 py-1 text-[11.5px] border border-apple-border rounded-md bg-white">
+                            </div>
+
+                            <!-- X (Twitter) -->
+                            <div class="p-2.5 border border-apple-border rounded-lg bg-apple-canvas/30 flex flex-col gap-1.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-medium text-neutral-900">X (Twitter)</span>
+                                    <label class="flex items-center gap-1.5 text-[11px] cursor-pointer">
+                                        <input type="checkbox" name="channels[x][enabled]" value="1" {{ !empty($x['enabled']) ? 'checked' : '' }}>
+                                        <span>Aktif</span>
+                                    </label>
+                                </div>
+                                <input type="text" name="channels[x][url]" value="{{ $x['url'] ?? '' }}" placeholder="https://x.com/akunanda atau @akunanda" class="w-full px-2.5 py-1 text-[11.5px] border border-apple-border rounded-md bg-white">
                             </div>
 
                             <!-- Facebook -->
