@@ -12,6 +12,7 @@ class Visitor extends Model
         'project_id',
         'contact_id',
         'name',
+        'email',
         'customer_code',
         'visitor_uuid',
         'ip_address',

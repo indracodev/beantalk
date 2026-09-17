@@ -54,6 +54,8 @@ Route::prefix('v1')->group(function () {
         Route::get('conversations', 'Api\Admin\ConversationController@index');
         Route::get('conversations/{id}', 'Api\Admin\ConversationController@show');
         Route::post('conversations/{id}/reply', 'Api\Admin\ConversationController@reply');
+        Route::post('conversations/{id}/close', 'Api\Admin\ConversationController@close');
+        Route::post('conversations/{id}/email-transcript', 'Api\Admin\ConversationController@emailTranscript');
 
         // Multi-Site Integrations Hub
         Route::get('integrations', 'Api\Admin\IntegrationController@index');

@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ChatTranscriptMail;
 use App\Models\Conversation;
 use App\Services\ConversationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class ConversationController extends Controller
 {
@@ -44,7 +47,7 @@ class ConversationController extends Controller
                         'id'                   => $conv->id,
                         'project_name'         => $conv->project ? $conv->project->name : 'Unknown',
                         'customer_name'        => $conv->contact ? $conv->contact->name : 'Visitor ' . substr($conv->visitor->visitor_uuid ?? '0000', 0, 8),
-                        'customer_email'       => $conv->contact ? $conv->contact->email : null,
+                        'customer_email'       => $conv->visitor ? $conv->visitor->email : ($conv->contact ? $conv->contact->email : null),
                         'page_url'             => $conv->page_url,
                         'page_title'           => $conv->page_title,
                         'status'               => $conv->status,
@@ -88,8 +91,8 @@ class ConversationController extends Controller
                         'name' => $conversation->project->name,
                     ],
                     'customer'        => [
-                        'name'    => $conversation->contact ? $conversation->contact->name : 'Jane Doe (Visitor)',
-                        'email'   => $conversation->contact ? $conversation->contact->email : 'visitor@browser.local',
+                        'name'    => $conversation->visitor ? $conversation->visitor->display_name : ($conversation->contact ? $conversation->contact->name : 'Visitor'),
+                        'email'   => $conversation->visitor ? $conversation->visitor->email : ($conversation->contact ? $conversation->contact->email : null),
                         'ip'      => $conversation->visitor ? $conversation->visitor->ip_address : null,
                         'source'  => $conversation->page_url,
                         'product' => $conversation->page_title,
@@ -153,5 +156,120 @@ class ConversationController extends Controller
                 'created_at'  => $msg->created_at ? $msg->created_at->toIso8601String() : null,
             ]
         ], 201);
+    }
+
+    /**
+     * Closes/resolves a conversation from admin inbox.
+     * Auto-sends chat transcript to visitor email if available.
+     * POST /api/v1/admin/conversations/{id}/close
+     */
+    public function close(Request $request, $id)
+    {
+        $conversation = Conversation::with(['visitor', 'project'])->findOrFail($id);
+
+        if ($conversation->status === 'closed') {
+            return response()->json([
+                'success' => false,
+                'error' => [
+                    'code'    => 'ALREADY_CLOSED',
+                    'message' => 'Percakapan sudah ditutup.',
+                ]
+            ], 422);
+        }
+
+        $conversation->update(['status' => 'closed']);
+
+        try {
+            $telegramService = app(\App\Services\TelegramService::class);
+            $telegramService->closeForumTopic($conversation);
+        } catch (\Throwable $e) {}
+
+        // Auto-send transcript to visitor email
+        $emailSent = $this->sendTranscriptEmail($conversation);
+
+        \App\Services\ActivityLogger::log(
+            'conversation.closed',
+            "CS menutup percakapan #{$conversation->id}" . ($emailSent ? ' (transkrip email terkirim)' : ''),
+            $conversation,
+            ['status' => 'closed', 'transcript_emailed' => $emailSent]
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id'                 => $conversation->id,
+                'status'             => 'closed',
+                'transcript_emailed' => $emailSent,
+            ]
+        ]);
+    }
+
+    /**
+     * Manually sends chat transcript to visitor email.
+     * POST /api/v1/admin/conversations/{id}/email-transcript
+     */
+    public function emailTranscript(Request $request, $id)
+    {
+        $conversation = Conversation::with(['visitor', 'project'])->findOrFail($id);
+
+        $emailSent = $this->sendTranscriptEmail($conversation);
+
+        if (!$emailSent) {
+            return response()->json([
+                'success' => false,
+                'error' => [
+                    'code'    => 'NO_EMAIL',
+                    'message' => 'Pengunjung belum memiliki email. Riwayat chat tidak dapat dikirim.',
+                ]
+            ], 422);
+        }
+
+        \App\Services\ActivityLogger::log(
+            'transcript.emailed',
+            "Mengirim riwayat chat percakapan #{$conversation->id} ke email pengunjung",
+            $conversation,
+            ['conversation_id' => $conversation->id, 'email' => $conversation->visitor->email ?? null]
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'message' => 'Riwayat chat berhasil dikirim ke email pengunjung.',
+            ]
+        ]);
+    }
+
+    /**
+     * Internal helper: sends transcript email to visitor.
+     * Returns true if email was sent, false if no email available.
+     */
+    private function sendTranscriptEmail(Conversation $conversation): bool
+    {
+        $visitor = $conversation->visitor;
+        $email = $visitor ? $visitor->email : null;
+
+        if (!$email) {
+            // Try from contact
+            $contact = $conversation->contact;
+            $email = $contact ? $contact->email : null;
+        }
+
+        if (!$email) {
+            return false;
+        }
+
+        $projectName = $conversation->project ? $conversation->project->name : 'BeanTalk';
+        $visitorName = $visitor ? ($visitor->name ?: $visitor->display_name) : 'Pengunjung';
+
+        try {
+            Mail::to($email)->send(new ChatTranscriptMail($conversation, $projectName, $visitorName));
+            return true;
+        } catch (\Throwable $e) {
+            Log::warning("[ChatTranscript] Gagal mengirim email transkrip: {$e->getMessage()}", [
+                'conversation_id' => $conversation->id,
+                'email' => $email,
+            ]);
+            return false;
+        }
     }
 }

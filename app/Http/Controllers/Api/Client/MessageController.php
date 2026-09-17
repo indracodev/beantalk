@@ -121,6 +121,22 @@ class MessageController extends Controller
             $telegramService->closeForumTopic($conversation);
         } catch (\Throwable $e) {}
 
+        // Auto-send transcript email to visitor
+        $conversation->load(['visitor', 'project']);
+        $visitor = $conversation->visitor;
+        $visitorEmail = $visitor ? $visitor->email : null;
+        if ($visitorEmail) {
+            try {
+                $projectName = $conversation->project ? $conversation->project->name : 'BeanTalk';
+                $visitorName = $visitor->name ?: ($visitor->display_name ?? 'Pengunjung');
+                \Illuminate\Support\Facades\Mail::to($visitorEmail)->send(
+                    new \App\Mail\ChatTranscriptMail($conversation, $projectName, $visitorName)
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("[ChatTranscript] Self-resolve email gagal: {$e->getMessage()}");
+            }
+        }
+
         \App\Services\ActivityLogger::log(
             'conversation.status_updated',
             "Pengunjung menandai percakapan #{$conversation->id} selesai",

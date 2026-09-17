@@ -22,7 +22,7 @@ class ConversationService
     /**
      * Resolves an existing visitor or creates a new one based on client UUID
      */
-    public function getOrCreateVisitor(Project $project, string $visitorUuid, ?string $ip = null, ?string $userAgent = null, ?string $name = null): Visitor
+    public function getOrCreateVisitor(Project $project, string $visitorUuid, ?string $ip = null, ?string $userAgent = null, ?string $name = null, ?string $email = null): Visitor
     {
         $visitor = Visitor::where('project_id', $project->id)
             ->where('visitor_uuid', $visitorUuid)
@@ -34,6 +34,9 @@ class ConversationService
             ];
             if ($name && (empty($visitor->name) || $visitor->name !== $name)) {
                 $updates['name'] = strip_tags($name);
+            }
+            if ($email && (empty($visitor->email) || $visitor->email !== $email)) {
+                $updates['email'] = strtolower(trim($email));
             }
             if (empty($visitor->customer_code)) {
                 $updates['customer_code'] = $this->generateCustomerCode($visitorUuid . $project->id);
@@ -47,6 +50,7 @@ class ConversationService
             'visitor_uuid'  => $visitorUuid,
             'customer_code' => $this->generateCustomerCode($visitorUuid . $project->id),
             'name'          => $name ? strip_tags($name) : null,
+            'email'         => $email ? strtolower(trim($email)) : null,
             'ip_address'    => $ip,
             'user_agent'    => $userAgent,
             'last_seen_at'  => now(),
