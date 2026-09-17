@@ -24,7 +24,7 @@
         <!-- PANE 1: Conversation List (Resizable)      -->
         <!-- ========================================== -->
         <section id="pane-conv-list"
-            class="w-full md:w-80 {{ $isExplicitChat ? 'hidden md:flex' : 'flex' }} border-r border-apple-border flex-col glass-sidebar shrink-0 z-10 select-none overflow-hidden"
+            class="w-full md:w-80 {{ $isExplicitChat ? 'hidden md:flex' : 'flex' }} border-r border-apple-border flex-col glass-sidebar shrink-0 z-10 overflow-hidden"
             style="min-width: 220px; max-width: 520px;">
 
             <!-- Search & Filter Controls -->
@@ -224,21 +224,34 @@
                             </div>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center justify-between mb-0.5">
-                                    <span class="conv-name font-semibold text-apple-textPrimary truncate text-[12.5px]"
-                                        title="{{ $displayName }}">
-                                        {{ $displayName }}
-                                    </span>
+                                    <div class="flex items-center gap-1.5 min-w-0">
+                                        <span class="conv-name font-semibold text-apple-textPrimary truncate text-[12.5px]"
+                                            title="{{ $displayName }}">
+                                            {{ $displayName }}
+                                        </span>
+                                        <span class="conv-ticket-badge text-[9.5px] font-mono font-semibold px-1.5 py-0.2 rounded bg-black/5 text-apple-textSecondary border border-black/10 shrink-0">
+                                            #{{ $conv->id }}
+                                        </span>
+                                    </div>
                                     <span
                                         class="conv-time text-[10.5px] text-apple-textTertiary font-mono" data-timestamp="{{ $conv->last_message_at ? $conv->last_message_at->toIso8601String() : '' }}">{{ $timeHuman }}</span>
                                 </div>
-                                <div class="conv-meta-row flex items-center gap-1.5 mb-1" data-conv-meta>
+                                <div class="conv-meta-row flex items-center gap-1.5 mb-1 flex-wrap" data-conv-meta>
                                     <span
-                                        class="conv-site text-[9px] font-semibold tracking-tight uppercase px-1.5 py-0.5 rounded truncate max-w-[110px]"
+                                        class="conv-site text-[9px] font-semibold tracking-tight uppercase px-1.5 py-0.5 rounded truncate max-w-[95px]"
                                         style="background-color: {{ $projectColor }}14; color: {{ $projectColor }}; border: 1px solid {{ $projectColor }}30;">
                                         {{ $siteName }}
                                     </span>
                                     <span
                                         class="conv-cust-code text-[10px] text-apple-textTertiary font-mono">{{ $customerCode }}</span>
+                                    <span class="conv-status-pill text-[9px] font-semibold px-1.5 py-0.2 rounded border shrink-0 {{ $conv->status === 'open' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-zinc-100 text-zinc-600 border-zinc-200' }}">
+                                        {{ $conv->status === 'open' ? 'Open' : 'Selesai' }}
+                                    </span>
+                                    @if (isset($visitorTicketCounts[$conv->visitor_id]) && $visitorTicketCounts[$conv->visitor_id] > 1)
+                                        <span class="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200 shrink-0" title="{{ $visitorTicketCounts[$conv->visitor_id] }} tiket total dari pelanggan ini">
+                                            {{ $visitorTicketCounts[$conv->visitor_id] }} Tiket
+                                        </span>
+                                    @endif
                                     @if ($isUnread)
                                         <span
                                             class="unread-badge ml-auto text-[9.5px] font-bold px-1.5 py-0.2 rounded-full bg-apple-blue text-white">
@@ -308,10 +321,16 @@
                         </div>
 
                         <div class="truncate min-w-0 flex-1 text-white">
-                            <div class="flex items-center gap-1.5">
+                            <div class="flex items-center gap-1.5 flex-wrap">
                                 <h3 id="threadCustomerName" class="font-bold text-[13px] text-white truncate drop-shadow-xs">
                                     {{ $activeDisplayName }}
                                 </h3>
+                                <span class="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/30 backdrop-blur-xs">
+                                    Tiket #{{ $activeConversation->id }}
+                                </span>
+                                <span class="text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full {{ $activeConversation->status === 'open' ? 'bg-emerald-400/30 text-emerald-100 border border-emerald-300/40' : 'bg-white/20 text-white/80 border border-white/30' }}">
+                                    {{ $activeConversation->status === 'open' ? 'OPEN' : 'SELESAI' }}
+                                </span>
                                 <span id="threadOriginBadge" class="hidden sm:inline-block text-[9px] font-bold tracking-tight uppercase px-2 py-0.5 rounded-full truncate max-w-[120px] bg-white/20 text-white border border-white/30 backdrop-blur-xs shadow-2xs">
                                     {{ $activeSiteName }}
                                 </span>
@@ -528,7 +547,7 @@
             <!-- PANE 3: Customer Context Session           -->
             <!-- ========================================== -->
             <aside id="pane-context-inspector"
-                class="fixed lg:static inset-y-0 right-0 z-40 lg:z-10 w-80 lg:w-72 border-l border-apple-border bg-white flex flex-col shrink-0 overflow-hidden select-none transition-transform lg:transition-[width] duration-200 ease-out hidden lg:flex shadow-2xl lg:shadow-none"
+                class="fixed lg:static inset-y-0 right-0 z-40 lg:z-10 w-80 lg:w-72 border-l border-apple-border bg-white flex flex-col shrink-0 overflow-hidden transition-transform lg:transition-[width] duration-200 ease-out hidden lg:flex shadow-2xl lg:shadow-none"
                 style="min-width: 48px; max-width: 420px;">
 
                 <!-- Mode A: Full Inspector Content -->
@@ -591,6 +610,50 @@
                                     <span
                                         class="font-mono text-[10px] text-apple-textTertiary">{{ $activeConversation->visitor->customer_code_formatted }}</span>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Riwayat Semua Tiket dari Pelanggan Ini -->
+                        @php
+                            $allVisitorTickets = $customerAllTickets ?? collect();
+                        @endphp
+                        <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-[9.5px] font-semibold uppercase tracking-wider text-apple-textTertiary">
+                                    Riwayat Tiket Pelanggan ({{ $allVisitorTickets->count() }})
+                                </span>
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                @forelse($allVisitorTickets as $vt)
+                                    @php
+                                        $isVtActive = $vt->id === $activeConversation->id;
+                                    @endphp
+                                    <a href="{{ route('admin.inbox', $vt->id) }}"
+                                        class="rounded-xl border p-2 flex flex-col gap-1 transition no-loader {{ $isVtActive ? 'bg-apple-blue/5 border-apple-blue/40 ring-1 ring-apple-blue/20' : 'bg-apple-canvas/40 border-apple-border/80 hover:bg-apple-canvas hover:border-apple-border' }}">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="font-mono font-bold text-[11px] {{ $isVtActive ? 'text-apple-blue' : 'text-apple-textPrimary' }}">
+                                                    Tiket #{{ $vt->id }}
+                                                </span>
+                                                @if($isVtActive)
+                                                    <span class="text-[8.5px] font-bold px-1.5 py-0.2 rounded bg-apple-blue text-white">Aktif</span>
+                                                @endif
+                                            </div>
+                                            <span class="text-[9px] font-semibold uppercase px-1.5 py-0.2 rounded border {{ $vt->status === 'open' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-zinc-100 text-zinc-600 border-zinc-200' }}">
+                                                {{ $vt->status === 'open' ? 'Open' : 'Selesai' }}
+                                            </span>
+                                        </div>
+                                        <p class="text-[10.5px] text-apple-textSecondary truncate">
+                                            {{ $vt->last_message_preview ?: 'Percakapan baru...' }}
+                                        </p>
+                                        <div class="flex items-center justify-between text-[9.5px] text-apple-textTertiary font-mono">
+                                            <span>{{ $vt->created_at ? $vt->created_at->format('d M Y, H:i') : '-' }}</span>
+                                            <span>{{ $vt->channel_label }}</span>
+                                        </div>
+                                    </a>
+                                @empty
+                                    <div class="text-[11px] text-apple-textTertiary p-2 text-center bg-apple-canvas/40 rounded-xl border border-apple-border/60">Tidak ada tiket lain</div>
+                                @endforelse
                             </div>
                         </div>
 

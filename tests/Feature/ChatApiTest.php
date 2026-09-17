@@ -323,6 +323,18 @@ class ChatApiTest extends TestCase
         $conv = \App\Models\Conversation::find($convId);
         $this->assertNotNull($conv);
         $this->assertEquals('Halo kak, apakah ada promo diskon hari ini?', $conv->last_message_preview);
+
+        // Next page load / session init must return this active conversation and messages directly
+        $initAfterChat = $this->withHeaders([
+            'X-Project-Key' => 'pk_live_supresso_8819',
+        ])->postJson('/api/v1/client/session/init', [
+            'visitor_uuid' => $uniqueUuid,
+        ]);
+        $initAfterChat->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.conversation.id', $convId)
+            ->assertJsonPath('data.conversation.status', 'open');
+        $this->assertNotEmpty($initAfterChat->json('data.conversation.messages'));
     }
 
     /**

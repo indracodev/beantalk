@@ -297,8 +297,8 @@ window.onGlobalFeedUpdate = function(data) {
         }
 
         data.conversations.forEach(conv => {
-            // Temukan semua DOM item dengan ID / Visitor ID yang sama dan bersihkan duplikasi jika ada
-            const selector = `[data-conv-id="${conv.id}"], #card-conv-${conv.id}` + (conv.visitor_id ? `, [data-visitor-id="${conv.visitor_id}"]` : '');
+            // Temukan DOM item berdasarkan ID tiket percakapan unik
+            const selector = `[data-conv-id="${conv.id}"], #card-conv-${conv.id}`;
             const existingItems = container.querySelectorAll(selector);
             if (existingItems.length > 1) {
                 for (let i = 1; i < existingItems.length; i++) {
@@ -347,16 +347,25 @@ window.onGlobalFeedUpdate = function(data) {
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center justify-between mb-0.5">
-                                <span class="conv-name font-semibold text-apple-textPrimary truncate text-[12.5px]" title="${custName}">
-                                    ${custName}
-                                </span>
+                                <div class="flex items-center gap-1.5 min-w-0">
+                                    <span class="conv-name font-semibold text-apple-textPrimary truncate text-[12.5px]" title="${custName}">
+                                        ${custName}
+                                    </span>
+                                    <span class="conv-ticket-badge text-[9.5px] font-mono font-semibold px-1.5 py-0.2 rounded bg-black/5 text-apple-textSecondary border border-black/10 shrink-0">
+                                        #${conv.id}
+                                    </span>
+                                </div>
                                 <span class="conv-time text-[10.5px] text-apple-textTertiary font-mono" data-timestamp="${conv.last_message_at || ''}">${timeText}</span>
                             </div>
-                            <div class="conv-meta-row flex items-center gap-1.5 mb-1" data-conv-meta>
-                                <span class="conv-site text-[9px] font-semibold tracking-tight uppercase px-1.5 py-0.5 rounded truncate max-w-[110px]" style="background-color: ${projectColor}14; color: ${projectColor}; border: 1px solid ${projectColor}30;">
+                            <div class="conv-meta-row flex items-center gap-1.5 mb-1 flex-wrap" data-conv-meta>
+                                <span class="conv-site text-[9px] font-semibold tracking-tight uppercase px-1.5 py-0.5 rounded truncate max-w-[95px]" style="background-color: ${projectColor}14; color: ${projectColor}; border: 1px solid ${projectColor}30;">
                                     ${siteName}
                                 </span>
                                 <span class="conv-cust-code text-[10px] text-apple-textTertiary font-mono">${custCode}</span>
+                                <span class="conv-status-pill text-[9px] font-semibold px-1.5 py-0.2 rounded border shrink-0 ${conv.status === 'open' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-zinc-100 text-zinc-600 border-zinc-200'}">
+                                    ${conv.status === 'open' ? 'Open' : 'Selesai'}
+                                </span>
+                                ${conv.visitor_tickets_count > 1 ? `<span class="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200 shrink-0" title="${conv.visitor_tickets_count} tiket total dari pelanggan ini">${conv.visitor_tickets_count} Tiket</span>` : ''}
                                 ${conv.is_unread ? `<span class="unread-badge ml-auto text-[9.5px] font-bold px-1.5 py-0.2 rounded-full bg-apple-blue text-white">${badgeText}</span>` : ''}
                             </div>
                             <p class="conv-snippet text-[11.5px] text-apple-textSecondary truncate">
@@ -426,6 +435,12 @@ window.onGlobalFeedUpdate = function(data) {
                     item.classList.remove('conv-unread');
                     const badge = item.querySelector('.unread-badge');
                     if (badge) badge.remove();
+                }
+
+                let statusPill = item.querySelector('.conv-status-pill');
+                if (statusPill && conv.status) {
+                    statusPill.className = `conv-status-pill text-[9px] font-semibold px-1.5 py-0.2 rounded border shrink-0 ${conv.status === 'open' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-zinc-100 text-zinc-600 border-zinc-200'}`;
+                    statusPill.textContent = conv.status === 'open' ? 'Open' : 'Selesai';
                 }
 
                 // Pertahankan urutan kartu percakapan sesuai array backend (aktivitas terbaru di paling atas)
@@ -623,6 +638,10 @@ async function handleSendReply(e) {
 
     const text = input.value.trim();
     if (!text || typeof activeConversationId === 'undefined' || !activeConversationId) return;
+
+    if (window.BeanTalkAudio) {
+        window.BeanTalkAudio.stop();
+    }
 
     input.value = '';
 
@@ -983,4 +1002,9 @@ async function promptEditCustomerName() {
 document.addEventListener('DOMContentLoaded', () => {
     scrollToBottom();
     startPollingSchedule();
+    if (typeof activeConversationId !== 'undefined' && activeConversationId) {
+        if (window.BeanTalkAudio) {
+            window.BeanTalkAudio.stop();
+        }
+    }
 });
