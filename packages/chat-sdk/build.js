@@ -36,6 +36,7 @@ async function build() {
   fs.copyFileSync(distFile, path.join(publicDir, 'chat.js'));
   fs.copyFileSync(distFile, path.join(publicDir, 'widget.js'));
   fs.copyFileSync(distFile, path.join(vendorChatDir, 'chat-widget.js'));
+  fs.copyFileSync(distFile, path.join(publicDir, 'js', 'chat-widget.js'));
 
   const stats = fs.statSync(publicFile);
   const sizeKb = (stats.size / 1024).toFixed(2);

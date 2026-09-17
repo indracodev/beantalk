@@ -97,7 +97,7 @@ class SoundSettingsIntegrationTest extends TestCase
     {
         Storage::fake('public');
 
-        $fakeMp3 = UploadedFile::fake()->create('custom-chime.mp3', 200, 'audio/mpeg');
+        $fakeMp3 = UploadedFile::fake()->createWithContent('custom-chime.mp3', 'fake mp3 sound file data');
 
         $payload = [
             'primary_color'     => '#0071E3',

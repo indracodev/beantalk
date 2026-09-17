@@ -16,6 +16,8 @@
         <input type="hidden" name="social_channels" id="hiddenSocialChannels" value="{{ json_encode($socialChannelsList) }}">
         <input type="hidden" name="bot_welcome_options" id="hiddenBotWelcomeOptions" value="{{ json_encode($widgetSetting->bot_welcome_options ?? []) }}">
         <input type="hidden" name="bot_tree" id="hiddenBotTree" value="{{ json_encode($widgetSetting->bot_tree ?? []) }}">
+        <input type="hidden" name="has_sound_settings_form" value="1">
+        <input type="hidden" name="has_widget_sound_settings_form" value="1">
 
         <!-- Header Action Bar -->
         <div class="bg-white border border-apple-border rounded-xl p-3.5 sm:p-4 shadow-apple-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1144,13 +1146,18 @@
                     <!-- Sound Option Radio Cards Grid Agent -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <!-- Option 1: Pedestrian (Tot Tot) -->
-                        <label class="sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentSoundType === 'pedestrian' ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20' : 'border-apple-border hover:border-rose-300 bg-white' }}">
+                        <label class="sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentSoundType === 'pedestrian' ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20' : 'border-apple-border hover:border-rose-300 bg-white' }}" onclick="previewAgentSound('pedestrian', event, false)">
                             <input type="radio" name="sound_type" value="pedestrian" {{ $currentSoundType === 'pedestrian' ? 'checked' : '' }} onchange="onSoundTypeChanged(this.value)" class="mt-1 text-rose-600 focus:ring-0">
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-base">🚦</span>
-                                    <strong class="text-[13px] font-bold text-apple-textPrimary">Lampu Merah Penyeberangan</strong>
-                                    <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-amber-100 text-amber-800">"Tot-tot-tot"</span>
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-base">🚦</span>
+                                        <strong class="text-[13px] font-bold text-apple-textPrimary">Lampu Merah Penyeberangan</strong>
+                                        <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-amber-100 text-amber-800">"Tot-tot-tot"</span>
+                                    </div>
+                                    <button type="button" onclick="previewAgentSound('pedestrian', event, true)" class="px-2 py-0.5 rounded-lg text-[10.5px] font-semibold bg-white border border-apple-border text-apple-textPrimary hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 transition shadow-2xs flex items-center gap-1 shrink-0" title="Dengarkan cuplikan suara">
+                                        <span>🔊 Dengar</span>
+                                    </button>
                                 </div>
                                 <p class="text-[11px] text-apple-textSecondary mt-1 leading-relaxed">
                                     Suara akustik penyeberangan zebra cross dengan ketukan ritmis teratur dan frekuensi tinggi yang sangat mudah disadari.
@@ -1159,13 +1166,18 @@
                         </label>
 
                         <!-- Option 2: Ambulance (Ninu Ninu) -->
-                        <label class="sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentSoundType === 'ambulance' ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20' : 'border-apple-border hover:border-rose-300 bg-white' }}">
+                        <label class="sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentSoundType === 'ambulance' ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20' : 'border-apple-border hover:border-rose-300 bg-white' }}" onclick="previewAgentSound('ambulance', event, false)">
                             <input type="radio" name="sound_type" value="ambulance" {{ $currentSoundType === 'ambulance' ? 'checked' : '' }} onchange="onSoundTypeChanged(this.value)" class="mt-1 text-rose-600 focus:ring-0">
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-base">🚑</span>
-                                    <strong class="text-[13px] font-bold text-apple-textPrimary">Suara Ambulans</strong>
-                                    <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-rose-100 text-rose-800">"Ninu-ninu"</span>
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-base">🚑</span>
+                                        <strong class="text-[13px] font-bold text-apple-textPrimary">Suara Ambulans</strong>
+                                        <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-rose-100 text-rose-800">"Ninu-ninu"</span>
+                                    </div>
+                                    <button type="button" onclick="previewAgentSound('ambulance', event, true)" class="px-2 py-0.5 rounded-lg text-[10.5px] font-semibold bg-white border border-apple-border text-apple-textPrimary hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 transition shadow-2xs flex items-center gap-1 shrink-0" title="Dengarkan cuplikan suara">
+                                        <span>🔊 Dengar</span>
+                                    </button>
                                 </div>
                                 <p class="text-[11px] text-apple-textSecondary mt-1 leading-relaxed">
                                     Sirine dual-tone ambulans darurat (frekuensi ganda 960Hz / 770Hz) bergantian, sangat mencolok untuk situasi prioritas tinggi.
@@ -1174,13 +1186,18 @@
                         </label>
 
                         <!-- Option 3: Police / Mobil Dinas (Wut Wut) -->
-                        <label class="sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentSoundType === 'police' ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20' : 'border-apple-border hover:border-rose-300 bg-white' }}">
+                        <label class="sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentSoundType === 'police' ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20' : 'border-apple-border hover:border-rose-300 bg-white' }}" onclick="previewAgentSound('police', event, false)">
                             <input type="radio" name="sound_type" value="police" {{ $currentSoundType === 'police' ? 'checked' : '' }} onchange="onSoundTypeChanged(this.value)" class="mt-1 text-rose-600 focus:ring-0">
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-base">🚓</span>
-                                    <strong class="text-[13px] font-bold text-apple-textPrimary">Mobil Dinas / Patwal</strong>
-                                    <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-sky-100 text-sky-800">"Wut-wut"</span>
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-base">🚓</span>
+                                        <strong class="text-[13px] font-bold text-apple-textPrimary">Mobil Dinas / Patwal</strong>
+                                        <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-sky-100 text-sky-800">"Wut-wut"</span>
+                                    </div>
+                                    <button type="button" onclick="previewAgentSound('police', event, true)" class="px-2 py-0.5 rounded-lg text-[10.5px] font-semibold bg-white border border-apple-border text-apple-textPrimary hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 transition shadow-2xs flex items-center gap-1 shrink-0" title="Dengarkan cuplikan suara">
+                                        <span>🔊 Dengar</span>
+                                    </button>
                                 </div>
                                 <p class="text-[11px] text-apple-textSecondary mt-1 leading-relaxed">
                                     Suara sirine yelp mobil dinas pengawalan dengan frekuensi melengking cepat (sweep band-pass), terdengar energik dan tegas.
@@ -1189,13 +1206,18 @@
                         </label>
 
                         <!-- Option 4: Apple Harmonic Chime (Elegan) -->
-                        <label class="sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentSoundType === 'chime' ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20' : 'border-apple-border hover:border-rose-300 bg-white' }}">
+                        <label class="sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentSoundType === 'chime' ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20' : 'border-apple-border hover:border-rose-300 bg-white' }}" onclick="previewAgentSound('chime', event, false)">
                             <input type="radio" name="sound_type" value="chime" {{ $currentSoundType === 'chime' ? 'checked' : '' }} onchange="onSoundTypeChanged(this.value)" class="mt-1 text-rose-600 focus:ring-0">
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-base">🔔</span>
-                                    <strong class="text-[13px] font-bold text-apple-textPrimary">Apple Chime Harmonis</strong>
-                                    <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-emerald-100 text-emerald-800">Lembut &amp; Elegan</span>
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-base">🔔</span>
+                                        <strong class="text-[13px] font-bold text-apple-textPrimary">Apple Chime Harmonis</strong>
+                                        <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-emerald-100 text-emerald-800">Lembut &amp; Elegan</span>
+                                    </div>
+                                    <button type="button" onclick="previewAgentSound('chime', event, true)" class="px-2 py-0.5 rounded-lg text-[10.5px] font-semibold bg-white border border-apple-border text-apple-textPrimary hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 transition shadow-2xs flex items-center gap-1 shrink-0" title="Dengarkan cuplikan suara">
+                                        <span>🔊 Dengar</span>
+                                    </button>
                                 </div>
                                 <p class="text-[11px] text-apple-textSecondary mt-1 leading-relaxed">
                                     Nada chime akustik bernuansa Apple iOS (E5 -> A5 glide + C#6 harmonic), nyaman di telinga dan cocok untuk kantor tenang.
@@ -1204,13 +1226,18 @@
                         </label>
 
                         <!-- Option 5: Custom Audio Upload Agent -->
-                        <label class="sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 md:col-span-2 {{ $currentSoundType === 'custom' ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20' : 'border-apple-border hover:border-rose-300 bg-white' }}">
+                        <label class="sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 md:col-span-2 {{ $currentSoundType === 'custom' ? 'border-rose-500 bg-rose-50/30 ring-2 ring-rose-500/20' : 'border-apple-border hover:border-rose-300 bg-white' }}" onclick="previewAgentSound('custom', event, false)">
                             <input type="radio" name="sound_type" value="custom" {{ $currentSoundType === 'custom' ? 'checked' : '' }} onchange="onSoundTypeChanged(this.value)" class="mt-1 text-rose-600 focus:ring-0">
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-base">📁</span>
-                                    <strong class="text-[13px] font-bold text-apple-textPrimary">Unggah File Audio Kustom CS (Upload Sound)</strong>
-                                    <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-purple-100 text-purple-800">MP3 / WAV / OGG</span>
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-base">📁</span>
+                                        <strong class="text-[13px] font-bold text-apple-textPrimary">Unggah File Audio Kustom CS (Upload Sound)</strong>
+                                        <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-purple-100 text-purple-800">MP3 / WAV / OGG</span>
+                                    </div>
+                                    <button type="button" onclick="previewAgentSound('custom', event, true)" class="px-2 py-0.5 rounded-lg text-[10.5px] font-semibold bg-white border border-apple-border text-apple-textPrimary hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 transition shadow-2xs flex items-center gap-1 shrink-0" title="Dengarkan cuplikan suara">
+                                        <span>🔊 Dengar</span>
+                                    </button>
                                 </div>
                                 <p class="text-[11px] text-apple-textSecondary mt-1 leading-relaxed">
                                     Gunakan rekaman bel pintu khusus, ringtone WAV/MP3, atau efek suara perusahaan Anda sendiri untuk alarm CS (Maksimal 3MB).
@@ -1348,13 +1375,18 @@
                     <!-- Sound Option Radio Cards Grid Customer -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <!-- Option 1: Apple Harmonic Chime (Default) -->
-                        <label class="widget-sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentWidgetSoundType === 'chime' ? 'border-purple-500 bg-purple-50/30 ring-2 ring-purple-500/20' : 'border-apple-border hover:border-purple-300 bg-white' }}">
+                        <label class="widget-sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentWidgetSoundType === 'chime' ? 'border-purple-500 bg-purple-50/30 ring-2 ring-purple-500/20' : 'border-apple-border hover:border-purple-300 bg-white' }}" onclick="previewWidgetSound('chime', event, false)">
                             <input type="radio" name="widget_sound_type" value="chime" {{ $currentWidgetSoundType === 'chime' ? 'checked' : '' }} onchange="onWidgetSoundTypeChanged(this.value)" class="mt-1 text-purple-600 focus:ring-0">
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-base">🔔</span>
-                                    <strong class="text-[13px] font-bold text-apple-textPrimary">Apple Chime Harmonis</strong>
-                                    <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-purple-100 text-purple-800">Default &bull; Elegan</span>
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-base">🔔</span>
+                                        <strong class="text-[13px] font-bold text-apple-textPrimary">Apple Chime Harmonis</strong>
+                                        <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-purple-100 text-purple-800">Default &bull; Elegan</span>
+                                    </div>
+                                    <button type="button" onclick="previewWidgetSound('chime', event, true)" class="px-2 py-0.5 rounded-lg text-[10.5px] font-semibold bg-white border border-apple-border text-apple-textPrimary hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300 transition shadow-2xs flex items-center gap-1 shrink-0" title="Dengarkan cuplikan suara">
+                                        <span>🔊 Dengar</span>
+                                    </button>
                                 </div>
                                 <p class="text-[11px] text-apple-textSecondary mt-1 leading-relaxed">
                                     Nada glide E5 &rarr; A5 khas perangkat modern iOS, terasa sangat lembut, profesional, dan menyejukkan.
@@ -1363,13 +1395,18 @@
                         </label>
 
                         <!-- Option 2: Aquatic Bubble Pop -->
-                        <label class="widget-sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentWidgetSoundType === 'pop' ? 'border-purple-500 bg-purple-50/30 ring-2 ring-purple-500/20' : 'border-apple-border hover:border-purple-300 bg-white' }}">
+                        <label class="widget-sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentWidgetSoundType === 'pop' ? 'border-purple-500 bg-purple-50/30 ring-2 ring-purple-500/20' : 'border-apple-border hover:border-purple-300 bg-white' }}" onclick="previewWidgetSound('pop', event, false)">
                             <input type="radio" name="widget_sound_type" value="pop" {{ $currentWidgetSoundType === 'pop' ? 'checked' : '' }} onchange="onWidgetSoundTypeChanged(this.value)" class="mt-1 text-purple-600 focus:ring-0">
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-base">🫧</span>
-                                    <strong class="text-[13px] font-bold text-apple-textPrimary">Aquatic Bubble Pop</strong>
-                                    <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-sky-100 text-sky-800">"Pop!" Renyah</span>
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-base">🫧</span>
+                                        <strong class="text-[13px] font-bold text-apple-textPrimary">Aquatic Bubble Pop</strong>
+                                        <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-sky-100 text-sky-800">"Pop!" Renyah</span>
+                                    </div>
+                                    <button type="button" onclick="previewWidgetSound('pop', event, true)" class="px-2 py-0.5 rounded-lg text-[10.5px] font-semibold bg-white border border-apple-border text-apple-textPrimary hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300 transition shadow-2xs flex items-center gap-1 shrink-0" title="Dengarkan cuplikan suara">
+                                        <span>🔊 Dengar</span>
+                                    </button>
                                 </div>
                                 <p class="text-[11px] text-apple-textSecondary mt-1 leading-relaxed">
                                     Letupan gelembung air instan berdurasi 0.08 detik. Segar, ramah, dan sangat pas untuk antarmuka chat modern.
@@ -1378,13 +1415,18 @@
                         </label>
 
                         <!-- Option 3: Crystal Ding Bell -->
-                        <label class="widget-sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentWidgetSoundType === 'ding' ? 'border-purple-500 bg-purple-50/30 ring-2 ring-purple-500/20' : 'border-apple-border hover:border-purple-300 bg-white' }}">
+                        <label class="widget-sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentWidgetSoundType === 'ding' ? 'border-purple-500 bg-purple-50/30 ring-2 ring-purple-500/20' : 'border-apple-border hover:border-purple-300 bg-white' }}" onclick="previewWidgetSound('ding', event, false)">
                             <input type="radio" name="widget_sound_type" value="ding" {{ $currentWidgetSoundType === 'ding' ? 'checked' : '' }} onchange="onWidgetSoundTypeChanged(this.value)" class="mt-1 text-purple-600 focus:ring-0">
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-base">🛎️</span>
-                                    <strong class="text-[13px] font-bold text-apple-textPrimary">Crystal Reception Ding</strong>
-                                    <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-amber-100 text-amber-800">"Ting!" Jernih</span>
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-base">🛎️</span>
+                                        <strong class="text-[13px] font-bold text-apple-textPrimary">Crystal Reception Ding</strong>
+                                        <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-amber-100 text-amber-800">"Ting!" Jernih</span>
+                                    </div>
+                                    <button type="button" onclick="previewWidgetSound('ding', event, true)" class="px-2 py-0.5 rounded-lg text-[10.5px] font-semibold bg-white border border-apple-border text-apple-textPrimary hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300 transition shadow-2xs flex items-center gap-1 shrink-0" title="Dengarkan cuplikan suara">
+                                        <span>🔊 Dengar</span>
+                                    </button>
                                 </div>
                                 <p class="text-[11px] text-apple-textSecondary mt-1 leading-relaxed">
                                     Lonceng meja resepsionis kristal dengan resonansi harmonik murni (1318Hz), memberi kesan pelayanan premium.
@@ -1393,13 +1435,18 @@
                         </label>
 
                         <!-- Option 4: Melodic Marimba -->
-                        <label class="widget-sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentWidgetSoundType === 'marimba' ? 'border-purple-500 bg-purple-50/30 ring-2 ring-purple-500/20' : 'border-apple-border hover:border-purple-300 bg-white' }}">
+                        <label class="widget-sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 {{ $currentWidgetSoundType === 'marimba' ? 'border-purple-500 bg-purple-50/30 ring-2 ring-purple-500/20' : 'border-apple-border hover:border-purple-300 bg-white' }}" onclick="previewWidgetSound('marimba', event, false)">
                             <input type="radio" name="widget_sound_type" value="marimba" {{ $currentWidgetSoundType === 'marimba' ? 'checked' : '' }} onchange="onWidgetSoundTypeChanged(this.value)" class="mt-1 text-purple-600 focus:ring-0">
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-base">🎶</span>
-                                    <strong class="text-[13px] font-bold text-apple-textPrimary">Melodic Marimba Chord</strong>
-                                    <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-emerald-100 text-emerald-800">3-Nada Ceria</span>
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-base">🎶</span>
+                                        <strong class="text-[13px] font-bold text-apple-textPrimary">Melodic Marimba Chord</strong>
+                                        <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-emerald-100 text-emerald-800">3-Nada Ceria</span>
+                                    </div>
+                                    <button type="button" onclick="previewWidgetSound('marimba', event, true)" class="px-2 py-0.5 rounded-lg text-[10.5px] font-semibold bg-white border border-apple-border text-apple-textPrimary hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300 transition shadow-2xs flex items-center gap-1 shrink-0" title="Dengarkan cuplikan suara">
+                                        <span>🔊 Dengar</span>
+                                    </button>
                                 </div>
                                 <p class="text-[11px] text-apple-textSecondary mt-1 leading-relaxed">
                                     Ketukan marimba kayu naik 3 nada cepat (C6 - E6 - G6), memberi nuansa hangat, ceria, dan bersahabat bagi customer.
@@ -1408,13 +1455,18 @@
                         </label>
 
                         <!-- Option 5: Custom Audio Upload Customer -->
-                        <label class="widget-sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 md:col-span-2 {{ $currentWidgetSoundType === 'custom' ? 'border-purple-500 bg-purple-50/30 ring-2 ring-purple-500/20' : 'border-apple-border hover:border-purple-300 bg-white' }}">
+                        <label class="widget-sound-option-card relative p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 md:col-span-2 {{ $currentWidgetSoundType === 'custom' ? 'border-purple-500 bg-purple-50/30 ring-2 ring-purple-500/20' : 'border-apple-border hover:border-purple-300 bg-white' }}" onclick="previewWidgetSound('custom', event, false)">
                             <input type="radio" name="widget_sound_type" value="custom" {{ $currentWidgetSoundType === 'custom' ? 'checked' : '' }} onchange="onWidgetSoundTypeChanged(this.value)" class="mt-1 text-purple-600 focus:ring-0">
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-base">📁</span>
-                                    <strong class="text-[13px] font-bold text-apple-textPrimary">Unggah Audio Kustom Pengunjung (Upload Customer Sound)</strong>
-                                    <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-violet-100 text-violet-800">MP3 / WAV / OGG</span>
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-base">📁</span>
+                                        <strong class="text-[13px] font-bold text-apple-textPrimary">Unggah Audio Kustom Pengunjung (Upload Customer Sound)</strong>
+                                        <span class="px-1.5 py-0.2 rounded text-[9.5px] font-mono font-bold bg-violet-100 text-violet-800">MP3 / WAV / OGG</span>
+                                    </div>
+                                    <button type="button" onclick="previewWidgetSound('custom', event, true)" class="px-2 py-0.5 rounded-lg text-[10.5px] font-semibold bg-white border border-apple-border text-apple-textPrimary hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300 transition shadow-2xs flex items-center gap-1 shrink-0" title="Dengarkan cuplikan suara">
+                                        <span>🔊 Dengar</span>
+                                    </button>
                                 </div>
                                 <p class="text-[11px] text-apple-textSecondary mt-1 leading-relaxed">
                                     Gunakan sound effect khas brand Anda sendiri untuk diputar saat customer menerima balasan (Maksimal 3MB).
@@ -1634,16 +1686,35 @@ document.getElementById('inputSoundDuration')?.addEventListener('input', functio
     if (badgeTab && isMasterOn) badgeTab.innerText = val + 's';
 });
 
-function onSoundTypeChanged(selectedType) {
+function previewAgentSound(type, e, isButton = false) {
+    if (e && isButton) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+    const radio = document.querySelector(`input[name="sound_type"][value="${type}"]`);
+    if (radio) {
+        radio.checked = true;
+        updateSoundOptionCardsHighlight(type);
+    }
     const containerUpload = document.getElementById('containerCustomSoundUpload');
     if (containerUpload) {
-        if (selectedType === 'custom') {
+        if (type === 'custom') {
             containerUpload.classList.remove('hidden');
         } else {
             containerUpload.classList.add('hidden');
         }
     }
-    updateSoundOptionCardsHighlight(selectedType);
+    let customUrl = null;
+    if (type === 'custom') {
+        customUrl = window._pendingCustomSoundBlobUrl || @json($widgetSetting->sound_custom_url ?? null);
+    }
+    if (window.BeanTalkAudio && typeof window.BeanTalkAudio.preview === 'function') {
+        window.BeanTalkAudio.preview(type, customUrl);
+    }
+}
+
+function onSoundTypeChanged(selectedType) {
+    previewAgentSound(selectedType, null, false);
 }
 
 function updateSoundOptionCardsHighlight(activeType) {
@@ -1768,16 +1839,35 @@ function toggleWidgetSoundSwitch(checkbox) {
     }
 }
 
-function onWidgetSoundTypeChanged(selectedType) {
+function previewWidgetSound(type, e, isButton = false) {
+    if (e && isButton) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+    const radio = document.querySelector(`input[name="widget_sound_type"][value="${type}"]`);
+    if (radio) {
+        radio.checked = true;
+        updateWidgetSoundOptionCardsHighlight(type);
+    }
     const containerUpload = document.getElementById('containerWidgetCustomSoundUpload');
     if (containerUpload) {
-        if (selectedType === 'custom') {
+        if (type === 'custom') {
             containerUpload.classList.remove('hidden');
         } else {
             containerUpload.classList.add('hidden');
         }
     }
-    updateWidgetSoundOptionCardsHighlight(selectedType);
+    let customUrl = null;
+    if (type === 'custom') {
+        customUrl = window._pendingWidgetCustomSoundBlobUrl || @json($widgetSetting->widget_sound_custom_url ?? null);
+    }
+    if (window.BeanTalkAudio && typeof window.BeanTalkAudio.preview === 'function') {
+        window.BeanTalkAudio.preview(type, customUrl);
+    }
+}
+
+function onWidgetSoundTypeChanged(selectedType) {
+    previewWidgetSound(selectedType, null, false);
 }
 
 function updateWidgetSoundOptionCardsHighlight(activeType) {

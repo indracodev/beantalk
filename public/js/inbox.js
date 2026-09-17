@@ -37,46 +37,21 @@ document.addEventListener('click', unlockAudio, { once: false });
 document.addEventListener('keydown', unlockAudio, { once: false });
 
 /**
- * Plays a pleasant, crisp harmonic dual-tone chime (E5 -> A5 glide + C#6 harmonic)
- * 100% native synthesized Web Audio API (Zero audio files, Zero 404 risk)
+ * Plays a pleasant, crisp notification chime
  */
 function playNotificationSound() {
-    try {
-        unlockAudio();
-        if (!audioCtx) return;
-
-        const now = audioCtx.currentTime;
-
-        // Tone 1: High crisp ping
-        const osc1 = audioCtx.createOscillator();
-        const gain1 = audioCtx.createGain();
-        osc1.type = 'sine';
-        osc1.frequency.setValueAtTime(659.25, now); // E5
-        osc1.frequency.exponentialRampToValueAtTime(880, now + 0.08); // Glide to A5
-        gain1.gain.setValueAtTime(0, now);
-        gain1.gain.linearRampToValueAtTime(0.3, now + 0.02);
-        gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
-        osc1.connect(gain1);
-        gain1.connect(audioCtx.destination);
-        osc1.start(now);
-        osc1.stop(now + 0.35);
-
-        // Tone 2: Harmonic pleasant chime
-        const osc2 = audioCtx.createOscillator();
-        const gain2 = audioCtx.createGain();
-        osc2.type = 'triangle';
-        osc2.frequency.setValueAtTime(1108.73, now + 0.09); // C#6
-        gain2.gain.setValueAtTime(0, now + 0.09);
-        gain2.gain.linearRampToValueAtTime(0.25, now + 0.12);
-        gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
-        osc2.connect(gain2);
-        gain2.connect(audioCtx.destination);
-        osc2.start(now + 0.09);
-        osc2.stop(now + 0.55);
-    } catch (err) {
-        console.warn('[BeanTalk Sound] Audio playback warning:', err);
+    if (window.BeanTalkAudio) {
+        window.BeanTalkAudio.playSingleChime();
     }
 }
+
+// Matikan alarm seketika saat agen CS mengklik percakapan apapun di inbox
+document.addEventListener('click', (e) => {
+    const card = e.target.closest('[data-conv-id]');
+    if (card && window.BeanTalkAudio) {
+        window.BeanTalkAudio.stop();
+    }
+}, { passive: true });
 
 
 

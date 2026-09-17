@@ -764,6 +764,32 @@ window.BeanTalkAudio = (function() {
         }
     }
 
+    function preview(soundType, customUrl) {
+        stop();
+        if (soundType === 'pop' || soundType === 'ding' || soundType === 'marimba') {
+            playVisitorSound(soundType, customUrl);
+            return;
+        }
+        if (soundType === 'chime') {
+            const ctx = getContext();
+            if (ctx) playChime(ctx);
+            return;
+        }
+        if (soundType === 'custom' && customUrl) {
+            try {
+                const a = new Audio(customUrl);
+                a.volume = 0.8;
+                a.play().catch(() => {});
+                setTimeout(() => {
+                    try { a.pause(); a.currentTime = 0; } catch (e) {}
+                }, 3000);
+                return;
+            } catch (e) {}
+        }
+        // Play 2-second preview of pedestrian, ambulance, or police without floating banner
+        playAlarm(soundType, 2, customUrl, false);
+    }
+
     return {
         play: playAlarm,
         playSingleChime: function() {
@@ -771,6 +797,7 @@ window.BeanTalkAudio = (function() {
             if (ctx) playChime(ctx);
         },
         playVisitorSound: playVisitorSound,
+        preview: preview,
         stop: stop,
         isPlaying: () => isPlaying,
         unlock: getContext
@@ -945,9 +972,23 @@ async function pollGlobalFeedUpdates() {
                         lastNotifiedMsgId = incomingMsgId;
                         sessionStorage.setItem('beantalk_last_notified_msg_id', String(lastNotifiedMsgId));
 
-                        playGlobalChime();
-
                         const isCurrentActive = typeof activeConversationId !== 'undefined' && activeConversationId == data.latest_incoming.conversation_id;
+
+                        // Play sound alarm according to project widget settings
+                        if (data.latest_incoming.sound_enabled !== false && window.BeanTalkAudio) {
+                            if (!isCurrentActive) {
+                                // Pesan belum dibuka / di percakapan lain: bunyikan alarm sesuai waktu yg ditentukan
+                                window.BeanTalkAudio.play(
+                                    data.latest_incoming.sound_type || 'pedestrian',
+                                    data.latest_incoming.sound_duration || 15,
+                                    data.latest_incoming.sound_custom_url || null
+                                );
+                            } else {
+                                // Percakapan sedang aktif ditonton agen: bunyikan notifikasi halus 1x
+                                window.BeanTalkAudio.playSingleChime();
+                            }
+                        }
+
                         if (!isCurrentActive) {
                             showGlobalToast(
                                 data.latest_incoming.sender_name,

@@ -416,7 +416,7 @@
       const urlParams = new URLSearchParams(window.location.search);
       const projectKey = urlParams.get('key') || urlParams.get('project_key') || 'pk_live_supresso_8819';
       const script = document.createElement('script');
-      script.src = '/chat-widget.js';
+      script.src = '/chat-widget.js?v=' + Date.now();
       script.setAttribute('data-project-key', projectKey);
       script.setAttribute('data-api-url', window.location.origin);
       document.body.appendChild(script);
