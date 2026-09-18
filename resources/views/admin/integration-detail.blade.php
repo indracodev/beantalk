@@ -202,8 +202,8 @@
             @include('admin.partials.integration-tabs.tab-sound')
         </div>
 
-        <!-- Sticky / Bottom Form Action Bar -->
-        <div class="bg-white border border-apple-border rounded-xl p-3.5 sm:p-4 shadow-apple-sm flex items-center justify-between gap-3 sticky bottom-4 z-20">
+        <!-- Form Bottom Action Bar (In-flow, non-sticky) -->
+        <div class="bg-white border border-apple-border rounded-xl p-3.5 sm:p-4 shadow-apple-sm flex items-center justify-between gap-3 mt-2">
             <div class="flex items-center gap-2 text-[12px] text-apple-textSecondary">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span>Perubahan tersimpan saat Anda menekan tombol simpan.</span>
@@ -1971,7 +1971,13 @@ function applyMascotFilters() {
 function selectMascot(mascotId) {
     currentAdminMascotId = mascotId;
     
-    // Clear any timers
+    // 1. Sync hidden form input
+    const hiddenInput = document.getElementById('inputSelectedMascotId');
+    if (hiddenInput) {
+        hiddenInput.value = mascotId;
+    }
+
+    // 2. Clear any active timers
     if (adminMascotBlinkTimer) {
         clearTimeout(adminMascotBlinkTimer);
         adminMascotBlinkTimer = null;
@@ -1981,20 +1987,20 @@ function selectMascot(mascotId) {
         adminMascotPokeTimeout = null;
     }
 
+    // 3. Highlight selected card & reset others
     const cards = document.querySelectorAll('#mascotCardsContainer .mascot-card');
     cards.forEach(c => {
         const isSelected = (c.getAttribute('data-mascot') === mascotId);
         if (isSelected) {
             c.classList.add('border-apple-blue', 'bg-blue-50/50', 'ring-1', 'ring-apple-blue');
             c.classList.remove('border-apple-border', 'bg-white');
-            const radio = c.querySelector('input[type="radio"]');
-            if (radio) radio.checked = true;
         } else {
             c.classList.remove('border-apple-blue', 'bg-blue-50/50', 'ring-1', 'ring-apple-blue');
             c.classList.add('border-apple-border', 'bg-white');
         }
     });
 
+    // 4. Update preview sprite smoothly without scroll jump
     const sprite = document.getElementById('adminMascotPreviewSprite');
     const statusText = document.getElementById('adminMascotStatusText');
     if (sprite) {

@@ -1,4 +1,4 @@
-﻿        <!-- ============================================================ -->
+        <!-- ============================================================ -->
         <!-- TAB 2.5: MASKOT INTERAKTIF (PAGE MASCOT)                     -->
         <!-- ============================================================ -->
         <div id="tab-pane-mascot" class="tab-pane flex flex-col gap-4" style="display: none;">
@@ -148,16 +148,17 @@
                                     $currentMascot = $widgetSetting->mascot_id ?? 'fox';
                                 @endphp
 
+                                <input type="hidden" name="mascot_id" id="inputSelectedMascotId" value="{{ $currentMascot }}">
+
                                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 max-h-72 overflow-y-auto pr-1 border border-apple-border/50 rounded-xl p-2 bg-apple-canvas/20" id="mascotCardsContainer">
                                     @foreach($allMascotsList as $m)
-                                        <label class="mascot-card flex flex-col items-center justify-center p-2.5 rounded-xl border {{ $currentMascot === $m['id'] ? 'border-apple-blue bg-blue-50/50 ring-1 ring-apple-blue' : 'border-apple-border bg-white hover:bg-apple-canvas/40' }} cursor-pointer transition text-center group" data-mascot="{{ $m['id'] }}" data-cat="{{ $m['cat'] }}" data-name="{{ strtolower($m['name']) }} {{ strtolower($m['desc']) }}" onclick="selectMascot('{{ $m['id'] }}')">
-                                            <input type="radio" name="mascot_id" value="{{ $m['id'] }}" {{ $currentMascot === $m['id'] ? 'checked' : '' }} class="sr-only">
+                                        <div class="mascot-card flex flex-col items-center justify-center p-2.5 rounded-xl border {{ $currentMascot === $m['id'] ? 'border-apple-blue bg-blue-50/50 ring-1 ring-apple-blue' : 'border-apple-border bg-white hover:bg-apple-canvas/40' }} cursor-pointer transition text-center group select-none" data-mascot="{{ $m['id'] }}" data-cat="{{ $m['cat'] }}" data-name="{{ strtolower($m['name']) }} {{ strtolower($m['desc']) }}" onclick="selectMascot('{{ $m['id'] }}')">
                                             <div class="w-12 h-12 rounded-full overflow-hidden bg-slate-50 shadow-2xs border border-apple-border/50 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
                                                 <div class="w-12 h-12" style="background-image: url('/mascots/{{ $m['id'] }}-directions.webp'); background-size: 300% 300%; background-position: 50% 50%;"></div>
                                             </div>
                                             <span class="text-[11.5px] font-bold text-apple-textPrimary leading-tight">{{ $m['name'] }}</span>
                                             <span class="text-[9.5px] text-apple-textTertiary mt-0.5 line-clamp-1">{{ $m['desc'] }}</span>
-                                        </label>
+                                        </div>
                                     @endforeach
                                 </div>
                             </div>
