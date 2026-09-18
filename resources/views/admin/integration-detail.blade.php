@@ -522,6 +522,130 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Gaya Tombol Peluncur Chat (Chat Launcher Style) -->
+            <div class="bg-white border border-apple-border rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col gap-4">
+                <div class="pb-3 border-b border-apple-border flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h3 class="text-[14px] font-bold text-apple-textPrimary flex items-center gap-2">
+                            <span>Gaya Tombol Peluncur Chat (Chat Launcher Style)</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Koboyo Mascot</span>
+                        </h3>
+                        <p class="text-[11.5px] text-apple-textSecondary mt-0.5">Pilih gaya tombol terapung di sudut website Anda: balon pesan klasik atau maskot interaktif yang matanya mengikuti kursor pengunjung.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label class="flex items-start gap-3 p-3.5 rounded-xl border border-apple-border bg-apple-canvas/30 hover:bg-white cursor-pointer transition-all has-[:checked]:border-apple-blue has-[:checked]:bg-blue-50/40 has-[:checked]:ring-1 has-[:checked]:ring-apple-blue" onclick="toggleLauncherType('default')">
+                        <input type="radio" name="launcher_type" value="default" {{ ($widgetSetting->launcher_type ?? 'default') === 'default' ? 'checked' : '' }} class="mt-1 w-4 h-4 text-apple-blue focus:ring-apple-blue">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <span class="w-7 h-7 rounded-lg bg-blue-100 text-apple-blue flex items-center justify-center shrink-0">
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                                </span>
+                                <span class="text-[13px] font-bold text-apple-textPrimary">Balon Chat Standar (Default)</span>
+                            </div>
+                            <p class="text-[11px] text-apple-textSecondary mt-1.5 leading-relaxed">Tombol melayang bundar dengan ikon balon pesan klasik. Menggunakan warna aksen brand yang Anda pilih.</p>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-3.5 rounded-xl border border-apple-border bg-apple-canvas/30 hover:bg-white cursor-pointer transition-all has-[:checked]:border-apple-blue has-[:checked]:bg-blue-50/40 has-[:checked]:ring-1 has-[:checked]:ring-apple-blue" onclick="toggleLauncherType('mascot')">
+                        <input type="radio" name="launcher_type" value="mascot" {{ ($widgetSetting->launcher_type ?? 'default') === 'mascot' ? 'checked' : '' }} class="mt-1 w-4 h-4 text-apple-blue focus:ring-apple-blue">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <span class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-[15px] shrink-0">🦊</span>
+                                <span class="text-[13px] font-bold text-apple-textPrimary">Maskot Interaktif (Page Mascot)</span>
+                                <span class="text-[10px] px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 font-semibold">Interactive</span>
+                            </div>
+                            <p class="text-[11px] text-apple-textSecondary mt-1.5 leading-relaxed">Karakter maskot animasi lucu yang menoleh mengikuti kursor mouse pengunjung web, berkedip, dan berekspresi riang saat diklik.</p>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Sub Panel Mascot Settings -->
+                <div id="sectionMascotOptions" class="{{ ($widgetSetting->launcher_type ?? 'default') === 'mascot' ? '' : 'hidden' }} flex flex-col gap-4 pt-4 border-t border-apple-border">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                        <!-- Left: Character Selection & Controls (7 Cols) -->
+                        <div class="lg:col-span-7 flex flex-col gap-4">
+                            <div>
+                                <label class="block text-[12px] font-semibold text-apple-textPrimary mb-1.5">Pilih Karakter Maskot</label>
+                                @php
+                                    $mascotsList = [
+                                        ['id' => 'fox', 'name' => 'Fox (Rubah)', 'desc' => 'Lincah & ramah'],
+                                        ['id' => 'cat', 'name' => 'Cat (Kucing)', 'desc' => 'Lucu & santai'],
+                                        ['id' => 'panda', 'name' => 'Panda', 'desc' => 'Menggemaskan'],
+                                        ['id' => 'bunny', 'name' => 'Bunny (Kelinci)', 'desc' => 'Ceria & aktif'],
+                                        ['id' => 'bear', 'name' => 'Bear (Beruang)', 'desc' => 'Hangat & ramah'],
+                                        ['id' => 'otter', 'name' => 'Otter (Berang)', 'desc' => 'Playful & cerdas'],
+                                        ['id' => 'owl', 'name' => 'Owl (Burung Hantu)', 'desc' => 'Bijak & waspada'],
+                                    ];
+                                    $currentMascot = $widgetSetting->mascot_id ?? 'fox';
+                                @endphp
+                                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5" id="mascotCardsContainer">
+                                    @foreach($mascotsList as $m)
+                                        <label class="mascot-card flex flex-col items-center justify-center p-3 rounded-xl border {{ $currentMascot === $m['id'] ? 'border-apple-blue bg-blue-50/50 ring-1 ring-apple-blue' : 'border-apple-border bg-apple-canvas/30 hover:bg-white' }} cursor-pointer transition text-center group" data-mascot="{{ $m['id'] }}" onclick="selectMascot('{{ $m['id'] }}')">
+                                            <input type="radio" name="mascot_id" value="{{ $m['id'] }}" {{ $currentMascot === $m['id'] ? 'checked' : '' }} class="sr-only">
+                                            <div class="w-12 h-12 rounded-full overflow-hidden bg-white shadow-2xs border border-apple-border/50 flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+                                                <div class="w-12 h-12" style="background-image: url('/mascots/{{ $m['id'] }}-directions.webp'); background-size: 300% 300%; background-position: 50% 50%;"></div>
+                                            </div>
+                                            <span class="text-[12px] font-bold text-apple-textPrimary leading-tight">{{ $m['name'] }}</span>
+                                            <span class="text-[10px] text-apple-textTertiary mt-0.5">{{ $m['desc'] }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <!-- Controls: Size & Cursor Tracking -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-apple-border/60">
+                                <div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="text-[11.5px] font-semibold text-apple-textPrimary">Ukuran Maskot</label>
+                                        <span id="labelMascotSize" class="text-[11px] font-mono font-bold text-apple-blue">{{ $widgetSetting->mascot_size ?? 72 }}px</span>
+                                    </div>
+                                    <input type="range" name="mascot_size" id="inputMascotSize" min="54" max="96" step="2" value="{{ $widgetSetting->mascot_size ?? 72 }}" oninput="updateMascotSize(this.value)" class="w-full accent-apple-blue cursor-pointer">
+                                    <div class="flex justify-between text-[10px] text-apple-textTertiary mt-0.5">
+                                        <span>Kecil (54px)</span>
+                                        <span>Normal (72px)</span>
+                                        <span>Besar (96px)</span>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col justify-center">
+                                    <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-apple-border bg-apple-canvas/30 hover:bg-white cursor-pointer transition">
+                                        <input type="checkbox" name="mascot_tracking" value="1" id="inputMascotTracking" {{ ($widgetSetting->mascot_tracking ?? true) ? 'checked' : '' }} onchange="toggleMascotTracking(this.checked)" class="w-4 h-4 text-apple-blue rounded focus:ring-apple-blue">
+                                        <div>
+                                            <span class="text-[11.5px] font-bold text-apple-textPrimary block">Gerakan Ikuti Kursor</span>
+                                            <span class="text-[10px] text-apple-textSecondary">Mata &amp; kepala menoleh mengikuti kursor mouse</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Live Interactive Sandbox Preview (5 Cols) -->
+                        <div class="lg:col-span-5 flex flex-col">
+                            <div class="bg-gradient-to-b from-slate-50 to-slate-100/70 border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center relative overflow-hidden h-full min-h-[220px]" id="adminMascotSandbox">
+                                <div class="absolute top-2.5 left-3 flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    <span class="text-[10.5px] font-semibold text-slate-600 uppercase tracking-wider">Live Preview</span>
+                                </div>
+                                <span class="absolute top-2.5 right-3 text-[10px] text-slate-400 font-medium">Arahkan kursor &amp; klik</span>
+
+                                <!-- Mascot Character in Sandbox -->
+                                <div class="flex flex-col items-center justify-center my-auto cursor-pointer select-none group" id="adminMascotPreviewWrapper" onclick="pokeAdminMascot()" title="Klik untuk menggelitik maskot!">
+                                    <div id="adminMascotPreviewSprite" class="transition-transform group-hover:scale-105" style="width: {{ $widgetSetting->mascot_size ?? 72 }}px; height: {{ $widgetSetting->mascot_size ?? 72 }}px; background-image: url('/mascots/{{ $currentMascot }}-directions.webp'); background-size: 300% 300%; background-position: 50% 50%;"></div>
+                                    <div class="w-10 h-2 rounded-full bg-black/10 blur-[2px] mt-1"></div>
+                                </div>
+
+                                <div class="mt-auto pt-2 text-center">
+                                    <p class="text-[11px] font-medium text-slate-600" id="adminMascotStatusText">Arahkan mouse di sekitar kotak ini</p>
+                                    <p class="text-[10px] text-slate-400">Maskot menoleh 9 arah sesuai posisi kursor</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- ============================================================ -->
@@ -3203,12 +3327,171 @@ function updateAgentScopeBadge() {
     }
 }
 
+// 8. Launcher & Mascot Controls
+let currentAdminMascotId = '{{ $widgetSetting->mascot_id ?? "fox" }}';
+let adminMascotSize = {{ $widgetSetting->mascot_size ?? 72 }};
+let adminMascotTrackingEnabled = {{ ($widgetSetting->mascot_tracking ?? true) ? 'true' : 'false' }};
+let adminMascotBlinkTimer = null;
+let adminMascotPokeTimeout = null;
+
+function toggleLauncherType(type) {
+    const section = document.getElementById('sectionMascotOptions');
+    if (!section) return;
+    if (type === 'mascot') {
+        section.classList.remove('hidden');
+        initAdminMascotSandbox();
+    } else {
+        section.classList.add('hidden');
+    }
+}
+
+function selectMascot(mascotId) {
+    currentAdminMascotId = mascotId;
+    const cards = document.querySelectorAll('#mascotCardsContainer .mascot-card');
+    cards.forEach(c => {
+        if (c.getAttribute('data-mascot') === mascotId) {
+            c.classList.add('border-apple-blue', 'bg-blue-50/50', 'ring-1', 'ring-apple-blue');
+            c.classList.remove('border-apple-border', 'bg-apple-canvas/30');
+            const radio = c.querySelector('input[type="radio"]');
+            if (radio) radio.checked = true;
+        } else {
+            c.classList.remove('border-apple-blue', 'bg-blue-50/50', 'ring-1', 'ring-apple-blue');
+            c.classList.add('border-apple-border', 'bg-apple-canvas/30');
+        }
+    });
+
+    const sprite = document.getElementById('adminMascotPreviewSprite');
+    if (sprite) {
+        sprite.style.backgroundImage = `url('/mascots/${mascotId}-directions.webp')`;
+        sprite.style.backgroundPosition = '50% 50%';
+    }
+}
+
+function updateMascotSize(val) {
+    adminMascotSize = parseInt(val, 10);
+    const label = document.getElementById('labelMascotSize');
+    if (label) label.innerText = `${adminMascotSize}px`;
+
+    const sprite = document.getElementById('adminMascotPreviewSprite');
+    if (sprite) {
+        sprite.style.width = `${adminMascotSize}px`;
+        sprite.style.height = `${adminMascotSize}px`;
+    }
+}
+
+function toggleMascotTracking(enabled) {
+    adminMascotTrackingEnabled = enabled;
+    const sprite = document.getElementById('adminMascotPreviewSprite');
+    if (!enabled && sprite) {
+        sprite.style.backgroundPosition = '50% 50%';
+    }
+}
+
+function pokeAdminMascot() {
+    const sprite = document.getElementById('adminMascotPreviewSprite');
+    const statusText = document.getElementById('adminMascotStatusText');
+    if (!sprite) return;
+
+    if (adminMascotPokeTimeout) clearTimeout(adminMascotPokeTimeout);
+
+    // Switch to reactions sheet frame (col 2, row 2 = 100% 100% or 50% 50%)
+    sprite.style.backgroundImage = `url('/mascots/${currentAdminMascotId}-reactions.webp')`;
+    sprite.style.backgroundPosition = '50% 50%';
+    sprite.style.transform = 'scale(1.15) rotate(5deg)';
+    if (statusText) statusText.innerText = '✨ Yaaay! (Gembira)';
+
+    adminMascotPokeTimeout = setTimeout(() => {
+        sprite.style.backgroundImage = `url('/mascots/${currentAdminMascotId}-directions.webp')`;
+        sprite.style.backgroundPosition = '50% 50%';
+        sprite.style.transform = '';
+        if (statusText) statusText.innerText = 'Arahkan mouse di sekitar kotak ini';
+    }, 1200);
+}
+
+function initAdminMascotSandbox() {
+    const sandbox = document.getElementById('adminMascotSandbox');
+    const sprite = document.getElementById('adminMascotPreviewSprite');
+    if (!sandbox || !sprite || sandbox.dataset.initialized) return;
+    sandbox.dataset.initialized = 'true';
+
+    const directionGrid = [
+        [0, 0],   // 0: Top-Left
+        [50, 0],  // 1: Top
+        [100, 0], // 2: Top-Right
+        [0, 50],  // 3: Center-Left
+        [50, 50], // 4: Center
+        [100, 50],// 5: Center-Right
+        [0, 100], // 6: Bottom-Left
+        [50, 100],// 7: Bottom
+        [100, 100]// 8: Bottom-Right
+    ];
+
+    sandbox.addEventListener('mousemove', (e) => {
+        if (!adminMascotTrackingEnabled || adminMascotPokeTimeout) return;
+        const rect = sprite.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        const dx = e.clientX - centerX;
+        const dy = e.clientY - centerY;
+        const distance = Math.hypot(dx, dy);
+
+        // Center deadzone
+        if (distance < 20) {
+            sprite.style.backgroundPosition = '50% 50%';
+            return;
+        }
+
+        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+        let dirIndex = 4;
+
+        if (angle >= -157.5 && angle < -112.5) dirIndex = 0;       // Up-Left
+        else if (angle >= -112.5 && angle < -67.5) dirIndex = 1;   // Up
+        else if (angle >= -67.5 && angle < -22.5) dirIndex = 2;    // Up-Right
+        else if (angle >= -22.5 && angle < 22.5) dirIndex = 5;     // Right
+        else if (angle >= 22.5 && angle < 67.5) dirIndex = 8;      // Down-Right
+        else if (angle >= 67.5 && angle < 112.5) dirIndex = 7;     // Down
+        else if (angle >= 112.5 && angle < 157.5) dirIndex = 6;    // Down-Left
+        else dirIndex = 3;                                         // Left
+
+        const [x, y] = directionGrid[dirIndex];
+        sprite.style.backgroundPosition = `${x}% ${y}%`;
+    });
+
+    sandbox.addEventListener('mouseleave', () => {
+        if (adminMascotPokeTimeout) return;
+        sprite.style.backgroundPosition = '50% 50%';
+    });
+
+    // Random blinking in sandbox
+    const scheduleBlink = () => {
+        const delay = Math.random() * 3000 + 2500;
+        adminMascotBlinkTimer = setTimeout(() => {
+            if (!adminMascotPokeTimeout) {
+                const currentBg = sprite.style.backgroundImage;
+                const currentPos = sprite.style.backgroundPosition;
+                sprite.style.backgroundImage = `url('/mascots/${currentAdminMascotId}-reactions.webp')`;
+                sprite.style.backgroundPosition = '0% 0%'; // Closed eyes
+                setTimeout(() => {
+                    if (!adminMascotPokeTimeout) {
+                        sprite.style.backgroundImage = currentBg;
+                        sprite.style.backgroundPosition = currentPos;
+                    }
+                }, 140);
+            }
+            scheduleBlink();
+        }, delay);
+    };
+    scheduleBlink();
+}
+
 // Initial Boot
 document.addEventListener('DOMContentLoaded', function() {
     renderDecisionTree();
     renderFaqRulesList();
     renderSocialChannelsList();
     updateSubTabToggleStates();
+    initAdminMascotSandbox();
 });
 </script>
 @endsection

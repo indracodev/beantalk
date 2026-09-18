@@ -4,11 +4,13 @@ import { LOCALES, Language, WidgetLocale } from './locale';
 import { Message, SessionInitData, WidgetInitOptions } from '../types';
 import { EventEmitter } from '../core/emitter';
 import { generateClientMessageId, getStoredCustomerName, setStoredCustomerName, getStoredCustomerEmail, setStoredCustomerEmail } from '../core/storage';
+import { MascotController } from './mascot';
 
 export class ChatWidgetUi {
   private shadowRoot: ShadowRoot;
   private emitter: EventEmitter;
   private options: WidgetInitOptions;
+  private mascotController: MascotController | null = null;
   private lang: Language = 'id';
   private isOpen: boolean = false;
   private currentStage: 'welcome' | 'identity' | 'chat' | 'social-picker' = 'welcome';
@@ -270,6 +272,18 @@ export class ChatWidgetUi {
     }
     if (settings.sound_custom_url !== undefined) {
       this.widgetSoundCustomUrl = settings.sound_custom_url;
+    }
+
+    // Launcher style (Default Balloon vs Interactive Mascot)
+    const launcherType = settings.launcher_type || 'default';
+    const mascotId = settings.mascot_id || 'fox';
+    const mascotSize = settings.mascot_size || 72;
+    const mascotTracking = settings.mascot_tracking !== false;
+
+    if (launcherType === 'mascot') {
+      this.initMascotLauncher(mascotId, mascotSize, mascotTracking);
+    } else {
+      this.disableMascotLauncher();
     }
 
     // Update titles and greetings
@@ -669,6 +683,7 @@ export class ChatWidgetUi {
         <button type="button" class="chat-launcher-btn" aria-label="${this.t.openChatAriaLabel}">
           <div class="launcher-icon-chat">${ICONS.chat}</div>
           <div class="launcher-icon-close">${ICONS.close}</div>
+          <div class="launcher-mascot-container" style="display: none;"></div>
           <div class="launcher-unread-badge">0</div>
         </button>
       </div>
@@ -1111,6 +1126,9 @@ export class ChatWidgetUi {
     this.unreadCount = 0;
     this.updateUnreadBadge();
     this.updateViewportDimensions();
+    if (this.mascotController) {
+      this.mascotController.setVisible(false);
+    }
     this.emitter.emit('widget:opened');
 
     // Prevent body scroll bounce on mobile
@@ -1134,6 +1152,9 @@ export class ChatWidgetUi {
   close(): void {
     this.isOpen = false;
     this.wrapperEl.classList.remove('is-open');
+    if (this.mascotController) {
+      this.mascotController.setVisible(true);
+    }
     this.emitter.emit('widget:closed');
 
     // Restore body scroll
@@ -1149,6 +1170,49 @@ export class ChatWidgetUi {
     } else {
       this.open();
     }
+  }
+
+  private initMascotLauncher(mascotId: string, size: number, tracking: boolean): void {
+    if (this.mascotController) {
+      this.mascotController.destroy();
+      this.mascotController = null;
+    }
+
+    const mascotContainer = this.shadowRoot.querySelector('.launcher-mascot-container') as HTMLElement;
+    const chatIcon = this.shadowRoot.querySelector('.launcher-icon-chat') as HTMLElement;
+    if (!mascotContainer) return;
+
+    mascotContainer.innerHTML = '';
+    mascotContainer.style.display = 'flex';
+    if (chatIcon) chatIcon.style.display = 'none';
+    this.launcherBtn.classList.add('is-mascot-launcher');
+
+    const apiUrl = this.options.apiUrl || (this.sessionData as any)?.api_url || '';
+    this.mascotController = new MascotController(mascotContainer, {
+      mascotId,
+      apiUrl,
+      size,
+      tracking,
+      onClick: () => {
+        this.toggle();
+      }
+    });
+
+    if (this.isOpen) {
+      this.mascotController.setVisible(false);
+    }
+  }
+
+  private disableMascotLauncher(): void {
+    if (this.mascotController) {
+      this.mascotController.destroy();
+      this.mascotController = null;
+    }
+    const mascotContainer = this.shadowRoot.querySelector('.launcher-mascot-container') as HTMLElement;
+    const chatIcon = this.shadowRoot.querySelector('.launcher-icon-chat') as HTMLElement;
+    if (mascotContainer) mascotContainer.style.display = 'none';
+    if (chatIcon) chatIcon.style.display = 'flex';
+    this.launcherBtn.classList.remove('is-mascot-launcher');
   }
 
   setMessages(messages: Message[]): void {

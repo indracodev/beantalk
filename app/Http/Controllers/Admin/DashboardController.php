@@ -1797,6 +1797,14 @@ class DashboardController extends Controller
             }
         }
 
+        // Process Launcher Style (Default Balloon vs Interactive Mascot)
+        if ($request->has('launcher_type')) {
+            $updateData['launcher_type']   = in_array($request->input('launcher_type'), ['default', 'mascot']) ? $request->input('launcher_type') : 'default';
+            $updateData['mascot_id']       = $request->input('mascot_id', 'fox');
+            $updateData['mascot_size']     = max(48, min(120, (int) $request->input('mascot_size', 72)));
+            $updateData['mascot_tracking'] = $request->has('mascot_tracking');
+        }
+
         $widgetSetting->update($updateData);
 
         ActivityLogger::log(

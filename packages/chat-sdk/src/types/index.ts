@@ -52,6 +52,10 @@ export interface WidgetSettings {
   bot_enabled?: boolean;
   bot_name?: string;
   bot_welcome_message?: string;
+  launcher_type?: 'default' | 'mascot';
+  mascot_id?: string;
+  mascot_size?: number;
+  mascot_tracking?: boolean;
 }
 
 export interface BusinessHoursData {

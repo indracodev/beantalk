@@ -48,6 +48,10 @@ class WidgetSetting extends Model
         'widget_sound_enabled',
         'widget_sound_type',
         'widget_sound_custom_url',
+        'launcher_type',
+        'mascot_id',
+        'mascot_size',
+        'mascot_tracking',
     ];
 
     protected $casts = [
@@ -68,6 +72,8 @@ class WidgetSetting extends Model
         'sound_enabled'                  => 'boolean',
         'sound_duration'                 => 'integer',
         'widget_sound_enabled'           => 'boolean',
+        'mascot_size'                    => 'integer',
+        'mascot_tracking'                => 'boolean',
     ];
 
     public function project()

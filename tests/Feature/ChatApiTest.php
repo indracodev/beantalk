@@ -497,4 +497,62 @@ class ChatApiTest extends TestCase
         $initResId->assertStatus(200)
                   ->assertJsonPath('data.widget.language', 'id');
     }
+
+    /**
+     * Test 16: Launcher mascot configuration and session init
+     */
+    public function testLauncherMascotConfigurationAndSessionInit()
+    {
+        $project = \App\Models\Project::where('slug', 'supresso')->first();
+        $user = \App\Models\User::first();
+        $user->update(['tenant_id' => $project->tenant_id]);
+
+        // 1. Admin saves settings with mascot launcher
+        $response = $this->actingAs($user)->put("/admin/integrations/{$project->id}/settings", [
+            'primary_color'   => '#0071E3',
+            'launcher_type'   => 'mascot',
+            'mascot_id'       => 'panda',
+            'mascot_size'     => 80,
+            'mascot_tracking' => '1',
+        ]);
+        $response->assertRedirect();
+
+        // Verify database state
+        $setting = \App\Models\WidgetSetting::where('project_id', $project->id)->first();
+        $this->assertEquals('mascot', $setting->launcher_type);
+        $this->assertEquals('panda', $setting->mascot_id);
+        $this->assertEquals(80, $setting->mascot_size);
+        $this->assertTrue((bool)$setting->mascot_tracking);
+
+        // Verify client session init returns mascot payload
+        $initRes = $this->withHeaders([
+            'X-Project-Key' => 'pk_live_supresso_8819',
+        ])->postJson('/api/v1/client/session/init', [
+            'visitor_uuid' => 'visitor-test-mascot-1',
+        ]);
+        $initRes->assertStatus(200)
+                ->assertJsonPath('data.widget.launcher_type', 'mascot')
+                ->assertJsonPath('data.widget.mascot_id', 'panda')
+                ->assertJsonPath('data.widget.mascot_size', 80)
+                ->assertJsonPath('data.widget.mascot_tracking', true);
+
+        // 2. Admin switches back to default balloon
+        $response2 = $this->actingAs($user)->put("/admin/integrations/{$project->id}/settings", [
+            'primary_color' => '#0071E3',
+            'launcher_type' => 'default',
+        ]);
+        $response2->assertRedirect();
+
+        $setting->refresh();
+        $this->assertEquals('default', $setting->launcher_type);
+
+        $initRes2 = $this->withHeaders([
+            'X-Project-Key' => 'pk_live_supresso_8819',
+        ])->postJson('/api/v1/client/session/init', [
+            'visitor_uuid' => 'visitor-test-mascot-2',
+        ]);
+        $initRes2->assertStatus(200)
+                 ->assertJsonPath('data.widget.launcher_type', 'default');
+    }
 }
+

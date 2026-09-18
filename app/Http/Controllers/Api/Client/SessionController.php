@@ -138,6 +138,10 @@ class SessionController extends Controller
                     'sound_enabled'       => $widgetSetting ? (bool) ($widgetSetting->widget_sound_enabled ?? true) : true,
                     'sound_type'          => $widgetSetting ? ($widgetSetting->widget_sound_type ?: 'chime') : 'chime',
                     'sound_custom_url'    => $widgetSetting ? $widgetSetting->widget_sound_custom_url : null,
+                    'launcher_type'       => $widgetSetting ? ($widgetSetting->launcher_type ?: 'default') : 'default',
+                    'mascot_id'           => $widgetSetting ? ($widgetSetting->mascot_id ?: 'fox') : 'fox',
+                    'mascot_size'         => $widgetSetting ? ($widgetSetting->mascot_size ?: 72) : 72,
+                    'mascot_tracking'     => $widgetSetting ? (bool) ($widgetSetting->mascot_tracking ?? true) : true,
                 ],
                 'business_hours' => $widgetSetting
                     ? $this->businessHoursService->getScheduleSummary($widgetSetting)

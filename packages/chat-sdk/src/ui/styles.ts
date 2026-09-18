@@ -107,6 +107,56 @@ export function generateWidgetCss(primaryColor: string = '#1E1E1E'): string {
       transform: rotate(0deg) scale(1);
     }
 
+    /* Mascot Launcher Styling */
+    .chat-launcher-btn.is-mascot-launcher {
+      background: transparent !important;
+      box-shadow: none !important;
+      border: none !important;
+      width: auto !important;
+      height: auto !important;
+      min-width: 56px;
+      min-height: 56px;
+      overflow: visible;
+      padding: 0;
+    }
+
+    .chat-launcher-btn.is-mascot-launcher:hover {
+      background: transparent !important;
+      transform: none !important;
+    }
+
+    .launcher-mascot-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.25));
+      transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease;
+      position: relative;
+    }
+
+    .chat-launcher-btn.is-mascot-launcher:hover .launcher-mascot-container {
+      transform: scale(1.08) translateY(-3px);
+    }
+
+    .chat-launcher-btn.is-mascot-launcher:active .launcher-mascot-container {
+      transform: scale(0.96);
+    }
+
+    .chat-launcher-btn.is-mascot-launcher .launcher-icon-close {
+      background: var(--chat-primary);
+      color: #FFFFFF;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+    }
+
+    .chat-wrapper.is-open .chat-launcher-btn.is-mascot-launcher .launcher-mascot-container {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.5);
+    }
+
     .launcher-unread-badge {
       position: absolute;
       top: -3px;
