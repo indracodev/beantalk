@@ -7,6 +7,7 @@
     <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Console') — BeanTalk</title>
+    <link rel="icon" id="beantalkFavicon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230071E3'/%3E%3Cpath d='M16 20a4 4 0 0 1 4-4h24a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H24l-8 7v-7a4 4 0 0 1-4-4V20z' fill='%23ffffff'/%3E%3Ccircle cx='26' cy='28' r='2.5' fill='%230071E3'/%3E%3Ccircle cx='32' cy='28' r='2.5' fill='%230071E3'/%3E%3Ccircle cx='38' cy='28' r='2.5' fill='%230071E3'/%3E%3C/svg%3E">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
