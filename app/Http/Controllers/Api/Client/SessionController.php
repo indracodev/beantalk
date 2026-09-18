@@ -142,6 +142,7 @@ class SessionController extends Controller
                     'mascot_id'           => $widgetSetting ? ($widgetSetting->mascot_id ?: 'fox') : 'fox',
                     'mascot_size'         => $widgetSetting ? ($widgetSetting->mascot_size ?: 72) : 72,
                     'mascot_tracking'     => $widgetSetting ? (bool) ($widgetSetting->mascot_tracking ?? true) : true,
+                    'api_url'             => url('/'),
                 ],
                 'business_hours' => $widgetSetting
                     ? $this->businessHoursService->getScheduleSummary($widgetSetting)

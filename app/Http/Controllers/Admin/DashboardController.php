@@ -1818,7 +1818,13 @@ class DashboardController extends Controller
             ]
         );
 
-        return redirect()->route('admin.integrations.detail', $project->id)->with('success', "Pengaturan integrasi, smart bot & Telegram untuk '{$project->name}' berhasil disimpan!");
+        $activeTab = $request->input('active_tab');
+        $redirectRoute = ($activeTab && $activeTab !== 'bot')
+            ? route('admin.integrations.detail', ['id' => $project->id, 'tab' => $activeTab])
+            : route('admin.integrations.detail', $project->id);
+
+        return redirect($redirectRoute)
+            ->with('success', "Pengaturan integrasi untuk '{$project->name}' berhasil disimpan!");
     }
 
     /**

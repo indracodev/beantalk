@@ -18,6 +18,7 @@
         <input type="hidden" name="bot_tree" id="hiddenBotTree" value="{{ json_encode($widgetSetting->bot_tree ?? []) }}">
         <input type="hidden" name="has_sound_settings_form" value="1">
         <input type="hidden" name="has_widget_sound_settings_form" value="1">
+        <input type="hidden" name="active_tab" id="hiddenActiveTab" value="{{ request('tab', 'bot') }}">
 
         <!-- Header Action Bar -->
         <div class="bg-white border border-apple-border rounded-xl p-3.5 sm:p-4 shadow-apple-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -128,6 +129,14 @@
                     <path d="M2 12h20"></path>
                 </svg>
                 <span>Tampilan &amp; Branding</span>
+            </button>
+
+            <button type="button" onclick="switchDetailTab('mascot')" id="tab-btn-mascot" class="tab-btn shrink-0 whitespace-nowrap px-3.5 py-2 rounded-lg text-[12px] font-medium text-apple-textSecondary hover:text-apple-textPrimary hover:bg-apple-canvas transition flex items-center gap-2 cursor-pointer">
+                <span class="text-[14px]">🦊</span>
+                <span>Maskot Interaktif</span>
+                <span id="badgeTabMascotStatus" class="px-1.5 py-0.2 rounded-full text-[10px] font-bold {{ ($widgetSetting->launcher_type ?? 'default') === 'mascot' ? 'bg-amber-100 text-amber-800' : 'bg-neutral-100 text-neutral-600' }}">
+                    {{ ($widgetSetting->launcher_type ?? 'default') === 'mascot' ? 'Aktif' : 'Off' }}
+                </span>
             </button>
 
             <button type="button" onclick="switchDetailTab('social')" id="tab-btn-social" class="tab-btn shrink-0 whitespace-nowrap px-3.5 py-2 rounded-lg text-[12px] font-medium text-apple-textSecondary hover:text-apple-textPrimary hover:bg-apple-canvas transition flex items-center gap-2 cursor-pointer">
@@ -522,7 +531,12 @@
                     </div>
                 </div>
             </div>
+        </div>
 
+        <!-- ============================================================ -->
+        <!-- TAB 2.5: MASKOT INTERAKTIF (PAGE MASCOT)                     -->
+        <!-- ============================================================ -->
+        <div id="tab-pane-mascot" class="tab-pane flex flex-col gap-4" style="display: none;">
             <!-- Gaya Tombol Peluncur Chat (Chat Launcher Style) -->
             <div class="bg-white border border-apple-border rounded-xl p-4 sm:p-5 shadow-apple-sm flex flex-col gap-4">
                 <div class="pb-3 border-b border-apple-border flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -1826,8 +1840,17 @@ function getSocialPreviewIconHtml(chan, platform) {
 
 // 1. Tab Switching Function (Zero dependencies, Bulletproof inline display toggle)
 function switchDetailTab(tabName) {
-    const tabs = ['bot', 'appearance', 'social', 'embed', 'telegram', 'hours', 'sound'];
+    const tabs = ['bot', 'appearance', 'mascot', 'social', 'embed', 'telegram', 'hours', 'sound'];
     
+    // Save to hidden input and update URL
+    const hiddenTab = document.getElementById('hiddenActiveTab');
+    if (hiddenTab) hiddenTab.value = tabName;
+    try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', tabName);
+        window.history.replaceState(null, '', url.toString());
+    } catch (e) {}
+
     tabs.forEach(t => {
         const pane = document.getElementById('tab-pane-' + t);
         const btn = document.getElementById('tab-btn-' + t);
@@ -1840,6 +1863,8 @@ function switchDetailTab(tabName) {
             if (t === tabName) {
                 if (t === 'bot') {
                     btn.className = 'tab-btn shrink-0 whitespace-nowrap px-3.5 py-2 rounded-lg text-[12px] font-semibold transition flex items-center gap-2 bg-purple-600 text-white shadow-2xs cursor-pointer';
+                } else if (t === 'mascot') {
+                    btn.className = 'tab-btn shrink-0 whitespace-nowrap px-3.5 py-2 rounded-lg text-[12px] font-semibold transition flex items-center gap-2 bg-amber-500 text-white shadow-2xs cursor-pointer';
                 } else if (t === 'telegram') {
                     btn.className = 'tab-btn shrink-0 whitespace-nowrap px-3.5 py-2 rounded-lg text-[12px] font-semibold transition flex items-center gap-2 bg-sky-600 text-white shadow-2xs cursor-pointer';
                 } else if (t === 'hours') {
@@ -1854,6 +1879,10 @@ function switchDetailTab(tabName) {
             }
         }
     });
+
+    if (tabName === 'mascot') {
+        setTimeout(initAdminMascotSandbox, 50);
+    }
 }
 
 // 1.05 Sound Alert Configuration Helpers
@@ -3471,24 +3500,43 @@ function applyMascotFilters() {
 
 function selectMascot(mascotId) {
     currentAdminMascotId = mascotId;
+    
+    // Clear any timers
+    if (adminMascotBlinkTimer) {
+        clearTimeout(adminMascotBlinkTimer);
+        adminMascotBlinkTimer = null;
+    }
+    if (adminMascotPokeTimeout) {
+        clearTimeout(adminMascotPokeTimeout);
+        adminMascotPokeTimeout = null;
+    }
+
     const cards = document.querySelectorAll('#mascotCardsContainer .mascot-card');
     cards.forEach(c => {
-        if (c.getAttribute('data-mascot') === mascotId) {
+        const isSelected = (c.getAttribute('data-mascot') === mascotId);
+        if (isSelected) {
             c.classList.add('border-apple-blue', 'bg-blue-50/50', 'ring-1', 'ring-apple-blue');
-            c.classList.remove('border-apple-border', 'bg-apple-canvas/30');
+            c.classList.remove('border-apple-border', 'bg-white');
             const radio = c.querySelector('input[type="radio"]');
             if (radio) radio.checked = true;
         } else {
             c.classList.remove('border-apple-blue', 'bg-blue-50/50', 'ring-1', 'ring-apple-blue');
-            c.classList.add('border-apple-border', 'bg-apple-canvas/30');
+            c.classList.add('border-apple-border', 'bg-white');
         }
     });
 
     const sprite = document.getElementById('adminMascotPreviewSprite');
+    const statusText = document.getElementById('adminMascotStatusText');
     if (sprite) {
+        sprite.style.transform = '';
         sprite.style.backgroundImage = `url('/mascots/${mascotId}-directions.webp')`;
         sprite.style.backgroundPosition = '50% 50%';
     }
+    if (statusText) {
+        statusText.innerText = 'Arahkan mouse di sekitar kotak ini';
+    }
+
+    scheduleAdminBlink();
 }
 
 function updateMascotSize(val) {
@@ -3529,7 +3577,33 @@ function pokeAdminMascot() {
         sprite.style.backgroundPosition = '50% 50%';
         sprite.style.transform = '';
         if (statusText) statusText.innerText = 'Arahkan mouse di sekitar kotak ini';
+        adminMascotPokeTimeout = null;
     }, 1200);
+}
+
+function scheduleAdminBlink() {
+    if (adminMascotBlinkTimer) clearTimeout(adminMascotBlinkTimer);
+    const delay = Math.random() * 3000 + 2500;
+    adminMascotBlinkTimer = setTimeout(() => {
+        const sprite = document.getElementById('adminMascotPreviewSprite');
+        if (!sprite || adminMascotPokeTimeout) {
+            scheduleAdminBlink();
+            return;
+        }
+        
+        const directionsBg = `url('/mascots/${currentAdminMascotId}-directions.webp')`;
+        const currentPos = sprite.style.backgroundPosition || '50% 50%';
+        sprite.style.backgroundImage = `url('/mascots/${currentAdminMascotId}-reactions.webp')`;
+        sprite.style.backgroundPosition = '0% 0%'; // Closed eyes
+        
+        setTimeout(() => {
+            if (!adminMascotPokeTimeout && sprite) {
+                sprite.style.backgroundImage = directionsBg;
+                sprite.style.backgroundPosition = currentPos;
+            }
+        }, 140);
+        scheduleAdminBlink();
+    }, delay);
 }
 
 function initAdminMascotSandbox() {
@@ -3587,26 +3661,7 @@ function initAdminMascotSandbox() {
         sprite.style.backgroundPosition = '50% 50%';
     });
 
-    // Random blinking in sandbox
-    const scheduleBlink = () => {
-        const delay = Math.random() * 3000 + 2500;
-        adminMascotBlinkTimer = setTimeout(() => {
-            if (!adminMascotPokeTimeout) {
-                const currentBg = sprite.style.backgroundImage;
-                const currentPos = sprite.style.backgroundPosition;
-                sprite.style.backgroundImage = `url('/mascots/${currentAdminMascotId}-reactions.webp')`;
-                sprite.style.backgroundPosition = '0% 0%'; // Closed eyes
-                setTimeout(() => {
-                    if (!adminMascotPokeTimeout) {
-                        sprite.style.backgroundImage = currentBg;
-                        sprite.style.backgroundPosition = currentPos;
-                    }
-                }, 140);
-            }
-            scheduleBlink();
-        }, delay);
-    };
-    scheduleBlink();
+    scheduleAdminBlink();
 }
 
 // Initial Boot
@@ -3615,7 +3670,15 @@ document.addEventListener('DOMContentLoaded', function() {
     renderFaqRulesList();
     renderSocialChannelsList();
     updateSubTabToggleStates();
-    initAdminMascotSandbox();
+
+    // Check active tab from URL query params or server session
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialTab = urlParams.get('tab') || '{{ request("tab", "bot") }}';
+    if (initialTab && initialTab !== 'bot') {
+        switchDetailTab(initialTab);
+    } else {
+        initAdminMascotSandbox();
+    }
 });
 </script>
 @endsection

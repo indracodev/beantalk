@@ -51,6 +51,7 @@ export class BeanTalk {
     // 1. Initialize API Client with auto-detected server origin
     const detectedOrigin = resolveScriptOrigin();
     const apiUrl = options.apiUrl || detectedOrigin || (typeof window !== 'undefined' ? window.location.origin : '');
+    options.apiUrl = apiUrl;
     this.api = new ApiClient(options.projectKey, apiUrl);
 
     // 2. Initialize UI (Shadow DOM)
