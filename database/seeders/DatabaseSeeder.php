@@ -42,5 +42,8 @@ class DatabaseSeeder extends Seeder
 
         // 3. Semai Chatbot & Widget Setting INDRACO Store
         $this->call(IndracoStoreChatbotSeeder::class);
+
+        // 4. Semai Chatbot & Widget Setting Supresso Coffee SG
+        $this->call(SupressoCoffeeChatbotSeeder::class);
     }
 }

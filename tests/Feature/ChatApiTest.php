@@ -19,10 +19,11 @@ class ChatApiTest extends TestCase
             ['public_key' => 'pk_live_supresso_8819'],
             ['tenant_id' => $tenant->id, 'project_id' => $project->id, 'name' => 'Supresso Test Key', 'is_active' => true]
         );
-        \App\Models\WidgetSetting::firstOrCreate(
+        $widgetSetting = \App\Models\WidgetSetting::firstOrCreate(
             ['project_id' => $project->id],
             ['primary_color' => '#1E1E1E', 'accent_color' => '#FFFFFF', 'position' => 'bottom-right', 'greeting_title' => 'Hallo!', 'greeting_subtitle' => 'Ada yang bisa dibantu?', 'is_online' => true]
         );
+        $widgetSetting->update(['bot_enabled' => false]);
 
         $visitor = \App\Models\Visitor::firstOrCreate(
             ['project_id' => $project->id, 'visitor_uuid' => '550e8400-e29b-41d4-a716-446655440000'],

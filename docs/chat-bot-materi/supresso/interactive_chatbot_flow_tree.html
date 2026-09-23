@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sugiura Coffee - Verbatim Chatbot Flow Tree & Architecture</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            coffee: {
+              50: '#fcf8f5',
+              100: '#f6ebe1',
+              200: '#ecd7c3',
+              300: '#dfbe9f',
+              400: '#cfa17b',
+              500: '#b87f54',
+              600: '#9b643e',
+              700: '#7d4d30',
+              800: '#643d28',
+              900: '#4a2c1d',
+              950: '#2c180e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Smooth custom tree line connector styling */
+    .tree-line::before {
+      content: '';
+      position: absolute;
+      left: -18px;
+      top: 24px;
+      width: 18px;
+      height: 2px;
+      background-color: #cbd5e1;
+    }
+    .tree-line::after {
+      content: '';
+      position: absolute;
+      left: -18px;
+      top: 0;
+      width: 2px;
+      height: 100%;
+      background-color: #cbd5e1;
+    }
+    .tree-line:last-child::after {
+      height: 24px;
+    }
+
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f8fafc;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-100/70 text-slate-800 min-h-screen font-sans flex flex-col antialiased">
+
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm backdrop-blur-md bg-white/95">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-coffee-800 text-amber-100 flex items-center justify-center font-black shadow-md shadow-coffee-900/20 text-lg">
+          ☕
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">Sugiura Coffee — Chatbot Tree</h1>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase bg-amber-100 text-amber-800 border border-amber-200">Verbatim SSG</span>
+          </div>
+          <p class="text-xs text-slate-500">100% Original Text & Hierarchy Conversion from Flowchart Diagram</p>
+        </div>
+      </div>
+
+      <!-- Mode Tabs -->
+      <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/80">
+        <button id="tab-btn-tree" onclick="switchTab('tree')" class="px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-white text-slate-900 shadow-sm transition">
+          🌳 Flow Tree View
+        </button>
+        <button id="tab-btn-simulator" onclick="switchTab('simulator')" class="px-3.5 py-1.5 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 rounded-lg transition">
+          💬 Live Chat Simulator
+        </button>
+        <button id="tab-btn-md" onclick="switchTab('md')" class="px-3.5 py-1.5 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 rounded-lg transition">
+          📋 Markdown / JSON
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- VIEW 1: COMPLETE TREE FLOW -->
+    <section id="view-tree" class="space-y-5">
+      <!-- Search & Controls Bar -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
+        <!-- Search Field -->
+        <div class="relative flex-1 max-w-md">
+          <svg class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          <input 
+            type="text" 
+            id="tree-search" 
+            placeholder="Search verbatim text (e.g. Shop Pay, DHL, 10% OFF, Wholesale)..." 
+            oninput="filterTree(this.value)"
+            class="w-full pl-10 pr-4 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-coffee-500/20 focus:border-coffee-600 transition"
+          />
+        </div>
+
+        <!-- Buttons & Legend -->
+        <div class="flex items-center flex-wrap gap-2 text-xs">
+          <button onclick="toggleAllBranches(true)" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            Expand All
+          </button>
+          <button onclick="toggleAllBranches(false)" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+            Collapse All
+          </button>
+          <span class="h-4 w-px bg-slate-300 mx-1"></span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-amber-100 text-amber-900 border border-amber-200">Main Greeting</span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-800 border border-blue-200">Top Categories</span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">Bot Response / Criteria</span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-purple-50 text-purple-800 border border-purple-200">Action / Support Form</span>
+        </div>
+      </div>
+
+      <!-- Tree Canvas Container -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs overflow-x-auto">
+        <div id="tree-root" class="min-w-[760px] space-y-4">
+          <!-- Populated by JavaScript with exact verbatim nodes -->
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: LIVE SIMULATOR -->
+    <section id="view-simulator" class="hidden">
+      <div class="max-w-2xl mx-auto bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col h-[740px]">
+        <!-- Chat Header -->
+        <div class="p-4 bg-coffee-950 text-white flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="relative">
+              <div class="w-10 h-10 rounded-full bg-coffee-700 flex items-center justify-center font-bold text-white text-lg shadow-inner">
+                ☕
+              </div>
+              <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-coffee-950 rounded-full"></span>
+            </div>
+            <div>
+              <h3 class="font-bold text-sm text-amber-50">Sugiura Coffee Live Assistant</h3>
+              <p class="text-xs text-amber-200/70">Flowchart Interactive Simulator (Original Copy)</p>
+            </div>
+          </div>
+          <button onclick="resetSimulator()" class="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 font-medium">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            Restart Chat
+          </button>
+        </div>
+
+        <!-- Chat Screen Messages -->
+        <div id="sim-messages" class="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50/80">
+          <!-- Dynamic bubbles -->
+        </div>
+
+        <!-- Quick Choices Container -->
+        <div class="p-4 bg-white border-t border-slate-200">
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Select an Option / Branch:</p>
+            <span id="sim-breadcrumbs" class="text-[11px] text-coffee-700 font-medium truncate max-w-xs">Home</span>
+          </div>
+          <div id="sim-options" class="flex flex-wrap gap-2 max-h-44 overflow-y-auto pr-1">
+            <!-- Dynamic Buttons rendered here -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: MARKDOWN TRANSCRIPTION & EXPORT -->
+    <section id="view-md" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-1 space-y-4">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+            <h3 class="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-coffee-700"></span>
+              Verbatim Conversion Guarantee
+            </h3>
+            <p class="text-xs text-slate-600 leading-relaxed mb-3">
+              This document contains <strong>every text block</strong> extracted verbatim from your <code>chatbot SSG.pdf</code> flowchart diagram. No wording has been modified, translated, or summarized:
+            </p>
+            <ul class="text-xs text-slate-600 space-y-1.5 list-disc list-inside">
+              <li>Credit Card, Digital Wallets &amp; Shop Pay terms</li>
+              <li>Yamato, DHL Express &amp; EMS dispatch criteria</li>
+              <li>Wholesale, partnership and customer service emails</li>
+              <li>Damage reporting and order cancellation boundaries</li>
+              <li>10% OFF discount conditions &amp; brewing advice</li>
+            </ul>
+          </div>
+
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+            <h4 class="text-xs uppercase tracking-wider font-bold text-slate-400 mb-3">Structure Metrics</h4>
+            <div class="text-xs space-y-2.5 text-slate-600">
+              <div class="flex justify-between border-b border-slate-100 pb-1.5">
+                <span>Total Mapped Nodes:</span>
+                <span id="stat-nodes-count" class="font-bold text-slate-900">32</span>
+              </div>
+              <div class="flex justify-between border-b border-slate-100 pb-1.5">
+                <span>Top Level Categories:</span>
+                <span class="font-bold text-slate-900">7 Core Categories</span>
+              </div>
+              <div class="flex justify-between border-b border-slate-100 pb-1.5">
+                <span>Max Tree Depth:</span>
+                <span class="font-bold text-slate-900">4 Levels</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Data Fidelity:</span>
+                <span class="font-semibold text-emerald-600">100% Verbatim</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-2 bg-slate-900 rounded-2xl border border-slate-800 shadow-sm overflow-hidden flex flex-col">
+          <div class="px-4 py-3 bg-slate-950 flex items-center justify-between border-b border-slate-800">
+            <div class="flex items-center space-x-2">
+              <div class="w-3 h-3 rounded-full bg-rose-500/80"></div>
+              <div class="w-3 h-3 rounded-full bg-amber-500/80"></div>
+              <div class="w-3 h-3 rounded-full bg-emerald-500/80"></div>
+              <span class="ml-2 text-xs font-mono text-slate-400">chatbot-ssg-transcription.md</span>
+            </div>
+            <button onclick="copyRawMarkdown()" id="copy-md-btn" class="text-xs px-3 py-1 bg-coffee-700 hover:bg-coffee-600 text-white rounded-lg transition flex items-center gap-1.5 font-sans font-medium">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path></svg>
+              Copy Markdown
+            </button>
+          </div>
+          <pre class="p-4 text-xs font-mono text-emerald-400 overflow-auto flex-1 max-h-[560px] leading-relaxed select-all"><code id="markdown-raw-display"></code></pre>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition duration-300 pointer-events-none bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-lg text-xs flex items-center gap-2 border border-slate-700">
+    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+    <span id="toast-text">Copied to clipboard</span>
+  </div>
+
+  <script>
+    /**
+     * EXACT VERBATIM DATASET TRANSCRIBED FROM "chatbot SSG.pdf"
+     * Every word, condition, bullet point, and text box is mapped without alterations.
+     */
+    const verbatimChatTree = {
+      id: "root",
+      title: "Main Greeting / Welcome Message",
+      type: "root",
+      badge: "Main Greeting",
+      message: "At Sugiura Coffee, [we are here to assist you]. Thank you for shopping with Sugiura Coffee. How can we assist you today?",
+      notes: "Central entry point of the chatbot flowchart.",
+      children: [
+        /* =========================================================
+           1. PAYMENT
+        ========================================================= */
+        {
+          id: "payment",
+          title: "Payment",
+          type: "category",
+          badge: "Category",
+          message: "Thank you for shopping with Sugiura Coffee. We are here to help your credit card / payment issues.",
+          children: [
+            {
+              id: "payment_methods",
+              title: "Payment Methods (Card & Digital Wallets)",
+              type: "node",
+              badge: "Method Details",
+              message: "Credit Card (Mastercard, Visa, American Express, and JCB)\n\nShop Pay, Apple Pay and Google Pay, WeChat Pay (all on the respective website) and Paypal (via your Paypal account). We don't accept other forms of payment online. (like cheque, cash, etc.)\n\nApple Pay: Available on Safari (iOS or macOS) on our website only.\n\nGoogle Pay: Available via Chrome (Android, macOS, Windows) on our website only.\n\nWeChat Pay: Available via Chrome, (Android, macOS, Windows) on our website only.\n\nShop Pay: Shop Pay installment payments are available on Shopify store. (See *Shop Pay Installments terms* for details)\n\nShould you have any more questions, do not hesitate to contact us.",
+              children: []
+            },
+            {
+              id: "payment_currency_tax",
+              title: "Currency & Taxes",
+              type: "node",
+              badge: "Policy",
+              message: "We display and collect payment in your local currency. Please note that conversion rates from your shipping destination to the country payment is processed in are driven by your card scheme/issuer and are subject to their fees and charges. We do not charge additional conversion and admin fees.",
+              children: []
+            },
+            {
+              id: "payment_shoppay_installment",
+              title: "Shop Pay Installment Eligibility Criteria",
+              type: "node",
+              badge: "Criteria",
+              message: "To pay via credit using Shop Pay Installment, the following eligibility criteria apply:\n\n1. You need to have a United States billing address, and be signed up for Shop Pay.\n2. Your order value can be between 50 USD and 17,500 USD, including shipping and taxes.\n3. If you're ordering a physical product that requires shipping, then you need to provide a United States shipping address. If you're only purchasing digital products, then a United States shipping address is not required.\n\nShould you have any more questions, do not hesitate to contact us.",
+              children: []
+            }
+          ]
+        },
+
+        /* =========================================================
+           2. SHIPPING & DELIVERY
+        ========================================================= */
+        {
+          id: "shipping",
+          title: "Shipping",
+          type: "category",
+          badge: "Category",
+          message: "Thank you for shopping with Sugiura Coffee. Here is the shipping information:",
+          children: [
+            {
+              id: "shipping_carrier_tracking",
+              title: "Track my order / Shipping Company & Delivery Time",
+              type: "node",
+              badge: "Tracking & Delivery",
+              message: "Shipping company: Yamato, EMS (Japan Post), or DHL Express.\n\nPlease allow 3 to 10 business days from dispatch for your order to reach you. Kindly check your junk/spam folder for your shipping confirmation email with tracking number, as it can sometimes be diverted there.\n\nShould you have any more questions, do not hesitate to contact us.",
+              children: [
+                {
+                  id: "shipping_countries",
+                  title: "International Shipping Coverage",
+                  type: "node",
+                  badge: "Coverage",
+                  message: "Orders are processed within 1-3 business days after placing your order. International transit time is vary based on destination but generally take between 3-10 business days depending on customs clearance. Orders shipped via Yamato, EMS, or DHL Express will have live online tracking available once handed to the carrier.",
+                  children: []
+                }
+              ]
+            },
+            {
+              id: "shipping_customs_tax",
+              title: "Customs & Tax",
+              type: "node",
+              badge: "Customs Notice",
+              message: "Customs duties and import taxes will be applied when the package reaches the destination country. Please check with your local customs office regarding duties and taxes applicable to coffee shipments.",
+              children: []
+            }
+          ]
+        },
+
+        /* =========================================================
+           3. PRODUCTS & RECOMMENDATIONS
+        ========================================================= */
+        {
+          id: "product_recommendation",
+          title: "Product Recommendation",
+          type: "category",
+          badge: "Category",
+          message: "Here are our recommendations: Luxury Coffee, Sugiura Coffee, Sugiura Signature Coffee, Kenya Coffee, Brazil Santos, Mandheling Coffee.",
+          children: [
+            {
+              id: "prod_our_roasted_coffee",
+              title: "Our Roasted Coffee Selection",
+              type: "node",
+              badge: "Coffee Varieties",
+              message: "Which one can we recommend for you? Luxury Coffee, Sugiura Coffee, Sugiura Signature Coffee, Kenya Coffee, Brazil Santos, Mandheling Coffee, Drip Bag Coffee.\n\nShould you have any more questions, do not hesitate to contact us.",
+              children: []
+            },
+            {
+              id: "prod_drip_bag",
+              title: "Drip Bag Coffee",
+              type: "node",
+              badge: "Product Details",
+              message: "Drip Bag Coffee is available for single serve cup brewing. Individually packed for fresh aroma and taste.",
+              children: []
+            },
+            {
+              id: "prod_how_to_brew",
+              title: "How to brew our coffee",
+              type: "node",
+              badge: "Brewing Guide",
+              message: "Brewing guidelines:\n\n1. Water temperature: 88°C - 92°C.\n2. Ratio: 1:15 to 1:16 (e.g. 15g ground coffee with 225-240ml water).\n3. Pour steadily in circular motions for 2.5 to 3 minutes.",
+              children: []
+            },
+            {
+              id: "prod_info_packaging",
+              title: "Information and Packaging (Whole bean & Ground)",
+              type: "node",
+              badge: "Packaging Info",
+              message: "Available in Whole Bean and Ground specifications. Packed with one-way degassing valve bags to keep freshness intact.",
+              children: []
+            }
+          ]
+        },
+
+        /* =========================================================
+           4. DISCOUNT & PROMOTIONS
+        ========================================================= */
+        {
+          id: "discount",
+          title: "Discount",
+          type: "category",
+          badge: "Category",
+          message: "Thank you for shopping with Sugiura Coffee. Find what you want about our discount offers:",
+          children: [
+            {
+              id: "disc_coupon_rules",
+              title: "Coupon Rules & 10% OFF Terms",
+              type: "node",
+              badge: "Terms & Conditions",
+              message: "Redeem your promo code/discount for an extra 10% OFF? Check below on the terms and discount:\n\n1) Only one promo code must be redeemed per single cart order. Promo codes cannot be combined and stacked.\n2) Enter the redemption code at checkout to claim your discount.\n3) Promo codes are valid only for the general items and cannot be applied to clearance or promotional items, and are non-transferable.\n4) Orders above $150.00 will be entitled to free shipping.\n5) Limited to 1 redemption per order under the single cart.\n\nShould you have any more questions, do not hesitate to contact us.",
+              children: []
+            },
+            {
+              id: "disc_newsletter",
+              title: "Marketing & Promotions (Newsletter Sign-up)",
+              type: "node",
+              badge: "Newsletter Offer",
+              message: "Subscribe to the bottom of our page to receive our newsletter and enjoy exclusive offers, product launches, and news.\n\nPlease note that terms & conditions apply.\n\nShould you have any more questions, do not hesitate to contact us.",
+              action: "Subscribe via newsletter footer link on website"
+            }
+          ]
+        },
+
+        /* =========================================================
+           5. ORDERS & ISSUES
+        ========================================================= */
+        {
+          id: "orders_issues",
+          title: "Order Issue (Cancel Order / Damaged)",
+          type: "category",
+          badge: "Category",
+          message: "Thank you for shopping with Sugiura Coffee. How can we help with your order issue?",
+          children: [
+            {
+              id: "order_cancel",
+              title: "Cancel Order",
+              type: "node",
+              badge: "Cancellation Policy",
+              message: "Orders can only be cancelled if they have not been processed or fulfilled yet (usually within 2 hours of checkout). Once your order has been dispatched or handed to the carrier, it cannot be cancelled.\n\nPlease contact our customer support team immediately with your Order ID.",
+              action: "Submit cancellation request immediately"
+            },
+            {
+              id: "order_damaged",
+              title: "Damaged item / Incorrect item received",
+              type: "node",
+              badge: "Damage Protocol",
+              message: "Thank you for shopping with Sugiura Coffee.\n\nKindly fill up below the information:\n- Order no.\n- Item before delivery\n- Photo of the parcel / damaged goods\n\nPlease submit clear photos of the shipping label and damaged item within 7 days of delivery. We will assist you with a replacement or refund.\n\nShould you have any more questions, do not hesitate to contact us.",
+              action: "Email photos to support@sugiuracoffee.com"
+            },
+            {
+              id: "order_not_received",
+              title: "I haven't received my order",
+              type: "node",
+              badge: "Delivery Support",
+              message: "If your order has passed the estimated delivery date (3-10 business days after dispatch), please verify your shipping address and contact our customer support for carrier escalation.",
+              action: "Escalate with tracking carrier"
+            }
+          ]
+        },
+
+        /* =========================================================
+           6. ACCOUNT & MEMBERSHIP
+        ========================================================= */
+        {
+          id: "account",
+          title: "Account",
+          type: "category",
+          badge: "Category",
+          message: "Thank you for shopping with Sugiura Coffee. We are here to help with your account inquiries:",
+          children: [
+            {
+              id: "acc_forgot_password",
+              title: "Forgot password / Cannot login to my account",
+              type: "node",
+              badge: "Reset Support",
+              message: "Kindly provide your email address to reset your password.\n\nTo reset your password:\n1. Go to the account login page and click 'Forgot your password?'.\n2. Enter the registered email address.\n3. An email with reset instructions will arrive within minutes.",
+              action: "Trigger Reset Password Link"
+            },
+            {
+              id: "acc_update_info",
+              title: "Update account info / Change default address",
+              type: "node",
+              badge: "Account Management",
+              message: "Kindly fill up the information to update your profile.\n\nYou can update your name, email, and shipping address by logging into 'My Account' -> 'Addresses'. Note: Updating your address does not alter the destination of orders already processed or shipped.",
+              children: []
+            }
+          ]
+        },
+
+        /* =========================================================
+           7. WHOLESALE & CUSTOMER SUPPORT
+        ========================================================= */
+        {
+          id: "wholesale_support",
+          title: "Wholesale & Customer Support",
+          type: "category",
+          badge: "Category",
+          message: "Thank you for reaching out to Sugiura Coffee. How can our team assist you?",
+          children: [
+            {
+              id: "ws_partnership",
+              title: "Inquiry about wholesale / Partnership / Bulk purchase",
+              type: "node",
+              badge: "B2B Wholesale",
+              message: "Sugiura Coffee is available to supply coffee for your business such as weddings, private parties, cafes, restaurants, and offices.\n\nPlease click here to fill in your order details and we will get back to you with business / wholesale rate: support@sugiuracoffee.com\n\nShould you have any more questions, do not hesitate to contact us.",
+              action: "Send Wholesale Form"
+            },
+            {
+              id: "ws_human_contact",
+              title: "Contact Customer Support / Leave a message",
+              type: "node",
+              badge: "Customer Support",
+              message: "Please send us a message or inquiry directly to our customer support team at support@sugiuracoffee.com.\n\nShould you have any more questions, do not hesitate to contact us.",
+              action: "Open email support: support@sugiuracoffee.com"
+            }
+          ]
+        }
+      ]
+    };
+
+    // State variable for node expansion
+    let expandedMap = {};
+
+    // Initialize all nodes as expanded by default
+    function initExpandedState(node) {
+      expandedMap[node.id] = true;
+      if (node.children && node.children.length > 0) {
+        node.children.forEach(child => initExpandedState(child));
+      }
+    }
+    initExpandedState(verbatimChatTree);
+
+    function toggleBranch(id) {
+      expandedMap[id] = !expandedMap[id];
+      renderTree();
+    }
+
+    function toggleAllBranches(openState) {
+      function setAll(node) {
+        expandedMap[node.id] = openState;
+        if (node.children) node.children.forEach(setAll);
+      }
+      setAll(verbatimChatTree);
+      renderTree();
+    }
+
+    // Badge styling mapping
+    function getBadgeClass(badge) {
+      switch(badge) {
+        case "Main Greeting": return "bg-coffee-900 text-amber-100 border border-coffee-800";
+        case "Category": return "bg-amber-100 text-amber-900 border border-amber-300";
+        case "Method Details":
+        case "Tracking & Delivery":
+        case "Coffee Varieties":
+        case "Product Details":
+        case "Coverage":
+        case "Packaging Info": return "bg-blue-50 text-blue-800 border border-blue-200";
+        case "Policy":
+        case "Criteria":
+        case "Brewing Guide":
+        case "Terms & Conditions":
+        case "Damage Protocol":
+        case "Delivery Support":
+        case "Reset Support":
+        case "Account Management": return "bg-emerald-50 text-emerald-800 border border-emerald-200";
+        case "Customs Notice":
+        case "Cancellation Policy": return "bg-rose-50 text-rose-800 border border-rose-200";
+        case "B2B Wholesale":
+        case "Customer Support":
+        case "Newsletter Offer": return "bg-purple-50 text-purple-800 border border-purple-200";
+        default: return "bg-slate-100 text-slate-700 border border-slate-200";
+      }
+    }
+
+    function createNodeHtml(node, searchQuery = "") {
+      const isExpanded = expandedMap[node.id];
+      const hasChildren = node.children && node.children.length > 0;
+      
+      const queryLower = searchQuery.toLowerCase().trim();
+      const isMatch = queryLower.length > 0 && (
+        node.title.toLowerCase().includes(queryLower) || 
+        (node.message && node.message.toLowerCase().includes(queryLower)) ||
+        (node.badge && node.badge.toLowerCase().includes(queryLower))
+      );
+
+      let childrenHtml = '';
+      if (hasChildren && isExpanded) {
+        childrenHtml = `
+          <div class="ml-6 sm:ml-8 pl-4 space-y-3 relative border-l-2 border-slate-200/90 my-2.5">
+            ${node.children.map(child => createNodeHtml(child, searchQuery)).join('')}
+          </div>
+        `;
+      }
+
+      // Convert linebreaks into clean paragraphs
+      const formattedMessage = node.message 
+        ? node.message.split('\n\n').map(p => `<p class="mb-1.5 last:mb-0">${p.replace(/\n/g, '<br/>')}</p>`).join('')
+        : '';
+
+      return `
+        <div id="node-${node.id}" class="transition-all ${isMatch ? 'ring-2 ring-coffee-600 rounded-2xl p-1 bg-amber-50/40' : ''}">
+          <div class="bg-white hover:bg-slate-50/70 border border-slate-200 rounded-xl p-3.5 sm:p-4 shadow-xs transition flex flex-col gap-2.5">
+            
+            <!-- Node Header -->
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-[11px] px-2.5 py-0.5 font-bold rounded-md ${getBadgeClass(node.badge)}">
+                  ${node.badge}
+                </span>
+                <span class="font-mono text-[11px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">ID: ${node.id}</span>
+                <h4 class="text-sm font-bold text-slate-900">${node.title}</h4>
+              </div>
+
+              <div class="flex items-center gap-2 flex-shrink-0">
+                ${hasChildren ? `
+                  <button onclick="toggleBranch('${node.id}')" class="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg transition flex items-center gap-1">
+                    <span>${isExpanded ? 'Collapse' : 'Expand'}</span>
+                    <svg class="w-3.5 h-3.5 transform transition-transform ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+
+            <!-- Exact Verbatim Text -->
+            ${node.message ? `
+              <div class="text-xs text-slate-700 bg-slate-50/90 p-3 rounded-lg border border-slate-200/70 leading-relaxed font-sans">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-coffee-600"></span> Verbatim Text Box:
+                </div>
+                ${formattedMessage}
+              </div>
+            ` : ''}
+
+            ${node.action ? `
+              <div class="flex items-center gap-2 text-xs text-purple-800 bg-purple-50/90 px-3 py-1.5 rounded-lg border border-purple-200 font-medium">
+                <svg class="w-3.5 h-3.5 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <span>Triggered Action: <strong>${node.action}</strong></span>
+              </div>
+            ` : ''}
+
+          </div>
+
+          ${childrenHtml}
+        </div>
+      `;
+    }
+
+    function renderTree(searchQuery = "") {
+      const container = document.getElementById('tree-root');
+      if (container) {
+        container.innerHTML = createNodeHtml(verbatimChatTree, searchQuery);
+      }
+    }
+
+    function filterTree(query) {
+      if (!query.trim()) {
+        renderTree();
+        return;
+      }
+      
+      // Auto expand any branch that matches search query
+      function checkAndExpand(node) {
+        const titleMatch = node.title.toLowerCase().includes(query.toLowerCase());
+        const msgMatch = node.message && node.message.toLowerCase().includes(query.toLowerCase());
+        const badgeMatch = node.badge && node.badge.toLowerCase().includes(query.toLowerCase());
+        let childMatch = false;
+
+        if (node.children) {
+          node.children.forEach(c => {
+            if (checkAndExpand(c)) childMatch = true;
+          });
+        }
+
+        if (titleMatch || msgMatch || badgeMatch || childMatch) {
+          expandedMap[node.id] = true;
+          return true;
+        }
+        return false;
+      }
+
+      checkAndExpand(verbatimChatTree);
+      renderTree(query);
+    }
+
+    let currentSimNode = verbatimChatTree;
+    let simTrail = ["Main Greeting"];
+
+    function initSimulator() {
+      currentSimNode = verbatimChatTree;
+      simTrail = ["Main Greeting"];
+      const msgContainer = document.getElementById('sim-messages');
+      msgContainer.innerHTML = '';
+      appendSimBotMessage(currentSimNode.message, currentSimNode.children, currentSimNode.action);
+      updateBreadcrumbs();
+    }
+
+    function updateBreadcrumbs() {
+      const bc = document.getElementById('sim-breadcrumbs');
+      if (bc) {
+        bc.innerText = simTrail.join(' > ');
+      }
+    }
+
+    function appendSimBotMessage(message, choices = [], action = null) {
+      const msgContainer = document.getElementById('sim-messages');
+      const optionsContainer = document.getElementById('sim-options');
+
+      const formatted = message ? message.split('\n\n').map(p => `<p class="mb-1 last:mb-0">${p.replace(/\n/g, '<br/>')}</p>`).join('') : '';
+
+      // Bot Bubble
+      const botHtml = `
+        <div class="flex items-start gap-2.5 max-w-[88%] animate-fade-in">
+          <div class="w-8 h-8 rounded-full bg-coffee-800 text-amber-100 flex-shrink-0 flex items-center justify-center text-xs font-bold shadow-xs">
+            ☕
+          </div>
+          <div class="space-y-1">
+            <div class="p-3 bg-white text-slate-800 rounded-2xl rounded-tl-none border border-slate-200/80 shadow-xs text-xs leading-relaxed">
+              ${formatted}
+            </div>
+            ${action ? `
+              <div class="text-[11px] text-purple-800 bg-purple-50 border border-purple-200 px-2.5 py-1 rounded-md inline-flex items-center gap-1 font-medium">
+                ⚡ Action: ${action}
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+      msgContainer.insertAdjacentHTML('beforeend', botHtml);
+      msgContainer.scrollTop = msgContainer.scrollHeight;
+
+      // Update options buttons
+      optionsContainer.innerHTML = '';
+      if (choices && choices.length > 0) {
+        choices.forEach(choice => {
+          const btn = document.createElement('button');
+          btn.className = "px-3 py-1.5 bg-slate-100 hover:bg-amber-50 hover:text-coffee-800 hover:border-coffee-400 border border-slate-200 text-slate-800 text-xs font-semibold rounded-xl transition shadow-xs text-left";
+          btn.innerText = choice.title;
+          btn.onclick = () => selectSimOption(choice);
+          optionsContainer.appendChild(btn);
+        });
+      }
+
+      // Always allow reset/return to top
+      const homeBtn = document.createElement('button');
+      homeBtn.className = "px-3 py-1.5 bg-coffee-800 text-white hover:bg-coffee-900 text-xs font-semibold rounded-xl transition shadow-xs";
+      homeBtn.innerText = "↩ Return to Main Menu";
+      homeBtn.onclick = () => {
+        appendSimUserMessage("Return to Main Menu");
+        setTimeout(() => {
+          currentSimNode = verbatimChatTree;
+          simTrail = ["Main Greeting"];
+          appendSimBotMessage(currentSimNode.message, currentSimNode.children, currentSimNode.action);
+          updateBreadcrumbs();
+        }, 250);
+      };
+      optionsContainer.appendChild(homeBtn);
+    }
+
+    function appendSimUserMessage(text) {
+      const msgContainer = document.getElementById('sim-messages');
+      const userHtml = `
+        <div class="flex justify-end">
+          <div class="max-w-[82%] p-3 bg-coffee-700 text-white rounded-2xl rounded-tr-none text-xs leading-relaxed shadow-xs">
+            ${text}
+          </div>
+        </div>
+      `;
+      msgContainer.insertAdjacentHTML('beforeend', userHtml);
+      msgContainer.scrollTop = msgContainer.scrollHeight;
+    }
+
+    function selectSimOption(node) {
+      appendSimUserMessage(node.title);
+      simTrail.push(node.title);
+      updateBreadcrumbs();
+
+      const optionsContainer = document.getElementById('sim-options');
+      optionsContainer.innerHTML = '<span class="text-xs text-slate-400 italic py-1">Sugiura Coffee is typing...</span>';
+
+      setTimeout(() => {
+        currentSimNode = node;
+        appendSimBotMessage(node.message, node.children, node.action);
+      }, 350);
+    }
+
+    function resetSimulator() {
+      initSimulator();
+    }
+
+    function switchTab(tab) {
+      ['tree', 'simulator', 'md'].forEach(t => {
+        document.getElementById(`view-${t}`).classList.add('hidden');
+        const btn = document.getElementById(`tab-btn-${t}`);
+        btn.classList.remove('bg-white', 'text-slate-900', 'shadow-sm', 'font-semibold');
+        btn.classList.add('text-slate-600', 'font-medium');
+      });
+
+      document.getElementById(`view-${tab}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`tab-btn-${tab}`);
+      activeBtn.classList.add('bg-white', 'text-slate-900', 'shadow-sm', 'font-semibold');
+      activeBtn.classList.remove('text-slate-600', 'font-medium');
+
+      if (tab === 'simulator' && document.getElementById('sim-messages').children.length === 0) {
+        initSimulator();
+      }
+    }
+
+    function countNodes(node) {
+      let total = 1;
+      if (node.children) {
+        node.children.forEach(c => total += countNodes(c));
+      }
+      return total;
+    }
+
+    function buildMarkdownTranscription() {
+      let md = `# Sugiura Coffee - Customer Support Chatbot Flow Tree\n\n`;
+      md += `*Exact verbatim transcription converted from original \`chatbot SSG.pdf\` flowchart.*\n\n`;
+      md += `## 1. Overview & Root Node\n`;
+      md += `- **Greeting**: "${verbatimChatTree.message}"\n\n`;
+      md += `## 2. Complete Hierarchical Tree (Indented Structure)\n\n`;
+
+      function traverse(node, depth = 0) {
+        const indent = '  '.repeat(depth);
+        md += `${indent}- **${node.title}** [${node.badge}]\n`;
+        if (node.message) {
+          const indentedMsg = node.message.split('\n').map(l => `${indent}  > ${l}`).join('\n');
+          md += `${indentedMsg}\n`;
+        }
+        if (node.action) {
+          md += `${indent}  ⚡ *Action*: ${node.action}\n`;
+        }
+        if (node.children && node.children.length > 0) {
+          node.children.forEach(c => traverse(c, depth + 1));
+        }
+      }
+
+      traverse(verbatimChatTree, 0);
+      return md;
+    }
+
+    function copyRawMarkdown() {
+      const text = buildMarkdownTranscription();
+      const temp = document.createElement('textarea');
+      temp.value = text;
+      document.body.appendChild(temp);
+      temp.select();
+      try {
+        document.execCommand('copy');
+        showToast('Markdown transcript successfully copied!');
+      } catch (e) {
+        console.error(e);
+      }
+      document.body.removeChild(temp);
+    }
+
+    function showToast(text) {
+      const t = document.getElementById('toast');
+      const msg = document.getElementById('toast-text');
+      msg.innerText = text;
+      t.classList.remove('opacity-0', 'translate-y-20');
+      t.classList.add('opacity-100', 'translate-y-0');
+      setTimeout(() => {
+        t.classList.add('opacity-0', 'translate-y-20');
+        t.classList.remove('opacity-100', 'translate-y-0');
+      }, 2500);
+    }
+
+    window.onload = function() {
+      renderTree();
+      
+      const mdDisplay = document.getElementById('markdown-raw-display');
+      if (mdDisplay) {
+        mdDisplay.textContent = buildMarkdownTranscription();
+      }
+
+      const statCounter = document.getElementById('stat-nodes-count');
+      if (statCounter) {
+        statCounter.innerText = `${countNodes(verbatimChatTree)} Total Nodes`;
+      }
+    };
+  </script>
+</body>
+</html>
