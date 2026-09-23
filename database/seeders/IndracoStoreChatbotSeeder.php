@@ -67,9 +67,9 @@ class IndracoStoreChatbotSeeder extends Seeder
 
         // 5. Bot Welcome Message & Rules with Interactive Options
         $welcomeMessage = "Halo! Terima kasih telah menghubungi *INDRACO Store*! 👋\nSilakan pilih menu bantuan di bawah ini:\n\n" .
-            "1️⃣ *Pembelian Produk* (Kopi, Non Kopi, Bumbu Dapur)\n" .
-            "2️⃣ *Informasi & Kerjasama* (Distributor, Reseller, Hadiah, Karir, Sponsor)\n" .
-            "3️⃣ *Kendala Pembelian di Toko Online* (Checkout, Voucher, Akun, Komplain)\n\n" .
+            "• *Pembelian Produk* (Kopi, Non Kopi, Bumbu Dapur)\n" .
+            "• *Informasi & Kerjasama* (Distributor, Reseller, Hadiah, Karir, Sponsor)\n" .
+            "• *Kendala Pembelian di Toko Online* (Checkout, Voucher, Akun, Komplain)\n\n" .
             "💡 *Tips*: Anda dapat langsung mengklik tombol pilihan di bawah, mengetik kata kunci, atau klik *Bicara dengan CS* untuk terhubung langsung dengan tim kami. 😊🙏";
 
         $rules = array (
@@ -91,31 +91,31 @@ class IndracoStoreChatbotSeeder extends Seeder
     'response' => 'Halo! Terima kasih telah menghubungi *INDRACO Store*! 👋
 Silakan pilih menu bantuan di bawah ini:
 
-1️⃣ *Pembelian Produk* (Kopi, Non Kopi, Bumbu Dapur)
-2️⃣ *Informasi & Kerjasama* (Distributor, Reseller, Hadiah, Karir, Sponsor)
-3️⃣ *Kendala Pembelian di Toko Online* (Checkout, Voucher, Akun, Komplain)
+• *Pembelian Produk* (Kopi, Non Kopi, Bumbu Dapur)
+• *Informasi & Kerjasama* (Distributor, Reseller, Hadiah, Karir, Sponsor)
+• *Kendala Pembelian di Toko Online* (Checkout, Voucher, Akun, Komplain)
 
 💡 *Tips*: Anda dapat langsung mengklik tombol pilihan di bawah, mengetik kata kunci, atau klik *Bicara dengan CS* untuk terhubung langsung dengan tim kami. 😊🙏',
     'options' => 
     array (
       0 => 
       array (
-        'label' => '📦 1. Pembelian Produk',
+        'label' => '📦 Pembelian Produk',
         'value' => '1',
       ),
       1 => 
       array (
-        'label' => '🤝 2. Informasi & Kerjasama',
+        'label' => '🤝 Informasi & Kerjasama',
         'value' => '2',
       ),
       2 => 
       array (
-        'label' => '🛠️ 3. Kendala Belanja Online',
+        'label' => '🛠️ Kendala Belanja Online',
         'value' => '3',
       ),
       3 => 
       array (
-        'label' => '💬 Bicara dengan CS (YA)',
+        'label' => '💬 Bicara dengan CS',
         'value' => 'YA',
       ),
     ),
@@ -136,26 +136,26 @@ Silakan pilih menu bantuan di bawah ini:
     'response' => '📦 *Kategori Produk INDRACO Store*
 Silakan pilih kategori produk yang ingin Anda ketahui:
 
-1.1 *Kopi* (Supresso, Tugu Buaya, Uang Emas, Rasa Sayang, CERIA, UCAFE)
-1.2 *Produk Non Kopi* (Jaheku, BROCHOCO)
-1.3 *Bumbu Dapur* (Intirasa)
+• *Kopi* (Supresso, Tugu Buaya, Uang Emas, Rasa Sayang, CERIA, UCAFE)
+• *Produk Non Kopi* (Jaheku, BROCHOCO)
+• *Bumbu Dapur* (Intirasa)
 
 Pilih salah satu kategori di bawah atau klik *Menu Utama* untuk kembali.',
     'options' => 
     array (
       0 => 
       array (
-        'label' => '☕ 1.1 Kopi',
+        'label' => '☕ Kopi',
         'value' => '1.1',
       ),
       1 => 
       array (
-        'label' => '🍵 1.2 Produk Non Kopi',
+        'label' => '🍵 Produk Non Kopi',
         'value' => '1.2',
       ),
       2 => 
       array (
-        'label' => '🍳 1.3 Bumbu Dapur (Intirasa)',
+        'label' => '🍳 Bumbu Dapur (Intirasa)',
         'value' => '1.3',
       ),
       3 => 
@@ -165,7 +165,7 @@ Pilih salah satu kategori di bawah atau klik *Menu Utama* untuk kembali.',
       ),
       4 => 
       array (
-        'label' => '💬 Bicara dengan CS (YA)',
+        'label' => '💬 Bicara dengan CS',
         'value' => 'YA',
       ),
     ),
@@ -350,38 +350,38 @@ Kunjungi *www.intirasa.com* untuk katalog lengkap:',
     'response' => '🤝 *Informasi & Kerjasama INDRACO Group*
 Silakan pilih informasi yang Anda butuhkan:
 
-2.1 *Informasi Distributor Terdekat* (Tersedia di 38 Provinsi)
-2.2 *Cara Menjadi Reseller / Distributor*
-2.3 *Informasi Penukaran Hadiah* (Karton Tugu Buaya & Voucher Toko Online)
-2.4 *Lowongan Pekerjaan* (Karir di INDRACO Group)
-2.5 *Penawaran Kerjasama* (Event, Manufaktur, Supplier, Creative/Endorsement)
+• *Informasi Distributor Terdekat* (Tersedia di 38 Provinsi)
+• *Cara Menjadi Reseller / Distributor*
+• *Informasi Penukaran Hadiah* (Karton Tugu Buaya & Voucher Toko Online)
+• *Lowongan Pekerjaan* (Karir di INDRACO Group)
+• *Penawaran Kerjasama* (Event, Manufaktur, Supplier, Creative/Endorsement)
 
 Pilih salah satu opsi di bawah ini:',
     'options' => 
     array (
       0 => 
       array (
-        'label' => '📍 2.1 Info Distributor Terdekat',
+        'label' => '📍 Info Distributor Terdekat',
         'value' => '2.1',
       ),
       1 => 
       array (
-        'label' => '💼 2.2 Syarat Reseller / Distributor',
+        'label' => '💼 Syarat Reseller / Distributor',
         'value' => '2.2',
       ),
       2 => 
       array (
-        'label' => '🎁 2.3 Penukaran Hadiah Karton',
+        'label' => '🎁 Penukaran Hadiah Karton',
         'value' => '2.3',
       ),
       3 => 
       array (
-        'label' => '💼 2.4 Lowongan Pekerjaan (Karir)',
+        'label' => '💼 Lowongan Pekerjaan (Karir)',
         'value' => '2.4',
       ),
       4 => 
       array (
-        'label' => '🤝 2.5 Sponsorship & Supplier',
+        'label' => '🤝 Sponsorship & Supplier',
         'value' => '2.5',
       ),
       5 => 
@@ -391,7 +391,7 @@ Pilih salah satu opsi di bawah ini:',
       ),
       6 => 
       array (
-        'label' => '💬 Bicara dengan CS (YA)',
+        'label' => '💬 Bicara dengan CS',
         'value' => 'YA',
       ),
     ),
@@ -484,7 +484,7 @@ Tim INDRACO akan segera menghubungi dan mengarahkan ke distributor terdekat.',
     array (
       0 => 
       array (
-        'label' => '💬 Hubungkan ke Tim CS Sekarang (YA)',
+        'label' => '💬 Hubungkan ke Tim CS Sekarang',
         'value' => 'YA',
       ),
       1 => 
@@ -527,7 +527,7 @@ Tim penjualan kami akan segera mengontak Anda untuk penawaran harga terbaik.',
     array (
       0 => 
       array (
-        'label' => '💬 Hubungkan ke Sales / CS (YA)',
+        'label' => '💬 Hubungkan ke Sales / CS',
         'value' => 'YA',
       ),
       1 => 
@@ -572,7 +572,7 @@ Kumpulkan kemasan karton Kopi Tugu Buaya 12g dan tukarkan dengan hadiah menarik:
     array (
       0 => 
       array (
-        'label' => '💬 Tanya Lokasi Penukaran ke CS (YA)',
+        'label' => '💬 Tanya Lokasi Penukaran ke CS',
         'value' => 'YA',
       ),
       1 => 
@@ -612,7 +612,7 @@ Atau kirimkan CV & Portfolio Anda ke email:
     array (
       0 => 
       array (
-        'label' => '💬 Tanya Info Karir ke Tim HR (YA)',
+        'label' => '💬 Tanya Info Karir ke Tim HR',
         'value' => 'YA',
       ),
       1 => 
@@ -647,7 +647,7 @@ Atau kirimkan CV & Portfolio Anda ke email:
     array (
       0 => 
       array (
-        'label' => '💬 Hubungkan ke Tim Kerjasama (YA)',
+        'label' => '💬 Hubungkan ke Tim Kerjasama',
         'value' => 'YA',
       ),
       1 => 
@@ -676,37 +676,37 @@ Silakan pilih kendala yang sedang Anda alami:',
     array (
       0 => 
       array (
-        'label' => '🛒 3.1 Kendala Checkout & Keranjang',
+        'label' => '🛒 Kendala Checkout & Keranjang',
         'value' => '3.1',
       ),
       1 => 
       array (
-        'label' => '🚚 3.2 Kendala Pengiriman & Alamat',
+        'label' => '🚚 Kendala Pengiriman & Alamat',
         'value' => '3.2',
       ),
       2 => 
       array (
-        'label' => '🏷️ 3.3 Kendala Voucher Promo',
+        'label' => '🏷️ Kendala Voucher Promo',
         'value' => '3.3',
       ),
       3 => 
       array (
-        'label' => '💳 3.4 Kendala Pembayaran',
+        'label' => '💳 Kendala Pembayaran',
         'value' => '3.4',
       ),
       4 => 
       array (
-        'label' => '🔐 3.5 Kendala Akun & Password',
+        'label' => '🔐 Kendala Akun & Password',
         'value' => '3.5',
       ),
       5 => 
       array (
-        'label' => '📦 3.6 Komplain Produk Rusak',
+        'label' => '📦 Komplain Produk Rusak',
         'value' => '3.6',
       ),
       6 => 
       array (
-        'label' => '💬 Bicara dengan CS (YA)',
+        'label' => '💬 Bicara dengan CS',
         'value' => 'YA',
       ),
       7 => 
@@ -777,7 +777,7 @@ Silakan pilih kendala yang sedang Anda alami:',
     array (
       0 => 
       array (
-        'label' => '💬 Hubungkan ke Tim CS (YA)',
+        'label' => '💬 Hubungkan ke Tim CS',
         'value' => 'YA',
       ),
       1 => 
@@ -854,7 +854,7 @@ Silakan pilih kendala yang sedang Anda alami:',
     array (
       0 => 
       array (
-        'label' => '💬 Konfirmasi Bukti Bayar ke CS (YA)',
+        'label' => '💬 Konfirmasi Bukti Bayar ke CS',
         'value' => 'YA',
       ),
       1 => 
@@ -931,7 +931,7 @@ Tim kami akan segera memproses penggantian atau tindak lanjut keluhan Anda.',
     array (
       0 => 
       array (
-        'label' => '💬 Laporkan ke Tim CS Sekarang (YA)',
+        'label' => '💬 Laporkan ke Tim CS Sekarang',
         'value' => 'YA',
       ),
       1 => 
@@ -1248,7 +1248,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1276,7 +1276,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1304,7 +1304,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1332,7 +1332,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1360,7 +1360,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1388,7 +1388,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1416,7 +1416,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1444,7 +1444,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1472,7 +1472,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1500,7 +1500,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1528,7 +1528,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1556,7 +1556,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1584,7 +1584,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1612,7 +1612,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1640,7 +1640,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1668,7 +1668,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1696,7 +1696,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1724,7 +1724,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1752,7 +1752,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1780,7 +1780,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1808,7 +1808,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1836,7 +1836,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1864,7 +1864,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1892,7 +1892,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1920,7 +1920,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1948,7 +1948,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -1976,7 +1976,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2004,7 +2004,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2032,7 +2032,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2060,7 +2060,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2088,7 +2088,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2116,7 +2116,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2144,7 +2144,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2172,7 +2172,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2200,7 +2200,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2228,7 +2228,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2256,7 +2256,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2284,7 +2284,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2312,7 +2312,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2340,7 +2340,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2368,7 +2368,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2396,7 +2396,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2424,7 +2424,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2452,7 +2452,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2480,7 +2480,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2508,7 +2508,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2536,7 +2536,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2564,7 +2564,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2592,7 +2592,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2620,7 +2620,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2648,7 +2648,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2676,7 +2676,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2704,7 +2704,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2732,7 +2732,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2760,7 +2760,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2788,7 +2788,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2816,7 +2816,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2844,7 +2844,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2872,7 +2872,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2900,7 +2900,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2928,7 +2928,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2956,7 +2956,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -2984,7 +2984,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -3012,7 +3012,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 
@@ -3040,7 +3040,7 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
     array (
       0 => 
       array (
-        'label' => '💬 Bicara dengan CS Langsung (YA)',
+        'label' => '💬 Bicara dengan CS Langsung',
         'value' => 'YA',
       ),
       1 => 

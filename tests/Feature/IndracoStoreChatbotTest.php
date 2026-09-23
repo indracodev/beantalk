@@ -38,6 +38,12 @@ class IndracoStoreChatbotTest extends TestCase
         $this->assertEquals('INDRACO Assistant', $setting->bot_name);
         $this->assertIsArray($setting->bot_rules);
         $this->assertGreaterThan(70, count($setting->bot_rules));
+
+        // Verify option labels do not contain numbering or (YA)
+        foreach ($setting->bot_welcome_options as $opt) {
+            $this->assertFalse((bool)preg_match('/^\D*\d+[\.\)]\s*/', $opt['label']), "Option {$opt['label']} should not have numbers");
+            $this->assertStringNotContainsString('(YA)', $opt['label']);
+        }
     }
 
     public function testFirstInboundMessageReceivesIndracoWelcomeMenu()
