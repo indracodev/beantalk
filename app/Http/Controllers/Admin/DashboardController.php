@@ -635,11 +635,16 @@ class DashboardController extends Controller
             $query->where('project_id', $request->input('project_id'));
         }
 
-        if ($request->filled('status') && $request->input('status') !== 'all') {
-            if ($request->input('status') === 'mine') {
+        $currentStatus = $request->input('status', 'open');
+
+        if ($currentStatus !== 'all') {
+            if ($currentStatus === 'mine') {
                 $query->where('assigned_user_id', $request->user()->id);
+            } elseif ($currentStatus === 'closed') {
+                $query->where('status', 'closed');
             } else {
-                $query->where('status', $request->input('status'));
+                // Default: chat aktif ('open')
+                $query->where('status', 'open');
             }
         }
 
@@ -697,9 +702,12 @@ class DashboardController extends Controller
         $staffMembers = User::where('tenant_id', $tenantId)->orderBy('name', 'asc')->get();
 
         // Statistik ringkas dalam 1 query agregasi tunggal (menghindari multiple roundtrip counts)
-        $statusCounts = Conversation::where('tenant_id', $tenantId)
-            ->whereHas('messages')
-            ->selectRaw("
+        $statusCountsQuery = Conversation::where('tenant_id', $tenantId)->whereHas('messages');
+        if ($request->filled('project_id')) {
+            $statusCountsQuery->where('project_id', $request->input('project_id'));
+        }
+
+        $statusCounts = $statusCountsQuery->selectRaw("
                 COUNT(*) as total_all,
                 SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END) as total_open,
                 SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as total_closed,
@@ -722,6 +730,7 @@ class DashboardController extends Controller
             'activeConversation',
             'staffMembers',
             'counts',
+            'currentStatus',
             'maxMessageId',
             'visitorTicketCounts',
             'customerAllTickets'
@@ -796,6 +805,416 @@ class DashboardController extends Controller
     }
 
     /**
+     * Tracked Visitors Footprint & Real-Time Monitoring
+     * GET /admin/visitors
+     */
+    public function visitors(Request $request): View
+    {
+        $tenantId = $request->user()->tenant_id;
+        $projects = Project::where('tenant_id', $tenantId)->get();
+        $projectIds = $projects->pluck('id')->toArray();
+
+        $query = Visitor::whereIn('project_id', $projectIds)
+            ->with([
+                'project',
+                'contact',
+                'conversations' => function ($q) {
+                    $q->latest('id')->take(3);
+                }
+            ])
+            ->withCount('conversations');
+
+        // 1. Search Filter (customer_code, name, email, ip, visitor_uuid)
+        if ($request->filled('search')) {
+            $search = trim($request->input('search'));
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('customer_code', 'like', "%{$search}%")
+                  ->orWhere('ip_address', 'like', "%{$search}%")
+                  ->orWhere('visitor_uuid', 'like', "%{$search}%");
+            });
+        }
+
+        // 2. Channel / Project Filter
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->input('project_id'));
+        }
+
+        // 3. Status / Presence Filter
+        if ($request->filled('status')) {
+            $status = $request->input('status');
+            if ($status === 'online') {
+                $query->where('last_seen_at', '>=', now()->subMinutes(5));
+            } elseif ($status === 'today') {
+                $query->where('last_seen_at', '>=', now()->startOfDay());
+            } elseif ($status === 'chatting') {
+                $query->has('conversations');
+            } elseif ($status === 'identified') {
+                $query->where(function ($q) {
+                    $q->whereNotNull('name')
+                      ->orWhereNotNull('email')
+                      ->orWhereNotNull('contact_id');
+                });
+            } elseif ($status === 'anonymous') {
+                $query->whereNull('name')->whereNull('email')->whereNull('contact_id');
+            }
+        }
+
+        // 4. Device Form Factor Filter
+        if ($request->filled('device')) {
+            $device = $request->input('device');
+            if ($device === 'mobile') {
+                $query->where(function ($q) {
+                    $q->where('user_agent', 'like', '%mobile%')
+                      ->orWhere('user_agent', 'like', '%iphone%')
+                      ->orWhere('user_agent', 'like', '%android%');
+                });
+            } elseif ($device === 'tablet') {
+                $query->where(function ($q) {
+                    $q->where('user_agent', 'like', '%ipad%')
+                      ->orWhere('user_agent', 'like', '%tablet%');
+                });
+            } elseif ($device === 'desktop') {
+                $query->where(function ($q) {
+                    $q->where('user_agent', 'not like', '%mobile%')
+                      ->where('user_agent', 'not like', '%iphone%')
+                      ->where('user_agent', 'not like', '%android%')
+                      ->where('user_agent', 'not like', '%ipad%')
+                      ->where('user_agent', 'not like', '%tablet%');
+                });
+            }
+        }
+
+        // 4b. Browser Filter
+        if ($request->filled('browser')) {
+            $b = $request->input('browser');
+            if ($b === 'Edge') {
+                $query->where('user_agent', 'like', '%Edg%');
+            } elseif ($b === 'Chrome') {
+                $query->where('user_agent', 'like', '%Chrome%')->where('user_agent', 'not like', '%Edg%');
+            } elseif ($b === 'Safari') {
+                $query->where('user_agent', 'like', '%Safari%')->where('user_agent', 'not like', '%Chrome%');
+            } elseif ($b === 'Firefox') {
+                $query->where('user_agent', 'like', '%Firefox%');
+            } elseif ($b === 'Opera') {
+                $query->where(function ($q) {
+                    $q->where('user_agent', 'like', '%Opera%')->orWhere('user_agent', 'like', '%OPR%');
+                });
+            } elseif ($b === 'Lainnya') {
+                $query->where(function ($q) {
+                    $q->whereNull('user_agent')
+                      ->orWhere('user_agent', '')
+                      ->orWhere(function ($sq) {
+                          $sq->where('user_agent', 'not like', '%Chrome%')
+                             ->where('user_agent', 'not like', '%Safari%')
+                             ->where('user_agent', 'not like', '%Firefox%')
+                             ->where('user_agent', 'not like', '%Edg%')
+                             ->where('user_agent', 'not like', '%Opera%')
+                             ->where('user_agent', 'not like', '%OPR%');
+                      });
+                });
+            }
+        }
+
+        // 4c. Operating System Filter
+        if ($request->filled('os')) {
+            $os = $request->input('os');
+            if ($os === 'Windows') {
+                $query->where('user_agent', 'like', '%Windows%');
+            } elseif ($os === 'iOS') {
+                $query->where(function ($q) {
+                    $q->where('user_agent', 'like', '%iPhone%')
+                      ->orWhere('user_agent', 'like', '%iPad%')
+                      ->orWhere('user_agent', 'like', '%iOS%');
+                });
+            } elseif ($os === 'macOS') {
+                $query->where(function ($q) {
+                    $q->where('user_agent', 'like', '%Macintosh%')
+                      ->orWhere('user_agent', 'like', '%Mac OS%');
+                });
+            } elseif ($os === 'Android') {
+                $query->where('user_agent', 'like', '%Android%');
+            } elseif ($os === 'Linux') {
+                $query->where('user_agent', 'like', '%Linux%')->where('user_agent', 'not like', '%Android%');
+            } elseif ($os === 'Lainnya') {
+                $query->where(function ($q) {
+                    $q->whereNull('user_agent')
+                      ->orWhere('user_agent', '')
+                      ->orWhere(function ($sq) {
+                          $sq->where('user_agent', 'not like', '%Windows%')
+                             ->where('user_agent', 'not like', '%iPhone%')
+                             ->where('user_agent', 'not like', '%iPad%')
+                             ->where('user_agent', 'not like', '%iOS%')
+                             ->where('user_agent', 'not like', '%Macintosh%')
+                             ->where('user_agent', 'not like', '%Mac OS%')
+                             ->where('user_agent', 'not like', '%Android%')
+                             ->where('user_agent', 'not like', '%Linux%');
+                      });
+                });
+            }
+        }
+
+        // 5. Date Range Filter
+        if ($request->filled('date_range')) {
+            $range = $request->input('date_range');
+            if ($range === 'today') {
+                $query->whereDate('last_seen_at', now()->toDateString());
+            } elseif ($range === '7d') {
+                $query->where('last_seen_at', '>=', now()->subDays(7)->startOfDay());
+            } elseif ($range === '30d') {
+                $query->where('last_seen_at', '>=', now()->subDays(30)->startOfDay());
+            }
+        }
+
+        // 6. Column Sorting (Default: last_seen_at desc)
+        $allowedSorts = ['id', 'last_seen_at', 'created_at', 'name', 'customer_code', 'conversations_count', 'ip_address'];
+        $sort = in_array($request->input('sort'), $allowedSorts) ? $request->input('sort') : 'last_seen_at';
+        $direction = strtolower($request->input('dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        if ($sort === 'conversations_count') {
+            $query->orderBy('conversations_count', $direction)->orderBy('id', 'desc');
+        } else {
+            $query->orderBy($sort, $direction)->orderBy('id', 'desc');
+        }
+
+        // 7. Configurable Pagination Limit (Default: 25)
+        $perPage = in_array((int) $request->input('per_page'), [15, 25, 50, 100]) ? (int) $request->input('per_page') : 25;
+        $visitors = $query->paginate($perPage)->withQueryString();
+
+        // 8. Aggregated KPI Summary Statistics (Single query)
+        $fiveMinsAgo = now()->subMinutes(5);
+        $startToday = now()->startOfDay();
+
+        $visitorStats = Visitor::whereIn('project_id', $projectIds)
+            ->selectRaw("
+                COUNT(*) as total_visitors,
+                COUNT(CASE WHEN last_seen_at >= ? THEN 1 END) as online_visitors,
+                COUNT(CASE WHEN last_seen_at >= ? OR created_at >= ? THEN 1 END) as today_visitors,
+                COUNT(CASE WHEN name IS NOT NULL OR email IS NOT NULL OR contact_id IS NOT NULL THEN 1 END) as identified_visitors
+            ", [$fiveMinsAgo, $startToday, $startToday])
+            ->first();
+
+        $chattingVisitorsCount = Visitor::whereIn('project_id', $projectIds)->has('conversations')->count();
+
+        // 9. Traffic Analytics Engine (Trend, Devices, Channels, Top URLs, Peak Hours)
+        $chartRange = in_array($request->input('chart_range'), ['7d', '14d', '30d']) ? $request->input('chart_range') : '14d';
+        $daysCount = $chartRange === '7d' ? 7 : ($chartRange === '30d' ? 30 : 14);
+        $trendStartDate = now()->subDays($daysCount - 1)->startOfDay();
+
+        // Query all visitors for this tenant once to calculate traffic distributions without N+1
+        $allTenantVisitors = Visitor::whereIn('project_id', $projectIds)
+            ->with('project:id,name,slug')
+            ->get(['id', 'project_id', 'created_at', 'last_seen_at', 'user_agent', 'ip_address']);
+
+        // Conversations in range for chat conversion and top page tracking
+        $periodConversations = Conversation::whereIn('project_id', $projectIds)
+            ->where('created_at', '>=', $trendStartDate)
+            ->get(['id', 'project_id', 'created_at', 'page_url', 'page_title']);
+
+        // Build Daily Time-Series
+        $chartTrendData = [];
+        $maxDailyVisitors = 0;
+        $peakDateLabel = '-';
+        $totalPeriodVisitors = 0;
+        $totalPeriodChats = 0;
+
+        for ($i = $daysCount - 1; $i >= 0; $i--) {
+            $day = now()->subDays($i);
+            $dateStr = $day->format('Y-m-d');
+            $label = $day->format('d M');
+
+            $visCount = $allTenantVisitors->filter(function ($v) use ($dateStr) {
+                $seen = $v->last_seen_at ? $v->last_seen_at->format('Y-m-d') : null;
+                $created = $v->created_at ? $v->created_at->format('Y-m-d') : null;
+                return $seen === $dateStr || $created === $dateStr;
+            })->count();
+
+            $convCount = $periodConversations->filter(function ($c) use ($dateStr) {
+                return $c->created_at && $c->created_at->format('Y-m-d') === $dateStr;
+            })->count();
+
+            if ($visCount > $maxDailyVisitors) {
+                $maxDailyVisitors = $visCount;
+                $peakDateLabel = $label . " ({$visCount} pengunjung)";
+            }
+
+            $totalPeriodVisitors += $visCount;
+            $totalPeriodChats += $convCount;
+
+            $chartTrendData[] = [
+                'date'     => $dateStr,
+                'label'    => $label,
+                'visitors' => $visCount,
+                'chats'    => $convCount,
+            ];
+        }
+
+        $avgDailyVisitors = round($totalPeriodVisitors / max(1, $daysCount), 1);
+        $totalVisitorsCount = (int) ($visitorStats->total_visitors ?? 0);
+        $chatConversionRate = $totalVisitorsCount > 0 ? round(($chattingVisitorsCount / $totalVisitorsCount) * 100, 1) : 0;
+
+        // Device Breakdown
+        $deviceCounts = ['desktop' => 0, 'mobile' => 0, 'tablet' => 0];
+        $osCounts = [];
+        $browserCounts = [];
+        $timeOfDay = ['morning' => 0, 'afternoon' => 0, 'evening' => 0, 'night' => 0];
+
+        foreach ($allTenantVisitors as $tv) {
+            $deviceCounts[$tv->device_type] = ($deviceCounts[$tv->device_type] ?? 0) + 1;
+            
+            $os = $tv->os_name;
+            $osCounts[$os] = ($osCounts[$os] ?? 0) + 1;
+
+            $browser = $tv->browser_name;
+            $browserCounts[$browser] = ($browserCounts[$browser] ?? 0) + 1;
+
+            if ($tv->last_seen_at || $tv->created_at) {
+                $hour = (int) ($tv->last_seen_at ? $tv->last_seen_at->format('H') : $tv->created_at->format('H'));
+                if ($hour >= 6 && $hour < 12) {
+                    $timeOfDay['morning']++;
+                } elseif ($hour >= 12 && $hour < 18) {
+                    $timeOfDay['afternoon']++;
+                } elseif ($hour >= 18 && $hour < 24) {
+                    $timeOfDay['evening']++;
+                } else {
+                    $timeOfDay['night']++;
+                }
+            }
+        }
+        arsort($osCounts);
+        arsort($browserCounts);
+
+        // Channel / Website Traffic Share
+        $channelShare = [];
+        foreach ($projects as $proj) {
+            $pCount = $allTenantVisitors->where('project_id', $proj->id)->count();
+            $pPct = $totalVisitorsCount > 0 ? round(($pCount / $totalVisitorsCount) * 100, 1) : 0;
+            $channelShare[] = [
+                'id'         => $proj->id,
+                'name'       => $proj->name,
+                'slug'       => $proj->slug,
+                'visitors'   => $pCount,
+                'percentage' => $pPct,
+            ];
+        }
+        usort($channelShare, function ($a, $b) {
+            return $b['visitors'] <=> $a['visitors'];
+        });
+
+        // Top Visited Pages (Tracked URLs)
+        $topPagesRaw = Conversation::whereIn('project_id', $projectIds)
+            ->whereNotNull('page_url')
+            ->where('page_url', '!=', '')
+            ->selectRaw('page_url, page_title, count(*) as count')
+            ->groupBy('page_url', 'page_title')
+            ->orderByDesc('count')
+            ->take(5)
+            ->get();
+
+        $topPages = $topPagesRaw->map(function ($p) use ($totalVisitorsCount) {
+            return [
+                'url'        => $p->page_url,
+                'title'      => $p->page_title ?: parse_url($p->page_url, PHP_URL_PATH) ?: '/',
+                'count'      => $p->count,
+                'percentage' => $totalVisitorsCount > 0 ? round(($p->count / $totalVisitorsCount) * 100, 1) : 0,
+            ];
+        });
+
+        $trafficStats = [
+            'chartRange'           => $chartRange,
+            'daysCount'            => $daysCount,
+            'chartTrendData'       => $chartTrendData,
+            'maxDailyVisitors'     => $maxDailyVisitors,
+            'peakDateLabel'        => $peakDateLabel,
+            'totalPeriodVisitors'  => $totalPeriodVisitors,
+            'totalPeriodChats'     => $totalPeriodChats,
+            'avgDailyVisitors'     => $avgDailyVisitors,
+            'chatConversionRate'   => $chatConversionRate,
+            'deviceCounts'         => $deviceCounts,
+            'deviceTotal'          => array_sum($deviceCounts),
+            'osCounts'             => array_slice($osCounts, 0, 4, true),
+            'browserCounts'        => array_slice($browserCounts, 0, 4, true),
+            'channelShare'         => $channelShare,
+            'topPages'             => $topPages,
+            'timeOfDay'            => $timeOfDay,
+        ];
+
+        return view('admin.visitors', compact(
+            'visitors',
+            'projects',
+            'visitorStats',
+            'chattingVisitorsCount',
+            'trafficStats'
+        ));
+    }
+
+    /**
+     * Get Visitor Detail Footprint (AJAX / Drawer Modal)
+     * GET /admin/visitors/{id}
+     */
+    public function visitorDetail(Request $request, $id): JsonResponse
+    {
+        $tenantId = $request->user()->tenant_id;
+        $projectIds = Project::where('tenant_id', $tenantId)->pluck('id')->toArray();
+
+        $visitor = Visitor::whereIn('project_id', $projectIds)
+            ->where('id', $id)
+            ->with([
+                'project',
+                'contact',
+                'conversations' => function ($q) {
+                    $q->with('latestMessage')->latest('id');
+                }
+            ])
+            ->firstOrFail();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $visitor->id,
+                'customer_code' => $visitor->customer_code_formatted,
+                'name' => $visitor->name ?: 'Tamu Tanpa Nama',
+                'display_name' => $visitor->display_name,
+                'email' => $visitor->email,
+                'visitor_uuid' => $visitor->visitor_uuid,
+                'ip_address' => $visitor->ip_address,
+                'user_agent' => $visitor->user_agent,
+                'device_type' => $visitor->device_type,
+                'browser_name' => $visitor->browser_name,
+                'os_name' => $visitor->os_name,
+                'is_online' => $visitor->is_online,
+                'first_seen' => $visitor->created_at ? $visitor->created_at->format('d M Y, H:i') : '-',
+                'last_seen' => $visitor->last_seen_at ? $visitor->last_seen_at->format('d M Y, H:i:s') : '-',
+                'last_seen_human' => $visitor->last_seen_at ? $visitor->last_seen_at->diffForHumans() : '-',
+                'project' => [
+                    'id' => $visitor->project->id ?? null,
+                    'name' => $visitor->project->name ?? 'Default Project',
+                    'slug' => $visitor->project->slug ?? '',
+                ],
+                'contact' => $visitor->contact ? [
+                    'name' => $visitor->contact->name,
+                    'email' => $visitor->contact->email,
+                    'phone' => $visitor->contact->phone,
+                    'custom_attributes' => $visitor->contact->custom_attributes,
+                ] : null,
+                'conversations' => $visitor->conversations->map(function ($c) {
+                    return [
+                        'id' => $c->id,
+                        'status' => $c->status,
+                        'channel' => $c->channel,
+                        'page_url' => $c->page_url,
+                        'page_title' => $c->page_title,
+                        'last_message_at' => $c->last_message_at ? $c->last_message_at->format('d M Y, H:i') : null,
+                        'last_message_preview' => $c->last_message_preview ?? ($c->latestMessage ? Str::limit(strip_tags($c->latestMessage->content), 80) : 'Belum ada pesan'),
+                        'inbox_url' => route('admin.inbox', ['conversation_id' => $c->id]),
+                    ];
+                }),
+            ]
+        ]);
+    }
+
+    /**
      * Activity Logs & Audit Trail
      * GET /admin/logs
      */
@@ -805,36 +1224,78 @@ class DashboardController extends Controller
 
         $query = ActivityLog::where('tenant_id', $tenantId)->with('user');
 
+        // 1. Search Filter (description, action, IP, username, subject)
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('description', 'like', "%{$search}%")
                   ->orWhere('action', 'like', "%{$search}%")
                   ->orWhere('ip_address', 'like', "%{$search}%")
-                  ->orWhere('user_name', 'like', "%{$search}%");
+                  ->orWhere('user_name', 'like', "%{$search}%")
+                  ->orWhere('subject_type', 'like', "%{$search}%");
             });
         }
 
+        // 2. Role Filter
         if ($request->filled('role')) {
             $query->where('user_role', $request->input('role'));
         }
 
+        // 3. Action / Event Filter
         if ($request->filled('action')) {
-            $query->where('action', 'like', '%' . $request->input('action') . '%');
+            $action = $request->input('action');
+            if (strpos($action, '*') !== false) {
+                $query->where('action', 'like', str_replace('*', '%', $action));
+            } else {
+                $query->where('action', $action);
+            }
         }
 
-        $sort = $request->input('sort', 'id');
+        // 4. Date Range Filter
+        if ($request->filled('date_range')) {
+            $range = $request->input('date_range');
+            if ($range === 'today') {
+                $query->whereDate('created_at', now()->toDateString());
+            } elseif ($range === '7d') {
+                $query->where('created_at', '>=', now()->subDays(7)->startOfDay());
+            } elseif ($range === '30d') {
+                $query->where('created_at', '>=', now()->subDays(30)->startOfDay());
+            }
+        }
+
+        // 5. Column Sorting (Default: created_at desc)
+        $allowedSorts = ['id', 'created_at', 'user_role', 'user_name', 'action', 'ip_address'];
+        $sort = in_array($request->input('sort'), $allowedSorts) ? $request->input('sort') : 'created_at';
         $direction = strtolower($request->input('dir', 'desc')) === 'asc' ? 'asc' : 'desc';
 
-        if (in_array($sort, ['id', 'created_at', 'user_role', 'action', 'ip_address'])) {
-            $query->orderBy($sort, $direction);
-        } else {
-            $query->orderBy('id', 'desc');
+        $query->orderBy($sort, $direction);
+        if ($sort !== 'id') {
+            $query->orderBy('id', $direction);
         }
 
-        $logs = $query->paginate(25)->withQueryString();
+        // 6. Configurable Pagination Limit
+        $perPage = in_array((int) $request->input('per_page'), [10, 15, 25, 50, 100]) ? (int) $request->input('per_page') : 25;
+        $logs = $query->paginate($perPage)->withQueryString();
 
-        return view('admin.logs', compact('logs'));
+        // 7. Aggregate Statistics for Top Ribbon (Single indexed query)
+        $logStats = ActivityLog::where('tenant_id', $tenantId)
+            ->selectRaw("
+                COUNT(*) as total_logs,
+                SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as today_logs,
+                SUM(CASE WHEN user_role = 'superadmin' THEN 1 ELSE 0 END) as superadmin_logs,
+                SUM(CASE WHEN user_role = 'agent' THEN 1 ELSE 0 END) as agent_logs,
+                SUM(CASE WHEN action LIKE '%error%' OR action LIKE '%exceeded%' OR action LIKE '%UNAUTHORIZED%' THEN 1 ELSE 0 END) as warning_logs
+            ", [now()->startOfDay()])
+            ->first();
+
+        // 8. Available Action List for Dropdown Filter
+        $actionList = ActivityLog::where('tenant_id', $tenantId)
+            ->select('action')
+            ->distinct()
+            ->orderBy('action', 'asc')
+            ->pluck('action');
+
+        return view('admin.logs', compact('logs', 'logStats', 'actionList', 'perPage', 'sort', 'direction'));
     }
 
     /**
@@ -1029,11 +1490,16 @@ class DashboardController extends Controller
             $query->where('project_id', $request->input('project_id'));
         }
 
-        if ($request->filled('status') && $request->input('status') !== 'all') {
-            if ($request->input('status') === 'mine') {
+        $currentStatus = $request->input('status', 'open');
+
+        if ($currentStatus !== 'all') {
+            if ($currentStatus === 'mine') {
                 $query->where('assigned_user_id', $request->user()->id);
+            } elseif ($currentStatus === 'closed') {
+                $query->where('status', 'closed');
             } else {
-                $query->where('status', $request->input('status'));
+                // Default: chat aktif ('open')
+                $query->where('status', 'open');
             }
         }
 

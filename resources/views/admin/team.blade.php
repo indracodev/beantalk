@@ -76,9 +76,9 @@
 
     <!-- Team Members Container (Desktop Table + Mobile Cards) -->
     <div class="bg-white border border-apple-border rounded-xl shadow-apple-sm overflow-hidden">
-        <!-- 1. DESKTOP TABLE VIEW (md and up) -->
-        <div class="hidden md:block overflow-x-auto">
-            <table class="w-full text-left text-[12px]">
+        <!-- 1. DESKTOP / TABLET TABLE VIEW (md and up) -->
+        <div class="hidden md:block overflow-x-auto overscroll-x-contain" style="-webkit-overflow-scrolling: touch;">
+            <table class="w-full text-left text-[12px] min-w-[640px]">
                 <thead class="bg-apple-canvas/80 text-apple-textSecondary text-[10.5px] font-medium uppercase border-b border-apple-border">
                     <tr>
                         <th class="px-4 py-2.5">

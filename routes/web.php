@@ -48,6 +48,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('team/{id}/impersonate', 'Admin\DashboardController@impersonate')->name('team.impersonate');
     Route::match(['get', 'post'], 'impersonate/leave', 'Admin\DashboardController@leaveImpersonation')->name('impersonate.leave');
 
+    Route::get('visitors', 'Admin\DashboardController@visitors')->name('visitors');
+    Route::get('visitors/{id}', 'Admin\DashboardController@visitorDetail')->name('visitors.detail');
     Route::get('logs', 'Admin\DashboardController@logs')->name('logs');
     Route::put('profile/password', 'Admin\DashboardController@updateMyPassword')->name('profile.password');
 });

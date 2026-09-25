@@ -474,9 +474,9 @@
             </a>
         </div>
 
-        <!-- Desktop Table View (md:block) -->
-        <div class="hidden md:block overflow-x-auto">
-            <table class="w-full text-left border-collapse text-[12.5px]">
+        <!-- Desktop / Tablet Table View (md:block) -->
+        <div class="hidden md:block overflow-x-auto overscroll-x-contain" style="-webkit-overflow-scrolling: touch;">
+            <table class="w-full text-left border-collapse text-[12.5px] min-w-[680px]">
                 <thead>
                     <tr class="bg-apple-canvas/60 text-[10.5px] font-semibold text-apple-textTertiary uppercase tracking-wider border-b border-apple-border">
                         <th class="py-2.5 px-4">Website / Domain</th>

@@ -138,9 +138,20 @@
                             </span>
                         @endif
                     </div>
+                    @php
+                        $activeStatusKey = $currentStatus ?? request('status', 'open');
+                        $badgeLabel = ($counts['open'] ?? 0) . ' Aktif';
+                        if ($activeStatusKey === 'mine') {
+                            $badgeLabel = ($counts['mine'] ?? 0) . ' Mine';
+                        } elseif ($activeStatusKey === 'closed') {
+                            $badgeLabel = ($counts['closed'] ?? 0) . ' Selesai';
+                        } elseif ($activeStatusKey === 'all') {
+                            $badgeLabel = ($counts['all'] ?? 0) . ' Semua';
+                        }
+                    @endphp
                     <span
                         class="text-[10.5px] font-medium text-apple-textSecondary bg-white px-2 py-0.2 rounded-full border border-apple-border/70 shadow-2xs">
-                        {{ $counts['open'] ?? 0 }} Open
+                        {{ $badgeLabel }}
                     </span>
                 </div>
 
@@ -149,9 +160,7 @@
                     @if (request('project_id'))
                         <input type="hidden" name="project_id" value="{{ request('project_id') }}">
                     @endif
-                    @if (request('status'))
-                        <input type="hidden" name="status" value="{{ request('status') }}">
-                    @endif
+                    <input type="hidden" name="status" value="{{ $activeStatusKey }}">
                     <input type="text" name="search" id="search-conv-input"
                         placeholder="Search customer, code, keyword..." value="{{ request('search') }}"
                         oninput="handleSearchConv(this.value)"
@@ -162,31 +171,10 @@
                         <path d="m21 21-4.3-4.3" />
                     </svg>
                     @if (request('search'))
-                        <a href="{{ route('admin.inbox', ['project_id' => request('project_id'), 'status' => request('status')]) }}"
+                        <a href="{{ route('admin.inbox', array_filter(['project_id' => request('project_id'), 'status' => request('status')])) }}"
                             class="absolute right-2 top-1.5 text-apple-textTertiary hover:text-apple-textPrimary text-[13px]">&times;</a>
                     @endif
                 </form>
-
-                <!-- Segmented Scope Filter -->
-                <div
-                    class="grid grid-cols-4 bg-black/[0.05] p-0.5 rounded-lg text-[11px] font-medium text-apple-textSecondary text-center">
-                    <a href="?status=all{{ request('project_id') ? '&project_id=' . request('project_id') : '' }}"
-                        class="inbox-scope-btn no-loader py-1 rounded-md transition {{ !request('status') || request('status') === 'all' ? 'bg-white text-apple-textPrimary shadow-2xs font-semibold' : 'hover:text-apple-textPrimary' }}">
-                        Semua
-                    </a>
-                    <a href="?status=open{{ request('project_id') ? '&project_id=' . request('project_id') : '' }}"
-                        class="inbox-scope-btn no-loader py-1 rounded-md transition {{ request('status') === 'open' ? 'bg-white text-apple-textPrimary shadow-2xs font-semibold' : 'hover:text-apple-textPrimary' }}">
-                        Open
-                    </a>
-                    <a href="?status=mine{{ request('project_id') ? '&project_id=' . request('project_id') : '' }}"
-                        class="inbox-scope-btn no-loader py-1 rounded-md transition {{ request('status') === 'mine' ? 'bg-white text-apple-textPrimary shadow-2xs font-semibold' : 'hover:text-apple-textPrimary' }}">
-                        Mine
-                    </a>
-                    <a href="?status=closed{{ request('project_id') ? '&project_id=' . request('project_id') : '' }}"
-                        class="inbox-scope-btn no-loader py-1 rounded-md transition {{ request('status') === 'closed' ? 'bg-white text-apple-textPrimary shadow-2xs font-semibold' : 'hover:text-apple-textPrimary' }}">
-                        Selesai
-                    </a>
-                </div>
             </div>
 
             <!-- Conversation List -->
@@ -206,7 +194,7 @@
                         $projectColor = $conv->project->widgetSetting->primary_color ?? '#0071E3';
                         $timeHuman = $conv->last_message_time;
                     @endphp
-                    <a href="{{ route('admin.inbox', $conv->id) }}" data-conv-id="{{ $conv->id }}"
+                    <a href="{{ route('admin.inbox', array_filter(['id' => $conv->id, 'status' => request('status'), 'project_id' => request('project_id')])) }}" data-conv-id="{{ $conv->id }}"
                         data-visitor-id="{{ $conv->visitor_id }}"
                         data-project-color="{{ $projectColor }}"
                         data-site="{{ $conv->project_id }}" id="card-conv-{{ $conv->id }}"

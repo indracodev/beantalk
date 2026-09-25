@@ -3,6 +3,7 @@
     $isSuper = Auth::user()->isSuperAdmin();
     $dashboardActive = request()->routeIs('admin.dashboard*');
     $inboxActive = request()->routeIs('admin.inbox*');
+    $visitorsActive = request()->routeIs('admin.visitors*');
     $integrationsActive = request()->routeIs('admin.integrations*');
     $teamActive = request()->routeIs('admin.team*');
     $logsActive = request()->routeIs('admin.logs*');
@@ -38,6 +39,21 @@
             </span>
         </div>
         <span class="text-[9.5px] mt-0.5 tracking-tight">Inbox</span>
+    </a>
+
+    <!-- 3. Pengunjung (Tracked Visitors) -->
+    <a href="{{ route('admin.visitors') }}" id="bottomNavItemVisitors" data-loading-msg="Memuat Pengunjung..."
+       class="flex flex-col items-center justify-center flex-1 py-1 rounded-lg transition relative {{ $visitorsActive ? 'text-apple-blue font-semibold' : 'text-apple-textSecondary hover:text-apple-textPrimary font-normal' }}">
+        <div class="relative">
+            <svg class="w-5 h-5 {{ $visitorsActive ? 'stroke-[2.2]' : 'stroke-[1.8]' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <span class="w-1.5 h-1.5 rounded-full bg-apple-green absolute -top-0.5 -right-1 animate-pulse"></span>
+        </div>
+        <span class="text-[9.5px] mt-0.5 tracking-tight">Pengunjung</span>
     </a>
 
     @if($isSuper)

@@ -67,9 +67,11 @@ html.sidebar-is-collapsed #main-sidebar {
 .sidebar-collapsed .sidebar-text,
 .sidebar-collapsed .sidebar-badge,
 .sidebar-collapsed .sidebar-subtext,
+.sidebar-collapsed .sidebar-submenu,
 html.sidebar-is-collapsed #main-sidebar .sidebar-text,
 html.sidebar-is-collapsed #main-sidebar .sidebar-badge,
-html.sidebar-is-collapsed #main-sidebar .sidebar-subtext {
+html.sidebar-is-collapsed #main-sidebar .sidebar-subtext,
+html.sidebar-is-collapsed #main-sidebar .sidebar-submenu {
     display: none !important;
 }
 

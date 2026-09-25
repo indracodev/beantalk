@@ -71,6 +71,7 @@ class AdminDashboardTest extends TestCase
         $this->get('/admin/integrations')->assertRedirect('/login');
         $this->get('/admin/team')->assertRedirect('/login');
         $this->get('/admin/logs')->assertRedirect('/login');
+        $this->get('/admin/visitors')->assertRedirect('/login');
     }
 
     /**
@@ -131,13 +132,96 @@ class AdminDashboardTest extends TestCase
     /**
      * Test Authenticated User can view Live Inbox page
      */
+    /**
+     * Test Authenticated User can view Live Inbox page with default open filter and contextual sidebar submenu
+     */
     public function testAuthenticatedUserCanViewInbox()
     {
         $response = $this->actingAs($this->agent)->get('/admin/inbox');
 
         $response->assertStatus(200)
             ->assertSee('Live Inbox')
-            ->assertSee('Inbox');
+            ->assertSee('Inbox')
+            ->assertSee('Chat Aktif')
+            ->assertSee('sidebar-submenu');
+    }
+
+    /**
+     * Test Non-inbox page hides sidebar submenu
+     */
+    public function testNonInboxPageHidesSidebarSubmenu()
+    {
+        $response = $this->actingAs($this->superadmin)->get('/admin/team');
+
+        $response->assertStatus(200)
+            ->assertSee('Inbox')
+            ->assertDontSee('sidebar-submenu');
+    }
+
+    /**
+     * Test Inbox defaults to open chat filter and filters out closed conversations
+     */
+    public function testInboxDefaultsToOpenChatFilter()
+    {
+        $visOpen = Visitor::create([
+            'tenant_id'    => $this->tenant->id,
+            'project_id'   => $this->project->id,
+            'visitor_uuid' => 'vis-open-' . uniqid(),
+            'name'         => 'Open Customer',
+        ]);
+        $convOpen = Conversation::create([
+            'tenant_id'  => $this->tenant->id,
+            'project_id' => $this->project->id,
+            'visitor_id' => $visOpen->id,
+            'status'     => 'open',
+            'channel'    => 'widget',
+        ]);
+        \App\Models\Message::create([
+            'conversation_id' => $convOpen->id,
+            'tenant_id'       => $this->tenant->id,
+            'sender_type'     => 'visitor',
+            'sender_name'     => 'Open Customer',
+            'content'         => 'Open message content',
+        ]);
+
+        $visClosed = Visitor::create([
+            'tenant_id'    => $this->tenant->id,
+            'project_id'   => $this->project->id,
+            'visitor_uuid' => 'vis-closed-' . uniqid(),
+            'name'         => 'Closed Customer',
+        ]);
+        $convClosed = Conversation::create([
+            'tenant_id'  => $this->tenant->id,
+            'project_id' => $this->project->id,
+            'visitor_id' => $visClosed->id,
+            'status'     => 'closed',
+            'channel'    => 'widget',
+        ]);
+        \App\Models\Message::create([
+            'conversation_id' => $convClosed->id,
+            'tenant_id'       => $this->tenant->id,
+            'sender_type'     => 'visitor',
+            'sender_name'     => 'Closed Customer',
+            'content'         => 'Closed message content',
+        ]);
+
+        // Default: only open conversation should appear
+        $resDefault = $this->actingAs($this->agent)->get('/admin/inbox');
+        $resDefault->assertStatus(200)
+            ->assertSee('Open Customer')
+            ->assertDontSee('Closed Customer');
+
+        // Status closed: only closed conversation should appear
+        $resClosed = $this->actingAs($this->agent)->get('/admin/inbox?status=closed');
+        $resClosed->assertStatus(200)
+            ->assertSee('Closed Customer')
+            ->assertDontSee('Open Customer');
+
+        // Status all: both should appear
+        $resAll = $this->actingAs($this->agent)->get('/admin/inbox?status=all');
+        $resAll->assertStatus(200)
+            ->assertSee('Open Customer')
+            ->assertSee('Closed Customer');
     }
 
     /**
@@ -197,7 +281,155 @@ class AdminDashboardTest extends TestCase
         $response->assertStatus(200)
             ->assertSee('Activity Logs &amp; Audit Trail', false)
             ->assertSee('auth.test_login')
-            ->assertSee('Admin test logged in successfully');
+            ->assertSee('Admin test logged in successfully')
+            ->assertSee('logsTableView')
+            ->assertSee('logsCardsView')
+            ->assertSee('tableScrollHint');
+    }
+
+    /**
+     * Test Activity Logs Filter, Search, Sort and Responsive Views
+     */
+    public function testLogsPageFilterSortAndResponsiveFeatures()
+    {
+        ActivityLog::where('tenant_id', $this->tenant->id)->delete();
+
+        ActivityLog::create([
+            'tenant_id'   => $this->tenant->id,
+            'user_id'     => $this->agent->id,
+            'user_name'   => 'Agent Special Ops',
+            'user_role'   => 'agent',
+            'action'      => 'integration.create_secret',
+            'description' => 'Created secret key for webhook',
+            'ip_address'  => '192.168.1.100',
+            'created_at'  => now()->subMinutes(10),
+        ]);
+
+        ActivityLog::create([
+            'tenant_id'   => $this->tenant->id,
+            'user_id'     => $this->superadmin->id,
+            'user_name'   => 'Super Commander',
+            'user_role'   => 'superadmin',
+            'action'      => 'widget.color_updated',
+            'description' => 'Updated primary accent color to amber',
+            'ip_address'  => '10.0.0.1',
+            'created_at'  => now()->subMinutes(5),
+        ]);
+
+        // 1. Search filter: only matching query appears
+        $resSearch = $this->actingAs($this->superadmin)->get('/admin/logs?search=webhook');
+        $resSearch->assertStatus(200)
+            ->assertSee('Created secret key for webhook')
+            ->assertDontSee('Updated primary accent color to amber');
+
+        // 2. Role filter: only agent appears
+        $resRole = $this->actingAs($this->superadmin)->get('/admin/logs?role=agent');
+        $resRole->assertStatus(200)
+            ->assertSee('Created secret key for webhook')
+            ->assertDontSee('Updated primary accent color to amber');
+
+        // 3. Action filter: wildcard 'widget.*'
+        $resAction = $this->actingAs($this->superadmin)->get('/admin/logs?action=widget.*');
+        $resAction->assertStatus(200)
+            ->assertSee('widget.color_updated')
+            ->assertDontSee('Created secret key for webhook');
+
+        // 4. Sort and direction: check sort headers
+        $resSort = $this->actingAs($this->superadmin)->get('/admin/logs?sort=user_name&dir=asc');
+        $resSort->assertStatus(200)
+            ->assertSee('Agent Special Ops')
+            ->assertSee('Super Commander');
+    }
+
+    /**
+     * Test Authenticated User can view Tracked Visitors page
+     */
+    public function testAuthenticatedUserCanViewVisitorsPage()
+    {
+        Visitor::where('visitor_uuid', 'uuid-visitor-test-view')->delete();
+
+        $visitor = Visitor::create([
+            'project_id'    => $this->project->id,
+            'visitor_uuid'  => 'uuid-visitor-test-view',
+            'customer_code' => 'CUS-TEST99',
+            'name'          => 'Tracked Visitor Alpha',
+            'email'         => 'alpha@tracked.test',
+            'ip_address'    => '203.0.113.195',
+            'user_agent'    => 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1',
+            'last_seen_at'  => now(),
+        ]);
+
+        $response = $this->actingAs($this->superadmin)->get('/admin/visitors');
+
+        $response->assertStatus(200)
+            ->assertSee('Pengunjung Terlacak')
+            ->assertSee('Tracked Visitor Alpha')
+            ->assertSee('CUS-TEST99')
+            ->assertSee('visitorsTableView')
+            ->assertSee('visitorsCardsView');
+    }
+
+    /**
+     * Test Visitors search, filter, and detail endpoint
+     */
+    public function testVisitorsSearchFilterAndDetailEndpoint()
+    {
+        Visitor::whereIn('visitor_uuid', ['uuid-vis-mobile-search', 'uuid-vis-desktop-other'])->delete();
+
+        $v1 = Visitor::create([
+            'project_id'    => $this->project->id,
+            'visitor_uuid'  => 'uuid-vis-mobile-search',
+            'customer_code' => 'CUS-SRCH01',
+            'name'          => 'Target Search Person',
+            'email'         => 'target@search.test',
+            'ip_address'    => '10.10.10.10',
+            'user_agent'    => 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1',
+            'last_seen_at'  => now(),
+        ]);
+
+        $v2 = Visitor::create([
+            'project_id'    => $this->project->id,
+            'visitor_uuid'  => 'uuid-vis-desktop-other',
+            'customer_code' => 'CUS-DESK02',
+            'name'          => 'Other Desktop Guy',
+            'email'         => 'other@desktop.test',
+            'ip_address'    => '192.168.10.20',
+            'user_agent'    => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'last_seen_at'  => now()->subDays(2),
+        ]);
+
+        // 1. Search by customer code
+        $resSearch = $this->actingAs($this->agent)->get('/admin/visitors?search=CUS-SRCH01');
+        $resSearch->assertStatus(200)
+            ->assertSee('Target Search Person')
+            ->assertDontSee('Other Desktop Guy');
+
+        // 2. Filter by status online
+        $resOnline = $this->actingAs($this->agent)->get('/admin/visitors?status=online');
+        $resOnline->assertStatus(200)
+            ->assertSee('Target Search Person')
+            ->assertDontSee('Other Desktop Guy');
+
+        // 3. Filter by device mobile
+        $resDevice = $this->actingAs($this->agent)->get('/admin/visitors?device=mobile');
+        $resDevice->assertStatus(200)
+            ->assertSee('Target Search Person')
+            ->assertDontSee('Other Desktop Guy');
+
+        // 4. AJAX Detail endpoint
+        $resDetail = $this->actingAs($this->agent)->getJson("/admin/visitors/{$v1->id}");
+        $resDetail->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'id' => $v1->id,
+                    'customer_code' => 'CUS-SRCH01',
+                    'name' => 'Target Search Person',
+                    'email' => 'target@search.test',
+                    'device_type' => 'mobile',
+                    'is_online' => true,
+                ]
+            ]);
     }
 
     /**

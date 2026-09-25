@@ -106,6 +106,13 @@
         <header class="h-11 md:h-12 border-b border-apple-border glass-acrylic z-20 flex items-center justify-between px-3 md:px-4 shrink-0">
             <!-- Left: Brand / Breadcrumb -->
             <div class="flex items-center gap-1.5" id="topbar-breadcrumb">
+                <button type="button" onclick="toggleSidebarMobile()" class="md:hidden p-1 -ml-1 text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 rounded-md transition" title="Buka Menu">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
                 @hasSection('breadcrumb')
                     @yield('breadcrumb')
                 @else
@@ -173,7 +180,7 @@
         @endif
 
         <!-- Main Content Slot -->
-        <main class="flex-1 flex min-h-0 min-w-0 overflow-hidden relative">
+        <main class="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden relative">
             @yield('content')
         </main>
 
