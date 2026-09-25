@@ -79,10 +79,14 @@ class SupressoCoffeeChatbotSeeder extends Seeder
         }
 
         // 5. Bot Welcome Message & Interactive Options (Direct options, without numbers)
-        $welcomeMessage = "Hi there! Thank you for reaching out to *Supresso Coffee* ☕\nHow may we assist you today?\n\nPlease choose an option below or type your inquiry:";
+        $welcomeMessage = "Hi there! Thank you for reaching out to *Supresso Coffee*.
+How may we assist you today? :)
+
+Please choose an option below or type your inquiry:";
 
         $welcomeOptions = [
-            ['label' => 'Order', 'value' => 'Order'],
+            ['label' => 'Order / How to Buy', 'value' => 'How to Buy'],
+            ['label' => 'Order Issue', 'value' => 'Order Issue'],
             ['label' => 'Product', 'value' => 'Product'],
             ['label' => 'Membership', 'value' => 'Membership'],
             ['label' => 'About Event', 'value' => 'About Event'],
@@ -104,15 +108,68 @@ class SupressoCoffeeChatbotSeeder extends Seeder
                 'options'  => $welcomeOptions,
             ],
 
-            // Branch 1: Order
+            // Branch 1: How to Buy (Order / Purchase Coffee)
             [
-                'name'     => 'Order Assistance',
-                'keywords' => ['order', 'orders', 'my order', 'pesanan', 'pesanan saya', 'order assistance'],
-                'response' => "📦 *Order Assistance*\nWe are here to assist you with your order. Please choose an option below:",
+                'name'     => 'How to Buy Our Coffee',
+                'keywords' => ['how to buy', 'how to buy our coffee', 'order', 'orders', 'buy', 'beli', 'pesan', 'beli kopi', 'order coffee', 'where to buy', 'cara beli', 'cara pesan'],
+        'response' => "*How to Buy Our Coffee*\nYou can purchase Supresso Coffee directly through our official channels below:\n\n• Website: supresso.com (Worldwide shipping & promotions)\n• Shopee: Official Store (Singapore)\n• Lazada: Flagship Store (Singapore)\n\n_If you have an issue with an existing order, please choose *Order Issue*._",
+                'options'  => [
+                    ['label' => 'Buy from Website', 'value' => 'Buy from Website'],
+                    ['label' => 'Buy from Shopee', 'value' => 'Buy from Shopee'],
+                    ['label' => 'Buy from Lazada', 'value' => 'Buy from Lazada'],
+                    ['label' => 'Order Issue', 'value' => 'Order Issue'],
+                    ['label' => 'Main Menu', 'value' => 'MENU'],
+                    ['label' => 'Chat with CS', 'value' => 'CS'],
+                ],
+            ],
+            [
+                'name'     => 'Buy from Website',
+                'keywords' => ['buy from website', 'official website', 'website', 'supresso.com', 'web'],
+                'response' => "Kindly check our website https://www.supresso.com/ for your reference.\n\nShould you have any questions, please do not hesitate to contact us!",
+                'options'  => [
+                    ['label' => 'Buy from Shopee', 'value' => 'Buy from Shopee'],
+                    ['label' => 'Buy from Lazada', 'value' => 'Buy from Lazada'],
+                    ['label' => 'Order Issue', 'value' => 'Order Issue'],
+                    ['label' => 'Main Menu', 'value' => 'MENU'],
+                    ['label' => 'Chat with CS', 'value' => 'CS'],
+                ],
+            ],
+            [
+                'name'     => 'Buy from Shopee',
+                'keywords' => ['buy from shopee', 'shopee', 'shopee singapore', 'toko shopee'],
+                'response' => "Kindly check our official store on Shopee Singapore (https://shopee.sg/supresso) for your reference.\n\nShould you have any questions, please do not hesitate to contact us!",
+                'options'  => [
+                    ['label' => 'Buy from Website', 'value' => 'Buy from Website'],
+                    ['label' => 'Buy from Lazada', 'value' => 'Buy from Lazada'],
+                    ['label' => 'Order Issue', 'value' => 'Order Issue'],
+                    ['label' => 'Main Menu', 'value' => 'MENU'],
+                    ['label' => 'Chat with CS', 'value' => 'CS'],
+                ],
+            ],
+            [
+                'name'     => 'Buy from Lazada',
+                'keywords' => ['buy from lazada', 'lazada', 'lazada singapore', 'toko lazada'],
+                'response' => "Kindly check our official store on Lazada Singapore (https://www.lazada.sg/shop/supresso) for your reference.\n\nShould you have any questions, please do not hesitate to contact us!",
+                'options'  => [
+                    ['label' => 'Buy from Website', 'value' => 'Buy from Website'],
+                    ['label' => 'Buy from Shopee', 'value' => 'Buy from Shopee'],
+                    ['label' => 'Order Issue', 'value' => 'Order Issue'],
+                    ['label' => 'Main Menu', 'value' => 'MENU'],
+                    ['label' => 'Chat with CS', 'value' => 'CS'],
+                ],
+            ],
+
+            // Branch 2: Order Issue (Order Assistance & Issues)
+            [
+                'name'     => 'Order Issue Support',
+                'keywords' => ['order issue', 'order assistance', 'order problem', 'issue', 'masalah pesanan', 'kendala pesanan', 'kendala order', 'bantuan pesanan'],
+        'response' => "*Order Issue & Assistance*\nWe are here to help your order issue. Please choose an option below:",
                 'options'  => [
                     ['label' => 'Order Status', 'value' => 'Order Status'],
                     ['label' => 'Cancellation', 'value' => 'Cancellation'],
                     ['label' => 'Return Policy', 'value' => 'Return Policy'],
+                    ['label' => 'Package Not Received', 'value' => 'Package Not Received'],
+                    ['label' => 'Shipment Issue', 'value' => 'Shipment Issue'],
                     ['label' => 'Main Menu', 'value' => 'MENU'],
                     ['label' => 'Chat with CS', 'value' => 'CS'],
                 ],
@@ -120,7 +177,7 @@ class SupressoCoffeeChatbotSeeder extends Seeder
             [
                 'name'     => 'Order Status',
                 'keywords' => ['order status', 'track order', 'tracking', 'track', 'where is my order', 'cek resi', 'status pesanan'],
-                'response' => "Orders are typically fulfilled within 2-3 business days. Once your order has been fulfilled, a shipping confirmation email and WhatsApp message will be sent with your tracking information.\n\nShould you have anymore questions, do not hesitate to contact us!",
+                'response' => "Orders are typically fulfilled within 2-3 business days. Once your order has been fulfilled, you will receive an email with tracking information.\n\nPlease expect additional time for delivery during high volume sale or holiday periods.\n\nShould you have anymore questions, do not hesitate to contact us!",
                 'options'  => [
                     ['label' => 'Cancellation', 'value' => 'Cancellation'],
                     ['label' => 'Return Policy', 'value' => 'Return Policy'],
@@ -131,7 +188,7 @@ class SupressoCoffeeChatbotSeeder extends Seeder
             [
                 'name'     => 'Cancellation',
                 'keywords' => ['cancellation', 'cancelation', 'cancel order', 'cancel', 'batal', 'batalkan pesanan'],
-                'response' => "We process and complete orders as quickly as possible. If you have any modification requests or cancellation, please contact our Customer Support team immediately with your Order ID.\n\nShould you have anymore questions, do not hesitate to contact us!",
+                'response' => "We process and complete orders as quickly as possible. If you have any modification requests or order cancelations, please notify us immediately through our chat.\n\nWe will do our best to accommodate your request, but please note that we can not cancel orders that have been shipped.\n\nShould you have anymore questions, do not hesitate to contact us!",
                 'options'  => [
                     ['label' => 'Order Status', 'value' => 'Order Status'],
                     ['label' => 'Return Policy', 'value' => 'Return Policy'],
@@ -142,7 +199,7 @@ class SupressoCoffeeChatbotSeeder extends Seeder
             [
                 'name'     => 'Return Policy',
                 'keywords' => ['return policy', 'return', 'refund', 'retur', 'pengembalian', 'exchange', 'rusak'],
-                'response' => "All forms of order errors and damage to goods during delivery are not our responsibility. Please ensure you inspect your package upon arrival and record an unboxing video.\n\nFor verified defective items, please reach out to our Customer Support team with your order number and unboxing video for resolution.\n\nShould you have anymore questions, do not hesitate to contact us!",
+                'response' => "All forms of order errors and damage to goods during delivery are not our responsibility. Please do an unboxing video to claim and ask our staff to find solutions.\n\nShould you have anymore questions, do not hesitate to contact us!",
                 'options'  => [
                     ['label' => 'Order Status', 'value' => 'Order Status'],
                     ['label' => 'Cancellation', 'value' => 'Cancellation'],
@@ -155,7 +212,7 @@ class SupressoCoffeeChatbotSeeder extends Seeder
             [
                 'name'     => 'Product Assistance',
                 'keywords' => ['product', 'products', 'produk', 'produk supresso', 'katalog produk', 'product assistance'],
-                'response' => "☕ *Product Assistance*\nThank you for shopping with Supresso Coffee. We are here to assist you with our products. Please select what you need:",
+        'response' => "*Product Assistance*\nThank you for shopping with Supresso Coffee. We are here to assist you with our products. Please select what you need:",
                 'options'  => [
                     ['label' => 'Cannot Find Product', 'value' => 'Cannot Find Product'],
                     ['label' => 'Add to Cart Error', 'value' => 'Add to Cart Error'],
@@ -202,7 +259,7 @@ class SupressoCoffeeChatbotSeeder extends Seeder
             [
                 'name'     => 'Membership & Account',
                 'keywords' => ['membership', 'account', 'akun', 'member', 'membership & account'],
-                'response' => "👤 *Membership & Account*\nWe are here to assist you with your Supresso membership and account. Please select an option below:",
+        'response' => "*Membership & Account*\nWe are here to assist you with your Supresso membership and account. Please select an option below:",
                 'options'  => [
                     ['label' => 'Account Login Issue', 'value' => 'Account Login Issue'],
                     ['label' => 'Suspicious Activity', 'value' => 'Suspicious Activity'],
@@ -214,7 +271,7 @@ class SupressoCoffeeChatbotSeeder extends Seeder
             [
                 'name'     => 'Account Login Issue',
                 'keywords' => ['account login issue', 'account login', 'login issue', 'kendala akun', 'login', 'masalah login'],
-                'response' => "🔐 *Account Login*\nPlease let us know the issue you are facing with your account:",
+        'response' => "*Account Login*\nPlease let us know the issue you are facing with your account:",
                 'options'  => [
                     ['label' => 'Cannot Login', 'value' => 'Cannot Login'],
                     ['label' => 'Reset Password', 'value' => 'Reset Password'],
@@ -280,7 +337,7 @@ class SupressoCoffeeChatbotSeeder extends Seeder
             [
                 'name'     => 'About Event & Partnership',
                 'keywords' => ['about event', 'event', 'partnership or bulk', 'partnership', 'kerjasama', 'distributor'],
-                'response' => "🤝 *About Event, Partnership & Bulk Purchase*\nInterested in partnering or purchasing in bulk with Supresso Coffee? Please choose an option below:",
+        'response' => "*About Event, Partnership & Bulk Purchase*\nInterested in partnering or purchasing in bulk with Supresso Coffee? Please choose an option below:",
                 'options'  => [
                     ['label' => 'How to be a Distributor', 'value' => 'How to be a Distributor'],
                     ['label' => 'Promote Our Products', 'value' => 'Promote Our Products'],
@@ -351,7 +408,7 @@ class SupressoCoffeeChatbotSeeder extends Seeder
             [
                 'name'     => 'Checkout Assistance',
                 'keywords' => ['checkout', 'checkout assistance', 'bayar', 'proses bayar'],
-                'response' => "🛒 *Checkout Assistance*\nWe are here to assist you with your checkout and payment. Please select an option:",
+        'response' => "*Checkout Assistance*\nWe are here to assist you with your checkout and payment. Please select an option:",
                 'options'  => [
                     ['label' => 'Kris+ Voucher', 'value' => 'Kris+ Voucher'],
                     ['label' => 'Checkout Button', 'value' => 'Checkout Button'],
@@ -386,7 +443,7 @@ class SupressoCoffeeChatbotSeeder extends Seeder
             [
                 'name'     => 'Payment Methods',
                 'keywords' => ['payment methods', 'payment', 'pembayaran', 'cara bayar', 'metode pembayaran'],
-                'response' => "💳 *Payment Methods at Supresso Coffee*\nWe support various secure payment methods worldwide. Please select for details:",
+        'response' => "*Payment Methods at Supresso Coffee*\nWe support various secure payment methods worldwide. Please select for details:",
                 'options'  => [
                     ['label' => 'Credit/Debit Cards', 'value' => 'Credit/Debit Cards'],
                     ['label' => 'Shop Pay Installment', 'value' => 'Shop Pay Installment'],
@@ -417,18 +474,6 @@ class SupressoCoffeeChatbotSeeder extends Seeder
                 ],
             ],
             [
-                'name'     => 'Order Issue Support',
-                'keywords' => ['order issue', 'order problem', 'masalah pesanan', 'kendala pesanan'],
-                'response' => "📦 *Order Issue Support*\nWe are here to help your order issue. Please select the specific issue:",
-                'options'  => [
-                    ['label' => 'Package Not Received', 'value' => 'Package Not Received'],
-                    ['label' => 'Shipment Issue', 'value' => 'Shipment Issue'],
-                    ['label' => 'Information & Partnership', 'value' => 'Information & Partnership'],
-                    ['label' => 'Main Menu', 'value' => 'MENU'],
-                    ['label' => 'Chat with CS', 'value' => 'CS'],
-                ],
-            ],
-            [
                 'name'     => 'Package Not Received',
                 'keywords' => ['package not received', 'i haven\'t received my order', 'belum terima pesanan', 'belum sampai', 'package'],
                 'response' => "Thank you for shopping with Supresso Coffee.\n\nKindly fill up below the information:\nOrder ID:\nFull Name:\nContact Number:\n\nWe'll check with our logistics partner and get back to you the soonest!",
@@ -441,7 +486,7 @@ class SupressoCoffeeChatbotSeeder extends Seeder
             [
                 'name'     => 'Shipment Issue',
                 'keywords' => ['shipment issue', 'shipment', 'masalah pengiriman', 'kendala alamat', 'address error'],
-                'response' => "🚚 *Shipment Assistance*\nWe are here to help your shipment issue:",
+        'response' => "*Shipment Assistance*\nWe are here to help your shipment issue:",
                 'options'  => [
                     ['label' => 'Cannot Add Full Address', 'value' => 'Cannot Add Full Address'],
                     ['label' => 'Shipping Options', 'value' => 'Shipping Options'],
@@ -462,7 +507,7 @@ class SupressoCoffeeChatbotSeeder extends Seeder
             [
                 'name'     => 'Information & Partnership',
                 'keywords' => ['information & partnership', 'information and partnership', 'what do you need', 'informasi'],
-                'response' => "ℹ️ *Information & Buying Guide*\nWhat do you need assistance with?",
+                'response' => "*Information & Partnership*\nWhat do you need assistance with?",
                 'options'  => [
                     ['label' => 'Catalog', 'value' => 'Catalog'],
                     ['label' => 'Current Promotion', 'value' => 'Current Promotion'],
@@ -485,7 +530,7 @@ class SupressoCoffeeChatbotSeeder extends Seeder
             [
                 'name'     => 'Current Promotion',
                 'keywords' => ['current promotion', 'promotions & deals', 'promotion', 'coffee deals', 'deals', 'promo', 'diskon'],
-                'response' => "☕ *Current Promotions & Coffee Deals Just For You!*\nCheck out our ongoing promotions:",
+        'response' => "*Current Promotions & Coffee Deals Just For You!*\nCheck out our ongoing promotions:",
                 'options'  => [
                     ['label' => 'Summer Sales', 'value' => 'Summer Sales'],
                     ['label' => 'Father\'s Day Promo', 'value' => 'Father\'s Day Promo'],
@@ -577,7 +622,7 @@ class SupressoCoffeeChatbotSeeder extends Seeder
             [
                 'name'     => 'Global Shipping',
                 'keywords' => ['global shipping', 'shipping', 'pengiriman', 'ongkir', 'delivery', 'international shipping'],
-                'response' => "🌍 *Global & International Shipping*\nMost international orders will ship within 2 business days after placing your order. International transit times vary based on destination but generally take between 7-15 business days depending on custom clearance. Please expect additional time for delivery during high-volume sale or holiday periods. Once your order has shipped, you will receive an email with a tracking link.\n\nShipping options:\n• DHL International Express\n• Ninja Van: Singapore, Malaysia, Indonesia only\n\nShould you have anymore questions, do not hesitate to contact us!",
+                'response' => "Most international orders will ship within 2 business days after placing your order. International transit times is vary based on destination but generally take between 7-15 business days depending on custom clearance. Please expect additional time for delivery during high-volume sale or holiday periods. Once your order has shipped, you will receive an email with a link.\n\nShipping options:\nDHL International Express\nNinja Van: Singapore, Malaysia, Indonesia only\n\nShould you have anymore questions, do not hesitate to contact us!",
                 'options'  => [
                     ['label' => 'Shipping Options', 'value' => 'Shipping Options'],
                     ['label' => 'Currency', 'value' => 'Currency'],
@@ -624,7 +669,7 @@ class SupressoCoffeeChatbotSeeder extends Seeder
             [
                 'name'     => 'Coffee Recommendations',
                 'keywords' => ['coffee recommendations', 'product recommendation', 'coffee variety', 'rekomendasi', 'rekomendasi kopi', 'variety', 'houseblend', 'arabica', 'robusta'],
-                'response' => "☕ *Supresso Coffee Recommendations*\nDiscover the finest Indonesian and world coffees crafted to perfection. Choose a variety to see our recommendations:",
+        'response' => "*Supresso Coffee Recommendations*\nDiscover the finest Indonesian and world coffees crafted to perfection. Choose a variety to see our recommendations:",
                 'options'  => [
                     ['label' => 'Houseblend Coffee', 'value' => 'Houseblend Coffee'],
                     ['label' => 'Arabica Coffee', 'value' => 'Arabica Coffee'],
@@ -671,7 +716,7 @@ class SupressoCoffeeChatbotSeeder extends Seeder
             [
                 'name'     => 'Marketing',
                 'keywords' => ['marketing', 'promotional information', 'newsletter', 'promosi'],
-                'response' => "📢 *Marketing & Promotional Information*\nStay updated with our latest releases, exclusive discounts, and coffee brewing tips:",
+        'response' => "*Marketing & Promotional Information*\nStay updated with our latest releases, exclusive discounts, and coffee brewing tips:",
                 'options'  => [
                     ['label' => 'Email Marketing', 'value' => 'Email Marketing'],
                     ['label' => 'WhatsApp Marketing', 'value' => 'WhatsApp Marketing'],
@@ -704,7 +749,7 @@ class SupressoCoffeeChatbotSeeder extends Seeder
             [
                 'name'     => 'Customer Feedback',
                 'keywords' => ['customer feedback', 'feedback', 'customer experience', 'komplain', 'saran', 'product care', 'ulasan'],
-                'response' => "💬 *Customer Experience & Product Care*\nYour satisfaction is our priority. Please select an option:",
+        'response' => "*Customer Experience & Product Care*\nYour satisfaction is our priority. Please select an option:",
                 'options'  => [
                     ['label' => 'Customer Experience', 'value' => 'Customer Experience'],
                     ['label' => 'Product Care', 'value' => 'Product Care'],
@@ -808,7 +853,7 @@ class SupressoCoffeeChatbotSeeder extends Seeder
         if ($this->command) {
             $this->command->info('');
             $this->command->info('========================================================================');
-            $this->command->info('  🎉 SEEDER BERHASIL: Chatbot SUPRESSO Siap Digunakan!');
+            $this->command->info('  [SUCCESS] SEEDER BERHASIL: Chatbot SUPRESSO Siap Digunakan!');
             $this->command->info('========================================================================');
             $this->command->line('  • Tenant       : ' . $tenant->name . ' (' . $tenant->slug . ')');
             $this->command->line('  • Project      : ' . $project->name . ' (Slug: ' . $project->slug . ', ID: ' . $project->id . ')');

@@ -74,14 +74,15 @@ class SupressoCoffeeChatbotTest extends TestCase
 
         // Check options are direct without numbers
         $labels = array_column($options, 'label');
-        $this->assertContains('Order', $labels);
+        $this->assertContains('Order / How to Buy', $labels);
+        $this->assertContains('Order Issue', $labels);
         $this->assertContains('Product', $labels);
         $this->assertContains('Membership', $labels);
         $this->assertContains('Global Shipping', $labels);
         $this->assertNotContains('1. Order', $labels);
     }
 
-    public function testVisitorSelectingOrderGetsOrderAssistance()
+    public function testVisitorSelectingOrderOrHowToBuyGetsPurchaseChannels()
     {
         $visitorUuid = 'supresso-test-vis-' . uniqid();
 
@@ -96,12 +97,12 @@ class SupressoCoffeeChatbotTest extends TestCase
 
         $conv = Conversation::where('project_id', $this->project->id)->latest('id')->first();
 
-        // 2. Visitor clicks "Order" option
+        // 2. Visitor clicks "Order / How to Buy" option
         $this->withHeaders([
             'X-Project-Key' => $this->apiKey->public_key,
         ])->postJson("/api/v1/client/conversations/{$conv->id}/messages", [
             'visitor_uuid'      => $visitorUuid,
-            'content'           => 'Order',
+            'content'           => 'How to Buy',
             'client_message_id' => 'msg-sup-order-02-' . uniqid(),
         ]);
 
@@ -111,7 +112,47 @@ class SupressoCoffeeChatbotTest extends TestCase
             ->first();
 
         $this->assertNotNull($lastBotMsg);
-        $this->assertStringContainsString('Order Assistance', $lastBotMsg->content);
+        $this->assertStringContainsString('How to Buy Our Coffee', $lastBotMsg->content);
+
+        $options = $lastBotMsg->metadata['options'] ?? [];
+        $labels = array_column($options, 'label');
+        $this->assertContains('Buy from Website', $labels);
+        $this->assertContains('Buy from Shopee', $labels);
+        $this->assertContains('Buy from Lazada', $labels);
+        $this->assertContains('Order Issue', $labels);
+    }
+
+    public function testVisitorSelectingOrderIssueGetsOrderIssueAssistance()
+    {
+        $visitorUuid = 'supresso-test-vis-' . uniqid();
+
+        // 1. Initial message
+        $this->withHeaders([
+            'X-Project-Key' => $this->apiKey->public_key,
+        ])->postJson("/api/v1/client/conversations/0/messages", [
+            'visitor_uuid'      => $visitorUuid,
+            'content'           => 'Hi',
+            'client_message_id' => 'msg-sup-issue-01-' . uniqid(),
+        ]);
+
+        $conv = Conversation::where('project_id', $this->project->id)->latest('id')->first();
+
+        // 2. Visitor clicks "Order Issue" option
+        $this->withHeaders([
+            'X-Project-Key' => $this->apiKey->public_key,
+        ])->postJson("/api/v1/client/conversations/{$conv->id}/messages", [
+            'visitor_uuid'      => $visitorUuid,
+            'content'           => 'Order Issue',
+            'client_message_id' => 'msg-sup-issue-02-' . uniqid(),
+        ]);
+
+        $lastBotMsg = Message::where('conversation_id', $conv->id)
+            ->where('sender_type', 'bot')
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($lastBotMsg);
+        $this->assertStringContainsString('Order Issue & Assistance', $lastBotMsg->content);
 
         $options = $lastBotMsg->metadata['options'] ?? [];
         $labels = array_column($options, 'label');

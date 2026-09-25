@@ -3103,27 +3103,30 @@ Minuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas 
             if ($node) $tree[] = $node;
         }
 
-        // 7. Save or Update Widget Settings
-        $widgetSetting = WidgetSetting::updateOrCreate(
-            ['project_id' => $project->id],
-            [
-                'primary_color'       => '#1A1A1A',
-                'accent_color'        => '#D4AF37',
-                'position'            => 'bottom-right',
-                'greeting_title'      => 'INDRACO Store',
-                'greeting_subtitle'   => 'Layanan Pelanggan & Tanya Jawab Produk',
-                'is_online'           => true,
-                'bot_enabled'         => true,
-                'bot_mode_query'       => true,
-                'bot_mode_options'     => true,
-                'bot_name'            => 'INDRACO Assistant',
-                'bot_welcome_message' => $welcomeMessage,
-                'bot_welcome_options' => $rules[0]['options'],
-                'bot_offline_message' => 'Halo! Layanan konsultasi CS kami saat ini di luar jam operasional. Anda tetap dapat menggunakan bot otomatis atau meninggalkan pesan & nomor WhatsApp. Tim kami akan segera menghubungi Anda kembali.',
-                'bot_rules'           => $rules,
-                'bot_tree'            => $tree,
-            ]
-        );
+        // 7. Save or Update Widget Settings safely without disturbing existing colors or customizations
+        $widgetSetting = WidgetSetting::where('project_id', $project->id)->first();
+        if (!$widgetSetting) {
+            $widgetSetting = new WidgetSetting(['project_id' => $project->id]);
+            $widgetSetting->primary_color     = '#585858';
+            $widgetSetting->accent_color      = '#D4AF37';
+            $widgetSetting->position          = 'bottom-right';
+            $widgetSetting->greeting_title    = 'INDRACO Store';
+            $widgetSetting->greeting_subtitle = 'Layanan Pelanggan & Tanya Jawab Produk';
+            $widgetSetting->is_online         = true;
+        }
+
+        $widgetSetting->bot_enabled         = true;
+        $widgetSetting->bot_mode_query       = true;
+        $widgetSetting->bot_mode_options     = true;
+        $widgetSetting->bot_name            = $widgetSetting->bot_name ?: 'INDRACO Assistant';
+        $widgetSetting->bot_welcome_message = $welcomeMessage;
+        $widgetSetting->bot_welcome_options = $rules[0]['options'];
+        $widgetSetting->bot_rules           = $rules;
+        $widgetSetting->bot_tree            = $tree;
+        if (empty($widgetSetting->bot_offline_message)) {
+            $widgetSetting->bot_offline_message = 'Halo! Layanan konsultasi CS kami saat ini di luar jam operasional. Anda tetap dapat menggunakan bot otomatis atau meninggalkan pesan & nomor WhatsApp. Tim kami akan segera menghubungi Anda kembali.';
+        }
+        $widgetSetting->save();
 
         // 7. Output Integration Instructions & Embed Code
         $this->command->info('');

@@ -9,19 +9,40 @@
 ## 1. Top-Level Architectural Map
 
 ```text
-[ ROOT: Main Welcome Greeting ]
+[ ROOT: Main Welcome Greeting (Yellow Box) ]
   │
-  ├── 1. Order
-  │     ├── Order status
-  │     ├── Cancelation
-  │     └── Return policy
+  ├── 1. How to buy (Order / How to buy our coffee)
+  │     └── How to buy our coffee
+  │           ├── Buy from Shopee
+  │           ├── Buy from Lazada
+  │           └── Buy from Website
   │
-  ├── 2. Product (We are here to assist you)
+  ├── 2. Order issue (We are here to help your order issue)
+  │     ├── order (We are here to assist you)
+  │     │     ├── Order status
+  │     │     ├── Cancelation
+  │     │     └── Return policy
+  │     ├── Checkout (We are here to assist you)
+  │     │     ├── Kris+ Voucher
+  │     │     └── Checkout button
+  │     ├── Payment
+  │     │     ├── Credit/Debit Cards
+  │     │     ├── Shop Pay Installment
+  │     │     └── Price Adjustment
+  │     └── Package & Shipment Issue
+  │           ├── Package
+  │           │     └── I haven't received my order
+  │           └── Shipment issue
+  │                 ├── Shipment
+  │                 │     └── Cannot add full address for shipment
+  │                 └── We are here to help your shipment issue
+  │
+  ├── 3. Product (We are here to assist you)
   │     ├── Cannot Find Product
   │     ├── Add to cart error
   │     └── Price Adjustment
   │
-  ├── 3. Membership
+  ├── 4. Membership
   │     ├── Account login (Account login issue)
   │     │     └── Cannot login (Cannot login to account)
   │     │           ├── Reset password
@@ -29,38 +50,12 @@
   │     ├── Suspicious activity
   │     └── Unsubscribe (Unsubscribe from promotional information)
   │
-  ├── 4. About event
+  ├── 5. About event & Partnership
   │     └── Partnership or bulk (Information about partnership or bulk purchase)
   │           ├── How to be a Distributor
   │           ├── Promote our products
   │           ├── Office needs
   │           └── Bulk order
-  │
-  ├── 5. Checkout (We are here to assist you)
-  │     ├── Kris+ Voucher
-  │     ├── Checkout button
-  │     ├── Payment
-  │     │     ├── Credit/Debit Cards
-  │     │     ├── Shop Pay Installment
-  │     │     └── Price Adjustment
-  │     └── Order issue (We are here to help your order issue)
-  │           ├── Package
-  │           │     ├── I haven't received my order
-  │           │     └── Shipment issue
-  │           │           ├── Shipment
-  │           │           │     └── Cannot add full address for shipment
-  │           │           └── We are here to help your shipment issue
-  │           └── Information and partnership (What do you need?)
-  │                 ├── Information
-  │                 │     ├── Catalog
-  │                 │     └── Current Promotion (Coffee deals just for you ☕)
-  │                 │           ├── Summer Sales
-  │                 │           ├── Father's Day
-  │                 │           └── Payday
-  │                 └── How to buy our coffee
-  │                       ├── Buy from Shopee
-  │                       ├── Buy from Lazada
-  │                       └── Buy from Website
   │
   ├── 6. Global Shipping
   │     ├── Shipping option
@@ -76,16 +71,19 @@
   │     ├── Our arabica coffee
   │     └── Our robusta coffee
   │
-  ├── 9. Marketing
-  │     ├── Marketing & promotional information
-  │     │     ├── Email Marketing
-  │     │     └── WhatsApp Marketing
+  ├── 9. Information & Marketing
+  │     ├── Catalog
+  │     ├── Current Promotion (Coffee deals just for you)
+  │     │     ├── Summer Sales (sesuain lagi promo dari IPL)
+  │     │     ├── Father's Day
+  │     │     └── Payday
+  │     └── Marketing
+  │           ├── Email Marketing
+  │           └── WhatsApp Marketing
   │
-  ├── 10. Feedback
-  │      └── Customer experience
-  │            └── Product Care
-  │
-  └── sesuain lagi promo dari IPL
+  └── 10. Feedback
+        └── Customer experience
+              └── Product Care
 ```
 
 ---
@@ -99,24 +97,48 @@
 
 ---
 
-### BRANCH 1: Order
+### BRANCH 1: How to buy (Order / How to buy our coffee)
+- **Node:** `how_to_buy`
+- **Label:** "How to buy" -> "How to buy our coffee"
+- **Children Channels:**
+  - **Buy from Website**: Official Store https://www.supresso.com/
+  - **Buy from Shopee**: Shopee Official Store
+  - **Buy from Lazada**: Lazada Flagship Store
+
+---
+
+### BRANCH 2: Order issue (Order Assistance & Issues)
+- **Node:** `order_issue`
+- **Label:** "Order issue (We are here to help your order issue)"
+
+#### 2.1 order (We are here to assist you)
 - **Node:** `order`
 - **Label:** "order (We are here to assist you)"
 
-#### 1.1 Order status
+##### 2.1.1 Order status
 - **Node:** `order_status`
 - **Verbatim Message:**
-  > "Orders are typically fulfilled within 2-3 business days. Once your order has been fulfilled..."
+  > "Orders are typically fulfilled within 2-3 business days. Once your order has been fulfilled, you will receive an email with tracking information.
+  >
+  > Please expect additional time for delivery during high volume sale or holiday periods.
+  >
+  > Should you have anymore questions, do not hesitate to contact us!"
 
-#### 1.2 Cancelation
+##### 2.1.2 Cancelation
 - **Node:** `cancelation`
 - **Verbatim Message:**
-  > "We process and complete orders as quickly as possible. If you have any modification requests or..."
+  > "We process and complete orders as quickly as possible. If you have any modification requests or order cancelations, please notify us immediately through our chat.
+  >
+  > We will do our best to accommodate your request, but please note that we can not cancel orders that have been shipped.
+  >
+  > Should you have anymore questions, do not hesitate to contact us!"
 
-#### 1.3 Return policy
+##### 2.1.3 Return policy
 - **Node:** `return_policy`
 - **Verbatim Message:**
-  > "All forms of order errors and damage to goods during delivery are not our responsibility. Please..."
+  > "All forms of order errors and damage to goods during delivery are not our responsibility. Please do an unboxing video to claim and ask our staff to find solutions.
+  >
+  > Should you have anymore questions, do not hesitate to contact us!"
 
 ---
 
@@ -394,7 +416,7 @@
 
 ---
 
-### BRANCH 10: Current Promotion (Coffee deals just for you ☕)
+### BRANCH 10: Current Promotion (Coffee deals just for you)
 - **Node:** `current_promotion`
 - **Children:**
   - Summer Sales → sesuain lagi promo dari IPL
@@ -403,9 +425,9 @@
 
 ---
 
-### BRANCH 11: Information
+### BRANCH 11: Information & Catalog
 - **Node:** `information`
-- **Children:** Catalog, Information and partnership
+- **Children:** Catalog, Current Promotion, Information and partnership
 
 #### 11.1 Catalog
 - **Node:** `catalog`
@@ -413,13 +435,6 @@
   > "Kindly check our website https://www.supresso.com/ for your reference.
   >
   > Should you have any questions, please do not hesitate to contact us!"
-
-#### 11.2 How to buy our coffee
-- **Node:** `how_to_buy`
-- **Children:**
-  - Buy from Shopee
-  - Buy from Lazada
-  - Buy from Website
 
 ---
 
