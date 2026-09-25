@@ -1,11 +1,17 @@
 <!-- Collapsible Apple-style Sidebar Partial -->
 @php
-    $sidebarSitesCount = isset($projects) && is_countable($projects)
-        ? count($projects)
-        : (Auth::user() && Auth::user()->tenant ? Auth::user()->tenant->projects()->count() : 0);
-    $sidebarTeamCount = isset($staffMembers) && is_countable($staffMembers)
-        ? count($staffMembers)
-        : (Auth::user() && Auth::user()->tenant ? Auth::user()->tenant->users()->count() : 0);
+    $sidebarSitesCount =
+        isset($projects) && is_countable($projects)
+            ? count($projects)
+            : (Auth::user() && Auth::user()->tenant
+                ? Auth::user()->tenant->projects()->count()
+                : 0);
+    $sidebarTeamCount =
+        isset($staffMembers) && is_countable($staffMembers)
+            ? count($staffMembers)
+            : (Auth::user() && Auth::user()->tenant
+                ? Auth::user()->tenant->users()->count()
+                : 0);
 @endphp
 <aside id="main-sidebar"
     class="fixed md:static inset-y-0 left-0 -translate-x-full md:translate-x-0 h-full w-60 glass-sidebar border-r border-apple-border flex flex-col justify-between shrink-0 z-40 md:z-30 transition-transform md:transition-[width] duration-200 ease-out">
@@ -13,11 +19,14 @@
     <div class="flex flex-col h-full overflow-hidden">
         <!-- Top Brand & Minimize Toggle Header -->
         <div class="h-12 border-b border-apple-border flex items-center justify-between px-3 shrink-0">
-            <a href="{{ route('admin.inbox') }}" data-loading-msg="Memuat Inbox..." class="flex items-center gap-2.5 overflow-hidden text-inherit no-underline">
-                <div class="w-6 h-6 rounded-md bg-gradient-to-b from-[#333336] to-[#1D1D1F] flex items-center justify-center text-white font-semibold text-[11px] shadow-xs shrink-0">
+            <a href="{{ route('admin.inbox') }}" data-loading-msg="Memuat Inbox..."
+                class="flex items-center gap-2.5 overflow-hidden text-inherit no-underline">
+                <div
+                    class="w-6 h-6 rounded-md bg-gradient-to-b from-[#333336] to-[#1D1D1F] flex items-center justify-center text-white font-semibold text-[11px] shadow-xs shrink-0">
                     B
                 </div>
-                <span class="font-semibold text-apple-textPrimary tracking-tight text-[13px] truncate sidebar-text">BeanTalk</span>
+                <span
+                    class="font-semibold text-apple-textPrimary tracking-tight text-[13px] truncate sidebar-text">BeanTalk</span>
             </a>
 
             <div class="flex items-center gap-1">
@@ -48,7 +57,8 @@
 
             <!-- Navigation Group -->
             <nav class="flex flex-col gap-0.5">
-                <div class="px-2 pb-1 text-[9.5px] font-semibold tracking-wider text-apple-textTertiary uppercase sidebar-text">
+                <div
+                    class="px-2 pb-1 text-[9.5px] font-semibold tracking-wider text-apple-textTertiary uppercase sidebar-text">
                     Navigation
                 </div>
 
@@ -57,7 +67,8 @@
                     class="sidebar-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg {{ request()->routeIs('admin.dashboard*') ? 'text-apple-textPrimary bg-white border border-apple-border/60 shadow-apple-sm font-medium' : 'text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 font-normal' }} transition"
                     title="Dashboard">
                     <div class="flex items-center gap-2.5">
-                        <svg class="w-4 h-4 {{ request()->routeIs('admin.dashboard*') ? 'text-apple-blue' : 'text-apple-textSecondary' }} shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg class="w-4 h-4 {{ request()->routeIs('admin.dashboard*') ? 'text-apple-blue' : 'text-apple-textSecondary' }} shrink-0"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect width="7" height="9" x="3" y="3" rx="1"></rect>
                             <rect width="7" height="5" x="14" y="3" rx="1"></rect>
                             <rect width="7" height="9" x="14" y="12" rx="1"></rect>
@@ -65,7 +76,8 @@
                         </svg>
                         <span class="sidebar-text">Dashboard</span>
                     </div>
-                    <span class="sidebar-badge text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-700">LIVE</span>
+                    <span
+                        class="sidebar-badge text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-700">LIVE</span>
                 </a>
 
                 <!-- Live Inbox with Contextual Submenu Filter -->
@@ -74,14 +86,18 @@
                         class="sidebar-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg {{ request()->routeIs('admin.inbox*') ? 'text-apple-textPrimary bg-white border border-apple-border/60 shadow-apple-sm font-medium' : 'text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 font-normal' }} transition"
                         title="Inbox">
                         <div class="flex items-center gap-2.5">
-                            <svg class="w-4 h-4 {{ request()->routeIs('admin.inbox*') ? 'text-apple-blue' : 'text-apple-textSecondary' }} shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="w-4 h-4 {{ request()->routeIs('admin.inbox*') ? 'text-apple-blue' : 'text-apple-textSecondary' }} shrink-0"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect width="20" height="16" x="2" y="4" rx="2" />
                                 <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                             </svg>
                             <span class="sidebar-text">Inbox</span>
                         </div>
-                        <span class="sidebar-badge text-[10.5px] font-medium px-1.5 py-0.2 rounded-full {{ ($totalUnreadConversations ?? 0) > 0 ? 'bg-apple-red text-white pulse' : 'text-apple-textTertiary' }}" id="sidebarUnreadBadge" style="{{ ($totalUnreadConversations ?? 0) > 0 ? 'display: inline-flex;' : 'display: none;' }}">
-                            {{ ($totalUnreadConversations ?? 0) > 99 ? '99+' : ($totalUnreadConversations ?? 0) }}
+                        <span
+                            class="sidebar-badge text-[10.5px] font-medium px-1.5 py-0.2 rounded-full {{ ($totalUnreadConversations ?? 0) > 0 ? 'bg-apple-red text-white pulse' : 'text-apple-textTertiary' }}"
+                            id="sidebarUnreadBadge"
+                            style="{{ ($totalUnreadConversations ?? 0) > 0 ? 'display: inline-flex;' : 'display: none;' }}">
+                            {{ ($totalUnreadConversations ?? 0) > 99 ? '99+' : $totalUnreadConversations ?? 0 }}
                         </span>
                     </a>
 
@@ -91,16 +107,19 @@
                             $projectIdParam = request('project_id');
                         @endphp
                         <!-- Submenu Filter Obrolan (Hanya muncul saat menu Inbox dipilih/aktif) -->
-                        <div class="sidebar-submenu ml-3.5 pl-2 my-1 border-l border-apple-border/70 flex flex-col gap-0.5">
+                        <div
+                            class="sidebar-submenu ml-3.5 pl-2 my-1 border-l border-apple-border/70 flex flex-col gap-0.5">
                             <!-- 1. Chat Aktif (Open) - Default Filter -->
                             <a href="{{ route('admin.inbox', array_filter(['status' => 'open', 'project_id' => $projectIdParam])) }}"
                                 class="inbox-scope-btn no-loader sidebar-item w-full flex items-center justify-between px-2 py-1 rounded-md text-[11.5px] {{ $inboxStatus === 'open' ? 'text-apple-blue bg-apple-blue/10 font-semibold' : 'text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 font-normal' }} transition"
                                 title="Chat Aktif (Open)">
                                 <div class="flex items-center gap-2 truncate">
-                                    <span class="w-1.5 h-1.5 rounded-full {{ $inboxStatus === 'open' ? 'bg-apple-blue' : 'bg-apple-green' }} shrink-0"></span>
+                                    <span
+                                        class="w-1.5 h-1.5 rounded-full {{ $inboxStatus === 'open' ? 'bg-apple-blue' : 'bg-apple-green' }} shrink-0"></span>
                                     <span class="sidebar-text truncate">Chat Aktif</span>
                                 </div>
-                                <span class="sidebar-badge text-[10px] font-medium px-1.5 py-0.2 rounded-full {{ $inboxStatus === 'open' ? 'bg-apple-blue/20 text-apple-blue font-semibold' : 'text-apple-textTertiary' }}">
+                                <span
+                                    class="sidebar-badge text-[10px] font-medium px-1.5 py-0.2 rounded-full {{ $inboxStatus === 'open' ? 'bg-apple-blue/20 text-apple-blue font-semibold' : 'text-apple-textTertiary' }}">
                                     {{ $counts['open'] ?? 0 }}
                                 </span>
                             </a>
@@ -110,13 +129,15 @@
                                 class="inbox-scope-btn no-loader sidebar-item w-full flex items-center justify-between px-2 py-1 rounded-md text-[11.5px] {{ $inboxStatus === 'mine' ? 'text-apple-blue bg-apple-blue/10 font-semibold' : 'text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 font-normal' }} transition"
                                 title="Ditugaskan ke Saya">
                                 <div class="flex items-center gap-2 truncate">
-                                    <svg class="w-3.5 h-3.5 {{ $inboxStatus === 'mine' ? 'text-apple-blue' : 'text-apple-textTertiary' }} shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg class="w-3.5 h-3.5 {{ $inboxStatus === 'mine' ? 'text-apple-blue' : 'text-apple-textTertiary' }} shrink-0"
+                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                                         <circle cx="12" cy="7" r="4" />
                                     </svg>
                                     <span class="sidebar-text truncate">Mine</span>
                                 </div>
-                                <span class="sidebar-badge text-[10px] font-medium px-1.5 py-0.2 rounded-full {{ $inboxStatus === 'mine' ? 'bg-apple-blue/20 text-apple-blue font-semibold' : 'text-apple-textTertiary' }}">
+                                <span
+                                    class="sidebar-badge text-[10px] font-medium px-1.5 py-0.2 rounded-full {{ $inboxStatus === 'mine' ? 'bg-apple-blue/20 text-apple-blue font-semibold' : 'text-apple-textTertiary' }}">
                                     {{ $counts['mine'] ?? 0 }}
                                 </span>
                             </a>
@@ -126,13 +147,15 @@
                                 class="inbox-scope-btn no-loader sidebar-item w-full flex items-center justify-between px-2 py-1 rounded-md text-[11.5px] {{ $inboxStatus === 'closed' ? 'text-apple-blue bg-apple-blue/10 font-semibold' : 'text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 font-normal' }} transition"
                                 title="Obrolan Selesai">
                                 <div class="flex items-center gap-2 truncate">
-                                    <svg class="w-3.5 h-3.5 {{ $inboxStatus === 'closed' ? 'text-apple-blue' : 'text-apple-textTertiary' }} shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg class="w-3.5 h-3.5 {{ $inboxStatus === 'closed' ? 'text-apple-blue' : 'text-apple-textTertiary' }} shrink-0"
+                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                                         <polyline points="22 4 12 14.01 9 11.01" />
                                     </svg>
                                     <span class="sidebar-text truncate">Selesai</span>
                                 </div>
-                                <span class="sidebar-badge text-[10px] font-medium px-1.5 py-0.2 rounded-full {{ $inboxStatus === 'closed' ? 'bg-apple-blue/20 text-apple-blue font-semibold' : 'text-apple-textTertiary' }}">
+                                <span
+                                    class="sidebar-badge text-[10px] font-medium px-1.5 py-0.2 rounded-full {{ $inboxStatus === 'closed' ? 'bg-apple-blue/20 text-apple-blue font-semibold' : 'text-apple-textTertiary' }}">
                                     {{ $counts['closed'] ?? 0 }}
                                 </span>
                             </a>
@@ -142,7 +165,8 @@
                                 class="inbox-scope-btn no-loader sidebar-item w-full flex items-center justify-between px-2 py-1 rounded-md text-[11.5px] {{ $inboxStatus === 'all' ? 'text-apple-blue bg-apple-blue/10 font-semibold' : 'text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 font-normal' }} transition"
                                 title="Semua Riwayat Obrolan">
                                 <div class="flex items-center gap-2 truncate">
-                                    <svg class="w-3.5 h-3.5 {{ $inboxStatus === 'all' ? 'text-apple-blue' : 'text-apple-textTertiary' }} shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg class="w-3.5 h-3.5 {{ $inboxStatus === 'all' ? 'text-apple-blue' : 'text-apple-textTertiary' }} shrink-0"
+                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <line x1="8" y1="6" x2="21" y2="6" />
                                         <line x1="8" y1="12" x2="21" y2="12" />
                                         <line x1="8" y1="18" x2="21" y2="18" />
@@ -152,7 +176,8 @@
                                     </svg>
                                     <span class="sidebar-text truncate">Semua</span>
                                 </div>
-                                <span class="sidebar-badge text-[10px] font-medium px-1.5 py-0.2 rounded-full {{ $inboxStatus === 'all' ? 'bg-apple-blue/20 text-apple-blue font-semibold' : 'text-apple-textTertiary' }}">
+                                <span
+                                    class="sidebar-badge text-[10px] font-medium px-1.5 py-0.2 rounded-full {{ $inboxStatus === 'all' ? 'bg-apple-blue/20 text-apple-blue font-semibold' : 'text-apple-textTertiary' }}">
                                     {{ $counts['all'] ?? 0 }}
                                 </span>
                             </a>
@@ -160,32 +185,36 @@
                     @endif
                 </div>
 
-                <!-- Tracked Visitors (Pengunjung Terlacak) -->
-                <a href="{{ route('admin.visitors') }}" id="navItemVisitors" data-loading-msg="Memuat Pengunjung..."
-                    class="sidebar-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg {{ request()->routeIs('admin.visitors*') ? 'text-apple-textPrimary bg-white border border-apple-border/60 shadow-apple-sm font-medium' : 'text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 font-normal' }} transition"
-                    title="Pengunjung Terlacak">
-                    <div class="flex items-center gap-2.5">
-                        <svg class="w-4 h-4 {{ request()->routeIs('admin.visitors*') ? 'text-apple-blue' : 'text-apple-textSecondary' }} shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="9" cy="7" r="4"></circle>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                        </svg>
-                        <span class="sidebar-text">Pengunjung</span>
-                    </div>
-                    <span class="sidebar-badge inline-flex items-center gap-1 text-[9.5px] font-mono px-1.5 py-0.2 rounded-full bg-apple-green/10 text-apple-green border border-apple-green/20">
-                        <span class="w-1.5 h-1.5 rounded-full bg-apple-green animate-pulse"></span>
-                        LIVE
-                    </span>
-                </a>
-
                 @if (Auth::user()->isSuperAdmin())
+                    <!-- Tracked Visitors (Pengunjung Terlacak) -->
+                    <a href="{{ route('admin.visitors') }}" id="navItemVisitors"
+                        data-loading-msg="Memuat Pengunjung..."
+                        class="sidebar-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg {{ request()->routeIs('admin.visitors*') ? 'text-apple-textPrimary bg-white border border-apple-border/60 shadow-apple-sm font-medium' : 'text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 font-normal' }} transition"
+                        title="Pengunjung Terlacak">
+                        <div class="flex items-center gap-2.5">
+                            <svg class="w-4 h-4 {{ request()->routeIs('admin.visitors*') ? 'text-apple-blue' : 'text-apple-textSecondary' }} shrink-0"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            <span class="sidebar-text">Pengunjung</span>
+                        </div>
+                        <span
+                            class="sidebar-badge inline-flex items-center gap-1 text-[9.5px] font-mono px-1.5 py-0.2 rounded-full bg-apple-green/10 text-apple-green border border-apple-green/20">
+                            <span class="w-1.5 h-1.5 rounded-full bg-apple-green animate-pulse"></span>
+                            LIVE
+                        </span>
+                    </a>
                     <!-- Integrations / Channels -->
-                    <a href="{{ route('admin.integrations') }}" id="navItemIntegrations" data-loading-msg="Memuat Integrations..."
+                    <a href="{{ route('admin.integrations') }}" id="navItemIntegrations"
+                        data-loading-msg="Memuat Integrations..."
                         class="sidebar-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg {{ request()->routeIs('admin.integrations*') ? 'text-apple-textPrimary bg-white border border-apple-border/60 shadow-apple-sm font-medium' : 'text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 font-normal' }} transition"
                         title="Integrations">
                         <div class="flex items-center gap-2.5">
-                            <svg class="w-4 h-4 {{ request()->routeIs('admin.integrations*') ? 'text-apple-blue' : 'text-apple-textSecondary' }} shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="w-4 h-4 {{ request()->routeIs('admin.integrations*') ? 'text-apple-blue' : 'text-apple-textSecondary' }} shrink-0"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect x="3" y="3" width="7" height="7"></rect>
                                 <rect x="14" y="3" width="7" height="7"></rect>
                                 <rect x="14" y="14" width="7" height="7"></rect>
@@ -193,7 +222,8 @@
                             </svg>
                             <span class="sidebar-text">Integrations</span>
                         </div>
-                        <span class="sidebar-badge text-[10.5px] font-medium text-apple-textTertiary" id="sidebar-integrations-count">{{ $sidebarSitesCount }}</span>
+                        <span class="sidebar-badge text-[10.5px] font-medium text-apple-textTertiary"
+                            id="sidebar-integrations-count">{{ $sidebarSitesCount }}</span>
                     </a>
 
                     <!-- Team & RBAC -->
@@ -201,7 +231,8 @@
                         class="sidebar-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg {{ request()->routeIs('admin.team*') ? 'text-apple-textPrimary bg-white border border-apple-border/60 shadow-apple-sm font-medium' : 'text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 font-normal' }} transition"
                         title="Team & RBAC">
                         <div class="flex items-center gap-2.5">
-                            <svg class="w-4 h-4 {{ request()->routeIs('admin.team*') ? 'text-apple-blue' : 'text-apple-textSecondary' }} shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="w-4 h-4 {{ request()->routeIs('admin.team*') ? 'text-apple-blue' : 'text-apple-textSecondary' }} shrink-0"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
                                 <circle cx="9" cy="7" r="4" />
                                 <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
@@ -209,7 +240,8 @@
                             </svg>
                             <span class="sidebar-text">Team & RBAC</span>
                         </div>
-                        <span class="sidebar-badge text-[10px] font-medium px-1.5 py-0.2 rounded-md bg-amber-500/10 text-amber-700">{{ $sidebarTeamCount }}</span>
+                        <span
+                            class="sidebar-badge text-[10px] font-medium px-1.5 py-0.2 rounded-md bg-amber-500/10 text-amber-700">{{ $sidebarTeamCount }}</span>
                     </a>
 
                     <!-- Activity Logs -->
@@ -217,7 +249,8 @@
                         class="sidebar-item w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg {{ request()->routeIs('admin.logs*') ? 'text-apple-textPrimary bg-white border border-apple-border/60 shadow-apple-sm font-medium' : 'text-apple-textSecondary hover:text-apple-textPrimary hover:bg-black/5 font-normal' }} transition"
                         title="Activity Logs">
                         <div class="flex items-center gap-2.5">
-                            <svg class="w-4 h-4 {{ request()->routeIs('admin.logs*') ? 'text-apple-blue' : 'text-apple-textSecondary' }} shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="w-4 h-4 {{ request()->routeIs('admin.logs*') ? 'text-apple-blue' : 'text-apple-textSecondary' }} shrink-0"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                                 <polyline points="14 2 14 8 20 8" />
                                 <line x1="16" y1="13" x2="8" y2="13" />
@@ -240,7 +273,8 @@
                             class="w-7 h-7 rounded-full bg-amber-100 text-amber-800 font-semibold text-[10.5px] flex items-center justify-center border border-amber-300/60 shadow-2xs">
                             {{ strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', Auth::user()->name ?? 'User'), 0, 2)) }}
                         </div>
-                        <span class="w-2 h-2 rounded-full bg-apple-green absolute bottom-0 right-0 ring-1 ring-white"></span>
+                        <span
+                            class="w-2 h-2 rounded-full bg-apple-green absolute bottom-0 right-0 ring-1 ring-white"></span>
                     </div>
                     <div class="truncate sidebar-text">
                         <div id="user-display-name" class="font-medium text-[12px] text-apple-textPrimary truncate">
@@ -253,8 +287,11 @@
                 </div>
 
                 <div class="flex items-center gap-1 sidebar-text">
-                    <button type="button" onclick="openModal('modalChangeMyPassword')" class="p-1 text-apple-textTertiary hover:text-apple-blue rounded transition cursor-pointer" title="Ubah Password Akun">
-                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <button type="button" onclick="openModal('modalChangeMyPassword')"
+                        class="p-1 text-apple-textTertiary hover:text-apple-blue rounded transition cursor-pointer"
+                        title="Ubah Password Akun">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                             <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                         </svg>
@@ -262,8 +299,11 @@
 
                     <form action="{{ route('logout') }}" method="POST" class="m-0 inline">
                         @csrf
-                        <button type="submit" class="p-1 text-apple-textTertiary hover:text-apple-red rounded transition cursor-pointer" title="Logout / Keluar">
-                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <button type="submit"
+                            class="p-1 text-apple-textTertiary hover:text-apple-red rounded transition cursor-pointer"
+                            title="Logout / Keluar">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                                 <polyline points="16 17 21 12 16 7"></polyline>
                                 <line x1="21" y1="12" x2="9" y2="12"></line>
@@ -275,4 +315,3 @@
         </div>
     </div>
 </aside>
-
