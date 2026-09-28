@@ -1232,6 +1232,83 @@ class AdminDashboardTest extends TestCase
         $this->agent->refresh();
         $this->assertTrue(\Illuminate\Support\Facades\Hash::check('new-agent-secret', $this->agent->password));
     }
+
+    /**
+     * Test filter status di inbox: Mine hanya menampilkan chat OPEN yang ditugaskan ke saya,
+     * dan tiket CLOSED otomatis masuk ke Selesai serta counter terhitung tepat (Zero N+1).
+     */
+    public function testInboxStatusFilteringAndMineExcludesClosedConversations()
+    {
+        $visitor = Visitor::create([
+            'tenant_id'    => $this->tenant->id,
+            'project_id'   => $this->project->id,
+            'visitor_uuid' => 'vis-status-' . uniqid(),
+            'name'         => 'Test Visitor Status',
+        ]);
+
+        // Tiket 1: Assigned to agent, status open
+        $convOpen = Conversation::create([
+            'tenant_id'        => $this->tenant->id,
+            'project_id'       => $this->project->id,
+            'visitor_id'       => $visitor->id,
+            'assigned_user_id' => $this->agent->id,
+            'status'           => 'open',
+            'channel'          => 'widget',
+        ]);
+        \App\Models\Message::create([
+            'conversation_id' => $convOpen->id,
+            'tenant_id'       => $this->tenant->id,
+            'sender_type'     => 'visitor',
+            'sender_name'     => 'Test Visitor Status',
+            'content'         => 'Pesan aktif saya',
+            'status'          => 'delivered',
+        ]);
+
+        // Tiket 2: Assigned to agent, status CLOSED (sudah di-resolve)
+        $convClosed = Conversation::create([
+            'tenant_id'        => $this->tenant->id,
+            'project_id'       => $this->project->id,
+            'visitor_id'       => $visitor->id,
+            'assigned_user_id' => $this->agent->id,
+            'status'           => 'closed',
+            'channel'          => 'widget',
+        ]);
+        \App\Models\Message::create([
+            'conversation_id' => $convClosed->id,
+            'tenant_id'       => $this->tenant->id,
+            'sender_type'     => 'visitor',
+            'sender_name'     => 'Test Visitor Status',
+            'content'         => 'Pesan selesai saya',
+            'status'          => 'delivered',
+        ]);
+
+        // 1. GET /admin/inbox?status=mine harus memuat convOpen dan TIDAK memuat convClosed
+        $responseMine = $this->actingAs($this->agent)->get('/admin/inbox?status=mine');
+        $responseMine->assertStatus(200);
+        $mineConversations = $responseMine->viewData('conversations');
+        $this->assertTrue($mineConversations->contains('id', $convOpen->id));
+        $this->assertFalse($mineConversations->contains('id', $convClosed->id));
+
+        // Counter mine harus hanya menghitung status open (tidak menghitung closed)
+        $counts = $responseMine->viewData('counts');
+        $this->assertEquals(1, $counts['mine']);
+
+        // 2. GET /admin/inbox?status=closed harus memuat convClosed
+        $responseClosed = $this->actingAs($this->agent)->get('/admin/inbox?status=closed');
+        $responseClosed->assertStatus(200);
+        $closedConversations = $responseClosed->viewData('conversations');
+        $this->assertTrue($closedConversations->contains('id', $convClosed->id));
+        $this->assertFalse($closedConversations->contains('id', $convOpen->id));
+
+        // 3. Polling feed /admin/inbox/feed/updates?status=mine harus mengembalikan data yang konsisten
+        $pollMine = $this->actingAs($this->agent)->getJson('/admin/inbox/feed/updates?status=mine');
+        $pollMine->assertStatus(200);
+        $pollMineData = $pollMine->json('data.conversations');
+        $pollMineIds = collect($pollMineData)->pluck('id')->all();
+        $this->assertContains($convOpen->id, $pollMineIds);
+        $this->assertNotContains($convClosed->id, $pollMineIds);
+        $this->assertEquals(1, $pollMine->json('data.counts.mine'));
+    }
 }
 
 

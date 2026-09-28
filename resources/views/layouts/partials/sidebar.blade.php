@@ -119,6 +119,7 @@
                                     <span class="sidebar-text truncate">Chat Aktif</span>
                                 </div>
                                 <span
+                                    id="sidebarBadgeOpen" data-scope="open"
                                     class="sidebar-badge text-[10px] font-medium px-1.5 py-0.2 rounded-full {{ $inboxStatus === 'open' ? 'bg-apple-blue/20 text-apple-blue font-semibold' : 'text-apple-textTertiary' }}">
                                     {{ $counts['open'] ?? 0 }}
                                 </span>
@@ -137,6 +138,7 @@
                                     <span class="sidebar-text truncate">Mine</span>
                                 </div>
                                 <span
+                                    id="sidebarBadgeMine" data-scope="mine"
                                     class="sidebar-badge text-[10px] font-medium px-1.5 py-0.2 rounded-full {{ $inboxStatus === 'mine' ? 'bg-apple-blue/20 text-apple-blue font-semibold' : 'text-apple-textTertiary' }}">
                                     {{ $counts['mine'] ?? 0 }}
                                 </span>
@@ -155,6 +157,7 @@
                                     <span class="sidebar-text truncate">Selesai</span>
                                 </div>
                                 <span
+                                    id="sidebarBadgeClosed" data-scope="closed"
                                     class="sidebar-badge text-[10px] font-medium px-1.5 py-0.2 rounded-full {{ $inboxStatus === 'closed' ? 'bg-apple-blue/20 text-apple-blue font-semibold' : 'text-apple-textTertiary' }}">
                                     {{ $counts['closed'] ?? 0 }}
                                 </span>
@@ -177,6 +180,7 @@
                                     <span class="sidebar-text truncate">Semua</span>
                                 </div>
                                 <span
+                                    id="sidebarBadgeAll" data-scope="all"
                                     class="sidebar-badge text-[10px] font-medium px-1.5 py-0.2 rounded-full {{ $inboxStatus === 'all' ? 'bg-apple-blue/20 text-apple-blue font-semibold' : 'text-apple-textTertiary' }}">
                                     {{ $counts['all'] ?? 0 }}
                                 </span>

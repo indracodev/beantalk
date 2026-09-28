@@ -1275,6 +1275,7 @@ async function pollGlobalFeedUpdates() {
 window.updateGlobalSidebarBadge = updateGlobalSidebarBadge;
 window.playGlobalChime = playGlobalChime;
 window.showGlobalToast = showGlobalToast;
+window.pollGlobalFeedUpdates = pollGlobalFeedUpdates;
 
 
 function initGlobalNotificationEngine() {

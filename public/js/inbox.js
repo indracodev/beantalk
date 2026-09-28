@@ -258,17 +258,53 @@ window.onGlobalFeedUpdate = function(data) {
         updateUnreadBadges(data.unread_total);
     }
 
+    // 2. Update Scope Badges & Header Count jika tersedia
+    if (data.counts) {
+        updateScopeCounters(data.counts);
+    }
+
     if (data.max_message_id > maxTenantMessageId) {
         maxTenantMessageId = data.max_message_id;
     }
 
-    // 2. Update Conversation List in DOM
+    // 3. Update Conversation List in DOM
     const container = document.getElementById('convListContainer');
     if (container && Array.isArray(data.conversations)) {
         // Hapus empty state jika ada
-        const emptyState = container.querySelector('.empty-state');
+        const emptyState = container.querySelector('.empty-state, .empty-conv-state');
         if (emptyState && data.conversations.length > 0) {
             emptyState.remove();
+        }
+
+        const returnedIds = new Set(data.conversations.map(c => String(c.id)));
+        const searchInput = document.getElementById('search-conv-input');
+        const isClientSearching = searchInput && searchInput.value.trim().length > 0;
+
+        // Prune kartu yang sudah tidak masuk kriteria filter aktif (misal tiket di-resolve saat filter open/mine)
+        if (!isClientSearching) {
+            const allDomCards = container.querySelectorAll('.conv-row[data-conv-id]');
+            allDomCards.forEach(card => {
+                const cid = card.getAttribute('data-conv-id');
+                if (cid && !returnedIds.has(cid)) {
+                    card.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateX(-10px)';
+                    setTimeout(() => card.remove(), 200);
+                }
+            });
+
+            if (data.conversations.length === 0 && !container.querySelector('.empty-conv-state')) {
+                container.innerHTML = `
+                    <div class="empty-conv-state p-8 text-center text-apple-textTertiary">
+                        <svg class="w-8 h-8 mx-auto mb-2 text-apple-textTertiary/60" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="1.5">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        <p class="font-medium text-[12.5px] text-apple-textSecondary">Belum ada percakapan</p>
+                        <p class="text-[11px] mt-0.5">Tidak ada pesan untuk filter ini saat ini.</p>
+                    </div>
+                `;
+            }
         }
 
         data.conversations.forEach(conv => {
@@ -425,8 +461,36 @@ window.onGlobalFeedUpdate = function(data) {
     }
 };
 
+function updateScopeCounters(counts) {
+    if (!counts) return;
+
+    const badgeOpen = document.getElementById('sidebarBadgeOpen') || document.querySelector('[data-scope="open"]');
+    if (badgeOpen && typeof counts.open !== 'undefined') badgeOpen.textContent = counts.open;
+
+    const badgeMine = document.getElementById('sidebarBadgeMine') || document.querySelector('[data-scope="mine"]');
+    if (badgeMine && typeof counts.mine !== 'undefined') badgeMine.textContent = counts.mine;
+
+    const badgeClosed = document.getElementById('sidebarBadgeClosed') || document.querySelector('[data-scope="closed"]');
+    if (badgeClosed && typeof counts.closed !== 'undefined') badgeClosed.textContent = counts.closed;
+
+    const badgeAll = document.getElementById('sidebarBadgeAll') || document.querySelector('[data-scope="all"]');
+    if (badgeAll && typeof counts.all !== 'undefined') badgeAll.textContent = counts.all;
+
+    const activeFilterBadge = document.getElementById('inboxActiveFilterCountBadge');
+    if (activeFilterBadge) {
+        const curStatus = activeFilterBadge.getAttribute('data-active-status') || 'open';
+        let label = (counts.open || 0) + ' Aktif';
+        if (curStatus === 'mine') label = (counts.mine || 0) + ' Mine';
+        else if (curStatus === 'closed') label = (counts.closed || 0) + ' Selesai';
+        else if (curStatus === 'all') label = (counts.all || 0) + ' Semua';
+        activeFilterBadge.textContent = label;
+    }
+}
+
 function pollConversationFeed() {
-    // Driven seamlessly by admin.js initGlobalNotificationEngine
+    if (typeof window.pollGlobalFeedUpdates === 'function') {
+        window.pollGlobalFeedUpdates();
+    }
 }
 
 
@@ -889,8 +953,43 @@ async function executeStatusUpdate(targetStatus, closingMsg) {
                 }
             }
 
+            // Update status pill di toolbar aktif
+            const statusPillToolbar = document.getElementById('threadStatusPill');
+            if (statusPillToolbar) {
+                if (newStatus === 'open') {
+                    statusPillToolbar.className = 'text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-emerald-400/30 text-emerald-100 border border-emerald-300/40';
+                    statusPillToolbar.textContent = 'OPEN';
+                } else {
+                    statusPillToolbar.className = 'text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-white/20 text-white/80 border border-white/30';
+                    statusPillToolbar.textContent = 'SELESAI';
+                }
+            }
+
+            // Optimistic update pada kartu obrolan di panel kiri
+            const activeFilterBadge = document.getElementById('inboxActiveFilterCountBadge');
+            const currentFilter = activeFilterBadge ? activeFilterBadge.getAttribute('data-active-status') : 'open';
+            const activeCard = document.querySelector(`[data-conv-id="${activeConversationId}"], #card-conv-${activeConversationId}`);
+            if (activeCard) {
+                if ((newStatus === 'closed' && (currentFilter === 'open' || currentFilter === 'mine')) ||
+                    (newStatus === 'open' && currentFilter === 'closed')) {
+                    activeCard.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+                    activeCard.style.opacity = '0';
+                    activeCard.style.transform = 'translateX(-10px)';
+                    setTimeout(() => activeCard.remove(), 250);
+                } else {
+                    const pill = activeCard.querySelector('.conv-status-pill');
+                    if (pill) {
+                        pill.className = `conv-status-pill text-[9px] font-semibold px-1.5 py-0.2 rounded border shrink-0 ${newStatus === 'open' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-zinc-100 text-zinc-600 border-zinc-200'}`;
+                        pill.textContent = newStatus === 'open' ? 'Open' : 'Selesai';
+                    }
+                }
+            }
+
             // Immediately trigger poll to fetch newly appended closing message & refresh feed
-            setTimeout(runScheduledPoll, 200);
+            if (typeof window.pollGlobalFeedUpdates === 'function') {
+                window.pollGlobalFeedUpdates();
+            }
+            setTimeout(runScheduledPoll, 300);
         }
     } catch (err) {
         console.error('Error updating status:', err);

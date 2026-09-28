@@ -639,7 +639,8 @@ class DashboardController extends Controller
 
         if ($currentStatus !== 'all') {
             if ($currentStatus === 'mine') {
-                $query->where('assigned_user_id', $request->user()->id);
+                $query->where('assigned_user_id', $request->user()->id)
+                      ->where('status', 'open');
             } elseif ($currentStatus === 'closed') {
                 $query->where('status', 'closed');
             } else {
@@ -677,7 +678,7 @@ class DashboardController extends Controller
                 $activeConversation->load(['messages.user']);
             } else {
                 $activeConversation = Conversation::where('tenant_id', $tenantId)
-                    ->with(['project.widgetSetting', 'assignedUser', 'messages.user'])
+                    ->with(['visitor', 'project.widgetSetting', 'assignedUser', 'messages.user'])
                     ->find($id);
             }
             // Tandai tiket aktif sudah dibaca HANYA saat agen secara eksplisit membuka ID chat tersebut
@@ -701,7 +702,7 @@ class DashboardController extends Controller
         // Ambil daftar agen/staff untuk penugasan
         $staffMembers = User::where('tenant_id', $tenantId)->orderBy('name', 'asc')->get();
 
-        // Statistik ringkas dalam 1 query agregasi tunggal (menghindari multiple roundtrip counts)
+        // Statistik ringkas dalam 1 query agregasi tunggal (menghindari multiple roundtrip counts & N+1)
         $statusCountsQuery = Conversation::where('tenant_id', $tenantId)->whereHas('messages');
         if ($request->filled('project_id')) {
             $statusCountsQuery->where('project_id', $request->input('project_id'));
@@ -711,7 +712,7 @@ class DashboardController extends Controller
                 COUNT(*) as total_all,
                 SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END) as total_open,
                 SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as total_closed,
-                SUM(CASE WHEN assigned_user_id = ? THEN 1 ELSE 0 END) as total_mine
+                SUM(CASE WHEN assigned_user_id = ? AND status = 'open' THEN 1 ELSE 0 END) as total_mine
             ", [$request->user()->id])
             ->first();
 
@@ -1476,6 +1477,7 @@ class DashboardController extends Controller
                 ->whereHas('conversation', function ($q) {
                     $q->where('unread_agent_count', '>', 0);
                 })
+                ->with('conversation.project.widgetSetting')
                 ->orderBy('id', 'asc')
                 ->get();
         }
@@ -1494,7 +1496,8 @@ class DashboardController extends Controller
 
         if ($currentStatus !== 'all') {
             if ($currentStatus === 'mine') {
-                $query->where('assigned_user_id', $request->user()->id);
+                $query->where('assigned_user_id', $request->user()->id)
+                      ->where('status', 'open');
             } elseif ($currentStatus === 'closed') {
                 $query->where('status', 'closed');
             } else {
@@ -1552,11 +1555,33 @@ class DashboardController extends Controller
             ->where('unread_agent_count', '>', 0)
             ->count();
 
+        // 1 query agregasi cepat untuk sinkronisasi counter status real-time (Zero N+1)
+        $statusCountsQuery = Conversation::where('tenant_id', $tenantId)->whereHas('messages');
+        if ($request->filled('project_id')) {
+            $statusCountsQuery->where('project_id', $request->input('project_id'));
+        }
+
+        $statusCounts = $statusCountsQuery->selectRaw("
+                COUNT(*) as total_all,
+                SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END) as total_open,
+                SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as total_closed,
+                SUM(CASE WHEN assigned_user_id = ? AND status = 'open' THEN 1 ELSE 0 END) as total_mine
+            ", [$request->user()->id])
+            ->first();
+
+        $counts = [
+            'all'    => (int) ($statusCounts->total_all ?? 0),
+            'open'   => (int) ($statusCounts->total_open ?? 0),
+            'closed' => (int) ($statusCounts->total_closed ?? 0),
+            'mine'   => (int) ($statusCounts->total_mine ?? 0),
+        ];
+
         return response()->json([
             'success' => true,
             'data' => [
                 'conversations'      => $formatted,
                 'unread_total'       => $totalUnread,
+                'counts'             => $counts,
                 'max_message_id'     => $maxMessageId,
                 'has_new_incoming'   => $newVisitorMessages->isNotEmpty(),
                 'new_incoming_count' => $newVisitorMessages->count(),

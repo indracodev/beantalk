@@ -149,7 +149,8 @@
                             $badgeLabel = ($counts['all'] ?? 0) . ' Semua';
                         }
                     @endphp
-                    <span
+                    <span id="inboxActiveFilterCountBadge"
+                        data-active-status="{{ $activeStatusKey }}"
                         class="text-[10.5px] font-medium text-apple-textSecondary bg-white px-2 py-0.2 rounded-full border border-apple-border/70 shadow-2xs">
                         {{ $badgeLabel }}
                     </span>
@@ -316,7 +317,7 @@
                                 <span class="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/30 backdrop-blur-xs">
                                     Tiket #{{ $activeConversation->id }}
                                 </span>
-                                <span class="text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full {{ $activeConversation->status === 'open' ? 'bg-emerald-400/30 text-emerald-100 border border-emerald-300/40' : 'bg-white/20 text-white/80 border border-white/30' }}">
+                                <span id="threadStatusPill" class="text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full {{ $activeConversation->status === 'open' ? 'bg-emerald-400/30 text-emerald-100 border border-emerald-300/40' : 'bg-white/20 text-white/80 border border-white/30' }}">
                                     {{ $activeConversation->status === 'open' ? 'OPEN' : 'SELESAI' }}
                                 </span>
                                 <span id="threadOriginBadge" class="hidden sm:inline-block text-[9px] font-bold tracking-tight uppercase px-2 py-0.5 rounded-full truncate max-w-[120px] bg-white/20 text-white border border-white/30 backdrop-blur-xs shadow-2xs">

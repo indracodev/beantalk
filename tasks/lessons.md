@@ -189,3 +189,17 @@ Dokumen ini mencatat koreksi, pola desain, dan aturan teknis yang dipelajari sel
     2. Diekspos sebagai tab dedicated: **"⏰ Jam Kerja (Business Hours)"** berdampingan dengan tab Smart Bot, Tampilan & Branding, Saluran Sosial, Embed, dan Telegram.
     3. Dilengkapi indikator status realtime (🟢 Buka / 🌙 Tutup / ⚪ 24/7), pilihan timezone resmi (WIB, WITA, WIT, SGT, UTC), kustomisasi pesan luar jam kerja, dan template cepat (Kantor, Retail, 24 Jam) untuk jadwal harian 7 hari.
 
+- **[2026-09-28] Lesson 28: Scope Filter "Mine" Active-Only & Real-time Pruning di Admin Inbox**:
+  - *Konteks*: Saat admin menugaskan chat ke diri sendiri lalu menyelesaikan tiket (*Resolve*), chat tersebut tetap muncul di tab "Mine" dengan label "Selesai", dan angka badge counter "Mine" tidak berkurang.
+  - *Akar Masalah*:
+    1. Query filter `status=mine` di `DashboardController` hanya menyaring `assigned_user_id = $userId` tanpa mengecek `status = 'open'`.
+    2. Agregasi statistik `total_mine` di database menghitung seluruh riwayat tiket tanpa membedakan status open vs closed.
+    3. Loop polling realtime di frontend (`onGlobalFeedUpdate`) hanya menambah atau mengupdate kartu yang ada dalam payload, tanpa menghapus kartu yang sudah tidak lagi masuk kriteria filter aktif (karena chat yang di-close dihilangkan oleh query backend).
+    4. Relasi `conversation.project.widgetSetting` pada notifikasi pesan masuk baru belum di-eager-load (berpotensi lazy query N+1).
+  - *Solusi & Pola*:
+    1. **Strict Active Scoping**: Filter `status=mine` wajib menyaring `where('assigned_user_id', $userId)->where('status', 'open')`.
+    2. **Accurate Counter**: Agregasi counter `total_mine` menghitung `SUM(CASE WHEN assigned_user_id = ? AND status = 'open' THEN 1 ELSE 0 END)`.
+    3. **Zero N+1 Query Hygiene**: Sertakan `with('conversation.project.widgetSetting')` pada query incoming visitor messages dan `with('visitor')` pada fallback active conversation.
+    4. **Client-side Reconciliation**: Saat polling masuk, hapus kartu DOM yang ID-nya tidak ada lagi dalam `data.conversations` jika filter sedang aktif, serta perbarui badge counter realtime di sidebar dan header list.
+    5. **Side Menu Centralization**: Pertahankan navigasi pemfilteran status terpusat pada Side Menu navigasi kiri agar antarmuka kolom pesan tetap bersih dan tidak redundan.
+
