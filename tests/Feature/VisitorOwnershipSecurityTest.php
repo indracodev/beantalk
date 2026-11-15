@@ -59,7 +59,8 @@ class VisitorOwnershipSecurityTest extends TestCase
             $headers['X-Visitor-Uuid'] = $uuid;
         }
 
-        return $this->withHeaders($headers);
+        // withHeaders menempel antar-request; bersihkan agar "tanpa uuid" benar-benar tanpa uuid.
+        return $this->flushHeaders()->withHeaders($headers);
     }
 
     public function test_b1_pengunjung_lain_tidak_bisa_membaca_pesan()
