@@ -142,7 +142,15 @@ class MessageController extends Controller
         $project = $request->attributes->get('project');
 
         // Pemilik wajib (B1): sebelumnya cukup tahu ID untuk membaca chat orang lain.
-        $conversation = $this->conversationService->findForVisitor($project, $conversationId, self::visitorUuid($request));
+        $visitorUuid = self::visitorUuid($request);
+        if ($visitorUuid === null) {
+            // ponytail: masa transisi widget lama ter-cache (tidak kirim uuid saat polling) → daftar kosong, tanpa data.
+            // Hapus cabang ini (jadi 404) setelah ±2 minggu sejak deploy.
+            $afterId = (int) $request->query('after_id', 0);
+
+            return response()->json(['success' => true, 'data' => ['messages' => [], 'last_id' => $afterId]]);
+        }
+        $conversation = $this->conversationService->findForVisitor($project, $conversationId, $visitorUuid);
         if (!$conversation) {
             return self::notFound();
         }

@@ -65,7 +65,10 @@ class VisitorOwnershipSecurityTest extends TestCase
     public function test_b1_pengunjung_lain_tidak_bisa_membaca_pesan()
     {
         $this->sebagai(self::PENYUSUP)->getJson("/api/v1/client/conversations/{$this->conv->id}/messages")->assertStatus(404);
-        $this->sebagai()->getJson("/api/v1/client/conversations/{$this->conv->id}/messages")->assertStatus(404);
+
+        // Widget lama (masih ter-cache di browser) tidak mengirim uuid saat polling: dapat daftar kosong, bukan data.
+        $this->sebagai()->getJson("/api/v1/client/conversations/{$this->conv->id}/messages?after_id=7")
+            ->assertOk()->assertJsonPath('data.messages', [])->assertJsonPath('data.last_id', 7);
 
         $this->sebagai(self::PEMILIK)->getJson("/api/v1/client/conversations/{$this->conv->id}/messages")
             ->assertOk()->assertJsonPath('data.messages.0.content', 'Alamat saya Jl. Mawar 1');
