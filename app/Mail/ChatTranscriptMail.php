@@ -20,7 +20,8 @@ class ChatTranscriptMail extends Mailable
     public function __construct(Conversation $conversation, string $projectName, string $visitorName)
     {
         $this->conversation = $conversation;
-        $this->messages = $conversation->messages()->orderBy('id', 'asc')->get();
+        // Transkrip dikirim ke pelanggan: catatan internal tidak ikut.
+        $this->messages = $conversation->messages()->where('is_internal_note', false)->orderBy('id', 'asc')->get();
         $this->projectName = $projectName;
         $this->visitorName = $visitorName;
     }

@@ -74,6 +74,7 @@ class SessionController extends Controller
         $conversationData = null;
         if ($conversation) {
             $recentMessages = $conversation->messages()
+                ->where('is_internal_note', false) // catatan internal tidak pernah dikirim ke widget
                 ->orderBy('id', 'asc')
                 ->take(100)
                 ->get()

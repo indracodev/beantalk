@@ -72,6 +72,18 @@ class TelegramWebhookController extends Controller
             return response()->json(['ok' => true, 'note' => 'telegram_mode_disabled']);
         }
 
+        // 3b. Verifikasi secret token (B3): tanpa ini siapa pun bisa memalsukan balasan atas nama staf.
+        // Dibalas 200 agar Telegram tidak mengulang kirim; tidak ada aksi yang dijalankan.
+        $diterima = (string) $request->header('X-Telegram-Bot-Api-Secret-Token', '');
+        $harapan = $widgetSetting->telegram_bot_token ? \App\Services\TelegramService::webhookSecret($widgetSetting->telegram_bot_token) : '';
+        if ($harapan === '' || !hash_equals($harapan, $diterima)) {
+            Log::warning('[TelegramWebhook] Secret token tidak cocok; update diabaikan. Daftarkan ulang webhook di halaman integrasi.', [
+                'conversation_id' => $conversation->id,
+            ]);
+
+            return response()->json(['ok' => true, 'note' => 'invalid_secret_token']);
+        }
+
         // 4. Validasi Keamanan: Cocokkan Akun Pengirim Telegram dengan Akun Staf CS di Web
         $from = $msg['from'] ?? [];
         $fromUserId = !empty($from['id']) ? (string) $from['id'] : null;

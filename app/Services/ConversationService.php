@@ -58,6 +58,24 @@ class ConversationService
     }
 
     /**
+     * Ambil percakapan HANYA bila milik pengunjung pemegang visitor_uuid (header X-Visitor-Uuid atau input).
+     * Tanpa uuid atau bukan pemilik = null (controller membalas 404). Menutup celah B1/B2.
+     */
+    public function findForVisitor(Project $project, $conversationId, ?string $visitorUuid): ?Conversation
+    {
+        if (empty($visitorUuid) || !is_numeric($conversationId) || (int) $conversationId <= 0) {
+            return null;
+        }
+
+        return Conversation::where('project_id', $project->id)
+            ->where('id', (int) $conversationId)
+            ->whereHas('visitor', function ($q) use ($project, $visitorUuid) {
+                $q->where('project_id', $project->id)->where('visitor_uuid', $visitorUuid);
+            })
+            ->first();
+    }
+
+    /**
      * Gets the active conversation for a visitor ONLY if it is open/pending and has messages
      */
     public function getActiveConversation(Project $project, Visitor $visitor, bool $includeClosedFallback = false): ?Conversation
@@ -91,7 +109,9 @@ class ConversationService
         return Conversation::where('project_id', $project->id)
             ->where('visitor_id', $visitor->id)
             ->whereHas('messages')
-            ->with(['latestMessage'])
+            ->with(['latestMessage' => function ($q) {
+                $q->where('is_internal_note', false); // cuplikan untuk widget tidak boleh memuat catatan internal
+            }])
             ->latest('id')
             ->take($limit)
             ->get();
@@ -162,6 +182,13 @@ class ConversationService
                 ->where('client_message_id', $clientMessageId)
                 ->first();
 
+            // client_message_id milik pengirim lain (mis. "tg_…" agen atau catatan internal) tidak boleh dikembalikan.
+            if ($existing && ($existing->sender_type !== ($payload['sender_type'] ?? 'visitor') || $existing->is_internal_note)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'client_message_id' => 'client_message_id sudah dipakai.',
+                ]);
+            }
+
             if ($existing) {
                 return [
                     'message' => $existing,
@@ -185,6 +212,11 @@ class ConversationService
                 'status' => 'sent',
                 'is_internal_note' => $payload['is_internal_note'] ?? false,
             ]);
+
+            // Catatan internal tidak terlihat pelanggan: jangan ubah cuplikan & penghitung belum dibaca.
+            if (!empty($payload['is_internal_note'])) {
+                return ['message' => $message, 'is_duplicate' => false];
+            }
 
             // 3. Update preview dan unread counter di parent conversation
             $snippet = mb_substr(strip_tags($payload['content']), 0, 120);

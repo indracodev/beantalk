@@ -71,6 +71,12 @@ class TelegramIntegrationTest extends TestCase
         $this->visitor->save();
     }
 
+    /** Header secret token yang didaftarkan setWebhook untuk bot uji (B3). */
+    protected function secretHeader(): array
+    {
+        return ['X-Telegram-Bot-Api-Secret-Token' => \App\Services\TelegramService::webhookSecret('123456:TEST_TOKEN')];
+    }
+
     public function test_telegram_settings_can_be_saved(): void
     {
         $response = $this->actingAs($this->admin)->put(route('admin.integrations.settings', $this->project->id), [
@@ -219,7 +225,7 @@ class TelegramIntegrationTest extends TestCase
             ],
         ];
 
-        $response = $this->postJson(route('api.v1.telegram.webhook'), $payload);
+        $response = $this->postJson(route('api.v1.telegram.webhook'), $payload, $this->secretHeader());
         $response->assertOk();
         $response->assertJson(['ok' => true, 'conversation_id' => $conv->id, 'agent_name' => 'Siti Rahma']);
 
@@ -278,7 +284,7 @@ class TelegramIntegrationTest extends TestCase
             ],
         ];
 
-        $response = $this->postJson(route('api.v1.telegram.webhook'), $payload);
+        $response = $this->postJson(route('api.v1.telegram.webhook'), $payload, $this->secretHeader());
         $response->assertOk();
         $response->assertJson(['ok' => true, 'note' => 'unauthorized_telegram_sender']);
 

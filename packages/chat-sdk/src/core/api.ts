@@ -3,9 +3,12 @@ import { ApiResponse, SessionInitData, Message } from '../types';
 export class ApiClient {
   private baseUrl: string;
   private projectKey: string;
+  private visitorUuid: () => string;
 
-  constructor(projectKey: string, baseUrl: string = '') {
+  // visitorUuid dikirim di setiap request: server hanya melayani percakapan milik pengunjung ini.
+  constructor(projectKey: string, baseUrl: string = '', visitorUuid: () => string = () => '') {
     this.projectKey = projectKey;
+    this.visitorUuid = visitorUuid;
     // Normalize baseUrl: remove trailing slash
     this.baseUrl = baseUrl.replace(/\/+$/, '');
   }
@@ -16,6 +19,7 @@ export class ApiClient {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
       'X-Project-Key': this.projectKey,
+      ...(this.visitorUuid() ? { 'X-Visitor-Uuid': this.visitorUuid() } : {}),
       ...((options.headers as Record<string, string>) || {}),
     };
 

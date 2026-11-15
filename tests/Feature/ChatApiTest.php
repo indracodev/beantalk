@@ -93,6 +93,7 @@ class ChatApiTest extends TestCase
     {
         $response = $this->withHeaders([
             'X-Project-Key' => 'pk_live_supresso_8819',
+            'X-Visitor-Uuid' => '550e8400-e29b-41d4-a716-446655440000',
         ])->getJson('/api/v1/client/conversations/1/messages?after_id=0');
 
         $response->assertStatus(200)
@@ -116,6 +117,7 @@ class ChatApiTest extends TestCase
         // Send 1st time
         $res1 = $this->withHeaders([
             'X-Project-Key' => 'pk_live_supresso_8819',
+            'X-Visitor-Uuid' => '550e8400-e29b-41d4-a716-446655440000',
         ])->postJson('/api/v1/client/conversations/1/messages', [
             'client_message_id' => $clientMsgId,
             'content'           => 'Apakah kemasan ini ramah lingkungan?',
@@ -131,6 +133,7 @@ class ChatApiTest extends TestCase
         // Send 2nd time (Retry with same client_message_id)
         $res2 = $this->withHeaders([
             'X-Project-Key' => 'pk_live_supresso_8819',
+            'X-Visitor-Uuid' => '550e8400-e29b-41d4-a716-446655440000',
         ])->postJson('/api/v1/client/conversations/1/messages', [
             'client_message_id' => $clientMsgId,
             'content'           => 'Apakah kemasan ini ramah lingkungan?',

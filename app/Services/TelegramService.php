@@ -29,6 +29,15 @@ class TelegramService
     }
 
     /**
+     * Secret token webhook per bot (B3): HMAC token bot dengan APP_KEY, tanpa kolom DB baru.
+     * Telegram mengirimnya kembali di header X-Telegram-Bot-Api-Secret-Token (karakter A-Z a-z 0-9 _ -).
+     */
+    public static function webhookSecret(string $botToken): string
+    {
+        return substr(hash_hmac('sha256', 'telegram-webhook|' . trim($botToken), (string) config('app.key')), 0, 64);
+    }
+
+    /**
      * Send instant alert notification to Telegram (1x only per new conversation)
      */
     public function sendNewTicketAlert(Conversation $conversation, Message $message): ?array
@@ -381,6 +390,7 @@ class TelegramService
             $response = $this->http(8)->post("{$this->apiBase}{$botToken}/setWebhook", [
                 'url'                  => $webhookUrl,
                 'drop_pending_updates' => false,
+                'secret_token'         => self::webhookSecret($botToken),
             ]);
 
             $data = $response->json();

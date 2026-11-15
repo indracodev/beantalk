@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\Client;
 
 use App\Http\Controllers\Controller;
-use App\Models\Conversation;
 use App\Models\MessageAttachment;
 use App\Models\Project;
 use App\Services\ConversationService;
@@ -24,6 +23,15 @@ class UploadController extends Controller
      */
     public function upload(Request $request, $conversationId)
     {
+        /** @var Project $project */
+        $project = $request->attributes->get('project');
+
+        // Pemilik wajib (B2), dicek sebelum validasi berkas.
+        $conversation = $this->conversationService->findForVisitor($project, $conversationId, MessageController::visitorUuid($request));
+        if (!$conversation) {
+            return MessageController::notFound();
+        }
+
         $request->validate([
             'file'              => 'required|file|mimes:jpeg,png,jpg,webp,pdf|max:10240', // Max 10MB
             'client_message_id' => 'nullable|string|max:64',
@@ -32,25 +40,8 @@ class UploadController extends Controller
             'compressed_size'   => 'nullable|integer',
         ]);
 
-        /** @var Project $project */
-        $project = $request->attributes->get('project');
-
-        $conversation = Conversation::where('project_id', $project->id)
-            ->where('id', $conversationId)
-            ->first();
-
-        if (!$conversation) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'CONVERSATION_NOT_FOUND',
-                    'message' => 'Percakapan tidak ditemukan untuk project ini.',
-                ]
-            ], 404);
-        }
-
         $uploadedFile = $request->file('file');
-        $fileName = $uploadedFile->getClientOriginalName();
+        $fileName = mb_substr(strip_tags($uploadedFile->getClientOriginalName()), 0, 200);
         $fileSize = $uploadedFile->getSize();
         $mimeType = $uploadedFile->getMimeType();
 
@@ -64,7 +55,7 @@ class UploadController extends Controller
             'sender_name'       => 'Pengunjung',
             'content'           => $caption,
             'client_message_id' => $request->input('client_message_id'),
-            'content_type'      => 'image',
+            'content_type'      => strpos((string) $mimeType, 'image/') === 0 ? 'image' : 'file',
             'metadata'          => [
                 'file_name'       => $fileName,
                 'file_url'        => asset("storage/{$path}"),

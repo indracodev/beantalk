@@ -52,7 +52,7 @@ export class BeanTalk {
     const detectedOrigin = resolveScriptOrigin();
     const apiUrl = options.apiUrl || detectedOrigin || (typeof window !== 'undefined' ? window.location.origin : '');
     options.apiUrl = apiUrl;
-    this.api = new ApiClient(options.projectKey, apiUrl);
+    this.api = new ApiClient(options.projectKey, apiUrl, () => options.visitorUuid || getOrCreateVisitorUuid());
 
     // 2. Initialize UI (Shadow DOM)
     this.ui = new ChatWidgetUi(options, this.emitter);

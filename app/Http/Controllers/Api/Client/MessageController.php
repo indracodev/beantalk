@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\Client;
 
 use App\Http\Controllers\Controller;
-use App\Models\Conversation;
 use App\Models\Project;
 use App\Services\ConversationService;
 use App\Services\PollingService;
@@ -88,30 +87,10 @@ class MessageController extends Controller
         /** @var Project $project */
         $project = $request->attributes->get('project');
 
-        $conversation = Conversation::where('project_id', $project->id)
-            ->where('id', $conversationId)
-            ->first();
-
+        // Pemilik wajib (B2): tanpa visitor_uuid atau bukan pemilik = 404.
+        $conversation = $this->conversationService->findForVisitor($project, $conversationId, self::visitorUuid($request));
         if (!$conversation) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'CONVERSATION_NOT_FOUND',
-                    'message' => 'Percakapan tidak ditemukan.'
-                ]
-            ], 404);
-        }
-
-        // Optional verify visitor ownership if visitor_uuid provided
-        $visitorUuid = $request->input('visitor_uuid') ?: $request->header('X-Visitor-Uuid');
-        if ($visitorUuid && $conversation->visitor && $conversation->visitor->visitor_uuid !== $visitorUuid) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'UNAUTHORIZED',
-                    'message' => 'Anda tidak memiliki akses ke percakapan ini.'
-                ]
-            ], 403);
+            return self::notFound();
         }
 
         $conversation->update(['status' => 'closed']);
@@ -162,19 +141,10 @@ class MessageController extends Controller
         /** @var Project $project */
         $project = $request->attributes->get('project');
 
-        // Pastikan percakapan milik project ini
-        $conversation = Conversation::where('project_id', $project->id)
-            ->where('id', $conversationId)
-            ->first();
-
+        // Pemilik wajib (B1): sebelumnya cukup tahu ID untuk membaca chat orang lain.
+        $conversation = $this->conversationService->findForVisitor($project, $conversationId, self::visitorUuid($request));
         if (!$conversation) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'CONVERSATION_NOT_FOUND',
-                    'message' => 'Percakapan tidak ditemukan untuk project ini.',
-                ]
-            ], 404);
+            return self::notFound();
         }
 
         $afterId = (int) $request->query('after_id', 0);
@@ -230,9 +200,11 @@ class MessageController extends Controller
 
         $conversation = null;
         if (!empty($conversationId) && is_numeric($conversationId) && (int)$conversationId > 0) {
-            $conversation = Conversation::where('project_id', $project->id)
-                ->where('id', $conversationId)
-                ->first();
+            // Pemilik wajib (B2): ID percakapan orang lain = 404, bukan menyisipkan pesan.
+            $conversation = $this->conversationService->findForVisitor($project, $conversationId, self::visitorUuid($request));
+            if (!$conversation) {
+                return self::notFound();
+            }
         }
 
         // Jika percakapan lama sudah berstatus 'closed', jangan izinkan kirim ke tiket lama ini
@@ -326,5 +298,24 @@ class MessageController extends Controller
                 'is_duplicate'      => $result['is_duplicate'],
             ]
         ], $result['is_duplicate'] ? 200 : 201);
+    }
+
+    /** visitor_uuid dari header (widget) atau body/query (kompatibel klien lama). */
+    public static function visitorUuid(Request $request): ?string
+    {
+        $uuid = $request->header('X-Visitor-Uuid') ?: $request->input('visitor_uuid');
+
+        return is_string($uuid) && $uuid !== '' ? $uuid : null;
+    }
+
+    public static function notFound()
+    {
+        return response()->json([
+            'success' => false,
+            'error' => [
+                'code' => 'CONVERSATION_NOT_FOUND',
+                'message' => 'Percakapan tidak ditemukan.',
+            ],
+        ], 404);
     }
 }
