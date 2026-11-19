@@ -162,8 +162,9 @@ class InboxPageTest extends AdminTestCase
         $queryCount = count($queries);
 
         // Dengan eager loading lengkap dan reuse model, total query tetap konstan O(1)
-        // yaitu maksimal 13 query terindeks untuk merender seluruh 3-kolom inbox + multi-channel switcher, terlepas dari berapapun jumlah pesan.
-        $this->assertLessThanOrEqual(13, $queryCount, "Terdeteksi potensi N+1 query: Total {$queryCount} query dieksekusi.");
+        // yaitu maksimal 14 query terindeks (13 + 1 query status baca per-user untuk seluruh daftar),
+        // terlepas dari berapapun jumlah pesan/percakapan.
+        $this->assertLessThanOrEqual(14, $queryCount, "Terdeteksi potensi N+1 query: Total {$queryCount} query dieksekusi.");
     }
 
     /**

@@ -26,3 +26,11 @@ Gunakan `$this->ok()` / `$this->fail()`. Kode yang sudah dipakai: `UNAUTHENTICAT
 ## Realtime
 - Adaptive polling (2.5 dtk aktif / 15 dtk latar). WebSocket/daemon hanya bila ada pemicu jelas dan tetap opsional.
 - Feed admin: handshake **tanpa** `since_message_id` = baseline; `since_message_id=0` tetap sah (tenant baru).
+
+## Status baca (inbox staf)
+- Per-user, disimpan di `conversation_participants.last_read_message_id`. Jangan lagi mengosongkan `unread_agent_count` saat chat dibuka.
+- Membuka chat → `markReadBy($user)`; **superadmin tidak pernah tercatat membaca** (pemantauan tidak menghabiskan status "baru").
+- Chat yang sudah di-assign/diambil CS lain tidak dihitung "belum dibaca" bagi CS lain.
+- Balasan siapa pun (`appendMessage` non-visitor) → `unread_agent_count = 0` → terbaca untuk semua. Pesan pengunjung baru → "baru" lagi.
+- Badge, feed polling, notifikasi bunyi, dan dashboard memakai scope `unreadFor($user)` yang sama.
+

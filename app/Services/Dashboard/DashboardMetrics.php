@@ -31,8 +31,9 @@ class DashboardMetrics
         'bg-emerald-100 text-emerald-700', 'bg-amber-100 text-amber-700',
     ];
 
-    public function build(int $tenantId, DashboardPeriod $p): array
+    public function build(User $user, DashboardPeriod $p): array
     {
+        $tenantId = $user->tenant_id;
         $now = CarbonImmutable::now();
         $projects = Project::where('tenant_id', $tenantId)
             ->with(['domains', 'widgetSetting'])
@@ -51,7 +52,7 @@ class DashboardMetrics
 
         return [
             'projects' => $projects,
-            'totalUnreadConversations' => $conv()->where('unread_agent_count', '>', 0)->count(),
+            'totalUnreadConversations' => $conv()->unreadFor($user)->count(),
             'summary' => $this->summary($tenantId, $p, $projects, $current, $previous),
             'chartData' => $chart,
             'weeklyChartData' => $weekly,

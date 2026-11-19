@@ -30,7 +30,8 @@ app/
 | Kepemilikan percakapan oleh pengunjung | `ResolvesVisitorConversation::ownedConversation()` |
 | Bentuk pesan/visitor/tiket untuk widget | `Message::toWidgetArray()`, `Visitor::toWidgetArray()`, `ConversationService::toWidgetSummary()` |
 | Konfigurasi widget publik | `WidgetSetting::widgetConfig($ws)` |
-| Daftar & counter inbox | `Conversation::inbox($user, $filters)`, `Conversation::inboxCounts()`, `->toInboxCard()` |
+| Daftar & counter inbox | `Conversation::inbox($user, $filters)`, `Conversation::inboxCounts()`, `->toInboxCard($tickets, $isUnread)` |
+| Status baca per-user | `Conversation::unreadFor($user)` (scope), `Conversation::unreadIdsFor($user, $ids)`, `$conversation->markReadBy($user)` |
 | Filter pengunjung | `Visitor::filter($request->only([...]))` |
 | Buat integrasi / regenerate key | `IntegrationService::create()` / `regenerateKey()` |
 | Simpan pengaturan widget | `WidgetSettingsUpdater::update()` |

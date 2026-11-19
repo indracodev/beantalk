@@ -54,9 +54,7 @@ class ConversationController extends Controller
     {
         $c = $this->find($request, $id)->load(['visitor', 'contact', 'project', 'messages']);
 
-        if ($c->unread_agent_count > 0) {
-            $c->update(['unread_agent_count' => 0]);
-        }
+        $c->markReadBy($request->user());
 
         return $this->ok(['conversation' => [
             'id' => $c->id,

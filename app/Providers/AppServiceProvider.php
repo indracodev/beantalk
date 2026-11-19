@@ -34,7 +34,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer('layouts.partials.sidebar', function ($view) {
             $user = auth()->user();
             $view->with('totalUnreadConversations', $user
-                ? Conversation::where('tenant_id', $user->tenant_id)->where('unread_agent_count', '>', 0)->count()
+                ? Conversation::where('tenant_id', $user->tenant_id)->unreadFor($user)->count()
                 : 0);
         });
     }

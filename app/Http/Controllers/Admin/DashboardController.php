@@ -16,7 +16,7 @@ class DashboardController extends Controller
     /** GET /admin, /admin/dashboard */
     public function index(Request $request, DashboardMetrics $metrics): View
     {
-        return view('admin.dashboard', $metrics->build($request->user()->tenant_id, DashboardPeriod::fromRequest($request)));
+        return view('admin.dashboard', $metrics->build($request->user(), DashboardPeriod::fromRequest($request)));
     }
 
     /** GET /admin/dashboard/export — CSV percakapan (maks 3000 baris, di-stream per 500). */

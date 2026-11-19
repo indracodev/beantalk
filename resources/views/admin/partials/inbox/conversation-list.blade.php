@@ -159,7 +159,7 @@
         @forelse($conversations as $conv)
             @php
                 $isConvActive = $activeConversation && $activeConversation->id === $conv->id;
-                $isUnread = $conv->unread_agent_count > 0;
+                $isUnread = $unreadIds->contains($conv->id);
                 $displayName = $conv->visitor->display_name ?? 'Tamu';
                 $customerCode = $conv->visitor->customer_code_formatted ?? 'CUS-0000';
                 $initials = strtoupper(

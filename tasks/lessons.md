@@ -216,3 +216,8 @@ Dokumen ini mencatat koreksi, pola desain, dan aturan teknis yang dipelajari sel
     5. Keamanan: header `X-User-Id` dihapus total; mutasi integrasi dijaga `can:superadmin`; token Telegram `encrypted` & tak dirender ke HTML; URL kanal hanya http(s); warna hex tervalidasi.
     6. File gemuk dipecah: controller per domain, service per tanggung jawab, Blade → partial/komponen, JS/CSS per seksi via `@asset`, test per fitur. Batas 300 baris dicatat di `.agents/rules/00-core-principles.md`.
     7. Data dev dipindah dengan `php artisan beantalk:import-legacy beantalk` ke DB `beantalk_l13` (DB lama tidak disentuh). Seeder hanya data esensial (tanpa dummy).
+
+- **[2026-11-19] Lesson 30: Status Baca Per-User & Superadmin Tidak Menghabiskan Status "Baru"**:
+  - *Konteks*: Dulu satu penghitung `unread_agent_count` per percakapan dikosongkan saat siapa pun membuka chat, sehingga pemantauan superadmin atau satu CS "menghabiskan" status baru untuk semua CS.
+  - *Pola*: Status baca per-user di `conversation_participants.last_read_message_id` (tabel sudah ada). Scope `Conversation::unreadFor($user)` = masih menunggu balasan + belum dipegang CS lain + user belum membuka pesan pengunjung terakhir. `markReadBy()` mengecualikan superadmin. Balasan apa pun menutup status untuk semua. Badge/feed/bunyi/dashboard memakai scope yang sama (satu sumber).
+

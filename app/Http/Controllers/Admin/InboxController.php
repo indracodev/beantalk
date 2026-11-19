@@ -40,9 +40,9 @@ class InboxController extends Controller
 
         if ($active) {
             $active->load('messages.user');
-            // Tandai dibaca hanya saat agen membuka ID chat secara eksplisit.
-            if ($id && $active->unread_agent_count > 0) {
-                $active->update(['unread_agent_count' => 0]);
+            // Tercatat dibaca hanya saat chat dibuka eksplisit, per-user (superadmin dikecualikan).
+            if ($id) {
+                $active->markReadBy($user);
             }
         }
 
@@ -65,6 +65,7 @@ class InboxController extends Controller
             'maxMessageId' => (int) $conversations->pluck('latestMessage.id')->filter()->max(),
             'visitorTicketCounts' => $conversations->countBy('visitor_id'),
             'customerAllTickets' => $customerAllTickets,
+            'unreadIds' => Conversation::unreadIdsFor($user, $conversations->modelKeys()),
         ]);
     }
 
@@ -128,9 +129,7 @@ class InboxController extends Controller
             ->orderBy('id')
             ->get();
 
-        if ($conversation->unread_agent_count > 0) {
-            $conversation->update(['unread_agent_count' => 0]);
-        }
+        $conversation->markReadBy($request->user());
 
         $visitorName = $conversation->visitor?->display_name ?? 'Tamu';
 
@@ -157,6 +156,7 @@ class InboxController extends Controller
         $filters = $request->only(['status', 'project_id', 'search']);
         $conversations = Conversation::inbox($user, $filters)->take(50)->get();
         $ticketCounts = $conversations->countBy('visitor_id');
+        $unreadIds = Conversation::unreadIdsFor($user, $conversations->modelKeys());
 
         // Tanpa since_message_id = handshake awal: jadikan baseline, jangan bunyikan chat lama.
         // Baseline 0 tetap sah (tenant baru tanpa pesan), jadi cek keberadaan parameter, bukan nilainya.
@@ -165,7 +165,7 @@ class InboxController extends Controller
             ? Message::where('tenant_id', $user->tenant_id)
                 ->where('id', '>', $sinceId)
                 ->where('sender_type', 'visitor')
-                ->whereHas('conversation', fn ($q) => $q->where('unread_agent_count', '>', 0))
+                ->whereHas('conversation', fn ($q) => $q->unreadFor($user))
                 ->with('conversation.project.widgetSetting')
                 ->orderBy('id')
                 ->get()
@@ -173,7 +173,7 @@ class InboxController extends Controller
         $latest = $incoming->last();
 
         return $this->ok([
-            'conversations' => $conversations->map(fn (Conversation $c) => $c->toInboxCard((int) ($ticketCounts[$c->visitor_id] ?? 1))),
+            'conversations' => $conversations->map(fn (Conversation $c) => $c->toInboxCard((int) ($ticketCounts[$c->visitor_id] ?? 1), $unreadIds->contains($c->id))),
             'unread_total' => $this->unreadTotal($user),
             'counts' => Conversation::inboxCounts($user, $filters['project_id'] ?? null),
             'max_message_id' => (int) Message::where('tenant_id', $user->tenant_id)->max('id'),
@@ -258,7 +258,7 @@ class InboxController extends Controller
 
     private function unreadTotal(User $user): int
     {
-        return Conversation::where('tenant_id', $user->tenant_id)->where('unread_agent_count', '>', 0)->count();
+        return Conversation::where('tenant_id', $user->tenant_id)->unreadFor($user)->count();
     }
 
     /** Simpan pesan agen, teruskan ke topik Telegram, dan catat audit log. */

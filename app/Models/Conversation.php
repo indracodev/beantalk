@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Collection;
 
 class Conversation extends Model
 {
@@ -101,6 +102,46 @@ class Conversation extends Model
             ->orderByRaw('COALESCE(last_message_at, updated_at, created_at) DESC');
     }
 
+    /**
+     * Belum dibaca oleh $user (status baca per-user):
+     * - masih menunggu balasan (balasan siapa pun membuatnya terbaca untuk semua),
+     * - belum dipegang CS lain (tanpa assignee atau assignee = $user),
+     * - $user belum membuka pesan pengunjung terakhir. Superadmin tidak pernah tercatat membaca
+     *   (lihat markReadBy), jadi baginya chat tetap "baru" sampai ada yang membalas.
+     */
+    #[Scope]
+    protected function unreadFor(Builder $query, User $user): void
+    {
+        $query->where('conversations.unread_agent_count', '>', 0)
+            ->where(fn ($q) => $q->whereNull('conversations.assigned_user_id')->orWhere('conversations.assigned_user_id', $user->id))
+            ->whereNotExists(fn ($q) => $q->selectRaw('1')
+                ->from('conversation_participants as cp')
+                ->whereColumn('cp.conversation_id', 'conversations.id')
+                ->where('cp.user_id', $user->id)
+                ->whereRaw("cp.last_read_message_id >= (SELECT MAX(m.id) FROM messages m WHERE m.conversation_id = conversations.id AND m.sender_type = 'visitor')"));
+    }
+
+    /** ID percakapan (dari daftar $ids) yang belum dibaca $user — 1 query untuk seluruh daftar. */
+    public static function unreadIdsFor(User $user, array $ids): Collection
+    {
+        return $ids ? static::whereIn('id', $ids)->unreadFor($user)->pluck('id') : collect();
+    }
+
+    /** Catat bahwa $user sudah membuka percakapan sampai pesan terakhir. Superadmin dikecualikan. */
+    public function markReadBy(User $user): void
+    {
+        if ($user->isSuperAdmin() || $this->unread_agent_count <= 0) {
+            return;
+        }
+
+        ConversationParticipant::upsert([[
+            'conversation_id' => $this->id,
+            'user_id' => $user->id,
+            'last_read_message_id' => (int) Message::where('conversation_id', $this->id)->max('id'),
+            'joined_at' => now(),
+        ]], ['conversation_id', 'user_id'], ['last_read_message_id']);
+    }
+
     /** Counter sidebar inbox dalam 1 query agregasi. */
     public static function inboxCounts(User $user, mixed $projectId = null): array
     {
@@ -123,7 +164,7 @@ class Conversation extends Model
     }
 
     /** Kartu percakapan untuk feed polling inbox. */
-    public function toInboxCard(int $visitorTickets = 1): array
+    public function toInboxCard(int $visitorTickets = 1, bool $isUnread = false): array
     {
         return [
             'id' => $this->id,
@@ -138,8 +179,8 @@ class Conversation extends Model
             'last_message_preview' => $this->last_message_preview ?: 'Percakapan baru diinisialisasi...',
             'last_message_at' => $this->last_message_at?->toIso8601String(),
             'last_message_time' => $this->last_message_time,
-            'unread_agent_count' => (int) $this->unread_agent_count,
-            'is_unread' => $this->unread_agent_count > 0,
+            'unread_agent_count' => $isUnread ? (int) $this->unread_agent_count : 0,
+            'is_unread' => $isUnread,
             'status' => $this->status,
             'is_bot_active' => (bool) ($this->is_bot_active ?? true),
             'assigned_user_id' => $this->assigned_user_id,
