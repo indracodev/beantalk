@@ -4,147 +4,99 @@ namespace App\Http\Controllers\Api\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
-use App\Models\Project;
 use App\Models\User;
-use App\Models\WidgetSetting;
 use App\Services\ConversationService;
+use App\Services\TelegramService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Balasan staf dari topik forum Telegram → pesan agen di widget.
+ * Selalu membalas 200 agar Telegram tidak mengulang kirim; penolakan diberi 'note'.
+ */
 class TelegramWebhookController extends Controller
 {
-    /**
-     * @var ConversationService
-     */
-    protected $conversationService;
-
-    public function __construct(ConversationService $conversationService)
+    /** POST /api/v1/telegram/webhook/{token_hash?} */
+    public function handle(Request $request, ConversationService $conversations): JsonResponse
     {
-        $this->conversationService = $conversationService;
-    }
-
-    /**
-     * Handles incoming Webhook updates from Telegram Bot
-     * POST /api/v1/telegram/webhook/{token_hash?}
-     */
-    public function handle(Request $request, ?string $tokenHash = null): JsonResponse
-    {
-        $payload = $request->all();
-
-        // 1. Validasi pesan masuk dari Telegram
-        $msg = $payload['message'] ?? null;
-        if (!$msg || !empty($msg['from']['is_bot'])) {
-            return response()->json(['ok' => true]);
+        $msg = $request->input('message');
+        if (! is_array($msg) || ! empty($msg['from']['is_bot'])) {
+            return $this->ack();
         }
 
         $text = trim($msg['text'] ?? ($msg['caption'] ?? ''));
-        if ($text === '') {
-            return response()->json(['ok' => true]);
+        $topicId = $msg['message_thread_id'] ?? ($msg['reply_to_message']['message_thread_id'] ?? null);
+        if ($text === '' || ! $topicId) {
+            return $this->ack($text === '' ? null : 'no_matching_conversation');
         }
 
-        $chatId = (string) ($msg['chat']['id'] ?? '');
-        $topicId = $msg['message_thread_id'] ?? null;
-        $replyTo = $msg['reply_to_message'] ?? null;
-
-        // 2. Cari percakapan berdasarkan Topic ID (Mode Forum) atau Chat ID
-        $conversation = null;
-
-        if ($topicId) {
-            $conversation = Conversation::where('telegram_topic_id', $topicId)->with('project.widgetSetting')->first();
+        $conversation = Conversation::with('project.widgetSetting')->where('telegram_topic_id', $topicId)->first();
+        if (! $conversation) {
+            return $this->ack('no_matching_conversation');
         }
 
-        // Fallback jika bukan mode forum tapi reply ke bubble customer
-        if (!$conversation && $replyTo) {
-            $replyTopicId = $replyTo['message_thread_id'] ?? null;
-            if ($replyTopicId) {
-                $conversation = Conversation::where('telegram_topic_id', $replyTopicId)->with('project.widgetSetting')->first();
-            }
+        $ws = $conversation->project?->widgetSetting;
+        if (! $ws || (! $ws->telegram_topic_mode_enabled && ! $ws->telegram_notifications_enabled)) {
+            return $this->ack('telegram_mode_disabled');
         }
 
-        if (!$conversation) {
-            return response()->json(['ok' => true, 'note' => 'no_matching_conversation']);
+        // Verifikasi secret token: tanpa ini siapa pun bisa memalsukan balasan atas nama staf.
+        $expected = $ws->telegram_bot_token ? TelegramService::webhookSecret($ws->telegram_bot_token) : '';
+        if ($expected === '' || ! hash_equals($expected, (string) $request->header('X-Telegram-Bot-Api-Secret-Token', ''))) {
+            Log::warning('[TelegramWebhook] Secret token tidak cocok; daftarkan ulang webhook.', ['conversation_id' => $conversation->id]);
+
+            return $this->ack('invalid_secret_token');
         }
 
-        // 3. Validasi Toggle ON/OFF Telegram di Project
-        $widgetSetting = $conversation->project->widgetSetting ?? null;
-        if (!$widgetSetting || (!$widgetSetting->telegram_topic_mode_enabled && !$widgetSetting->telegram_notifications_enabled)) {
-            return response()->json(['ok' => true, 'note' => 'telegram_mode_disabled']);
+        $agent = $this->matchAgent($conversation->tenant_id, $msg['from'] ?? []);
+        if (! $agent) {
+            Log::info('[TelegramWebhook] Pengirim bukan staf terdaftar.', ['conversation_id' => $conversation->id]);
+
+            return $this->ack('unauthorized_telegram_sender', ['message' => 'Pengirim Telegram bukan akun staf CS yang terdaftar di BeanTalk.']);
         }
 
-        // 3b. Verifikasi secret token (B3): tanpa ini siapa pun bisa memalsukan balasan atas nama staf.
-        // Dibalas 200 agar Telegram tidak mengulang kirim; tidak ada aksi yang dijalankan.
-        $diterima = (string) $request->header('X-Telegram-Bot-Api-Secret-Token', '');
-        $harapan = $widgetSetting->telegram_bot_token ? \App\Services\TelegramService::webhookSecret($widgetSetting->telegram_bot_token) : '';
-        if ($harapan === '' || !hash_equals($harapan, $diterima)) {
-            Log::warning('[TelegramWebhook] Secret token tidak cocok; update diabaikan. Daftarkan ulang webhook di halaman integrasi.', [
-                'conversation_id' => $conversation->id,
-            ]);
-
-            return response()->json(['ok' => true, 'note' => 'invalid_secret_token']);
-        }
-
-        // 4. Validasi Keamanan: Cocokkan Akun Pengirim Telegram dengan Akun Staf CS di Web
-        $from = $msg['from'] ?? [];
-        $fromUserId = !empty($from['id']) ? (string) $from['id'] : null;
-        $fromUsername = !empty($from['username']) ? ltrim(trim($from['username']), '@') : null;
-
-        $matchedAgent = null;
-        if ($fromUserId || $fromUsername) {
-            $matchedAgent = User::where('tenant_id', $conversation->tenant_id)
-                ->where(function ($q) use ($fromUserId, $fromUsername) {
-                    if ($fromUserId) {
-                        $q->where('telegram_user_id', $fromUserId);
-                    }
-                    if ($fromUsername) {
-                        $q->orWhere('telegram_username', $fromUsername);
-                    }
-                })
-                ->first();
-        }
-
-        // Jika pengirim bukan staf CS resmi terdaftar, abaikan pesan (tidak dikirim ke customer)
-        if (!$matchedAgent) {
-            Log::info('[TelegramWebhook] Pesan diabaikan: Pengirim Telegram tidak terdaftar sebagai staf CS resmi.', [
-                'from'            => $from,
-                'conversation_id' => $conversation->id,
-            ]);
-
-            return response()->json([
-                'ok'      => true,
-                'note'    => 'unauthorized_telegram_sender',
-                'message' => 'Pengirim Telegram bukan akun staf CS yang terdaftar di BeanTalk.'
-            ]);
-        }
-
-        // 5. Update Conversation: Auto-yield bot dan pastikan status open
-        $updates = [];
-        if ($conversation->is_bot_active) {
-            $updates['is_bot_active'] = false;
-            $updates['bot_handoff_at'] = now();
-        }
+        // Auto-yield bot & buka ulang tiket bila sudah ditutup.
+        $conversation->fill(['is_bot_active' => false, 'bot_handoff_at' => $conversation->bot_handoff_at ?? now()]);
         if ($conversation->status === 'closed') {
-            $updates['status'] = 'open';
+            $conversation->status = 'open';
         }
-        if (!empty($updates)) {
-            $conversation->update($updates);
-        }
+        $conversation->save();
 
-        // 6. Append message: Tampil dengan nama resmi agen tanpa label "(via Telegram)"
-        $this->conversationService->appendMessage($conversation, [
-            'sender_type'       => 'agent',
-            'sender_name'       => $matchedAgent->name,
-            'content'           => $text,
-            'client_message_id' => 'tg_' . ($msg['message_id'] ?? time()),
-            'metadata'          => [
-                'from_telegram'       => true,
+        $conversations->appendMessage($conversation, [
+            'sender_type' => 'agent',
+            'sender_name' => $agent->name,
+            'content' => $text,
+            'client_message_id' => 'tg_'.($msg['message_id'] ?? time()),
+            'metadata' => [
+                'from_telegram' => true,
                 'telegram_message_id' => $msg['message_id'] ?? null,
-                'telegram_user_id'    => $from['id'] ?? null,
-                'agent_id'            => $matchedAgent->id,
-                'telegram_username'   => $from['username'] ?? null,
+                'telegram_user_id' => $msg['from']['id'] ?? null,
+                'agent_id' => $agent->id,
+                'telegram_username' => $msg['from']['username'] ?? null,
             ],
         ]);
 
-        return response()->json(['ok' => true, 'conversation_id' => $conversation->id, 'agent_name' => $matchedAgent->name]);
+        return response()->json(['ok' => true, 'conversation_id' => $conversation->id, 'agent_name' => $agent->name]);
+    }
+
+    /** Cocokkan akun Telegram pengirim dengan staf tenant (id atau username). */
+    private function matchAgent(int $tenantId, array $from): ?User
+    {
+        $id = ! empty($from['id']) ? (string) $from['id'] : null;
+        $username = ! empty($from['username']) ? ltrim(trim($from['username']), '@') : null;
+        if (! $id && ! $username) {
+            return null;
+        }
+
+        return User::where('tenant_id', $tenantId)
+            ->where(fn ($q) => $q->when($id, fn ($q) => $q->where('telegram_user_id', $id))
+                ->when($username, fn ($q) => $q->orWhere('telegram_username', $username)))
+            ->first();
+    }
+
+    private function ack(?string $note = null, array $extra = []): JsonResponse
+    {
+        return response()->json(['ok' => true] + ($note ? ['note' => $note] : []) + $extra);
     }
 }

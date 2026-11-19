@@ -12,7 +12,7 @@ Repositori ini dikendalikan oleh triad dokumentasi operasional yang saling melen
 | Dokumen | Peran & Tanggung Jawab | Kapan Dirujuk |
 |---|---|---|
 | **[GEMINI.md](file:///c:/laragon/www/chat-me/GEMINI.md)** *(File ini)* | **Technical & Architectural Standards**: Aturan arsitektur, standar penulisan kode, boundary teknologi, format data/API, dan kriteria verifikasi. | Setiap kali menulis, memodifikasi, atau mereview kode backend & frontend. |
-| **[AGENTS.md](file:///c:/laragon/www/chat-me/AGENTS.md)** | **Agent Operational Protocol**: Panduan perilaku AI agent, tangga keputusan Ponytail, urutan eksekusi fase (roadmap), anti-patterns terlarang, dan protokol autonomous bug fixing. | Setiap kali agen menerima instruksi baru, merencanakan eksekusi, atau memperbaiki bug. |
+| **[AGENTS.md](AGENTS.md)** + **[.agents/](.agents/README.md)** | **Agent Operational Protocol**: Panduan perilaku AI agent, tangga keputusan Ponytail, urutan eksekusi fase (roadmap), anti-patterns terlarang, dan protokol autonomous bug fixing. | Setiap kali agen menerima instruksi baru, merencanakan eksekusi, atau memperbaiki bug. |
 | **[tasks/lessons.md](file:///c:/laragon/www/chat-me/tasks/lessons.md)** | **Continuous Learning Memory**: Rekam jejak pelajaran, koreksi dari user, dan pola solusi untuk mencegah kesalahan berulang. | Dibaca di awal sesi pengerjaan dan diperbarui setiap ada koreksi teknis. |
 | **[docs/](file:///c:/laragon/www/chat-me/docs/)** | **Master Specification**: PRD lengkap, skema DB DDL, kontrak REST API v1, arsitektur SDK, widget, dan deployment. | Sumber kebenaran spesifikasi teknis dan bisnis. |
 
@@ -43,9 +43,9 @@ Repositori ini dikendalikan oleh triad dokumentasi operasional yang saling melen
 │ • Size budget: < 25 KB minified & gzipped                              │
 ├────────────────────────────────────────────────────────────────────────┤
 │ Laravel Core Server                                                    │
-│ • Versi Utama: Laravel 10 (Maksimal). Batas Bawah: Laravel 7 (Minimal) │
-│ • Target PHP: PHP 8.1/8.2 (Laravel 10) down to PHP 7.4/8.0 (Laravel 7) │
-│ • Skeleton: Struktur Klasik (app/Http/Kernel.php & named migrations)   │
+│ • Versi: Laravel 13 (PHP ^8.3), PHPUnit 12, Carbon 3                    │
+│ • Konvensi & larangan detail: lihat .agents/rules/01-stack-laravel13.md│
+│ • Skeleton L13: bootstrap/app.php, anonymous migrations, casts()      │
 │ • Multi-tenant: Single DB, column-based tenant_id via Global Scopes   │
 │ • Shared Hosting First: Zero background daemon, zero Redis/Node req    │
 │ • Realtime Default: Smart Adaptive HTTP Polling (after_id range scan)  │

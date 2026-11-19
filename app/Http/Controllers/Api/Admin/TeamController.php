@@ -3,217 +3,103 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Tenant;
 use App\Models\User;
+use App\Services\ActivityLogger;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 
 class TeamController extends Controller
 {
-    /**
-     * List all team members in the tenant
-     * GET /api/v1/admin/team
-     */
-    public function index(Request $request)
+    /** GET /api/v1/admin/team */
+    public function index(Request $request): JsonResponse
     {
-        $tenantId = app()->bound('current_tenant_id') ? app('current_tenant_id') : null;
-
-        $query = User::query();
-        if ($tenantId) {
-            $query->where('tenant_id', $tenantId);
-        }
-
-        $members = $query->orderBy('role', 'asc')
-            ->orderBy('name', 'asc')
+        $team = User::where('tenant_id', $request->user()->tenant_id)->orderBy('role')->orderBy('name')
             ->get(['id', 'tenant_id', 'name', 'username', 'email', 'role', 'status', 'avatar_url', 'created_at']);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'team' => $members
-            ]
-        ]);
+        return $this->ok(['team' => $team]);
     }
 
-    /**
-     * Invite / Create a new team member
-     * POST /api/v1/admin/team
-     */
-    public function store(Request $request)
+    /** POST /api/v1/admin/team (superadmin) */
+    public function store(Request $request): JsonResponse
     {
-        $currentUser = $request->user();
-
-        // Aplikasi internal: 2 role saja (superadmin dan agent/staff)
-        $allowedRoles = $currentUser && $currentUser->isSuperAdmin() ? 'superadmin,agent' : 'agent';
-
-        $request->validate([
-            'name'     => 'required|string|max:100',
+        $data = $request->validate([
+            'name' => 'required|string|max:100',
             'username' => 'nullable|string|min:3|max:50|alpha_dash|unique:users,username',
-            'email'    => 'required|email|max:255|unique:users,email',
-            'role'     => 'required|in:' . $allowedRoles,
-            'password' => 'nullable|string|min:6',
+            'email' => 'required|email|max:255|unique:users,email',
+            'role' => 'required|in:superadmin,agent',
+            'password' => ['nullable', 'string', Password::defaults()],
         ]);
-
-        $tenantId = (app()->bound('current_tenant_id') ? app('current_tenant_id') : null) ?? ($currentUser ? $currentUser->tenant_id : Tenant::first()->id);
-
-        $username = $request->input('username');
-        if (!$username) {
-            $base = Str::slug(explode('@', $request->input('email'))[0], '_');
-            $username = $base;
-            $counter = 1;
-            while (User::where('username', $username)->exists()) {
-                $username = $base . '_' . $counter++;
-            }
-        }
 
         $user = User::create([
-            'tenant_id'  => $tenantId,
-            'name'       => $request->input('name'),
-            'username'   => $username,
-            'email'      => $request->input('email'),
-            'role'       => $request->input('role'),
-            'password'   => Hash::make($request->input('password', Str::random(12))),
-            'status'     => 'offline',
-            'avatar_url' => 'https://ui-avatars.com/api/?name=' . urlencode($request->input('name')) . '&background=random',
+            'tenant_id' => $request->user()->tenant_id,
+            'name' => $data['name'],
+            'username' => $data['username'] ?? User::uniqueUsernameFrom($data['email']),
+            'email' => $data['email'],
+            'role' => $data['role'],
+            'password' => $data['password'] ?? Str::password(16),
+            'status' => 'offline',
+            'avatar_url' => User::defaultAvatar($data['name']),
         ]);
 
-        \App\Services\ActivityLogger::log(
-            'team.invited',
-            "Menambahkan anggota tim baru: {$user->name} ({$user->email}) sebagai {$user->role}",
-            $user,
-            ['invited_user_id' => $user->id, 'email' => $user->email, 'role' => $user->role]
-        );
+        ActivityLogger::log('team.invited', "Menambahkan anggota tim baru: {$user->name} ({$user->email}) sebagai {$user->role}", $user, [
+            'invited_user_id' => $user->id, 'email' => $user->email, 'role' => $user->role,
+        ]);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'user' => [
-                    'id'         => $user->id,
-                    'name'       => $user->name,
-                    'email'      => $user->email,
-                    'role'       => $user->role,
-                    'status'     => $user->status,
-                    'avatar_url' => $user->avatar_url,
-                    'created_at' => $user->created_at,
-                ]
-            ],
-            'message' => "Anggota tim berhasil ditambahkan sebagai {$user->role}."
-        ], 201);
+        return $this->ok(
+            ['user' => $user->only(['id', 'name', 'email', 'role', 'status', 'avatar_url', 'created_at'])],
+            201,
+            ['message' => "Anggota tim berhasil ditambahkan sebagai {$user->role}."],
+        );
     }
 
-    /**
-     * Update user role (Owner only)
-     * PUT /api/v1/admin/team/{id}/role
-     */
-    public function updateRole(Request $request, $id)
+    /** PUT /api/v1/admin/team/{id}/role (superadmin) */
+    public function updateRole(Request $request, string $id): JsonResponse
     {
-        $currentUser = $request->user();
+        $role = $request->validate(['role' => 'required|in:superadmin,agent'])['role'];
+        $current = $request->user();
+        $target = User::where('tenant_id', $request->user()->tenant_id)->find($id);
 
-        $request->validate([
-            'role' => 'required|in:superadmin,agent',
+        if (! $target) {
+            return $this->fail('NOT_FOUND', 'Anggota tim tidak ditemukan.', 404);
+        }
+
+        if ($current->is($target) && $role !== 'superadmin' && User::where('tenant_id', $current->tenant_id)->where('role', 'superadmin')->count() <= 1) {
+            return $this->fail('FORBIDDEN', 'Tidak dapat mengubah role diri sendiri karena Anda adalah satu-satunya Superadmin.', 422);
+        }
+
+        $oldRole = $target->role;
+        $target->update(['role' => $role]);
+
+        ActivityLogger::log('role.updated', "Mengubah role {$target->name} dari {$oldRole} menjadi {$role}", $target, [
+            'old_role' => $oldRole, 'new_role' => $role,
         ]);
 
-        $tenantId = (app()->bound('current_tenant_id') ? app('current_tenant_id') : null) ?? ($currentUser ? $currentUser->tenant_id : Tenant::first()->id);
-        $targetUser = User::where('tenant_id', $tenantId)->find($id);
-
-        if (!$targetUser) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'NOT_FOUND',
-                    'message' => 'Anggota tim tidak ditemukan.',
-                ]
-            ], 404);
-        }
-
-        // Prevent demoting self if sole superadmin
-        if ($currentUser && $currentUser->id === $targetUser->id && $request->input('role') !== 'superadmin') {
-            $superadminCount = User::where('tenant_id', $tenantId)->where('role', 'superadmin')->count();
-            if ($superadminCount <= 1) {
-                return response()->json([
-                    'success' => false,
-                    'error' => [
-                        'code' => 'FORBIDDEN',
-                        'message' => 'Tidak dapat mengubah role diri sendiri karena Anda adalah satu-satunya Superadmin.',
-                    ]
-                ], 422);
-            }
-        }
-
-        $oldRole = $targetUser->role;
-        $targetUser->role = $request->input('role');
-        $targetUser->save();
-
-        \App\Services\ActivityLogger::log(
-            'role.updated',
-            "Mengubah role {$targetUser->name} dari {$oldRole} menjadi {$targetUser->role}",
-            $targetUser,
-            ['old_role' => $oldRole, 'new_role' => $targetUser->role]
+        return $this->ok(
+            ['user' => $target->only(['id', 'name', 'email', 'role'])],
+            200,
+            ['message' => "Role {$target->name} berhasil diubah menjadi {$role}."],
         );
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'user' => [
-                    'id'    => $targetUser->id,
-                    'name'  => $targetUser->name,
-                    'email' => $targetUser->email,
-                    'role'  => $targetUser->role,
-                ]
-            ],
-            'message' => "Role {$targetUser->name} berhasil diubah menjadi {$targetUser->role}."
-        ]);
     }
 
-    /**
-     * Remove team member (Owner only)
-     * DELETE /api/v1/admin/team/{id}
-     */
-    public function destroy(Request $request, $id)
+    /** DELETE /api/v1/admin/team/{id} (superadmin) */
+    public function destroy(Request $request, string $id): JsonResponse
     {
-        $currentUser = $request->user();
-        $tenantId = (app()->bound('current_tenant_id') ? app('current_tenant_id') : null) ?? ($currentUser ? $currentUser->tenant_id : null);
-
-        if ($currentUser && $currentUser->id == $id) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'FORBIDDEN',
-                    'message' => 'Anda tidak dapat menghapus akun Anda sendiri.',
-                ]
-            ], 422);
+        if ((string) $request->user()->id === $id) {
+            return $this->fail('FORBIDDEN', 'Anda tidak dapat menghapus akun Anda sendiri.', 422);
         }
 
-        $query = User::where('id', $id);
-        if ($tenantId) {
-            $query->where('tenant_id', $tenantId);
+        $target = User::where('tenant_id', $request->user()->tenant_id)->find($id);
+        if (! $target) {
+            return $this->fail('NOT_FOUND', 'Anggota tim tidak ditemukan.', 404);
         }
 
-        $targetUser = $query->first();
-
-        if (!$targetUser) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'NOT_FOUND',
-                    'message' => 'Anggota tim tidak ditemukan.',
-                ]
-            ], 404);
-        }
-
-        \App\Services\ActivityLogger::log(
-            'team.removed',
-            "Menghapus anggota tim: {$targetUser->name} ({$targetUser->email})",
-            null,
-            ['deleted_user_id' => $targetUser->id, 'name' => $targetUser->name, 'email' => $targetUser->email, 'role' => $targetUser->role]
-        );
-
-        $targetUser->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => "Anggota tim {$targetUser->name} berhasil dihapus dari sistem."
+        ActivityLogger::log('team.removed', "Menghapus anggota tim: {$target->name} ({$target->email})", null, [
+            'deleted_user_id' => $target->id, 'name' => $target->name, 'email' => $target->email, 'role' => $target->role,
         ]);
+        $target->delete();
+
+        return response()->json(['success' => true, 'message' => "Anggota tim {$target->name} berhasil dihapus dari sistem."]);
     }
 }

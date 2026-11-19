@@ -2,89 +2,77 @@
 
 namespace App\Http\Controllers\Api\Client;
 
+use App\Http\Controllers\Api\Client\Concerns\ResolvesVisitorConversation;
 use App\Http\Controllers\Controller;
 use App\Models\MessageAttachment;
-use App\Models\Project;
 use App\Services\ConversationService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class UploadController extends Controller
 {
-    protected $conversationService;
+    use ResolvesVisitorConversation;
 
-    public function __construct(ConversationService $conversationService)
+    /** POST /api/v1/client/conversations/{id}/upload — lampiran foto terkompresi / PDF. */
+    public function upload(Request $request, string $id, ConversationService $conversations): JsonResponse
     {
-        $this->conversationService = $conversationService;
-    }
-
-    /**
-     * Uploads a compressed photo/file from client
-     * POST /api/v1/client/conversations/{id}/upload
-     */
-    public function upload(Request $request, $conversationId)
-    {
-        /** @var Project $project */
-        $project = $request->attributes->get('project');
-
-        // Pemilik wajib (B2), dicek sebelum validasi berkas.
-        $conversation = $this->conversationService->findForVisitor($project, $conversationId, MessageController::visitorUuid($request));
-        if (!$conversation) {
-            return MessageController::notFound();
+        // Kepemilikan dicek sebelum validasi berkas.
+        $conversation = $this->ownedConversation($request, $id);
+        if (! $conversation) {
+            return $this->conversationNotFound();
         }
 
-        $request->validate([
-            'file'              => 'required|file|mimes:jpeg,png,jpg,webp,pdf|max:10240', // Max 10MB
+        $data = $request->validate([
+            // mimes + mimetypes: ekstensi DAN isi berkas harus cocok (cegah polyglot).
+            'file' => 'required|file|max:10240|mimes:jpeg,png,jpg,webp,pdf|mimetypes:image/jpeg,image/png,image/webp,application/pdf',
             'client_message_id' => 'nullable|string|max:64',
-            'caption'           => 'nullable|string|max:1000',
-            'original_size'     => 'nullable|integer',
-            'compressed_size'   => 'nullable|integer',
+            'caption' => 'nullable|string|max:1000',
+            'original_size' => 'nullable|integer|min:0',
+            'compressed_size' => 'nullable|integer|min:0',
         ]);
 
-        $uploadedFile = $request->file('file');
-        $fileName = mb_substr(strip_tags($uploadedFile->getClientOriginalName()), 0, 200);
-        $fileSize = $uploadedFile->getSize();
-        $mimeType = $uploadedFile->getMimeType();
+        $file = $request->file('file');
+        $fileName = mb_substr(strip_tags($file->getClientOriginalName()), 0, 200);
+        $mime = $file->getMimeType();
+        $size = $file->getSize();
+        $path = $file->store("attachments/{$conversation->id}", 'public');
+        $url = Storage::disk('public')->url($path);
 
-        // Simpan file ke storage/app/public/attachments/{conversation_id}/
-        $path = $uploadedFile->store("attachments/{$conversation->id}", 'public');
+        $message = DB::transaction(function () use ($conversations, $conversation, $data, $fileName, $mime, $size, $path, $url) {
+            $message = $conversations->appendMessage($conversation, [
+                'sender_type' => 'visitor',
+                'sender_name' => $conversation->visitor->name ?: 'Pengunjung',
+                'content' => $data['caption'] ?? "Mengirim lampiran: {$fileName}",
+                'client_message_id' => $data['client_message_id'] ?? null,
+                'content_type' => str_starts_with((string) $mime, 'image/') ? 'image' : 'file',
+                'metadata' => [
+                    'file_name' => $fileName,
+                    'file_url' => $url,
+                    'original_size' => $data['original_size'] ?? $size,
+                    'compressed_size' => $data['compressed_size'] ?? $size,
+                ],
+            ])['message'];
 
-        // Buat record pesan
-        $caption = $request->input('caption') ?: "Mengirim lampiran: {$fileName}";
-        $result = $this->conversationService->appendMessage($conversation, [
-            'sender_type'       => 'visitor',
-            'sender_name'       => 'Pengunjung',
-            'content'           => $caption,
-            'client_message_id' => $request->input('client_message_id'),
-            'content_type'      => strpos((string) $mimeType, 'image/') === 0 ? 'image' : 'file',
-            'metadata'          => [
-                'file_name'       => $fileName,
-                'file_url'        => asset("storage/{$path}"),
-                'original_size'   => $request->input('original_size', $fileSize),
-                'compressed_size' => $request->input('compressed_size', $fileSize),
-            ],
-        ]);
-
-        $message = $result['message'];
-
-        // Simpan metadata attachment
-        $attachment = MessageAttachment::create([
-            'message_id'      => $message->id,
-            'file_name'       => $fileName,
-            'file_path'       => $path,
-            'file_size'       => $fileSize,
-            'mime_type'       => $mimeType,
-            'original_size'   => $request->input('original_size'),
-            'compressed_size' => $request->input('compressed_size', $fileSize),
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'data' => [
+            MessageAttachment::create([
                 'message_id' => $message->id,
-                'file_name'  => $fileName,
-                'file_url'   => asset("storage/{$path}"),
-                'file_size'  => $fileSize,
-            ]
+                'file_name' => $fileName,
+                'file_path' => $path,
+                'file_size' => $size,
+                'mime_type' => $mime,
+                'original_size' => $data['original_size'] ?? null,
+                'compressed_size' => $data['compressed_size'] ?? $size,
+            ]);
+
+            return $message;
+        });
+
+        return $this->ok([
+            'message_id' => $message->id,
+            'file_name' => $fileName,
+            'file_url' => $url,
+            'file_size' => $size,
         ], 201);
     }
 }

@@ -3,13 +3,18 @@
 namespace App\Models;
 
 use App\Traits\BelongsToTenant;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Conversation extends Model
 {
     use BelongsToTenant;
-
-    protected $table = 'conversations';
 
     protected $fillable = [
         'tenant_id',
@@ -32,79 +37,156 @@ class Conversation extends Model
         'telegram_notif_sent',
     ];
 
-    protected $casts = [
-        'is_bot_active'        => 'boolean',
-        'bot_handoff_at'       => 'datetime',
-        'last_message_at'      => 'datetime',
-        'unread_agent_count'   => 'integer',
-        'unread_visitor_count' => 'integer',
-        'telegram_notif_sent'  => 'boolean',
-    ];
+    protected $appends = ['channel_label', 'last_message_time'];
 
-    protected $appends = [
-        'channel_label',
-        'last_message_time',
-    ];
-
-    public function getChannelLabelAttribute(): string
+    protected function casts(): array
     {
-        switch ($this->channel) {
-            case 'whatsapp': return 'WhatsApp';
-            case 'instagram': return 'Instagram';
-            case 'facebook': return 'Messenger';
-            default: return 'Web Chat';
-        }
+        return [
+            'is_bot_active' => 'boolean',
+            'bot_handoff_at' => 'datetime',
+            'last_message_at' => 'datetime',
+            'unread_agent_count' => 'integer',
+            'unread_visitor_count' => 'integer',
+            'telegram_notif_sent' => 'boolean',
+        ];
     }
 
-    public function getLastMessageTimeAttribute(): string
+    protected function channelLabel(): Attribute
     {
-        if (!$this->last_message_at) {
-            return '-';
-        }
-        $date = \Carbon\Carbon::parse($this->last_message_at);
-        if ($date->isToday()) {
-            return $date->format('H:i');
-        } elseif ($date->isYesterday()) {
-            return 'Kemarin';
-        } elseif ($date->isCurrentYear()) {
-            return $date->format('d/m');
-        }
-        return $date->format('d/m/Y');
+        return Attribute::get(fn () => match ($this->channel) {
+            'whatsapp' => 'WhatsApp',
+            'instagram' => 'Instagram',
+            'facebook' => 'Messenger',
+            default => 'Web Chat',
+        });
     }
 
-    public function project()
+    protected function lastMessageTime(): Attribute
+    {
+        return Attribute::get(function () {
+            $date = $this->last_message_at;
+
+            return match (true) {
+                ! $date => '-',
+                $date->isToday() => $date->format('H:i'),
+                $date->isYesterday() => 'Kemarin',
+                $date->isCurrentYear() => $date->format('d/m'),
+                default => $date->format('d/m/Y'),
+            };
+        });
+    }
+
+    /**
+     * Daftar inbox CS: hanya tiket berpesan, filter status (open|mine|closed|all), project, pencarian.
+     *
+     * @param  array{status?: ?string, project_id?: mixed, search?: ?string}  $filters
+     */
+    #[Scope]
+    protected function inbox(Builder $query, User $user, array $filters): void
+    {
+        $status = $filters['status'] ?? 'open';
+        $search = trim((string) ($filters['search'] ?? ''));
+
+        $query->where('tenant_id', $user->tenant_id)
+            ->whereHas('messages')
+            ->with(['visitor', 'project.widgetSetting', 'assignedUser', 'latestMessage'])
+            ->when($filters['project_id'] ?? null, fn ($q, $id) => $q->where('project_id', $id))
+            ->when($status === 'mine', fn ($q) => $q->where('assigned_user_id', $user->id)->where('status', 'open'))
+            ->when($status === 'closed', fn ($q) => $q->where('status', 'closed'))
+            ->when(! in_array($status, ['mine', 'closed', 'all'], true), fn ($q) => $q->where('status', 'open'))
+            ->when($search !== '', fn ($q) => $q->where(fn ($sub) => $sub
+                ->whereHas('visitor', fn ($v) => $v->whereLike('name', "%{$search}%")->orWhereLike('customer_code', "%{$search}%"))
+                ->orWhereHas('contact', fn ($c) => $c->whereLike('name', "%{$search}%")->orWhereLike('email', "%{$search}%")->orWhereLike('phone', "%{$search}%"))
+                ->orWhereLike('last_message_preview', "%{$search}%")))
+            ->orderByRaw('COALESCE(last_message_at, updated_at, created_at) DESC');
+    }
+
+    /** Counter sidebar inbox dalam 1 query agregasi. */
+    public static function inboxCounts(User $user, mixed $projectId = null): array
+    {
+        $row = static::where('tenant_id', $user->tenant_id)
+            ->whereHas('messages')
+            ->when($projectId, fn ($q, $id) => $q->where('project_id', $id))
+            ->selectRaw("COUNT(*) AS total_all,
+                SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END) AS total_open,
+                SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) AS total_closed,
+                SUM(CASE WHEN assigned_user_id = ? AND status = 'open' THEN 1 ELSE 0 END) AS total_mine", [$user->id])
+            ->toBase()
+            ->first();
+
+        return [
+            'all' => (int) ($row->total_all ?? 0),
+            'open' => (int) ($row->total_open ?? 0),
+            'closed' => (int) ($row->total_closed ?? 0),
+            'mine' => (int) ($row->total_mine ?? 0),
+        ];
+    }
+
+    /** Kartu percakapan untuk feed polling inbox. */
+    public function toInboxCard(int $visitorTickets = 1): array
+    {
+        return [
+            'id' => $this->id,
+            'project_id' => $this->project_id,
+            'project_color' => $this->project?->widgetSetting?->primary_color ?? '#0071E3',
+            'visitor_id' => $this->visitor_id,
+            'customer_name' => $this->visitor?->display_name ?? 'Tamu',
+            'customer_code' => $this->visitor?->customer_code,
+            'initials' => $this->visitor?->initials ?? 'TM',
+            'channel_label' => $this->channel_label,
+            'project_name' => $this->project?->name ?? 'Website',
+            'last_message_preview' => $this->last_message_preview ?: 'Percakapan baru diinisialisasi...',
+            'last_message_at' => $this->last_message_at?->toIso8601String(),
+            'last_message_time' => $this->last_message_time,
+            'unread_agent_count' => (int) $this->unread_agent_count,
+            'is_unread' => $this->unread_agent_count > 0,
+            'status' => $this->status,
+            'is_bot_active' => (bool) ($this->is_bot_active ?? true),
+            'assigned_user_id' => $this->assigned_user_id,
+            'visitor_tickets_count' => $visitorTickets,
+        ];
+    }
+
+    public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
     }
 
-    public function visitor()
+    public function visitor(): BelongsTo
     {
         return $this->belongsTo(Visitor::class);
     }
 
-    public function contact()
+    public function contact(): BelongsTo
     {
         return $this->belongsTo(Contact::class);
     }
 
-    public function assignedUser()
+    public function assignedUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_user_id');
     }
 
-    public function participants()
+    public function participants(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'conversation_participants')
-                    ->withPivot('joined_at', 'last_read_message_id');
+            ->withPivot('joined_at', 'last_read_message_id');
     }
 
-    public function messages()
+    public function messages(): HasMany
     {
-        return $this->hasMany(Message::class)->orderBy('id', 'asc');
+        return $this->hasMany(Message::class)->orderBy('id');
     }
 
-    public function latestMessage()
+    /** Pesan terakhir (1 subquery MAX(id), bukan memuat semua pesan saat eager load). */
+    public function latestMessage(): HasOne
     {
-        return $this->hasOne(Message::class)->latest('id');
+        return $this->hasOne(Message::class)->latestOfMany();
+    }
+
+    /** Pesan terakhir yang boleh dilihat pengunjung (tanpa catatan internal). */
+    public function latestPublicMessage(): HasOne
+    {
+        return $this->hasOne(Message::class)->ofMany(['id' => 'max'], fn ($q) => $q->where('is_internal_note', false));
     }
 }

@@ -10,17 +10,17 @@ use App\Models\User;
 use App\Models\Visitor;
 use App\Models\WidgetSetting;
 use App\Services\TelegramService;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class TelegramIntegrationTest extends TestCase
 {
-    use DatabaseTransactions;
-
     protected $tenant;
+
     protected $admin;
+
     protected $project;
+
     protected $visitor;
 
     protected function setUp(): void
@@ -36,11 +36,11 @@ class TelegramIntegrationTest extends TestCase
             ['username' => 'teleadmin'],
             [
                 'tenant_id' => $this->tenant->id,
-                'name'      => 'Telegram Admin',
-                'email'     => 'teleadmin@indraco.com',
-                'password'  => bcrypt('password'),
-                'role'      => 'superadmin',
-                'status'    => 'online',
+                'name' => 'Telegram Admin',
+                'email' => 'teleadmin@indraco.com',
+                'password' => bcrypt('password'),
+                'role' => 'superadmin',
+                'status' => 'online',
             ]
         );
         $this->admin->tenant_id = $this->tenant->id;
@@ -50,10 +50,10 @@ class TelegramIntegrationTest extends TestCase
             ['project_key' => 'PK-TELEGRAMTEST123'],
             [
                 'tenant_id' => $this->tenant->id,
-                'name'      => 'Toko Sepatu',
-                'slug'      => 'toko-sepatu',
-                'domain'    => 'tokosepatu.com',
-                'status'    => 'active',
+                'name' => 'Toko Sepatu',
+                'slug' => 'toko-sepatu',
+                'domain' => 'tokosepatu.com',
+                'status' => 'active',
             ]
         );
         $this->project->tenant_id = $this->tenant->id;
@@ -62,8 +62,8 @@ class TelegramIntegrationTest extends TestCase
         $this->visitor = Visitor::firstOrCreate(
             ['visitor_uuid' => 'VT-TELEGRAM-12345'],
             [
-                'project_id'    => $this->project->id,
-                'name'          => 'Budi Santoso',
+                'project_id' => $this->project->id,
+                'name' => 'Budi Santoso',
                 'customer_code' => 'CUS-77889',
             ]
         );
@@ -74,7 +74,7 @@ class TelegramIntegrationTest extends TestCase
     /** Header secret token yang didaftarkan setWebhook untuk bot uji (B3). */
     protected function secretHeader(): array
     {
-        return ['X-Telegram-Bot-Api-Secret-Token' => \App\Services\TelegramService::webhookSecret('123456:TEST_TOKEN')];
+        return ['X-Telegram-Bot-Api-Secret-Token' => TelegramService::webhookSecret('123456:TEST_TOKEN')];
     }
 
     public function test_telegram_settings_can_be_saved(): void
@@ -93,8 +93,8 @@ class TelegramIntegrationTest extends TestCase
         $this->assertNotNull($settings);
         $this->assertEquals('123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11', $settings->telegram_bot_token);
         $this->assertEquals('-1001234567890', $settings->telegram_chat_id);
-        $this->assertTrue((bool)$settings->telegram_notifications_enabled);
-        $this->assertTrue((bool)$settings->telegram_topic_mode_enabled);
+        $this->assertTrue((bool) $settings->telegram_notifications_enabled);
+        $this->assertTrue((bool) $settings->telegram_topic_mode_enabled);
     }
 
     public function test_telegram_test_connection_endpoint(): void
@@ -156,11 +156,11 @@ class TelegramIntegrationTest extends TestCase
             'content' => 'Halo mau tanya stok size 42',
         ]);
 
-        $service = new TelegramService();
+        $service = new TelegramService;
         $service->sendNewTicketAlert($conv, $msg);
 
         $conv->refresh();
-        $this->assertTrue((bool)$conv->telegram_notif_sent);
+        $this->assertTrue((bool) $conv->telegram_notif_sent);
 
         // Call again -> should NOT send second alert (1-time only guarantee)
         Http::assertSentCount(1);
@@ -176,12 +176,12 @@ class TelegramIntegrationTest extends TestCase
         $agent = User::firstOrCreate(
             ['username' => 'siti_cs'],
             [
-                'tenant_id'         => $this->tenant->id,
-                'name'              => 'Siti Rahma',
-                'email'             => 'siti@indraco.com',
-                'password'          => bcrypt('password'),
-                'role'              => 'agent',
-                'telegram_user_id'  => '99999',
+                'tenant_id' => $this->tenant->id,
+                'name' => 'Siti Rahma',
+                'email' => 'siti@indraco.com',
+                'password' => bcrypt('password'),
+                'role' => 'agent',
+                'telegram_user_id' => '99999',
                 'telegram_username' => 'sitics',
             ]
         );
@@ -189,37 +189,37 @@ class TelegramIntegrationTest extends TestCase
         WidgetSetting::updateOrCreate(
             ['project_id' => $this->project->id],
             [
-                'tenant_id'                      => $this->tenant->id,
-                'telegram_bot_token'             => '123456:TEST_TOKEN',
-                'telegram_chat_id'               => '-1001234567890',
+                'tenant_id' => $this->tenant->id,
+                'telegram_bot_token' => '123456:TEST_TOKEN',
+                'telegram_chat_id' => '-1001234567890',
                 'telegram_notifications_enabled' => true,
-                'telegram_topic_mode_enabled'    => true,
+                'telegram_topic_mode_enabled' => true,
             ]
         );
 
         $conv = Conversation::create([
-            'tenant_id'         => $this->tenant->id,
-            'project_id'        => $this->project->id,
-            'visitor_id'        => $this->visitor->id,
-            'status'            => 'open',
+            'tenant_id' => $this->tenant->id,
+            'project_id' => $this->project->id,
+            'visitor_id' => $this->visitor->id,
+            'status' => 'open',
             'telegram_topic_id' => $uniqueTopicId,
-            'is_bot_active'     => true,
+            'is_bot_active' => true,
         ]);
 
         // Agent replies in Telegram topic thread $uniqueTopicId
         $payload = [
             'message' => [
-                'message_id'        => 888,
+                'message_id' => 888,
                 'message_thread_id' => $uniqueTopicId,
                 'chat' => [
-                    'id'   => -1001234567890,
+                    'id' => -1001234567890,
                     'type' => 'supergroup',
                 ],
                 'from' => [
-                    'id'         => 99999,
-                    'is_bot'     => false,
+                    'id' => 99999,
+                    'is_bot' => false,
                     'first_name' => 'Siti',
-                    'username'   => 'sitics',
+                    'username' => 'sitics',
                 ],
                 'text' => 'Halo Kak Budi, ready ya size 42!',
             ],
@@ -238,7 +238,7 @@ class TelegramIntegrationTest extends TestCase
 
         // Assert bot auto-yielded
         $conv->refresh();
-        $this->assertFalse((bool)$conv->is_bot_active);
+        $this->assertFalse((bool) $conv->is_bot_active);
     }
 
     public function test_telegram_webhook_rejects_unregistered_telegram_user(): void
@@ -248,37 +248,37 @@ class TelegramIntegrationTest extends TestCase
         WidgetSetting::updateOrCreate(
             ['project_id' => $this->project->id],
             [
-                'tenant_id'                      => $this->tenant->id,
-                'telegram_bot_token'             => '123456:TEST_TOKEN',
-                'telegram_chat_id'               => '-1001234567890',
+                'tenant_id' => $this->tenant->id,
+                'telegram_bot_token' => '123456:TEST_TOKEN',
+                'telegram_chat_id' => '-1001234567890',
                 'telegram_notifications_enabled' => true,
-                'telegram_topic_mode_enabled'    => true,
+                'telegram_topic_mode_enabled' => true,
             ]
         );
 
         $conv = Conversation::create([
-            'tenant_id'         => $this->tenant->id,
-            'project_id'        => $this->project->id,
-            'visitor_id'        => $this->visitor->id,
-            'status'            => 'open',
+            'tenant_id' => $this->tenant->id,
+            'project_id' => $this->project->id,
+            'visitor_id' => $this->visitor->id,
+            'status' => 'open',
             'telegram_topic_id' => $uniqueTopicId,
-            'is_bot_active'     => true,
+            'is_bot_active' => true,
         ]);
 
         // Unregistered user in Telegram supergroup replies
         $payload = [
             'message' => [
-                'message_id'        => 889,
+                'message_id' => 889,
                 'message_thread_id' => $uniqueTopicId,
                 'chat' => [
-                    'id'   => -1001234567890,
+                    'id' => -1001234567890,
                     'type' => 'supergroup',
                 ],
                 'from' => [
-                    'id'         => 7777777, // Unregistered ID
-                    'is_bot'     => false,
+                    'id' => 7777777, // Unregistered ID
+                    'is_bot' => false,
                     'first_name' => 'Stranger',
-                    'username'   => 'random_stranger_user',
+                    'username' => 'random_stranger_user',
                 ],
                 'text' => 'Pesan dari orang luar',
             ],
@@ -302,36 +302,36 @@ class TelegramIntegrationTest extends TestCase
         WidgetSetting::updateOrCreate(
             ['project_id' => $this->project->id],
             [
-                'tenant_id'                      => $this->tenant->id,
-                'telegram_bot_token'             => '123456:TEST_TOKEN',
-                'telegram_chat_id'               => '-1001234567890',
+                'tenant_id' => $this->tenant->id,
+                'telegram_bot_token' => '123456:TEST_TOKEN',
+                'telegram_chat_id' => '-1001234567890',
                 'telegram_notifications_enabled' => false,
-                'telegram_topic_mode_enabled'    => false,
+                'telegram_topic_mode_enabled' => false,
             ]
         );
 
         $conv = Conversation::create([
-            'tenant_id'         => $this->tenant->id,
-            'project_id'        => $this->project->id,
-            'visitor_id'        => $this->visitor->id,
-            'status'            => 'open',
+            'tenant_id' => $this->tenant->id,
+            'project_id' => $this->project->id,
+            'visitor_id' => $this->visitor->id,
+            'status' => 'open',
             'telegram_topic_id' => $uniqueTopicId,
-            'is_bot_active'     => true,
+            'is_bot_active' => true,
         ]);
 
         $payload = [
             'message' => [
-                'message_id'        => 890,
+                'message_id' => 890,
                 'message_thread_id' => $uniqueTopicId,
                 'chat' => [
-                    'id'   => -1001234567890,
+                    'id' => -1001234567890,
                     'type' => 'supergroup',
                 ],
                 'from' => [
-                    'id'         => 99999,
-                    'is_bot'     => false,
+                    'id' => 99999,
+                    'is_bot' => false,
                     'first_name' => 'Siti',
-                    'username'   => 'sitics',
+                    'username' => 'sitics',
                 ],
                 'text' => 'Halo Kak Budi!',
             ],

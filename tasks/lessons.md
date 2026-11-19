@@ -14,7 +14,8 @@ Dokumen ini mencatat koreksi, pola desain, dan aturan teknis yang dipelajari sel
 - **Pelajaran**: Pisahkan dokumentasi ke dalam sub-folder spesifik (misal: `docs/prd/`, `docs/architecture/`, `docs/database/`, `docs/api/`, dll.) agar tidak ada file raksasa yang sulit dipelihara saat proyek berkembang.
 - **Pola**: Setiap sub-folder memiliki fokus tunggal dengan referensi saling terhubung di `docs/README.md`.
 
-### 3. Batasan Versi Framework (Laravel 10 Maksimal s/d Laravel 7 Minimal)
+### 3. Batasan Versi Framework
+> **[DIGANTIKAN — 2026-11-19, Lesson 29]** User meminta rebuild ke Laravel 13. Pola skeleton klasik/PHP 7.4–8.2 di bawah hanya berlaku untuk branch `laravel-7`. (Laravel 10 Maksimal s/d Laravel 7 Minimal)
 - **Pelajaran**: Banyak shared hosting/cPanel lawas klien masih terkunci di PHP 7.4 atau PHP 8.0, sementara server modern menggunakan PHP 8.1/8.2.
 - **Pola**: Wajib menggunakan arsitektur skeleton klasik (`app/Http/Kernel.php`, migrasi class tradisional, throttling route standar `throttle:60,1`) dan PHP syntax yang kompatibel dengan PHP 7.4 s/d 8.2. Dilarang keras mengunci kode pada skeleton eksklusif Laravel 11/12 (`bootstrap/app.php`) atau fitur PHP 8.2+ yang tidak backward-compatible.
 
@@ -86,7 +87,8 @@ Dokumen ini mencatat koreksi, pola desain, dan aturan teknis yang dipelajari sel
   1. **Konsistensi Lintas Modul**: Perbarui seluruh representasi brand ke **BeanTalk** di seluruh titik sentuh: Admin Sidebar, Top Toolbar Sandbox, Welcome Hub Widget (`Powered by BeanTalk`), SDK global namespace (`window.BeanTalk`), serta dokumentasi master (`GEMINI.md`, `AGENTS.md`, `docs/`).
   2. **Backward Compatibility**: Pertahankan alias transisi (`window.ChatWidget`, `#universal-chat-root`) di client library SDK agar kode integrasi sebelumnya tetap berjalan tanpa kendala (*zero breaking changes*).
 
-### 13. Modernisasi Framework: Upgrade ke Laravel 10 (PHP 8.1 s/d 8.4 LTS)
+### 13. Modernisasi Framework
+> **[DIGANTIKAN — 2026-11-19, Lesson 29]** User meminta rebuild ke Laravel 13. Pola skeleton klasik/PHP 7.4–8.2 di bawah hanya berlaku untuk branch `laravel-7`.: Upgrade ke Laravel 10 (PHP 8.1 s/d 8.4 LTS)
 - **Pelajaran**: Lingkungan development pengguna sering kali memiliki PHP versi mutakhir (seperti PHP 8.2 atau PHP 8.4). Menjaga framework di Laravel 7 menimbulkan peringatan *deprecation* (seperti `ReturnTypeWillChange` dan `implicitly nullable parameter`).
 - **Pola**:
   1. **Pertahankan Classic Skeleton**: Tetap gunakan struktur klasik (`app/Http/Kernel.php`, named migrations) sesuai kontrak [GEMINI.md](file:///c:/laragon/www/chat-me/GEMINI.md) agar tetap 100% kompatibel di Shared Hosting dan tidak memerlukan perubahan struktur folder radikal.
@@ -94,7 +96,8 @@ Dokumen ini mencatat koreksi, pola desain, dan aturan teknis yang dipelajari sel
   3. **Migrasi Schema PHPUnit 10**: Jalankan `vendor/bin/phpunit --migrate-configuration` untuk memodernisasi tag `<coverage>` dan `<source>`.
   4. **Zero-Deprecation Verification**: Menjamin seluruh unit/feature tests lulus 100% baik pada PHP 8.2 maupun PHP 8.4 global.
 
-### 14. Penguncian Platform PHP di Composer (`config.platform.php`)
+### 14. Penguncian Platform PHP
+> **[DIGANTIKAN — 2026-11-19, Lesson 29]** User meminta rebuild ke Laravel 13. Pola skeleton klasik/PHP 7.4–8.2 di bawah hanya berlaku untuk branch `laravel-7`. di Composer (`config.platform.php`)
 - **Pelajaran**: Jika `composer update` dijalankan di mesin development dengan versi PHP lebih tinggi (misal PHP 8.4) tanpa mendefinisikan `config.platform.php`, Composer dapat mengunduh dependensi (seperti komponen Symfony 7.x) yang menuntut PHP >= 8.2. Hal ini menyebabkan error fatal `platform_check.php` saat dijalankan di server dengan PHP 8.1.
 - **Pola**:
   1. **Tentukan Baseline Platform**: Selalu tambahkan `"config": { "platform": { "php": "8.1.0" } }` di `composer.json` agar Composer menyelesaikan dependensi ke versi LTS (seperti Symfony 6.4) yang didukung resmi oleh target minimum server (PHP 8.1 s/d 8.4).
@@ -203,3 +206,13 @@ Dokumen ini mencatat koreksi, pola desain, dan aturan teknis yang dipelajari sel
     4. **Client-side Reconciliation**: Saat polling masuk, hapus kartu DOM yang ID-nya tidak ada lagi dalam `data.conversations` jika filter sedang aktif, serta perbarui badge counter realtime di sidebar dan header list.
     5. **Side Menu Centralization**: Pertahankan navigasi pemfilteran status terpusat pada Side Menu navigasi kiri agar antarmuka kolom pesan tetap bersih dan tidak redundan.
 
+- **[2026-11-19] Lesson 29: Rebuild ke Laravel 13 & Folder `.agents/`**:
+  - *Konteks*: User meminta konversi penuh (bukan tiru) dari Laravel 7 ke Laravel 13 di branch `laravel-13`, dengan fokus maintainability, anti N+1, cache, keamanan, reuse, dan **tidak ada file membengkak** di mana pun. Aturan agent dipusatkan di `.agents/` agar dipatuhi agent lain.
+  - *Pola & pelajaran*:
+    1. Skeleton L13 murni (`bootstrap/app.php`, migrasi anonymous dikonsolidasi per domain, `casts()`, `#[Scope]`), PHP ^8.3 (platform terkunci 8.3.0). Paket legacy (fruitcake/cors, fideloper/proxy, ignition) diganti fitur core.
+    2. Carbon 3 `diffIn*` = float bertanda; `latestOfMany()+where` → `ofMany()` dengan constraint; `firstOrCreate` perlu `refresh()` untuk default DB; `@json` multi-baris → `Js::from()`; logging 429/5xx lewat `$exceptions->respond()`.
+    3. Test dengan `RefreshDatabase` membongkar test yang diam-diam bergantung pada sisa data test lain → fixture eksplisit per test.
+    4. Bug nyata yang terungkap: `since_message_id=0` dianggap handshake → pesan pertama tenant baru tak pernah dinotifikasi. Handshake = ketiadaan parameter.
+    5. Keamanan: header `X-User-Id` dihapus total; mutasi integrasi dijaga `can:superadmin`; token Telegram `encrypted` & tak dirender ke HTML; URL kanal hanya http(s); warna hex tervalidasi.
+    6. File gemuk dipecah: controller per domain, service per tanggung jawab, Blade → partial/komponen, JS/CSS per seksi via `@asset`, test per fitur. Batas 300 baris dicatat di `.agents/rules/00-core-principles.md`.
+    7. Data dev dipindah dengan `php artisan beantalk:import-legacy beantalk` ke DB `beantalk_l13` (DB lama tidak disentuh). Seeder hanya data esensial (tanpa dummy).

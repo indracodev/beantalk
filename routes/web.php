@@ -1,60 +1,69 @@
 <?php
 
+use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\InboxController;
+use App\Http\Controllers\Admin\IntegrationController;
+use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\TeamController;
+use App\Http\Controllers\Admin\VisitorController;
+use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
+Route::get('/', [LoginController::class, 'root']);
 
-Route::get('/', 'Auth\LoginController@root');
+// Autentikasi (email ATAU username)
+Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('login', [LoginController::class, 'login'])->middleware('throttle:15,1');
+Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 
-// Authentication Web Routes (Login via Email or Username)
-Route::get('login', 'Auth\LoginController@showLoginForm')->name('login');
-Route::post('login', 'Auth\LoginController@login')->middleware('throttle:15,1');
-Route::post('logout', 'Auth\LoginController@logout')->name('logout');
+// Admin Dashboard (sesi login)
+Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+    Route::get('dashboard/export', [DashboardController::class, 'export'])->name('dashboard.export');
 
-// Admin Dashboard Web Routes (Protected by Auth Session)
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', 'Admin\DashboardController@index')->name('dashboard');
-    Route::get('dashboard', 'Admin\DashboardController@index')->name('dashboard.index');
-    Route::get('dashboard/export', 'Admin\DashboardController@exportReport')->name('dashboard.export');
-    Route::get('inbox/feed/updates', 'Admin\DashboardController@pollUpdates')->name('inbox.updates');
-    Route::get('inbox/{id?}', 'Admin\DashboardController@inbox')->name('inbox');
-    Route::post('inbox/{id}/reply', 'Admin\DashboardController@reply')->name('inbox.reply');
-    Route::post('inbox/{id}/toggle-bot', 'Admin\DashboardController@toggleBot')->name('inbox.toggle-bot');
-    Route::get('inbox/{id}/messages', 'Admin\DashboardController@messages')->name('inbox.messages');
-    Route::put('inbox/{id}/status', 'Admin\DashboardController@updateStatus')->name('inbox.status');
-    Route::put('inbox/{id}/assign', 'Admin\DashboardController@assign')->name('inbox.assign');
-    Route::put('inbox/{id}/customer', 'Admin\DashboardController@updateCustomerName')->name('inbox.customer');
+    Route::controller(InboxController::class)->prefix('inbox')->name('inbox')->group(function () {
+        Route::get('feed/updates', 'pollUpdates')->name('.updates');
+        Route::get('{id?}', 'index')->whereNumber('id');
+        Route::post('{id}/reply', 'reply')->whereNumber('id')->name('.reply');
+        Route::post('{id}/toggle-bot', 'toggleBot')->whereNumber('id')->name('.toggle-bot');
+        Route::get('{id}/messages', 'messages')->whereNumber('id')->name('.messages');
+        Route::put('{id}/status', 'updateStatus')->whereNumber('id')->name('.status');
+        Route::put('{id}/assign', 'assign')->whereNumber('id')->name('.assign');
+        Route::put('{id}/customer', 'updateCustomerName')->whereNumber('id')->name('.customer');
+    });
 
-    Route::get('integrations', 'Admin\DashboardController@integrations')->name('integrations');
-    Route::post('integrations', 'Admin\DashboardController@storeIntegration')->name('integrations.store');
-    Route::get('integrations/{id}', 'Admin\DashboardController@integrationDetail')->name('integrations.detail');
-    Route::post('integrations/{id}/regenerate', 'Admin\DashboardController@regenerateKey')->name('integrations.regenerate');
-    Route::put('integrations/{id}/settings', 'Admin\DashboardController@updateWidgetSettings')->name('integrations.settings');
-    Route::post('integrations/{id}/test-telegram', 'Admin\DashboardController@testTelegramAlert')->name('integrations.test-telegram');
-    Route::post('integrations/{id}/set-telegram-webhook', 'Admin\DashboardController@setTelegramWebhook')->name('integrations.set-telegram-webhook');
+    Route::controller(IntegrationController::class)->prefix('integrations')->name('integrations')->group(function () {
+        Route::get('/', 'index');
+        Route::get('{id}', 'show')->whereNumber('id')->name('.detail');
 
-    Route::get('team', 'Admin\DashboardController@team')->name('team');
-    Route::post('team', 'Admin\DashboardController@storeTeam')->name('team.store');
-    Route::put('team/{id}', 'Admin\DashboardController@updateTeam')->name('team.update');
-    Route::post('team/{id}/impersonate', 'Admin\DashboardController@impersonate')->name('team.impersonate');
-    Route::match(['get', 'post'], 'impersonate/leave', 'Admin\DashboardController@leaveImpersonation')->name('impersonate.leave');
+        // Mutasi integrasi: superadmin saja (sebelumnya hanya disembunyikan di UI).
+        Route::middleware('can:superadmin')->group(function () {
+            Route::post('/', 'store')->name('.store');
+            Route::post('{id}/regenerate', 'regenerateKey')->whereNumber('id')->name('.regenerate');
+            Route::put('{id}/settings', 'updateSettings')->whereNumber('id')->name('.settings');
+            Route::post('{id}/test-telegram', 'testTelegram')->whereNumber('id')->name('.test-telegram');
+            Route::post('{id}/set-telegram-webhook', 'setTelegramWebhook')->whereNumber('id')->name('.set-telegram-webhook');
+        });
+    });
 
-    Route::get('visitors', 'Admin\DashboardController@visitors')->name('visitors');
-    Route::get('visitors/{id}', 'Admin\DashboardController@visitorDetail')->name('visitors.detail');
-    Route::get('logs', 'Admin\DashboardController@logs')->name('logs');
-    Route::put('profile/password', 'Admin\DashboardController@updateMyPassword')->name('profile.password');
+    Route::controller(TeamController::class)->group(function () {
+        Route::middleware('can:superadmin')->group(function () {
+            Route::get('team', 'index')->name('team');
+            Route::post('team', 'store')->name('team.store');
+            Route::put('team/{id}', 'update')->whereNumber('id')->name('team.update');
+            Route::post('team/{id}/impersonate', 'impersonate')->whereNumber('id')->name('team.impersonate');
+        });
+        // Dapat dipanggil saat sedang menyamar sebagai agent.
+        Route::match(['get', 'post'], 'impersonate/leave', 'leaveImpersonation')->name('impersonate.leave');
+    });
+
+    Route::get('visitors', [VisitorController::class, 'index'])->name('visitors');
+    Route::get('visitors/{id}', [VisitorController::class, 'show'])->whereNumber('id')->name('visitors.detail');
+    Route::get('logs', [ActivityLogController::class, 'index'])->name('logs');
+    Route::put('profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 });
 
-// Public CDN Endpoint for Embed Widget (Fallback if not directly intercepted by web server)
-Route::get('{file}.js', 'Auth\LoginController@widgetScript')->where('file', 'chat|widget|chat-widget');
-
-
+// Fallback CDN widget bila web server tidak melayani berkas statis secara langsung.
+Route::get('{file}.js', [LoginController::class, 'widgetScript'])->whereIn('file', ['chat', 'widget', 'chat-widget']);

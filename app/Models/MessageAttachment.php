@@ -3,11 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MessageAttachment extends Model
 {
-    protected $table = 'message_attachments';
-
     protected $fillable = [
         'message_id',
         'file_name',
@@ -18,7 +17,7 @@ class MessageAttachment extends Model
         'compressed_size',
     ];
 
-    public function message()
+    public function message(): BelongsTo
     {
         return $this->belongsTo(Message::class);
     }

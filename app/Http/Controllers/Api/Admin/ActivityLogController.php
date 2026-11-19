@@ -4,53 +4,29 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ActivityLogController extends Controller
 {
-    /**
-     * Get paginated audit activity logs
-     * GET /api/v1/admin/activity-logs
-     */
-    public function index(Request $request)
+    /** GET /api/v1/admin/activity-logs?role=&user_id=&action=&per_page= */
+    public function index(Request $request): JsonResponse
     {
-        $tenantId = app()->bound('current_tenant_id') ? app('current_tenant_id') : null;
+        $logs = ActivityLog::where('tenant_id', $request->user()->tenant_id)
+            ->when($request->input('role'), fn ($q, $v) => $q->where('user_role', $v))
+            ->when($request->input('user_id'), fn ($q, $v) => $q->where('user_id', $v))
+            ->when($request->input('action'), fn ($q, $v) => $q->whereLike('action', '%'.$v.'%'))
+            ->orderByDesc('id')
+            ->paginate(min((int) $request->input('per_page', 25), 100));
 
-        $query = ActivityLog::query();
-
-        if ($tenantId) {
-            $query->where('tenant_id', $tenantId);
-        }
-
-        // Filter by role
-        if ($request->filled('role')) {
-            $query->where('user_role', $request->input('role'));
-        }
-
-        // Filter by specific user
-        if ($request->filled('user_id')) {
-            $query->where('user_id', $request->input('user_id'));
-        }
-
-        // Filter by action keyword
-        if ($request->filled('action')) {
-            $query->where('action', 'LIKE', '%' . $request->input('action') . '%');
-        }
-
-        $perPage = min((int) $request->input('per_page', 25), 100);
-        $logs = $query->orderBy('id', 'desc')->paginate($perPage);
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'logs' => $logs->items(),
-                'pagination' => [
-                    'current_page' => $logs->currentPage(),
-                    'per_page'     => $logs->perPage(),
-                    'total'        => $logs->total(),
-                    'last_page'    => $logs->lastPage(),
-                ]
-            ]
+        return $this->ok([
+            'logs' => $logs->items(),
+            'pagination' => [
+                'current_page' => $logs->currentPage(),
+                'per_page' => $logs->perPage(),
+                'total' => $logs->total(),
+                'last_page' => $logs->lastPage(),
+            ],
         ]);
     }
 }

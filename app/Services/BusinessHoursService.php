@@ -27,12 +27,12 @@ class BusinessHoursService
      */
     public function isWithinBusinessHours(WidgetSetting $ws): bool
     {
-        if (!$ws->business_hours_enabled) {
+        if (! $ws->business_hours_enabled) {
             return true; // Feature disabled = always available
         }
 
         $schedule = $ws->business_hours;
-        if (empty($schedule) || !is_array($schedule)) {
+        if (empty($schedule) || ! is_array($schedule)) {
             return true; // No schedule configured = always available
         }
 
@@ -51,7 +51,7 @@ class BusinessHoursService
 
         // 2. Check day schedule
         $dayKey = self::DAY_MAP[$now->dayOfWeek] ?? null;
-        if (!$dayKey || !isset($schedule[$dayKey])) {
+        if (! $dayKey || ! isset($schedule[$dayKey])) {
             return false;
         }
 
@@ -62,11 +62,12 @@ class BusinessHoursService
 
         $start = $dayConfig['start'] ?? null;
         $end = $dayConfig['end'] ?? null;
-        if (!$start || !$end) {
+        if (! $start || ! $end) {
             return false;
         }
 
         $currentTime = $now->format('H:i');
+
         return $currentTime >= $start && $currentTime < $end;
     }
 
@@ -76,12 +77,12 @@ class BusinessHoursService
     public function isHoliday(WidgetSetting $ws, ?Carbon $date = null): bool
     {
         $holidays = $ws->holidays;
-        if (empty($holidays) || !is_array($holidays)) {
+        if (empty($holidays) || ! is_array($holidays)) {
             return false;
         }
 
         $tz = $ws->business_hours_timezone ?: 'Asia/Jakarta';
-        if (!$date) {
+        if (! $date) {
             $date = Carbon::now($tz);
         }
 
@@ -101,7 +102,7 @@ class BusinessHoursService
      */
     public function getOfflineMessage(WidgetSetting $ws): string
     {
-        if (!empty($ws->business_hours_off_message)) {
+        if (! empty($ws->business_hours_off_message)) {
             return $ws->business_hours_off_message;
         }
 
@@ -119,10 +120,10 @@ class BusinessHoursService
     public function getScheduleSummary(WidgetSetting $ws): array
     {
         return [
-            'enabled'     => (bool) $ws->business_hours_enabled,
-            'schedule'    => $ws->business_hours ?: [],
-            'timezone'    => $ws->business_hours_timezone ?: 'Asia/Jakarta',
-            'holidays'    => $ws->holidays ?: [],
+            'enabled' => (bool) $ws->business_hours_enabled,
+            'schedule' => $ws->business_hours ?: [],
+            'timezone' => $ws->business_hours_timezone ?: 'Asia/Jakarta',
+            'holidays' => $ws->holidays ?: [],
             'off_message' => $this->getOfflineMessage($ws),
         ];
     }

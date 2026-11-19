@@ -5,15 +5,14 @@ namespace Tests\Feature;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\ActivityLogger;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 class ActivityLogTest extends TestCase
 {
-    use DatabaseTransactions;
-
     protected $tenant;
+
     protected $superadmin;
+
     protected $agent;
 
     protected function setUp(): void
@@ -29,10 +28,10 @@ class ActivityLogTest extends TestCase
             ['email' => 'audit-superadmin@example.com'],
             [
                 'tenant_id' => $this->tenant->id,
-                'name'      => 'Audit Superadmin',
-                'username'  => 'audit-superadmin',
-                'password'  => bcrypt('secret123'),
-                'role'      => 'superadmin',
+                'name' => 'Audit Superadmin',
+                'username' => 'audit-superadmin',
+                'password' => bcrypt('secret123'),
+                'role' => 'superadmin',
             ]
         );
 
@@ -40,10 +39,10 @@ class ActivityLogTest extends TestCase
             ['email' => 'audit-agent@example.com'],
             [
                 'tenant_id' => $this->tenant->id,
-                'name'      => 'Audit Agent Sarah',
-                'username'  => 'audit-agent',
-                'password'  => bcrypt('secret123'),
-                'role'      => 'agent',
+                'name' => 'Audit Agent Sarah',
+                'username' => 'audit-agent',
+                'password' => bcrypt('secret123'),
+                'role' => 'agent',
             ]
         );
     }
@@ -51,7 +50,7 @@ class ActivityLogTest extends TestCase
     /**
      * Test 1: Direct activity logging works across roles
      */
-    public function testDirectActivityLoggerRecordsEntry()
+    public function test_direct_activity_logger_records_entry()
     {
         $log = ActivityLogger::log(
             'system.maintenance',
@@ -62,83 +61,83 @@ class ActivityLogTest extends TestCase
         );
 
         $this->assertDatabaseHas('activity_logs', [
-            'id'        => $log->id,
+            'id' => $log->id,
             'user_role' => 'superadmin',
-            'action'    => 'system.maintenance',
+            'action' => 'system.maintenance',
         ]);
     }
 
     /**
      * Test 2: Superadmin creating integration generates activity log
      */
-    public function testCreatingIntegrationLogsActivity()
+    public function test_creating_integration_logs_activity()
     {
         $response = $this->actingAs($this->superadmin)
-                         ->postJson('/api/v1/admin/integrations', [
-                             'name'          => 'Audit Tested Store',
-                             'domain'        => 'audittest.com',
-                             'primary_color' => '#6366F1',
-                         ]);
+            ->postJson('/api/v1/admin/integrations', [
+                'name' => 'Audit Tested Store',
+                'domain' => 'audittest.com',
+                'primary_color' => '#6366F1',
+            ]);
 
         $response->assertStatus(201);
 
         $this->assertDatabaseHas('activity_logs', [
             'tenant_id' => $this->tenant->id,
-            'user_id'   => $this->superadmin->id,
+            'user_id' => $this->superadmin->id,
             'user_role' => 'superadmin',
-            'action'    => 'integration.created',
+            'action' => 'integration.created',
         ]);
     }
 
     /**
      * Test 3: Inviting team member generates activity log
      */
-    public function testInvitingTeamMemberLogsActivity()
+    public function test_inviting_team_member_logs_activity()
     {
-        $email = 'new-recruit-' . uniqid() . '@example.com';
+        $email = 'new-recruit-'.uniqid().'@example.com';
 
         $response = $this->actingAs($this->superadmin)
-                         ->postJson('/api/v1/admin/team', [
-                             'name'     => 'New Agent Recruit',
-                             'username' => 'agent_' . uniqid(),
-                             'email'    => $email,
-                             'role'     => 'agent',
-                         ]);
+            ->postJson('/api/v1/admin/team', [
+                'name' => 'New Agent Recruit',
+                'username' => 'agent_'.uniqid(),
+                'email' => $email,
+                'role' => 'agent',
+            ]);
 
         $response->assertStatus(201);
 
         $this->assertDatabaseHas('activity_logs', [
             'tenant_id' => $this->tenant->id,
-            'user_id'   => $this->superadmin->id,
+            'user_id' => $this->superadmin->id,
             'user_role' => 'superadmin',
-            'action'    => 'team.invited',
+            'action' => 'team.invited',
         ]);
     }
 
     /**
      * Test 4: Updating member role generates activity log
      */
-    public function testUpdatingRoleLogsActivity()
+    public function test_updating_role_logs_activity()
     {
         $response = $this->actingAs($this->superadmin)
-                         ->putJson("/api/v1/admin/team/{$this->agent->id}/role", [
-                             'role' => 'superadmin',
-                         ]);
+            ->putJson("/api/v1/admin/team/{$this->agent->id}/role", [
+                'role' => 'superadmin',
+            ]);
 
         $response->assertStatus(200);
 
         $this->assertDatabaseHas('activity_logs', [
             'tenant_id' => $this->tenant->id,
-            'user_id'   => $this->superadmin->id,
+            'user_id' => $this->superadmin->id,
             'user_role' => 'superadmin',
-            'action'    => 'role.updated',
+            'action' => 'role.updated',
         ]);
     }
 
     /**
      * Test 5: Fetch activity logs via REST API endpoint with role filtering
      */
-    public function testFetchActivityLogsWithRoleFilter()
+    public function test_fetch_activity_logs_with_role_filter()
     {
         // Seed an agent activity
         ActivityLogger::log('chat.assigned', 'Agent Sarah ditugaskan tiket baru', null, [], $this->agent);
@@ -148,8 +147,8 @@ class ActivityLogTest extends TestCase
         // 1. Fetch all
         $resAll = $this->actingAs($this->superadmin)->getJson('/api/v1/admin/activity-logs');
         $resAll->assertStatus(200)
-               ->assertJsonPath('success', true)
-               ->assertJsonStructure(['data' => ['logs', 'pagination']]);
+            ->assertJsonPath('success', true)
+            ->assertJsonStructure(['data' => ['logs', 'pagination']]);
 
         // 2. Filter by role=agent
         $resAgent = $this->actingAs($this->superadmin)->getJson('/api/v1/admin/activity-logs?role=agent');

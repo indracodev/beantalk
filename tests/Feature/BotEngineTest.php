@@ -15,9 +15,13 @@ use Tests\TestCase;
 class BotEngineTest extends TestCase
 {
     protected $tenant;
+
     protected $project;
+
     protected $apiKey;
+
     protected $widgetSetting;
+
     protected $adminUser;
 
     protected function setUp(): void
@@ -40,7 +44,7 @@ class BotEngineTest extends TestCase
                 'tenant_id' => $this->tenant->id,
                 'project_id' => $this->project->id,
                 'name' => 'Bot Test Key',
-                'is_active' => true
+                'is_active' => true,
             ]
         );
 
@@ -60,12 +64,12 @@ class BotEngineTest extends TestCase
                 'bot_rules' => [
                     [
                         'keywords' => 'ongkir, pengiriman, kurir',
-                        'response' => 'Pengiriman kami menggunakan JNE, J&T, dan SiCepat.'
+                        'response' => 'Pengiriman kami menggunakan JNE, J&T, dan SiCepat.',
                     ],
                     [
                         'keywords' => 'jam buka, operasional',
-                        'response' => 'Jam operasional kami adalah Senin - Jumat pukul 08:00 - 17:00 WIB.'
-                    ]
+                        'response' => 'Jam operasional kami adalah Senin - Jumat pukul 08:00 - 17:00 WIB.',
+                    ],
                 ],
             ]
         );
@@ -78,7 +82,7 @@ class BotEngineTest extends TestCase
                 'username' => 'admin_bot',
                 'password' => bcrypt('password'),
                 'role' => 'superadmin',
-                'is_active' => true
+                'is_active' => true,
             ]
         );
     }
@@ -86,19 +90,19 @@ class BotEngineTest extends TestCase
     /**
      * Test 1: Bot does NOT respond when globally disabled
      */
-    public function testBotDoesNotRespondWhenGloballyDisabled()
+    public function test_bot_does_not_respond_when_globally_disabled()
     {
         $this->widgetSetting->update(['bot_enabled' => false]);
 
-        $visitorUuid = 'bot-test-visitor-disabled-' . uniqid();
+        $visitorUuid = 'bot-test-visitor-disabled-'.uniqid();
 
         // 1. Send Message with visitor_uuid on conv 0
         $msgRes = $this->withHeaders([
             'X-Project-Key' => $this->apiKey->public_key,
-        ])->postJson("/api/v1/client/conversations/0/messages", [
+        ])->postJson('/api/v1/client/conversations/0/messages', [
             'visitor_uuid' => $visitorUuid,
             'content' => 'Berapa ongkir ke Surabaya?',
-            'client_message_id' => 'msg-bot-01-' . uniqid(),
+            'client_message_id' => 'msg-bot-01-'.uniqid(),
         ]);
 
         $msgRes->assertStatus(201);
@@ -115,19 +119,19 @@ class BotEngineTest extends TestCase
     /**
      * Test 2: Bot sends welcome message on first generic message
      */
-    public function testBotSendsWelcomeMessageOnFirstGenericMessage()
+    public function test_bot_sends_welcome_message_on_first_generic_message()
     {
         $this->widgetSetting->update(['bot_enabled' => true]);
 
-        $visitorUuid = 'bot-test-visitor-welcome-' . uniqid();
+        $visitorUuid = 'bot-test-visitor-welcome-'.uniqid();
 
         // Send First Message without keyword match
         $msgRes = $this->withHeaders([
             'X-Project-Key' => $this->apiKey->public_key,
-        ])->postJson("/api/v1/client/conversations/0/messages", [
+        ])->postJson('/api/v1/client/conversations/0/messages', [
             'visitor_uuid' => $visitorUuid,
             'content' => 'Selamat pagi!',
-            'client_message_id' => 'msg-bot-02-' . uniqid(),
+            'client_message_id' => 'msg-bot-02-'.uniqid(),
         ]);
 
         $msgRes->assertStatus(201);
@@ -144,19 +148,19 @@ class BotEngineTest extends TestCase
     /**
      * Test 3: Bot answers with keyword FAQ rule
      */
-    public function testBotAnswersWithKeywordFaqRule()
+    public function test_bot_answers_with_keyword_faq_rule()
     {
         $this->widgetSetting->update(['bot_enabled' => true]);
 
-        $visitorUuid = 'bot-test-visitor-faq-' . uniqid();
+        $visitorUuid = 'bot-test-visitor-faq-'.uniqid();
 
         // Send Message matching keyword 'ongkir'
         $msgRes = $this->withHeaders([
             'X-Project-Key' => $this->apiKey->public_key,
-        ])->postJson("/api/v1/client/conversations/0/messages", [
+        ])->postJson('/api/v1/client/conversations/0/messages', [
             'visitor_uuid' => $visitorUuid,
             'content' => 'Berapa ongkir pengiriman ke Bandung?',
-            'client_message_id' => 'msg-bot-03-' . uniqid(),
+            'client_message_id' => 'msg-bot-03-'.uniqid(),
         ]);
 
         $msgRes->assertStatus(201);
@@ -173,19 +177,19 @@ class BotEngineTest extends TestCase
     /**
      * Test 4: Bot smart handoff when visitor requests human CS
      */
-    public function testBotSmartHandoffToHumanAgent()
+    public function test_bot_smart_handoff_to_human_agent()
     {
         $this->widgetSetting->update(['bot_enabled' => true]);
 
-        $visitorUuid = 'bot-test-visitor-handoff-' . uniqid();
+        $visitorUuid = 'bot-test-visitor-handoff-'.uniqid();
 
         // Customer requests CS
         $msgRes = $this->withHeaders([
             'X-Project-Key' => $this->apiKey->public_key,
-        ])->postJson("/api/v1/client/conversations/0/messages", [
+        ])->postJson('/api/v1/client/conversations/0/messages', [
             'visitor_uuid' => $visitorUuid,
             'content' => 'Saya mau bicara dengan CS manusia tolong',
-            'client_message_id' => 'msg-bot-04-' . uniqid(),
+            'client_message_id' => 'msg-bot-04-'.uniqid(),
         ]);
 
         $msgRes->assertStatus(201);
@@ -193,7 +197,7 @@ class BotEngineTest extends TestCase
 
         $conversation = Conversation::find($conversationId);
 
-        $this->assertFalse((bool)$conversation->is_bot_active);
+        $this->assertFalse((bool) $conversation->is_bot_active);
         $this->assertNotNull($conversation->bot_handoff_at);
 
         $lastBotMsg = Message::where('conversation_id', $conversation->id)
@@ -208,13 +212,13 @@ class BotEngineTest extends TestCase
     /**
      * Test 5: CS Agent can manually toggle bot on/off via Inbox
      */
-    public function testAgentCanToggleBotStateInInbox()
+    public function test_agent_can_toggle_bot_state_in_inbox()
     {
         $visitor = Visitor::create([
             'project_id' => $this->project->id,
             'tenant_id' => $this->tenant->id,
-            'visitor_uuid' => 'bot-test-toggle-' . uniqid(),
-            'name' => 'Toggle Tester'
+            'visitor_uuid' => 'bot-test-toggle-'.uniqid(),
+            'name' => 'Toggle Tester',
         ]);
 
         $conversation = Conversation::create([
@@ -230,7 +234,7 @@ class BotEngineTest extends TestCase
 
         // Toggle Bot OFF
         $responseOff = $this->actingAs($this->adminUser)->postJson("/admin/inbox/{$conversation->id}/toggle-bot", [
-            'is_bot_active' => false
+            'is_bot_active' => false,
         ]);
 
         $responseOff->assertStatus(200)
@@ -238,11 +242,11 @@ class BotEngineTest extends TestCase
             ->assertJsonPath('data.is_bot_active', false);
 
         $conversation->refresh();
-        $this->assertFalse((bool)$conversation->is_bot_active);
+        $this->assertFalse((bool) $conversation->is_bot_active);
 
         // Toggle Bot ON
         $responseOn = $this->actingAs($this->adminUser)->postJson("/admin/inbox/{$conversation->id}/toggle-bot", [
-            'is_bot_active' => true
+            'is_bot_active' => true,
         ]);
 
         $responseOn->assertStatus(200)
@@ -250,19 +254,19 @@ class BotEngineTest extends TestCase
             ->assertJsonPath('data.is_bot_active', true);
 
         $conversation->refresh();
-        $this->assertTrue((bool)$conversation->is_bot_active);
+        $this->assertTrue((bool) $conversation->is_bot_active);
     }
 
     /**
      * Test 6: Agent reply auto-yields bot
      */
-    public function testAgentReplyAutoYieldsBot()
+    public function test_agent_reply_auto_yields_bot()
     {
         $visitor = Visitor::create([
             'project_id' => $this->project->id,
             'tenant_id' => $this->tenant->id,
-            'visitor_uuid' => 'bot-test-autoyield-' . uniqid(),
-            'name' => 'AutoYield Tester'
+            'visitor_uuid' => 'bot-test-autoyield-'.uniqid(),
+            'name' => 'AutoYield Tester',
         ]);
 
         $conversation = Conversation::create([
@@ -277,37 +281,37 @@ class BotEngineTest extends TestCase
         ]);
 
         $replyRes = $this->actingAs($this->adminUser)->postJson("/admin/inbox/{$conversation->id}/reply", [
-            'content' => 'Halo Kak, ada yang bisa kami bantu secara langsung?'
+            'content' => 'Halo Kak, ada yang bisa kami bantu secara langsung?',
         ]);
 
         $replyRes->assertSuccessful()
             ->assertJsonPath('success', true);
 
         $conversation->refresh();
-        $this->assertFalse((bool)$conversation->is_bot_active);
+        $this->assertFalse((bool) $conversation->is_bot_active);
         $this->assertNotNull($conversation->bot_handoff_at);
     }
 
     /**
      * Test 7: Bot respects bot_mode_query toggle
      */
-    public function testBotRespectsModeQueryToggle()
+    public function test_bot_respects_mode_query_toggle()
     {
         $this->widgetSetting->update([
-            'bot_enabled'      => true,
-            'bot_mode_query'   => false, // Query matching disabled
+            'bot_enabled' => true,
+            'bot_mode_query' => false, // Query matching disabled
             'bot_mode_options' => true,
         ]);
 
-        $visitorUuid = 'bot-test-visitor-noquery-' . uniqid();
+        $visitorUuid = 'bot-test-visitor-noquery-'.uniqid();
 
         // Send loose query containing keyword 'ongkir'
         $msgRes = $this->withHeaders([
             'X-Project-Key' => $this->apiKey->public_key,
-        ])->postJson("/api/v1/client/conversations/0/messages", [
+        ])->postJson('/api/v1/client/conversations/0/messages', [
             'visitor_uuid' => $visitorUuid,
             'content' => 'Berapa tarif ongkir ke Jakarta?',
-            'client_message_id' => 'msg-bot-noquery-' . uniqid(),
+            'client_message_id' => 'msg-bot-noquery-'.uniqid(),
         ]);
 
         $msgRes->assertStatus(201);
@@ -326,25 +330,25 @@ class BotEngineTest extends TestCase
     /**
      * Test 8: Bot strips options when bot_mode_options is disabled
      */
-    public function testBotStripsOptionsWhenModeOptionsDisabled()
+    public function test_bot_strips_options_when_mode_options_disabled()
     {
         $this->widgetSetting->update([
-            'bot_enabled'         => true,
-            'bot_mode_query'      => true,
-            'bot_mode_options'    => false, // Options disabled
+            'bot_enabled' => true,
+            'bot_mode_query' => true,
+            'bot_mode_options' => false, // Options disabled
             'bot_welcome_options' => [
-                ['label' => 'Tombol Test', 'value' => 'test']
-            ]
+                ['label' => 'Tombol Test', 'value' => 'test'],
+            ],
         ]);
 
-        $visitorUuid = 'bot-test-visitor-nooptions-' . uniqid();
+        $visitorUuid = 'bot-test-visitor-nooptions-'.uniqid();
 
         $msgRes = $this->withHeaders([
             'X-Project-Key' => $this->apiKey->public_key,
-        ])->postJson("/api/v1/client/conversations/0/messages", [
+        ])->postJson('/api/v1/client/conversations/0/messages', [
             'visitor_uuid' => $visitorUuid,
             'content' => 'Halo kak',
-            'client_message_id' => 'msg-bot-noopt-' . uniqid(),
+            'client_message_id' => 'msg-bot-noopt-'.uniqid(),
         ]);
 
         $msgRes->assertStatus(201);
@@ -361,7 +365,7 @@ class BotEngineTest extends TestCase
     /**
      * Test 9: Admin can save bot modes and dynamic welcome options
      */
-    public function testAdminCanSaveBotModesAndWelcomeOptions()
+    public function test_admin_can_save_bot_modes_and_welcome_options()
     {
         $welcomeOptions = [
             ['label' => '📦 Beli Kopi', 'value' => 'kopi'],
@@ -369,11 +373,11 @@ class BotEngineTest extends TestCase
         ];
 
         $res = $this->actingAs($this->adminUser)->put("/admin/integrations/{$this->project->id}/settings", [
-            'primary_color'       => '#222222',
-            'bot_enabled'         => '1',
-            'bot_mode_query'      => '1',
-            'bot_mode_options'    => '1',
-            'bot_name'            => 'SuperBot',
+            'primary_color' => '#222222',
+            'bot_enabled' => '1',
+            'bot_mode_query' => '1',
+            'bot_mode_options' => '1',
+            'bot_name' => 'SuperBot',
             'bot_welcome_message' => 'Halo dari SuperBot!',
             'bot_welcome_options' => json_encode($welcomeOptions),
         ]);
@@ -381,8 +385,8 @@ class BotEngineTest extends TestCase
         $res->assertRedirect();
 
         $this->widgetSetting->refresh();
-        $this->assertTrue((bool)$this->widgetSetting->bot_mode_query);
-        $this->assertTrue((bool)$this->widgetSetting->bot_mode_options);
+        $this->assertTrue((bool) $this->widgetSetting->bot_mode_query);
+        $this->assertTrue((bool) $this->widgetSetting->bot_mode_options);
         $this->assertEquals($welcomeOptions, $this->widgetSetting->bot_welcome_options);
         $this->assertEquals('SuperBot', $this->widgetSetting->bot_name);
     }
@@ -390,7 +394,7 @@ class BotEngineTest extends TestCase
     /**
      * Test 10: Admin can save hierarchical decision tree (bot_tree)
      */
-    public function testAdminCanSaveBotTreeStructure()
+    public function test_admin_can_save_bot_tree_structure()
     {
         $botTree = [
             [
@@ -404,18 +408,18 @@ class BotEngineTest extends TestCase
                         'label' => '1.1 Robusta',
                         'value' => '1.1',
                         'response' => 'Informasi kopi robusta...',
-                        'children' => []
-                    ]
-                ]
-            ]
+                        'children' => [],
+                    ],
+                ],
+            ],
         ];
 
         $res = $this->actingAs($this->adminUser)->put("/admin/integrations/{$this->project->id}/settings", [
-            'primary_color'       => '#222222',
-            'bot_enabled'         => '1',
-            'bot_mode_query'      => '1',
-            'bot_mode_options'    => '1',
-            'bot_tree'            => json_encode($botTree),
+            'primary_color' => '#222222',
+            'bot_enabled' => '1',
+            'bot_mode_query' => '1',
+            'bot_mode_options' => '1',
+            'bot_tree' => json_encode($botTree),
         ]);
 
         $res->assertRedirect();

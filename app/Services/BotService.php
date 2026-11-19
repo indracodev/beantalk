@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Conversation;
 use App\Models\Message;
-use App\Models\WidgetSetting;
 use Illuminate\Support\Str;
 
 class BotService
@@ -28,12 +27,12 @@ class BotService
 
         // 2. Cek status aktif di level website/project (global toggle)
         $project = $conversation->project;
-        if (!$project) {
+        if (! $project) {
             return false;
         }
 
         $widgetSetting = $project->widgetSetting;
-        if (!$widgetSetting || !$widgetSetting->bot_enabled) {
+        if (! $widgetSetting || ! $widgetSetting->bot_enabled) {
             return false;
         }
 
@@ -45,13 +44,13 @@ class BotService
      */
     public function processInboundMessage(Conversation $conversation, Message $inboundMessage): ?Message
     {
-        if (!$this->shouldHandle($conversation)) {
+        if (! $this->shouldHandle($conversation)) {
             return null;
         }
 
         $project = $conversation->project;
         $widgetSetting = $project ? $project->widgetSetting : null;
-        if (!$widgetSetting) {
+        if (! $widgetSetting) {
             return null;
         }
 
@@ -61,20 +60,20 @@ class BotService
         // 1. SMART HANDOFF: Cek apakah customer meminta berbicara dengan staf manusia / CS
         if ($this->isHandoffRequested($text)) {
             $conversation->update([
-                'is_bot_active'  => false,
+                'is_bot_active' => false,
                 'bot_handoff_at' => now(),
             ]);
 
-            $handoffText = "Baik, saya telah mengalihkan percakapan ini ke staf Customer Service kami. Mohon tunggu sebentar, staf kami akan segera membalas pesan Anda.";
+            $handoffText = 'Baik, saya telah mengalihkan percakapan ini ke staf Customer Service kami. Mohon tunggu sebentar, staf kami akan segera membalas pesan Anda.';
 
             $res = $this->conversationService->appendMessage($conversation, [
-                'sender_type'       => 'bot',
-                'sender_name'       => $botName,
-                'content'           => $handoffText,
-                'client_message_id' => 'bot_handoff_' . $inboundMessage->id . '_' . time(),
-                'metadata'          => [
-                    'is_bot'         => true,
-                    'is_handoff'     => true,
+                'sender_type' => 'bot',
+                'sender_name' => $botName,
+                'content' => $handoffText,
+                'client_message_id' => 'bot_handoff_'.$inboundMessage->id.'_'.time(),
+                'metadata' => [
+                    'is_bot' => true,
+                    'is_handoff' => true,
                     'inbound_msg_id' => $inboundMessage->id,
                 ],
             ]);
@@ -82,8 +81,8 @@ class BotService
             return $res['message'];
         }
 
-        $modeQuery = isset($widgetSetting->bot_mode_query) ? (bool)$widgetSetting->bot_mode_query : true;
-        $modeOptions = isset($widgetSetting->bot_mode_options) ? (bool)$widgetSetting->bot_mode_options : true;
+        $modeQuery = isset($widgetSetting->bot_mode_query) ? (bool) $widgetSetting->bot_mode_query : true;
+        $modeOptions = isset($widgetSetting->bot_mode_options) ? (bool) $widgetSetting->bot_mode_options : true;
 
         // 2. KEYWORD & FAQ MATCHING (Rule-Based Engine with Longest-Match Specificity Priority)
         // If mode_query is false and mode_options is false, bot rules matching is skipped.
@@ -94,7 +93,7 @@ class BotService
         if ($modeQuery || $modeOptions) {
             foreach ($rules as $rule) {
                 $keywords = [];
-                if (!empty($rule['keywords'])) {
+                if (! empty($rule['keywords'])) {
                     if (is_array($rule['keywords'])) {
                         $keywords = $rule['keywords'];
                     } elseif (is_string($rule['keywords'])) {
@@ -115,14 +114,14 @@ class BotService
 
                     $isMatch = false;
                     // If mode_query is false (Options only), only allow exact match (from option clicks or button values)
-                    if (!$modeQuery) {
+                    if (! $modeQuery) {
                         if ($text === $kwLower) {
                             $isMatch = true;
                         }
                     } else {
                         // mode_query is true: allow free-form phrase and keyword matching
                         if (mb_strlen($kwLower) <= 4 || is_numeric($kwLower)) {
-                            if ($text === $kwLower || preg_match('/(^|\s|[.,!?])' . preg_quote($kwLower, '/') . '($|\s|[.,!?])/iu', $text)) {
+                            if ($text === $kwLower || preg_match('/(^|\s|[.,!?])'.preg_quote($kwLower, '/').'($|\s|[.,!?])/iu', $text)) {
                                 $isMatch = true;
                             }
                         } else {
@@ -143,8 +142,8 @@ class BotService
                             $longestMatchLen = $matchWeight;
                             $bestMatch = [
                                 'response' => $responseTemplate,
-                                'keyword'  => $kwLower,
-                                'options'  => $modeOptions ? ($rule['options'] ?? null) : null,
+                                'keyword' => $kwLower,
+                                'options' => $modeOptions ? ($rule['options'] ?? null) : null,
                             ];
                         }
                     }
@@ -154,15 +153,15 @@ class BotService
 
         if ($bestMatch) {
             $res = $this->conversationService->appendMessage($conversation, [
-                'sender_type'       => 'bot',
-                'sender_name'       => $botName,
-                'content'           => $bestMatch['response'],
-                'client_message_id' => 'bot_rule_' . $inboundMessage->id . '_' . time(),
-                'metadata'          => [
-                    'is_bot'          => true,
+                'sender_type' => 'bot',
+                'sender_name' => $botName,
+                'content' => $bestMatch['response'],
+                'client_message_id' => 'bot_rule_'.$inboundMessage->id.'_'.time(),
+                'metadata' => [
+                    'is_bot' => true,
                     'matched_keyword' => $bestMatch['keyword'],
-                    'inbound_msg_id'  => $inboundMessage->id,
-                    'options'         => $bestMatch['options'],
+                    'inbound_msg_id' => $inboundMessage->id,
+                    'options' => $bestMatch['options'],
                 ],
             ]);
 
@@ -174,15 +173,15 @@ class BotService
             ->where('sender_type', 'bot')
             ->exists();
 
-        if (!$hasBotReplied && !empty($widgetSetting->bot_welcome_message)) {
+        if (! $hasBotReplied && ! empty($widgetSetting->bot_welcome_message)) {
             // Find welcome options dynamically from DB
             $welcomeOptions = null;
             if ($modeOptions) {
-                if (!empty($widgetSetting->bot_welcome_options) && is_array($widgetSetting->bot_welcome_options)) {
+                if (! empty($widgetSetting->bot_welcome_options) && is_array($widgetSetting->bot_welcome_options)) {
                     $welcomeOptions = $widgetSetting->bot_welcome_options;
-                } elseif (!empty($widgetSetting->bot_rules) && is_array($widgetSetting->bot_rules)) {
+                } elseif (! empty($widgetSetting->bot_rules) && is_array($widgetSetting->bot_rules)) {
                     foreach ($widgetSetting->bot_rules as $r) {
-                        if (($r['name'] ?? '') === 'Menu Utama' && !empty($r['options'])) {
+                        if (($r['name'] ?? '') === 'Menu Utama' && ! empty($r['options'])) {
                             $welcomeOptions = $r['options'];
                             break;
                         }
@@ -191,15 +190,15 @@ class BotService
             }
 
             $res = $this->conversationService->appendMessage($conversation, [
-                'sender_type'       => 'bot',
-                'sender_name'       => $botName,
-                'content'           => $widgetSetting->bot_welcome_message,
-                'client_message_id' => 'bot_welcome_' . $inboundMessage->id . '_' . time(),
-                'metadata'          => [
-                    'is_bot'         => true,
-                    'is_welcome'     => true,
+                'sender_type' => 'bot',
+                'sender_name' => $botName,
+                'content' => $widgetSetting->bot_welcome_message,
+                'client_message_id' => 'bot_welcome_'.$inboundMessage->id.'_'.time(),
+                'metadata' => [
+                    'is_bot' => true,
+                    'is_welcome' => true,
                     'inbound_msg_id' => $inboundMessage->id,
-                    'options'        => $welcomeOptions,
+                    'options' => $welcomeOptions,
                 ],
             ]);
 
@@ -207,15 +206,15 @@ class BotService
         }
 
         // 4. OFFLINE / FALLBACK AUTO-REPLY (Jika di luar jam online dan diset pesan offline)
-        if (!$widgetSetting->is_online && !empty($widgetSetting->bot_offline_message)) {
+        if (! $widgetSetting->is_online && ! empty($widgetSetting->bot_offline_message)) {
             $res = $this->conversationService->appendMessage($conversation, [
-                'sender_type'       => 'bot',
-                'sender_name'       => $botName,
-                'content'           => $widgetSetting->bot_offline_message,
-                'client_message_id' => 'bot_offline_' . $inboundMessage->id . '_' . time(),
-                'metadata'          => [
-                    'is_bot'         => true,
-                    'is_offline'     => true,
+                'sender_type' => 'bot',
+                'sender_name' => $botName,
+                'content' => $widgetSetting->bot_offline_message,
+                'client_message_id' => 'bot_offline_'.$inboundMessage->id.'_'.time(),
+                'metadata' => [
+                    'is_bot' => true,
+                    'is_offline' => true,
                     'inbound_msg_id' => $inboundMessage->id,
                 ],
             ]);
@@ -260,11 +259,11 @@ class BotService
 
             // Word boundary check for short words (<= 3 chars, e.g. 'ya', 'cs')
             if (mb_strlen($kwLower) <= 3) {
-                if ($text === $kwLower || preg_match('/(^|\s|[.,!?])' . preg_quote($kwLower, '/') . '($|\s|[.,!?])/iu', $text)) {
+                if ($text === $kwLower || preg_match('/(^|\s|[.,!?])'.preg_quote($kwLower, '/').'($|\s|[.,!?])/iu', $text)) {
                     return true;
                 }
             } else {
-                if (Str::contains($text, $kwLower) || preg_match('/(^|\s|[.,!?])' . preg_quote($kwLower, '/') . '($|\s|[.,!?])/iu', $text)) {
+                if (Str::contains($text, $kwLower) || preg_match('/(^|\s|[.,!?])'.preg_quote($kwLower, '/').'($|\s|[.,!?])/iu', $text)) {
                     return true;
                 }
             }
@@ -279,7 +278,7 @@ class BotService
     public function toggleBot(Conversation $conversation, bool $active): Conversation
     {
         $conversation->update([
-            'is_bot_active'  => $active,
+            'is_bot_active' => $active,
             'bot_handoff_at' => $active ? null : now(),
         ]);
 

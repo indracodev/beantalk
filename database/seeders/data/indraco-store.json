@@ -1,0 +1,2918 @@
+{
+    "welcome_message": "Halo! Terima kasih telah menghubungi *INDRACO Store*! 👋\nSilakan pilih menu bantuan di bawah ini:\n\n• *Pembelian Produk* (Kopi, Non Kopi, Bumbu Dapur)\n• *Informasi & Kerjasama* (Distributor, Reseller, Hadiah, Karir, Sponsor)\n• *Kendala Pembelian di Toko Online* (Checkout, Voucher, Akun, Komplain)\n\n💡 *Tips*: Anda dapat langsung mengklik tombol pilihan di bawah, mengetik kata kunci, atau klik *Bicara dengan CS* untuk terhubung langsung dengan tim kami. 😊🙏",
+    "welcome_options": [
+        {
+            "label": "📦 Pembelian Produk",
+            "value": "1"
+        },
+        {
+            "label": "🤝 Informasi & Kerjasama",
+            "value": "2"
+        },
+        {
+            "label": "🛠️ Kendala Belanja Online",
+            "value": "3"
+        },
+        {
+            "label": "💬 Bicara dengan CS",
+            "value": "YA"
+        }
+    ],
+    "rules": [
+        {
+            "name": "Menu Utama",
+            "keywords": [
+                "menu",
+                "menu utama",
+                "bantuan",
+                "help",
+                "mulai",
+                "start",
+                "halo",
+                "hai",
+                "pilihan"
+            ],
+            "response": "Halo! Terima kasih telah menghubungi *INDRACO Store*! 👋\r\nSilakan pilih menu bantuan di bawah ini:\r\n\r\n• *Pembelian Produk* (Kopi, Non Kopi, Bumbu Dapur)\r\n• *Informasi & Kerjasama* (Distributor, Reseller, Hadiah, Karir, Sponsor)\r\n• *Kendala Pembelian di Toko Online* (Checkout, Voucher, Akun, Komplain)\r\n\r\n💡 *Tips*: Anda dapat langsung mengklik tombol pilihan di bawah, mengetik kata kunci, atau klik *Bicara dengan CS* untuk terhubung langsung dengan tim kami. 😊🙏",
+            "options": [
+                {
+                    "label": "📦 Pembelian Produk",
+                    "value": "1"
+                },
+                {
+                    "label": "🤝 Informasi & Kerjasama",
+                    "value": "2"
+                },
+                {
+                    "label": "🛠️ Kendala Belanja Online",
+                    "value": "3"
+                },
+                {
+                    "label": "💬 Bicara dengan CS",
+                    "value": "YA"
+                }
+            ]
+        },
+        {
+            "name": "Menu 1 - Pembelian Produk",
+            "keywords": [
+                "1",
+                "menu 1",
+                "pembelian produk",
+                "kategori produk",
+                "produk",
+                "beli produk",
+                "katalog"
+            ],
+            "response": "📦 *Kategori Produk INDRACO Store*\r\nSilakan pilih kategori produk yang ingin Anda ketahui:\r\n\r\n• *Kopi* (Supresso, Tugu Buaya, Uang Emas, Rasa Sayang, CERIA, UCAFE)\r\n• *Produk Non Kopi* (Jaheku, BROCHOCO)\r\n• *Bumbu Dapur* (Intirasa)\r\n\r\nPilih salah satu kategori di bawah atau klik *Menu Utama* untuk kembali.",
+            "options": [
+                {
+                    "label": "☕ Kopi",
+                    "value": "1.1"
+                },
+                {
+                    "label": "🍵 Produk Non Kopi",
+                    "value": "1.2"
+                },
+                {
+                    "label": "🍳 Bumbu Dapur (Intirasa)",
+                    "value": "1.3"
+                },
+                {
+                    "label": "🔙 Menu Utama",
+                    "value": "MENU"
+                },
+                {
+                    "label": "💬 Bicara dengan CS",
+                    "value": "YA"
+                }
+            ]
+        },
+        {
+            "name": "Menu 1.1 - Kategori Kopi",
+            "keywords": [
+                "1.1",
+                "kopi",
+                "coffee",
+                "kategori kopi",
+                "brand kopi"
+            ],
+            "response": "☕ *Koleksi Brand Kopi INDRACO*\r\nPilih brand kopi di bawah ini untuk melihat series & variannya:\r\n\r\n• *Supresso Coffee* (Single Origin, Gourmet, The Collections, BaliCafe, World Blend)\r\n• *Tugu Buaya* (Kopi Special, Coffee Mix)\r\n• *Uang Emas* (Kopi Special)\r\n• *Rasa Sayang* (Gold Special, Super Quality, SP Bintang, Kopi Bali, Coffee Mix)\r\n• *CERIA* (Kopi Bubuk Halus)\r\n• *UCAFE* (Pure Coffee, Instant Coffee)\r\n\r\nKlik brand yang ingin Anda lihat atau kunjungi *www.indracostore.com*.",
+            "options": [
+                {
+                    "label": "☕ Supresso Coffee",
+                    "value": "Supresso"
+                },
+                {
+                    "label": "☕ Kopi Tugu Buaya",
+                    "value": "Tugu Buaya"
+                },
+                {
+                    "label": "☕ Kopi Uang Emas",
+                    "value": "Uang Emas"
+                },
+                {
+                    "label": "☕ Kopi Rasa Sayang",
+                    "value": "Rasa Sayang"
+                },
+                {
+                    "label": "☕ Kopi CERIA",
+                    "value": "CERIA"
+                },
+                {
+                    "label": "☕ UCAFE Coffee",
+                    "value": "UCAFE"
+                },
+                {
+                    "label": "🔙 Kategori Produk",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Menu 1.2 - Produk Non Kopi",
+            "keywords": [
+                "1.2",
+                "non kopi",
+                "produk non kopi",
+                "minuman non kopi"
+            ],
+            "response": "🍵 *Koleksi Produk Non Kopi INDRACO*\r\nPilih brand minuman di bawah ini:\r\n\r\n• *Jaheku Premium Ginger* (Minuman jahe hangat dengan bahan alami pilihan)\r\n• *BROCHOCO Chocolate Drink* (Minuman cokelat premium Original & Mix)\r\n\r\nPilih brand di bawah untuk melihat varian lengkapnya:",
+            "options": [
+                {
+                    "label": "🍵 Jaheku Premium Ginger",
+                    "value": "Jaheku"
+                },
+                {
+                    "label": "🍫 BROCHOCO Chocolate Drink",
+                    "value": "Brochoco"
+                },
+                {
+                    "label": "🔙 Kategori Produk",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Menu 1.3 - Bumbu Dapur",
+            "keywords": [
+                "1.3",
+                "bumbu dapur",
+                "bumbu",
+                "intirasa"
+            ],
+            "response": "🍳 *Koleksi Bumbu Dapur Intirasa*\r\nPilihan varian bumbu berkualitas untuk kebutuhan dapur dan usaha Anda:\r\n\r\n• Bumbu Tabur\r\n• Bumbu Tepung\r\n• Bumbu Pelengkap & Dasar (Santan Instan, dll)\r\n• Krimer Minuman & Masakan\r\n• Bumbu Instan, Kaldu, & Rendam\r\n\r\nKunjungi *www.intirasa.com* untuk katalog lengkap:",
+            "options": [
+                {
+                    "label": "Bumbu Tabur",
+                    "value": "Bumbu Tabur"
+                },
+                {
+                    "label": "Bumbu Tepung",
+                    "value": "Bumbu Tepung"
+                },
+                {
+                    "label": "Bumbu Dasar & Pelengkap",
+                    "value": "Bumbu Dasar"
+                },
+                {
+                    "label": "Krimer",
+                    "value": "Krimer"
+                },
+                {
+                    "label": "Bumbu Instan & Kaldu",
+                    "value": "Bumbu Instan"
+                },
+                {
+                    "label": "🔙 Kategori Produk",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Menu 2 - Informasi dan Kerjasama",
+            "keywords": [
+                "2",
+                "menu 2",
+                "informasi dan kerjasama",
+                "kerjasama",
+                "info kerjasama"
+            ],
+            "response": "🤝 *Informasi & Kerjasama INDRACO Group*\r\nSilakan pilih informasi yang Anda butuhkan:\r\n\r\n• *Informasi Distributor Terdekat* (Tersedia di 38 Provinsi)\r\n• *Cara Menjadi Reseller / Distributor*\r\n• *Informasi Penukaran Hadiah* (Karton Tugu Buaya & Voucher Toko Online)\r\n• *Lowongan Pekerjaan* (Karir di INDRACO Group)\r\n• *Penawaran Kerjasama* (Event, Manufaktur, Supplier, Creative/Endorsement)\r\n\r\nPilih salah satu opsi di bawah ini:",
+            "options": [
+                {
+                    "label": "📍 Info Distributor Terdekat",
+                    "value": "2.1"
+                },
+                {
+                    "label": "💼 Syarat Reseller / Distributor",
+                    "value": "2.2"
+                },
+                {
+                    "label": "🎁 Penukaran Hadiah Karton",
+                    "value": "2.3"
+                },
+                {
+                    "label": "💼 Lowongan Pekerjaan (Karir)",
+                    "value": "2.4"
+                },
+                {
+                    "label": "🤝 Sponsorship & Supplier",
+                    "value": "2.5"
+                },
+                {
+                    "label": "🔙 Menu Utama",
+                    "value": "MENU"
+                },
+                {
+                    "label": "💬 Bicara dengan CS",
+                    "value": "YA"
+                }
+            ]
+        },
+        {
+            "name": "Menu 2.1 - Info Distributor Terdekat",
+            "keywords": [
+                "2.1",
+                "distributor",
+                "distributor terdekat",
+                "agen terdekat",
+                "lokasi distributor",
+                "cari distributor",
+                "aceh",
+                "sumatra utara",
+                "sumatera utara",
+                "sumatra selatan",
+                "sumatera selatan",
+                "sumatra barat",
+                "sumatera barat",
+                "bengkulu",
+                "riau",
+                "kepulauan riau",
+                "kepri",
+                "jambi",
+                "lampung",
+                "bangka belitung",
+                "babel",
+                "kalimantan barat",
+                "kalbar",
+                "kalimantan timur",
+                "kaltim",
+                "kalimantan selatan",
+                "kalsel",
+                "kalimantan tengah",
+                "kalteng",
+                "kalimantan utara",
+                "kaltara",
+                "banten",
+                "dki jakarta",
+                "jakarta",
+                "jawa barat",
+                "jabar",
+                "jawa tengah",
+                "jateng",
+                "daerah istimewa yogyakarta",
+                "jogja",
+                "yogyakarta",
+                "jawa timur",
+                "jatim",
+                "surabaya",
+                "bali",
+                "nusa tenggara timur",
+                "ntt",
+                "nusa tenggara barat",
+                "ntb",
+                "gorontalo",
+                "sulawesi barat",
+                "sulbar",
+                "sulawesi tengah",
+                "sulteng",
+                "sulawesi utara",
+                "sulut",
+                "sulawesi tenggara",
+                "sultra",
+                "sulawesi selatan",
+                "sulsel",
+                "makassar",
+                "maluku utara",
+                "maluku",
+                "papua barat",
+                "papua",
+                "papua tengah",
+                "papua pegunungan",
+                "papua selatan",
+                "papua barat daya"
+            ],
+            "response": "📍 *Informasi Distributor Terdekat INDRACO*\r\n\r\nDistributor tersebar hampir di seluruh provinsi di Indonesia. Untuk memudahkan Anda menemukan distributor terdekat, mohon lengkapi data berikut:\r\n\r\n• *Nama*:\r\n• *Nomor WhatsApp Aktif*:\r\n• *Domisili (Kota/Provinsi)*:\r\n\r\nTim INDRACO akan segera menghubungi dan mengarahkan ke distributor terdekat.",
+            "options": [
+                {
+                    "label": "💬 Hubungkan ke Tim CS Sekarang",
+                    "value": "YA"
+                },
+                {
+                    "label": "💼 Syarat Menjadi Distributor/Reseller",
+                    "value": "2.2"
+                },
+                {
+                    "label": "🏠 Kembali ke Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Menu 2.2 - Syarat Reseller & Distributor",
+            "keywords": [
+                "2.2",
+                "reseller",
+                "syarat reseller",
+                "cara jadi reseller",
+                "keagenan",
+                "grosir",
+                "partai besar",
+                "beli banyak",
+                "syarat distributor"
+            ],
+            "response": "💼 *Syarat Menjadi Reseller / Pembelian Jumlah Banyak*\r\n\r\nTerima kasih atas minat Anda bermitra dengan INDRACO Group. Untuk menjadi reseller atau pembelian grosir, siapkan brand/produk yang diinginkan, lalu informasikan:\r\n\r\n• *Nama*:\r\n• *Nomor WhatsApp Aktif*:\r\n• *Domisili / Lokasi Usaha*:\r\n\r\nTim penjualan kami akan segera mengontak Anda untuk penawaran harga terbaik.",
+            "options": [
+                {
+                    "label": "💬 Hubungkan ke Sales / CS",
+                    "value": "YA"
+                },
+                {
+                    "label": "📍 Cek Distributor Terdekat",
+                    "value": "2.1"
+                },
+                {
+                    "label": "🏠 Kembali ke Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Menu 2.3 - Penukaran Hadiah & Voucher",
+            "keywords": [
+                "2.3",
+                "hadiah",
+                "tukar hadiah",
+                "karton",
+                "penukaran hadiah",
+                "tukar karton",
+                "tugu buaya 12g"
+            ],
+            "response": "🎁 *Program Penukaran Hadiah Karton Tugu Buaya 12g*\r\n\r\nKumpulkan kemasan karton Kopi Tugu Buaya 12g dan tukarkan dengan hadiah menarik:\r\n• 10 Lembar: 1 Sachet Kopi Tugu Buaya 12g\r\n• 50 Lembar: Piring Keramik\r\n• 100 Lembar: Mangkok Keramik\r\n• 250 Lembar: Kaos Eksklusif\r\n• 500 Lembar: Jam Dinding Cantik\r\n• 1.000 Lembar: Dispenser\r\n• 2.500 Lembar: Magic Com\r\n• 5.000 Lembar: Kulkas 1 Pintu\r\n• 10.000 Lembar: Mesin Cuci 2 Tabung\r\n• 17.000 Lembar: Smart TV 32 Inch!",
+            "options": [
+                {
+                    "label": "💬 Tanya Lokasi Penukaran ke CS",
+                    "value": "YA"
+                },
+                {
+                    "label": "☕ Info Varian Kopi Tugu Buaya",
+                    "value": "Tugu Buaya"
+                },
+                {
+                    "label": "🏠 Kembali ke Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Menu 2.4 - Lowongan Pekerjaan",
+            "keywords": [
+                "2.4",
+                "karir",
+                "career",
+                "lowongan",
+                "loker",
+                "recruitment",
+                "rekrutmen",
+                "kerja",
+                "lamar kerja"
+            ],
+            "response": "💼 *Karir & Lowongan Pekerjaan INDRACO Group*\r\n\r\nInformasi posisi terbuka (Manufaktur, Marketing, IT, Finance, HRD, dll) dapat diakses melalui:\r\n🌐 *www.indraco.com/career*\r\nAtau kirimkan CV & Portfolio Anda ke email:\r\n📧 *recruitment@indraco.com*",
+            "options": [
+                {
+                    "label": "💬 Tanya Info Karir ke Tim HR",
+                    "value": "YA"
+                },
+                {
+                    "label": "🏠 Kembali ke Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Menu 2.5 - Kerjasama Sponsorship & Supplier",
+            "keywords": [
+                "2.5",
+                "sponsor",
+                "proposal",
+                "supplier",
+                "creative",
+                "endorsement",
+                "partnership",
+                "kerjasama event",
+                "mesin",
+                "bahan baku"
+            ],
+            "response": "🤝 *Penawaran Kerjasama & Sponsorship*\r\n\r\n• *Event / Acara Kampus / Musik*: Kirim proposal ke *info@indraco.com* (Subjek: Event_Nama Acara_Kategori)\r\n• *Supplier Kopi / Jahe / Bahan Baku*: Kirim penawaran ke *info@indraco.com* (Subjek: Supplier_Nama Perusahaan_Kategori Item)\r\n• *Creative / Endorsement / Agency*: Kirim ke *dm@indraco.com* & *info@indraco.com* (Subjek: Creative_Nama Perusahaan_Kategori Item)",
+            "options": [
+                {
+                    "label": "💬 Hubungkan ke Tim Kerjasama",
+                    "value": "YA"
+                },
+                {
+                    "label": "🏠 Kembali ke Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Menu 3 - Kendala Pembelian di Toko Online",
+            "keywords": [
+                "3",
+                "menu 3",
+                "kendala",
+                "masalah",
+                "bantuan web",
+                "komplain",
+                "kendala belanja"
+            ],
+            "response": "🛠️ *Pusat Bantuan & Kendala Belanja Online*\r\nSilakan pilih kendala yang sedang Anda alami:",
+            "options": [
+                {
+                    "label": "🛒 Kendala Checkout & Keranjang",
+                    "value": "3.1"
+                },
+                {
+                    "label": "🚚 Kendala Pengiriman & Alamat",
+                    "value": "3.2"
+                },
+                {
+                    "label": "🏷️ Kendala Voucher Promo",
+                    "value": "3.3"
+                },
+                {
+                    "label": "💳 Kendala Pembayaran",
+                    "value": "3.4"
+                },
+                {
+                    "label": "🔐 Kendala Akun & Password",
+                    "value": "3.5"
+                },
+                {
+                    "label": "📦 Komplain Produk Rusak",
+                    "value": "3.6"
+                },
+                {
+                    "label": "💬 Bicara dengan CS",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Menu 3.1 - Kendala Checkout & Keranjang",
+            "keywords": [
+                "3.1",
+                "checkout",
+                "keranjang",
+                "tidak bisa checkout",
+                "gagal checkout",
+                "tambah keranjang",
+                "troli"
+            ],
+            "response": "🛒 *Panduan Kendala Checkout & Keranjang*\r\n\r\n1. Pastikan produk masih memiliki kuota stok (tidak Out of Stock).\r\n2. Pilih opsi varian produk (jika ada) sebelum menekan 'Beli Sekarang'.\r\n3. Buka Keranjang, pastikan data penerima & alamat tujuan sudah benar.\r\n4. Pilih opsi pengiriman dan metode pembayaran yang diinginkan.\r\n5. Tekan tombol 'Proses Untuk Pembayaran'.",
+            "options": [
+                {
+                    "label": "💬 Tombol Masih Tidak Merespon (Bantuan CS)",
+                    "value": "YA"
+                },
+                {
+                    "label": "💳 Kendala Pembayaran",
+                    "value": "3.4"
+                },
+                {
+                    "label": "🏠 Kembali ke Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Menu 3.2 - Kendala Pengiriman",
+            "keywords": [
+                "3.2",
+                "pengiriman",
+                "kurir",
+                "ekspedisi",
+                "ongkir",
+                "alamat",
+                "tidak bisa pilih ekspedisi"
+            ],
+            "response": "🚚 *Kendala Pilihan Pengiriman & Alamat*\r\n\r\n1. Pastikan kolom provinsi, kota/kabupaten, dan kode pos terisi sesuai.\r\n2. Pastikan alamat lengkap dan nomor WhatsApp aktif sudah benar.\r\n3. Jika pilihan ekspedisi tidak muncul, coba refresh browser Anda.",
+            "options": [
+                {
+                    "label": "💬 Hubungkan ke Tim CS",
+                    "value": "YA"
+                },
+                {
+                    "label": "🛒 Kendala Checkout",
+                    "value": "3.1"
+                },
+                {
+                    "label": "🏠 Kembali ke Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Menu 3.3 - Kendala Voucher Promo",
+            "keywords": [
+                "3.3",
+                "voucher",
+                "promo",
+                "diskon",
+                "kode voucher",
+                "kupon",
+                "voucher salah",
+                "voucher tidak berlaku"
+            ],
+            "response": "🏷️ *Kendala Penggunaan Voucher Promo*\r\n\r\n1. Pastikan kode voucher yang dimasukkan sesuai dengan huruf besar/kecilnya.\r\n2. Pastikan voucher Anda masih dalam periode penggunaan dan belum melewati batas penukaran.\r\n3. Jika voucher reguler toko, klik 'Makin Hemat Pakai Promo' atau 'Ambil Voucher' pada halaman keranjang.",
+            "options": [
+                {
+                    "label": "💬 Butuh Bantuan Verifikasi Voucher (CS)",
+                    "value": "YA"
+                },
+                {
+                    "label": "🛒 Kembali ke Info Checkout",
+                    "value": "3.1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Menu 3.4 - Kendala Pembayaran",
+            "keywords": [
+                "3.4",
+                "pembayaran",
+                "bayar",
+                "transfer",
+                "virtual account",
+                "va",
+                "qris",
+                "kode bayar",
+                "tidak bisa bayar"
+            ],
+            "response": "💳 *Kendala Pembayaran*\r\n\r\n1. Pastikan koneksi internet stabil saat proses pembayaran.\r\n2. Pastikan Anda telah memilih metode pembayaran yang tersedia (Manual Transfer, VA, Kartu Kredit, atau E-Wallet).\r\n3. Pastikan memeriksa kembali produk yang diorder, alamat, dan ekspedisi.",
+            "options": [
+                {
+                    "label": "💬 Konfirmasi Bukti Bayar ke CS",
+                    "value": "YA"
+                },
+                {
+                    "label": "🛒 Kendala Checkout",
+                    "value": "3.1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Menu 3.5 - Kendala Akun & Password",
+            "keywords": [
+                "3.5",
+                "akun",
+                "password",
+                "lupa password",
+                "tidak bisa login",
+                "login",
+                "ganti password"
+            ],
+            "response": "🔐 *Kendala Login & Akun*\r\n\r\n1. Pastikan Anda telah melakukan verifikasi email pada inbox email pendaftaran.\r\n2. Jika lupa kata sandi, klik 'Lupa Password' di pojok kanan atas halaman untuk reset kata sandi.\r\n3. Pastikan email dan password yang dimasukkan sudah sesuai.",
+            "options": [
+                {
+                    "label": "💬 Bantuan Verifikasi Akun (CS)",
+                    "value": "YA"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Menu 3.6 - Komplain Produk & Kritik Saran",
+            "keywords": [
+                "3.6",
+                "komplain",
+                "rusak",
+                "barang rusak",
+                "kritik",
+                "saran",
+                "cacat",
+                "retur",
+                "kemasan rusak",
+                "benda asing",
+                "produk rusak"
+            ],
+            "response": "📦 *Layanan Komplain & Kepuasan Pelanggan INDRACO*\r\n\r\nKepuasan Anda adalah prioritas kami. Jika terjadi kerusakan kemasan, produk tidak sesuai, atau terdapat saran layanan, mohon siapkan video unboxing dan kirimkan data:\r\n\r\n• *Nama Anda*:\r\n• *Produk yang dibeli*:\r\n• *Tanggal transaksi & nomor order*:\r\n\r\nTim kami akan segera memproses penggantian atau tindak lanjut keluhan Anda.",
+            "options": [
+                {
+                    "label": "💬 Laporkan ke Tim CS Sekarang",
+                    "value": "YA"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Brand Supresso",
+            "keywords": [
+                "supresso",
+                "supresso coffee"
+            ],
+            "response": "☕ *Supresso Coffee*\r\nKoleksi kopi premium Nusantara dan mancanegara dengan citarasa anggun dan kompleks. Pilih varian series Supresso di bawah ini:",
+            "options": [
+                {
+                    "label": "Single Origin",
+                    "value": "Single Origin"
+                },
+                {
+                    "label": "Gourmet Collections",
+                    "value": "Gourmet Collections"
+                },
+                {
+                    "label": "The Collections",
+                    "value": "The Collections"
+                },
+                {
+                    "label": "BaliCafe",
+                    "value": "BaliCafe"
+                },
+                {
+                    "label": "World Blend",
+                    "value": "World Blend"
+                },
+                {
+                    "label": "🔙 Kategori Kopi",
+                    "value": "1.1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Brand Tugu Buaya",
+            "keywords": [
+                "tugu buaya",
+                "kopi tugu buaya"
+            ],
+            "response": "☕ *Kopi Tugu Buaya (Sejak 1977)*\r\nKopi hitam bubuk legendaris dengan rasa pahit seimbang dan aroma khas, Nikmat Setiap Saat. Tersedia berbagai ukuran gramasi serta program penukaran hadiah karton.",
+            "options": [
+                {
+                    "label": "Kopi Special",
+                    "value": "Tugu Buaya Kopi Special"
+                },
+                {
+                    "label": "Coffee Mix",
+                    "value": "Tugu Buaya Coffee Mix"
+                },
+                {
+                    "label": "🎁 Info Tukar Hadiah Karton",
+                    "value": "2.3"
+                },
+                {
+                    "label": "🔙 Kategori Kopi",
+                    "value": "1.1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Brand Uang Emas",
+            "keywords": [
+                "uang emas",
+                "kopi uang emas"
+            ],
+            "response": "☕ *Kopi Uang Emas*\r\nKopi hitam bubuk dengan rasa mantap dan body tebal. Ampas kopi cepat turun saat diseduh, sangat cocok untuk stok di rumah maupun usaha warung kopi Anda.",
+            "options": [
+                {
+                    "label": "Kopi Special",
+                    "value": "Uang Emas Kopi Special"
+                },
+                {
+                    "label": "🔙 Kategori Kopi",
+                    "value": "1.1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Brand Rasa Sayang",
+            "keywords": [
+                "rasa sayang",
+                "kopi rasa sayang"
+            ],
+            "response": "☕ *Kopi Rasa Sayang - Citarasa Tempo Doeloe*\r\nDiracik dari biji kopi pilihan lintas generasi dengan rasa mantap dan harum khas Nusantara.",
+            "options": [
+                {
+                    "label": "Kopi Gold Special",
+                    "value": "Kopi Gold Special"
+                },
+                {
+                    "label": "Kopi Super Quality",
+                    "value": "Kopi Super Quality"
+                },
+                {
+                    "label": "Kopi SP Bintang",
+                    "value": "Kopi SP Bintang"
+                },
+                {
+                    "label": "Kopi Bali",
+                    "value": "Kopi Bali"
+                },
+                {
+                    "label": "Coffee Mix",
+                    "value": "Rasa Sayang Coffee Mix"
+                },
+                {
+                    "label": "🔙 Kategori Kopi",
+                    "value": "1.1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Brand CERIA",
+            "keywords": [
+                "ceria",
+                "kopi ceria"
+            ],
+            "response": "☕ *Kopi CERIA*\r\nKopi hitam bubuk dengan gilingan halus yang menghasilkan seduhan lebih nikmat dan ampas cepat turun. Nyaman dinikmati kapan saja.",
+            "options": [
+                {
+                    "label": "Kopi Bubuk Halus",
+                    "value": "Kopi Bubuk Halus"
+                },
+                {
+                    "label": "🔙 Kategori Kopi",
+                    "value": "1.1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Brand UCAFE",
+            "keywords": [
+                "ucafe",
+                "u cafe"
+            ],
+            "response": "☕ *UCAFE Coffee Series*\r\nPilihan kopi modern praktis dengan rasa tebal, aftertaste bersih, dan varian instan tanpa ampas.",
+            "options": [
+                {
+                    "label": "Pure Coffee Series",
+                    "value": "Pure Coffee Series"
+                },
+                {
+                    "label": "Instant Coffee Series",
+                    "value": "Instant Coffee Series"
+                },
+                {
+                    "label": "🔙 Kategori Kopi",
+                    "value": "1.1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Brand Jaheku",
+            "keywords": [
+                "jaheku",
+                "jahe",
+                "jaheku premium ginger"
+            ],
+            "response": "🍵 *Jaheku Premium Ginger*\r\nMinuman jahe alami yang dipadukan dengan bahan pendukung pilihan untuk menghangatkan dan menyegarkan tubuh dalam aktivitas sehari-hari.",
+            "options": [
+                {
+                    "label": "Jaheku Mix Series",
+                    "value": "Jaheku Mix"
+                },
+                {
+                    "label": "🔙 Produk Non Kopi",
+                    "value": "1.2"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Brand Brochoco",
+            "keywords": [
+                "brochoco",
+                "cokelat",
+                "brochoco chocolate drink"
+            ],
+            "response": "🍫 *BROCHOCO Chocolate Drink*\r\nMinuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas maupun dingin, atau sebagai kreasi bahan kue di rumah.",
+            "options": [
+                {
+                    "label": "BROCHOCO Original",
+                    "value": "BROCHOCO Original"
+                },
+                {
+                    "label": "BROCHOCO Mix",
+                    "value": "BROCHOCO Mix"
+                },
+                {
+                    "label": "🔙 Produk Non Kopi",
+                    "value": "1.2"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Supresso Coffee - Single Origin",
+            "keywords": [
+                "single origin",
+                "supresso coffee single origin"
+            ],
+            "response": "Biji kopi yang berasal dari seluruh penjuru daerah di Indonesia. Mulai Aceh, Toraja, hingga Flores Bajawa. Koleksi kopi single-origin dari Supresso menghasilkan citarasa premium dengan ciri khas yang anggun.Untuk mengetahui varian lengkapnya, kunjungi www.supresso.com atau ketik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Supresso Coffee - Gourmet Collections",
+            "keywords": [
+                "gourmet collections",
+                "supresso coffee gourmet collections"
+            ],
+            "response": "Diolah dari berbagai varian biji kopi di seluruh daerah Indonesia membentuk karakter yang unik nan seimbang dengan citarasa yang kompleks. Pilihan terbaik untuk semua variasi kopi.Untuk mengetahui varian lengkapnya, kunjungi www.supresso.com atau ketik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Supresso Coffee - The Collections",
+            "keywords": [
+                "the collections",
+                "supresso coffee the collections"
+            ],
+            "response": "Salah satu series yang dikhususkan untuk anda penikmat kopi yang sesungguhnya. Diolah dari bahan-bahan pilihan yang memiliki keunikan dari segi pembuatan, pengolahan, hingga proses serta hasil jadi dari biji kopi Peaberry hingga Luwak Coffee.Untuk mengetahui varian lengkapnya, kunjungi www.supresso.com atau ketik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Supresso Coffee - BaliCafe",
+            "keywords": [
+                "balicafe",
+                "supresso coffee balicafe"
+            ],
+            "response": "Series khusus biji kopi asli dari pulau Dewata. Varian kopi nikmat dan unik serta sekaligus menjadi sudut rekreasi anda secara langsung dari rumah.Untuk mengetahui varian lengkapnya, kunjungi www.supresso.com atau ketik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Supresso Coffee - World Blend",
+            "keywords": [
+                "world blend",
+                "supresso coffee world blend"
+            ],
+            "response": "Berasal dari mancanegara, berbagai biji kopi yang patut anda coba. Sensasi hasil bumi dari setiap dataran di belahan dunia menuju cangkir dalam genggaman anda.Untuk mengetahui varian lengkapnya, kunjungi www.supresso.com atau ketik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Tugu Buaya - Kopi Special",
+            "keywords": [
+                "kopi special",
+                "tugu buaya kopi special"
+            ],
+            "response": "Terkenal sejak 1977 karena rasa pahit yang seimbang serta aroma-nya yang khas, membuatnya Nikmat Setiap Saat. Kopi hitam bubuk ini memiliki berbagai varian ukuran berat atau gramasi yang bisa disesuaikan dengan kebutuhan anda setiap hari.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Tugu Buaya - Coffee Mix",
+            "keywords": [
+                "coffee mix",
+                "tugu buaya coffee mix"
+            ],
+            "response": "Campuran kopi dengan bahan lain yang mengakomodasi kebutuhan setiap penggemar Kopi Tugu Buaya untuk merasakan nikmatnya sensasi kopi dengan aroma dan variasi berbeda.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Uang Emas - Kopi Special",
+            "keywords": [
+                "kopi special",
+                "uang emas kopi special"
+            ],
+            "response": "Kopi hitam bubuk dengan rasa yang pahit dengan body lebih mantap. Ampas kopi cepat turun saat di seduh membuat Kopi Uang Emas menjadi produk yang cocok untuk stok di rumah maupun untuk bisnis warung kopi anda!Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Rasa Sayang - Kopi Gold Special",
+            "keywords": [
+                "kopi gold special",
+                "rasa sayang kopi gold special"
+            ],
+            "response": "Diracik dari biji kopi pilihan dengan rasa yang mantap dan harum tercipta sajian kopi lintas generasi dalam Citarasa Tempo Doeloe Kopi Rasa SayangUntuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Rasa Sayang - Kopi Super Quality",
+            "keywords": [
+                "kopi super quality",
+                "rasa sayang kopi super quality"
+            ],
+            "response": "Biji kopi berkualitas tinggi yang diproses dari biji kopi pilihan, menciptakan rasa yang halus, mantap nan berciri khas di setiap isapan cangkir Kopi Rasa Sayang andaUntuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Rasa Sayang - Kopi SP Bintang",
+            "keywords": [
+                "kopi sp bintang",
+                "rasa sayang kopi sp bintang"
+            ],
+            "response": "Edisi spesial dari kopi hitam bubuk Rasa Sayang, dengan rasa pahit mantap yang berbeda dari yang lain untuk anda pencinta serta penjelajah rasa kopi khas Nusantara.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Rasa Sayang - Kopi Bali",
+            "keywords": [
+                "kopi bali",
+                "rasa sayang kopi bali"
+            ],
+            "response": "Berasal dari biji kopi asli Bali, diproses dan dikemas ke dalam citarasa khas pulau Dewata untuk disajikan dalam hangatnya suasana dengan sentuhan kontemporer.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Rasa Sayang - Coffee Mix",
+            "keywords": [
+                "coffee mix",
+                "rasa sayang coffee mix"
+            ],
+            "response": "Berbahan dasar kopi dan bahan lain pilihan tercipta series Coffee Mix khas Kopi Rasa Sayang dengan tetap mempertahankan sisi klasik ala Citarasa Tempo Doeloe.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "CERIA - Kopi Bubuk Halus",
+            "keywords": [
+                "kopi bubuk halus",
+                "ceria kopi bubuk halus"
+            ],
+            "response": "Kopi Ceria merupakan kopi hitam bubuk dengan gilingan halus yang menghasilkan seduhan lebih nikmat. Ampasnya cepat turun setelah diseduh, sehingga kopi lebih nyaman dinikmati kapan saja. Cocok untuk stok di rumah maupun untuk kebutuhan bisnis warung kopi Anda!Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung dengan tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "UCAFE - Pure Coffee Series",
+            "keywords": [
+                "pure coffee series",
+                "ucafe pure coffee series"
+            ],
+            "response": "Diracik khusus untuk memberi rasa halus, aftertaste yang bersih, dengan aroma khas dan rasa kopi yang kuat. Series dari UCAFE yang cocok bagi anda penggemar tebalnya rasa kopi untuk konsumsi sehari-hari.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "UCAFE - Instant Coffee Series",
+            "keywords": [
+                "instant coffee series",
+                "ucafe instant coffee series"
+            ],
+            "response": "Perpaduan antara kopi, krimer, dengan bahan lain yang dikreasikan dalam beberapa varian kopi instan berkarakter serta tanpa ampas yang siap untuk dinikmati kapanpun dan dimanapun.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Jaheku Premium Ginger - Mix",
+            "keywords": [
+                "mix",
+                "jaheku premium ginger mix"
+            ],
+            "response": "Minuman jahe yang dipadukan dengan bahan pendukung lainnya untuk menjaga tubuh tetap hangat dalam aktivitas setiap harinya.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "BROCHOCO Chocolate Drink - Original",
+            "keywords": [
+                "original",
+                "brochoco chocolate drink original"
+            ],
+            "response": "Rasa sesungguhnya dari minuman cokelat yang bisa meleleh dimulut saat diseduh. Cocok untuk dinikmati dalam keadaan panas maupun dinginatau bisa anda gunakan sebagai bahan pembuatan kue ala-ala di rumah. Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "BROCHOCO Chocolate Drink - Mix",
+            "keywords": [
+                "mix",
+                "brochoco chocolate drink mix"
+            ],
+            "response": "Minuman cokelat yang di-mix dengan berbagai macam bahan yang unik untuk melengkapi kepuasan anda menikmati variasi minuman cokelat.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Intirasa - Bumbu Tabur",
+            "keywords": [
+                "bumbu tabur",
+                "intirasa bumbu tabur"
+            ],
+            "response": "Untuk mengetahui varian lengkapnya, kunjungi www.intirasa.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Intirasa - Bumbu Tepung",
+            "keywords": [
+                "bumbu tepung",
+                "intirasa bumbu tepung"
+            ],
+            "response": "Untuk mengetahui varian lengkapnya, kunjungi www.intirasa.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Intirasa - Bumbu Pelengkap",
+            "keywords": [
+                "bumbu pelengkap",
+                "intirasa bumbu pelengkap"
+            ],
+            "response": "Untuk mengetahui varian lengkapnya, kunjungi www.intirasa.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Intirasa - Krimer",
+            "keywords": [
+                "krimer",
+                "intirasa krimer"
+            ],
+            "response": "Untuk mengetahui varian lengkapnya, kunjungi www.intirasa.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Intirasa - Bumbu Dasar",
+            "keywords": [
+                "bumbu dasar",
+                "intirasa bumbu dasar"
+            ],
+            "response": "Bahan penting dalam segala masakan maupun minuman yang akan dibuat. Mulai dari santan instan hingga bahan dasar lain yang memudahkan aktivitas dapur dan usaha anda.Untuk mengetahui varian lengkapnya, kunjungi www.intirasa.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Intirasa - Bumbu Instan",
+            "keywords": [
+                "bumbu instan",
+                "intirasa bumbu instan"
+            ],
+            "response": "Untuk mengetahui varian lengkapnya, kunjungi www.intirasa.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Intirasa - Bumbu Kaldu",
+            "keywords": [
+                "bumbu kaldu",
+                "intirasa bumbu kaldu"
+            ],
+            "response": "Untuk mengetahui varian lengkapnya, kunjungi www.intirasa.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Intirasa - Bumbu Rendam",
+            "keywords": [
+                "bumbu rendam",
+                "intirasa bumbu rendam"
+            ],
+            "response": "Untuk mengetahui varian lengkapnya, kunjungi www.intirasa.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Cara Menjadi Reseller/Distributor - Syarat Menjadi Reseller/ Pembelian dalam jumlah banyak",
+            "keywords": [
+                "syarat menjadi reseller/ pembelian dalam jumlah banyak",
+                "cara menjadi reseller/distributor syarat menjadi reseller/ pembelian dalam jumlah banyak"
+            ],
+            "response": "Terima kasih atas kepercayaan anda dengan INDRACO Group. Untuk menjadi Reseller/ pembelian dalam jumlah banyak anda cukup mempersiapkan brand dan produk apa yang anda inginkan kemudian mohon bantuannya untuk melengkapi informasi berikutNama:Nomor WhatsApp Aktif:Domisili:Nantinya, tim INDRACO dari departemen terkait akan menghubungi, mengarahkan, serta menjawab semua pertanyaan seputar menjadi Reseller/ pembelian dalam jumlah banyak secara langsung.Jika masih ada pertanyaan lebih lanjut ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Cara Menjadi Reseller/Distributor - Syarat Menjadi Distributor",
+            "keywords": [
+                "syarat menjadi distributor",
+                "cara menjadi reseller/distributor syarat menjadi distributor"
+            ],
+            "response": "Terima kasih atas kepercayaan anda dengan INDRACO Group. Untuk menjadi Reseller/ pembelian dalam jumlah banyak anda cukup mempersiapkan brand dan produk apa yang anda inginkan kemudian mohon bantuannya untuk melengkapi informasi berikutNama:Nomor WhatsApp Aktif:Domisili:Nantinya, tim INDRACO dari departemen terkait akan menghubungi, mengarahkan, serta memberikan informasi syarat dan ketentuan menjadi distributor brand dan produk INDRACO secara langsung.Jika masih ada pertanyaan lebih lanjut ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Penukaran Karton Tugu Buaya 12g - Cara Mendapatkan Hadiah",
+            "keywords": [
+                "cara mendapatkan hadiah",
+                "penukaran karton tugu buaya 12g cara mendapatkan hadiah"
+            ],
+            "response": "Terima kasih karena telah menjadi konsumen setia Kopi Tugu Buaya! Berikut cara mendapatkan hadiah Kopi Tugu Buaya 12g1. Kumpulkan sejumlah potongan karton Kopi Tugu Buaya 12g (Desain lama/ Desain Baru)2. Hitung berapa jumlah karton yang anda miliki untuk ditukarkan dengan hadiah sesuai daftar hadiah yang tertera pada karton3. Tukarkan ke lokasi terdekat dengan anda saat ini.Jika masih ada pertanyaan lebih lanjut ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Penukaran Karton Tugu Buaya 12g - Tempat Penukaran Hadiah",
+            "keywords": [
+                "tempat penukaran hadiah",
+                "penukaran karton tugu buaya 12g tempat penukaran hadiah"
+            ],
+            "response": "Terima kasih karena telah menjadi konsumen setia Kopi Tugu Buaya! Untuk memudahkan anda dalam menemukan tempat penukaran hadiah terdekat dengan lokasi saat ini, mohon bantuannya untuk memberikan informasi DOMISILI saat ini dengan menulis Nama Kota/Kabupaten_TB *contoh Surabaya_TB.Jika masih ada pertanyaan lebih lanjut ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Penukaran Karton Tugu Buaya 12g - Daftar Hadiah Tugu Buaya 12g",
+            "keywords": [
+                "daftar hadiah tugu buaya 12g",
+                "penukaran karton tugu buaya 12g daftar hadiah tugu buaya 12g"
+            ],
+            "response": "Terima kasih karena telah menjadi konsumen setia Kopi Tugu Buaya! Berikut jumlah penukaran dan daftar hadiah Kopi Tugu Buaya 12g Papan10 Lembar: 1 Gelas Tangkai20 Lembar: 1 Mug30 Lembar: 1 Piring Keramik75 Lembar: 1 Botol Minum150 Lembar: 1 Sealware Set300 Lembar: 1 Rantang Susun 4500 Lembar: 1 Emergency Lamp600 Lembar: 1 Cookware Set800 Lembar: 1 Kipas Angin1.000 Lembar: 1 Magic Com2.000 Lembar: 1 Handphone Android3.000 Lembar: 1 Tablet Android4.000 Lembar: 1 TV LED 32 Inch6.000 Lembar: 1 Kulkas 2 Pintu10.000 Lembar: 1 Laptop 14 Inch17.000 Lembar: 1 Sepeda MotorJika masih ada pertanyaan lebih lanjut ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Penggunaan Voucher Toko Online - Tata Cara Penukaran Voucher",
+            "keywords": [
+                "tata cara penukaran voucher",
+                "penggunaan voucher toko online tata cara penukaran voucher"
+            ],
+            "response": "Terima kasih karena telah menjadi konsumen setia produk dari semua brand di INDRACO Store! Berikut tata cara penukaran voucher toko online INDRACO Store:1. Siapkan kode unik voucher2. Ketik kode unik pada bagian \"masukkan voucher\" sebelum checkout atau sebelum pembayaran pesanan3. Selamat voucher anda berhasil digunakan*catatan: jika voucher tidak bisa digunakan silakan cek tanggal kadaluarsa voucher atau pastikan kode unik sudah dimasukkan dengan sesuai.Jika masih ada pertanyaan lebih lanjut ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Penggunaan Voucher Toko Online - Syarat dan Ketentuan Penggunaan Voucher",
+            "keywords": [
+                "syarat dan ketentuan penggunaan voucher",
+                "penggunaan voucher toko online syarat dan ketentuan penggunaan voucher"
+            ],
+            "response": "Terima kasih karena telah menjadi konsumen setia produk dari semua brand di INDRACO Store! Berikut syarat dan ketentuan penggunaan voucher di INDRACO Store1. Pastikan anda sudah mendaftar dan melakukan verifikasi akun2. Pastikan kode voucher belum pernah digunakan sebelumnya3. Pastikan anda telah memenuhi ketentuan penggunaan voucher4. Pastikan voucher masih berlaku sesuai tanggal periode penukaranJika masih ada pertanyaan lebih lanjut ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Manufaktur - Research, Development & Innovation",
+            "keywords": [
+                "research, development & innovation",
+                "manufaktur research, development & innovation"
+            ],
+            "response": "Terima kasih atas kepercayaan anda dengan INDRACO Group. Perihal lowongan pekerjaan, saat ini bisa anda akses pada laman karir di tautan www.indraco.comJika masih ada pertanyaan lebih lanjut ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Event/Acara - Kampus",
+            "keywords": [
+                "kampus",
+                "event/acara kampus"
+            ],
+            "response": "Terima kasih atas kepercayaan anda dengan INDRACO Group. Perihal penawaran kerjasama event/ acara, anda dapat mengirimkan informasi keterangan, detail dan proposal acara pada email info@indraco.com dan salting@indraco.com dengan subject \"Kota/Kab_event_kategori acara\"Jika masih ada pertanyaan lebih lanjut ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Manufaktur - Mesin",
+            "keywords": [
+                "mesin",
+                "manufaktur mesin"
+            ],
+            "response": "Terima kasih atas kepercayaan anda dengan INDRACO Group. Perihal penawaran kerjasama manufaktur, anda dapat mengirimkan informasi keterangan, detail credential, atau proposal acara pada email info@indraco.com dengan subject \"Manufaktur_nama perusahaan anda_kategori item (mesin/ alat berat/ dll)\"Jika masih ada pertanyaan lebih lanjut ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Supplier - Kopi",
+            "keywords": [
+                "kopi",
+                "supplier kopi"
+            ],
+            "response": "Terima kasih atas kepercayaan anda dengan INDRACO Group. Perihal penawaran kerjasama sebagai supplier, anda dapat mengirimkan informasi keterangan, detail credential, atau proposal pada email info@indraco.com dengan subject \"Supplier_nama perusahaan anda_kategori item (kopi/ jahe/ dll)\"Jika masih ada pertanyaan lebih lanjut ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Creative - Endorsement",
+            "keywords": [
+                "endorsement",
+                "creative endorsement"
+            ],
+            "response": "Terima kasih atas kepercayaan anda dengan INDRACO Group. Perihal penawaran kerjasama di bidang creative, anda dapat mengirimkan informasi keterangan, detail credential, atau proposal penawaran pada email dm@indraco.com dan info@indraco.com dengan subject \"Creative_nama perusahaan anda_kategori item (agency socmed/ PH/ dll)\"Jika masih ada pertanyaan lebih lanjut ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Kendala Checkout - Tidak bisa checkout produk yang dipilih",
+            "keywords": [
+                "tidak bisa checkout produk yang dipilih",
+                "kendala checkout tidak bisa checkout produk yang dipilih"
+            ],
+            "response": "Terima kasih atas kepercayaannya berbelanja di INDRACO Store! Mohon bantuannya untuk mengikuti cara berikut ini:1. Pada halaman produk, pilih Beli2. Pada halaman detail produk pilih opsi variasi yang diinginkan (jika ada)3. Pilih Beli Sekarang4. Buka Keranjang maka tampil produk yang akan dibeli5. Gunakan Voucher INDRACO Store (jika ada)6. Pilih Proses Order dengan mengisikan data penerima dan alamat tujuan7. Pilih Opsi Pengiriman yang diinginkan8. Pilih Metode Pembayaran yang diinginkan9. Proses Untuk Pembayaran.Jika masih ada pertanyaan lebih lanjut ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Kendala Checkout - Tidak bisa mengakses tombol checkout",
+            "keywords": [
+                "tidak bisa mengakses tombol checkout",
+                "kendala checkout tidak bisa mengakses tombol checkout"
+            ],
+            "response": "Terima kasih atas kepercayaannya berbelanja di INDRACO Store! Mohon bantuannya untuk memeriksa poin berikut ini:1. Data penerima dan alamat tujuan sudah diisi2. Opsi Pengiriman yang diinginkan sudah dipilih3. Metode Pembayaran yang diinginkan sudah dipilih4. Sudah menekan tombol Proses Untuk Pembayaran.Jika masih ada pertanyaan lebih lanjut ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Kendala Tambah Produk Ke Keranjang - Tidak bisa menambah quota produk",
+            "keywords": [
+                "tidak bisa menambah quota produk",
+                "kendala tambah produk ke keranjang tidak bisa menambah quota produk"
+            ],
+            "response": "Terima kasih atas kepercayaannya berbelanja di INDRACO Store! Mohon bantuannya untuk mengikuti cara berikut ini:1. Pada halaman produk, pilih Beli2. Pada halaman detail produk pilih Beli Sekarang atau pilih opsi variasi pilihan (jika ada)3. Buka KeranjangJika masih ada pertanyaan lebih lanjut ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Kendala Tambah Produk Ke Keranjang - Produk masih ada namun tidak bisa masuk keranjang",
+            "keywords": [
+                "produk masih ada namun tidak bisa masuk keranjang",
+                "kendala tambah produk ke keranjang produk masih ada namun tidak bisa masuk keranjang"
+            ],
+            "response": "Terima kasih atas kepercayaannya berbelanja di INDRACO Store! Mohon bantuannya untuk memeriksa poin berikut ini:1. Pastikan anda sudah memilih produk2. Pastikan anda memilih variasi pilihan (Jika ada)3. Pastikan produk yang anda beli tidak berstatus (habis/ out of stock)Jika masih ada pertanyaan lebih lanjut ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Kendala Pilihan Pengiriman - Tidak bisa memilih ekspedisi",
+            "keywords": [
+                "tidak bisa memilih ekspedisi",
+                "kendala pilihan pengiriman tidak bisa memilih ekspedisi"
+            ],
+            "response": "Terima kasih atas kepercayaannya berbelanja di INDRACO Store! Mohon bantuannya untuk mengikuti cara berikut ini:1. Pada halaman checkout, Isikan data penerima dan detail pengiriman2. Pilih Opsi Pengiriman yang diinginkan.Jika masih ada pertanyaan lebih lanjut ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Kendala Pilihan Pengiriman - Tidak bisa memasukkan alamat lengkap",
+            "keywords": [
+                "tidak bisa memasukkan alamat lengkap",
+                "kendala pilihan pengiriman tidak bisa memasukkan alamat lengkap"
+            ],
+            "response": "Terima kasih atas kepercayaannya berbelanja di INDRACO Store! Mohon bantuannya untuk memeriksa poin berikut ini:1. Pastikan anda sudah menulis data alamat pada kolom yang disediakan dengan benar2. Pastikan anda sudah memilih opsi pengirimanJika masih ada pertanyaan lebih lanjut ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Kendala Penggunaan Voucher - Voucher Tertulis Salah/ Tidak Berlaku",
+            "keywords": [
+                "voucher tertulis salah/ tidak berlaku",
+                "kendala penggunaan voucher voucher tertulis salah/ tidak berlaku"
+            ],
+            "response": "Terima kasih atas kepercayaannya berbelanja di INDRACO Store! Mohon bantuannya untuk memeriksa poin berikut ini:1. Pastikan voucher yang anda masukkan pada kolom isian voucher sudah sesuai dengan yang tertera2. Pastikan voucher anda masih dalam masa periode penggunaanatau jika voucher anda adalah voucher reguler, mohon melakukan langkah berikut:1. Pada halaman keranjang pilih Makin hemat pakai promo atau Ambil voucher2. Pilih Voucher yang tersediaJika terdapat kendala lain ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Kendala Penggunaan Voucher - Batas penggunaan voucher telah habis namun masih dalam periode penukaran",
+            "keywords": [
+                "batas penggunaan voucher telah habis namun masih dalam periode penukaran",
+                "kendala penggunaan voucher batas penggunaan voucher telah habis namun masih dalam periode penukaran"
+            ],
+            "response": "Terima kasih atas kepercayaannya berbelanja di INDRACO Store! Mohon bantuannya untuk memeriksa poin berikut ini:1. Pastikan voucher yang anda masukkan pada kolom isian voucher tidak pernah digunakan sebelumnya2. Pastikan voucher yang anda gunakan merupakan voucher resmi dari INDRACO StoreJika terdapat kendala lain ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Kendala Produk - Produk yang dicari tidak ada",
+            "keywords": [
+                "produk yang dicari tidak ada",
+                "kendala produk produk yang dicari tidak ada"
+            ],
+            "response": "Terima kasih atas kepercayaannya berbelanja di INDRACO Store! Mohon bantuannya untuk memeriksa pada halaman utama > pilih filter Kategori, Merek dan Kemasan.Jika terdapat kendala lain ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Kendala Produk - Produk yang dibeli berbeda dengan yang di terima",
+            "keywords": [
+                "produk yang dibeli berbeda dengan yang di terima",
+                "kendala produk produk yang dibeli berbeda dengan yang di terima"
+            ],
+            "response": "Terima kasih atas kepercayaannya berbelanja di INDRACO Store! Mohon bantuannya untuk memeriksa poin berikut ini:1. Pastikan produk yang anda pilih pada riwayat pesanan merupakan brand, produk, varian, dan gramasi yang sama dengan yang anda terima2. Pastikan memeriksa pesan terbaru dari tim admin INDRACO Store atau catatan ketentuan pembelian salah satu produk di INDRACO StoreJika terdapat kendala lain ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Kendala Pembayaran - Tidak bisa melanjutkan ke pembayaran setelah memilih pengiriman",
+            "keywords": [
+                "tidak bisa melanjutkan ke pembayaran setelah memilih pengiriman",
+                "kendala pembayaran tidak bisa melanjutkan ke pembayaran setelah memilih pengiriman"
+            ],
+            "response": "Terima kasih atas kepercayaannya berbelanja di INDRACO Store! Mohon bantuannya untuk memeriksa poin berikut ini:1. Pastikan koneksi internet anda dalam keadaan stabil2. Pastikan memeriksa produk yang diorder, isian alamat pengiriman, serta ekspedisi sudah terpilih dan terisi dengan sesuaiJika terdapat kendala lain ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Kendala Pembayaran - Tidak menerima kode bayar",
+            "keywords": [
+                "tidak menerima kode bayar",
+                "kendala pembayaran tidak menerima kode bayar"
+            ],
+            "response": "Terima kasih atas kepercayaannya berbelanja di INDRACO Store! Mohon bantuannya untuk memeriksa poin berikut ini:1. Pastikan anda memilih opsi pembayaran yang disediakan (manual bank transfer atau virtual account/ credit card/ dompet digital2. Pastikan memeriksa produk yang diorder, isian alamat pengiriman, serta ekspedisi sudah terpilih dan terisi dengan sesuaiJika terdapat kendala lain ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Kendala Pembayaran - Tidak menemukan rekening bayar",
+            "keywords": [
+                "tidak menemukan rekening bayar",
+                "kendala pembayaran tidak menemukan rekening bayar"
+            ],
+            "response": "Terima kasih atas kepercayaannya berbelanja di INDRACO Store! Mohon bantuannya untuk memeriksa poin berikut ini:1. Sudah melakukan langkah akhir, proses pembayaran2. Pada halaman pembayaran terakhir, anda akan melihat nomor rekening, jumlah order, dan alamat kirim3. Jika pada bagian ini anda belum menemukannya, mohon periksa pada inbox email andaJika terdapat kendala lain ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Kendala Akun - Tidak bisa login dengan akun yang sudah terdaftar",
+            "keywords": [
+                "tidak bisa login dengan akun yang sudah terdaftar",
+                "kendala akun tidak bisa login dengan akun yang sudah terdaftar"
+            ],
+            "response": "Terima kasih atas kepercayaannya berbelanja di INDRACO Store! Mohon bantuannya untuk memeriksa poin berikut ini:1. Pastikan anda sudah melakukan verifikasi email pada inbox email yang digunakan untuk mendaftar2. Pastikan email dan password yang anda gunakan sudah sesuaiJika terdapat kendala lain ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Kendala Akun - Kendala lupa password",
+            "keywords": [
+                "kendala lupa password",
+                "kendala akun kendala lupa password"
+            ],
+            "response": "Terima kasih atas kepercayaannya berbelanja di INDRACO Store! Mohon bantuannya untuk melakukan langkah berikut:1. Klik/ tap ikon login pada bagian pojok kanan atas halaman2. Klik/ Tap Lupa password lalu ikuti langkah yang sudah disediakanJika terdapat kendala lain ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Kendala Akun - Aktivitas mencurigakan",
+            "keywords": [
+                "aktivitas mencurigakan",
+                "kendala akun aktivitas mencurigakan"
+            ],
+            "response": "Terima kasih atas kepercayaannya berbelanja di INDRACO Store! Mohon bantuannya untuk memeriksa poin berikut ini:1. Pastikan anda tidak pernah membocorkan alamat email dan password kepada orang asing2. Pastikan device yang anda gunakan untuk login tidak sedang digunakan oleh orang lainJika terdapat kendala lain ketik YA untuk berkomunikasi langsung dengan tim admin. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Kritik dan Saran - Pengemasan atau packing orderan",
+            "keywords": [
+                "pengemasan atau packing orderan",
+                "kritik dan saran pengemasan atau packing orderan"
+            ],
+            "response": "Terima kasih atas kepercayaan anda berbelanja di INDRACO Store. Demi meningkatkan performa pelayanan agar semakin baik kedepannya, kami memohon bantuan anda untuk memberikan kritik dan saran kepada kami.Balas pesan ini dengan format berikut:PENGEMASAN - Sampaikan kritik dan saran anda.",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Kritik dan Saran - Produk dan hadiah di dalam kemasan atau packing",
+            "keywords": [
+                "produk dan hadiah di dalam kemasan atau packing",
+                "kritik dan saran produk dan hadiah di dalam kemasan atau packing"
+            ],
+            "response": "Terima kasih atas kepercayaan anda berbelanja di INDRACO Store. Demi meningkatkan performa pelayanan agar semakin baik kedepannya, kami memohon bantuan anda untuk memberikan kritik dan saran kepada kami.Balas pesan ini dengan format berikut:PRODUK DAN HADIAH - Sampaikan kritik dan saran anda.",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Kritik dan Saran - Gramatur, isi, dan berat produk",
+            "keywords": [
+                "gramatur, isi, dan berat produk",
+                "kritik dan saran gramatur, isi, dan berat produk"
+            ],
+            "response": "Terima kasih atas kepercayaan anda berbelanja di INDRACO Store. Demi meningkatkan performa pelayanan agar semakin baik kedepannya, kami memohon bantuan anda untuk memberikan kritik dan saran kepada kami.Balas pesan ini dengan format berikut:GRAMATUR - Sampaikan kritik dan saran anda.",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Kritik dan Saran - Rasa dan aroma",
+            "keywords": [
+                "rasa dan aroma",
+                "kritik dan saran rasa dan aroma"
+            ],
+            "response": "Terima kasih atas kepercayaan anda berbelanja di INDRACO Store. Demi meningkatkan performa pelayanan agar semakin baik kedepannya, kami memohon bantuan anda untuk memberikan kritik dan saran kepada kami.Balas pesan ini dengan format berikut:RASA DAN AROMA - Sampaikan kritik dan saran anda.",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Kritik dan Saran - Akses pembelian web atau area sekitar",
+            "keywords": [
+                "akses pembelian web atau area sekitar",
+                "kritik dan saran akses pembelian web atau area sekitar"
+            ],
+            "response": "Terima kasih atas kepercayaan anda berbelanja di INDRACO Store. Demi meningkatkan performa pelayanan agar semakin baik kedepannya, kami memohon bantuan anda untuk memberikan kritik dan saran kepada kami.Balas pesan ini dengan format berikut:WEB - Sampaikan kritik dan saran anda.",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Temuan produk tidak laik jual - Kemasan produk rusak",
+            "keywords": [
+                "kemasan produk rusak",
+                "temuan produk tidak laik jual kemasan produk rusak"
+            ],
+            "response": "Terima kasih atas kepercayaan anda berbelanja di INDRACO Store. Mohon maaf untuk kendala yang terjadi 🙏.Kami senantiasa selalu menjaga kualitas produk untuk kepuasan konsumen selaku prioritas di toko online kami. Agar bisa segera menangani dan menindak-lanjuti keluhan anda, kami memohon bantuannya untuk mengirimkan video unboxing dan mengetik informasi berikut:Nama anda:Produk yang anda beli:Tanggal transaksi:Tanggal produk diterima:Toko online yang anda gunakan:Tim kami akan merespon kendala anda terkait kemasan produk rusak secara langsung, segera. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Temuan produk tidak laik jual - Produk dalam keadaan kurang sesuai dan tidak semestinya",
+            "keywords": [
+                "produk dalam keadaan kurang sesuai dan tidak semestinya",
+                "temuan produk tidak laik jual produk dalam keadaan kurang sesuai dan tidak semestinya"
+            ],
+            "response": "Terima kasih atas kepercayaan anda berbelanja di INDRACO Store. Mohon maaf untuk kendala yang terjadi 🙏.Kami senantiasa selalu menjaga kualitas produk untuk kepuasan konsumen selaku prioritas di toko online kami. Agar bisa segera menangani dan menindak-lanjuti keluhan anda, kami memohon bantuannya untuk mengirimkan video unboxing dan mengetik informasi berikut:Nama anda:Produk yang anda beli:Tanggal transaksi:Tanggal produk diterima:Toko online yang anda gunakan:Tim kami akan merespon kendala anda terkait produk yang kurang sesuai secara langsung, segera. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Temuan produk tidak laik jual - Produk tercampur dengan benda asing",
+            "keywords": [
+                "produk tercampur dengan benda asing",
+                "temuan produk tidak laik jual produk tercampur dengan benda asing"
+            ],
+            "response": "Terima kasih atas kepercayaan anda berbelanja di INDRACO Store. Mohon maaf untuk kendala yang terjadi 🙏.Kami senantiasa selalu menjaga kualitas produk untuk kepuasan konsumen selaku prioritas di toko online kami. Agar bisa segera menangani dan menindak-lanjuti keluhan kakak, kami memohon bantuannya untuk mengirimkan video unboxing dan mengetik informasi berikut:Nama anda:Produk yang anda beli:Tanggal transaksi:Tanggal produk diterima:Toko online yang anda gunakan:Tim kami akan merespon kendala anda terkait produk dan benda asing secara langsung, segera. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Temuan promo yang tidak sesuai - Produk tertulis promo namun tidak terdapat hadiah atau tambahan lainnya",
+            "keywords": [
+                "produk tertulis promo namun tidak terdapat hadiah atau tambahan lainnya",
+                "temuan promo yang tidak sesuai produk tertulis promo namun tidak terdapat hadiah atau tambahan lainnya"
+            ],
+            "response": "Terima kasih atas kepercayaan anda berbelanja di INDRACO Store. Mohon maaf untuk kendala yang terjadi 🙏.Kami senantiasa selalu menjaga kualitas produk untuk kepuasan konsumen selaku prioritas di toko online kami. Agar bisa segera menangani dan menindak-lanjuti keluhan kakak, kami memohon bantuannya untuk mengirimkan video unboxing dan mengetik informasi berikut:Nama anda:Produk yang anda beli:Tanggal transaksi:Tanggal produk diterima:Toko online yang anda gunakan:Tim kami akan merespon kendala anda terkait promo tidak sesuai secara langsung, segera. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        },
+        {
+            "name": "Temuan promo yang tidak sesuai - Hadiah tidak sesuai dengan keterangan promo",
+            "keywords": [
+                "hadiah tidak sesuai dengan keterangan promo",
+                "temuan promo yang tidak sesuai hadiah tidak sesuai dengan keterangan promo"
+            ],
+            "response": "Terima kasih atas kepercayaan anda berbelanja di INDRACO Store. Mohon maaf untuk kendala yang terjadi 🙏.Kami senantiasa selalu menjaga kualitas produk untuk kepuasan konsumen selaku prioritas di toko online kami. Agar bisa segera menangani dan menindak-lanjuti keluhan kakak, kami memohon bantuannya untuk mengirimkan video unboxing dan mengetik informasi berikut:Nama anda:Produk yang anda beli:Tanggal transaksi:Tanggal produk diterima:Toko online yang anda gunakan:Tim kami akan merespon kendala anda terkait keterangan promo secara langsung, segera. 😊🙏",
+            "options": [
+                {
+                    "label": "💬 Bicara dengan CS Langsung",
+                    "value": "YA"
+                },
+                {
+                    "label": "🔙 Kembali ke Menu Kategori",
+                    "value": "1"
+                },
+                {
+                    "label": "🏠 Menu Utama",
+                    "value": "MENU"
+                }
+            ]
+        }
+    ],
+    "tree": [
+        {
+            "id": "node_84af9b9a",
+            "label": "📦 Pembelian Produk",
+            "value": "1",
+            "response": "📦 *Kategori Produk INDRACO Store*\r\nSilakan pilih kategori produk yang ingin Anda ketahui:\r\n\r\n• *Kopi* (Supresso, Tugu Buaya, Uang Emas, Rasa Sayang, CERIA, UCAFE)\r\n• *Produk Non Kopi* (Jaheku, BROCHOCO)\r\n• *Bumbu Dapur* (Intirasa)\r\n\r\nPilih salah satu kategori di bawah atau klik *Menu Utama* untuk kembali.",
+            "children": [
+                {
+                    "id": "node_158bf58a",
+                    "label": "☕ Kopi",
+                    "value": "1.1",
+                    "response": "☕ *Koleksi Brand Kopi INDRACO*\r\nPilih brand kopi di bawah ini untuk melihat series & variannya:\r\n\r\n• *Supresso Coffee* (Single Origin, Gourmet, The Collections, BaliCafe, World Blend)\r\n• *Tugu Buaya* (Kopi Special, Coffee Mix)\r\n• *Uang Emas* (Kopi Special)\r\n• *Rasa Sayang* (Gold Special, Super Quality, SP Bintang, Kopi Bali, Coffee Mix)\r\n• *CERIA* (Kopi Bubuk Halus)\r\n• *UCAFE* (Pure Coffee, Instant Coffee)\r\n\r\nKlik brand yang ingin Anda lihat atau kunjungi *www.indracostore.com*.",
+                    "children": [
+                        {
+                            "id": "node_20115c93",
+                            "label": "☕ Supresso Coffee",
+                            "value": "Supresso",
+                            "response": "☕ *Supresso Coffee*\r\nKoleksi kopi premium Nusantara dan mancanegara dengan citarasa anggun dan kompleks. Pilih varian series Supresso di bawah ini:",
+                            "children": [
+                                {
+                                    "id": "node_8a706974",
+                                    "label": "Single Origin",
+                                    "value": "Single Origin",
+                                    "response": "Biji kopi yang berasal dari seluruh penjuru daerah di Indonesia. Mulai Aceh, Toraja, hingga Flores Bajawa. Koleksi kopi single-origin dari Supresso menghasilkan citarasa premium dengan ciri khas yang anggun.Untuk mengetahui varian lengkapnya, kunjungi www.supresso.com atau ketik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                    "children": []
+                                },
+                                {
+                                    "id": "node_ac4aa4a9",
+                                    "label": "Gourmet Collections",
+                                    "value": "Gourmet Collections",
+                                    "response": "Diolah dari berbagai varian biji kopi di seluruh daerah Indonesia membentuk karakter yang unik nan seimbang dengan citarasa yang kompleks. Pilihan terbaik untuk semua variasi kopi.Untuk mengetahui varian lengkapnya, kunjungi www.supresso.com atau ketik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                    "children": []
+                                },
+                                {
+                                    "id": "node_7177e86a",
+                                    "label": "The Collections",
+                                    "value": "The Collections",
+                                    "response": "Salah satu series yang dikhususkan untuk anda penikmat kopi yang sesungguhnya. Diolah dari bahan-bahan pilihan yang memiliki keunikan dari segi pembuatan, pengolahan, hingga proses serta hasil jadi dari biji kopi Peaberry hingga Luwak Coffee.Untuk mengetahui varian lengkapnya, kunjungi www.supresso.com atau ketik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                    "children": []
+                                },
+                                {
+                                    "id": "node_683c47b9",
+                                    "label": "BaliCafe",
+                                    "value": "BaliCafe",
+                                    "response": "Series khusus biji kopi asli dari pulau Dewata. Varian kopi nikmat dan unik serta sekaligus menjadi sudut rekreasi anda secara langsung dari rumah.Untuk mengetahui varian lengkapnya, kunjungi www.supresso.com atau ketik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                    "children": []
+                                },
+                                {
+                                    "id": "node_a9ea2703",
+                                    "label": "World Blend",
+                                    "value": "World Blend",
+                                    "response": "Berasal dari mancanegara, berbagai biji kopi yang patut anda coba. Sensasi hasil bumi dari setiap dataran di belahan dunia menuju cangkir dalam genggaman anda.Untuk mengetahui varian lengkapnya, kunjungi www.supresso.com atau ketik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                    "children": []
+                                },
+                                {
+                                    "id": "node_e7efcd47",
+                                    "label": "🔙 Kategori Kopi",
+                                    "value": "1.1",
+                                    "response": "☕ *Koleksi Brand Kopi INDRACO*\r\nPilih brand kopi di bawah ini untuk melihat series & variannya:\r\n\r\n• *Supresso Coffee* (Single Origin, Gourmet, The Collections, BaliCafe, World Blend)\r\n• *Tugu Buaya* (Kopi Special, Coffee Mix)\r\n• *Uang Emas* (Kopi Special)\r\n• *Rasa Sayang* (Gold Special, Super Quality, SP Bintang, Kopi Bali, Coffee Mix)\r\n• *CERIA* (Kopi Bubuk Halus)\r\n• *UCAFE* (Pure Coffee, Instant Coffee)\r\n\r\nKlik brand yang ingin Anda lihat atau kunjungi *www.indracostore.com*.",
+                                    "children": [
+                                        {
+                                            "id": "node_3088925e",
+                                            "label": "☕ Kopi Tugu Buaya",
+                                            "value": "Tugu Buaya",
+                                            "response": "☕ *Kopi Tugu Buaya (Sejak 1977)*\r\nKopi hitam bubuk legendaris dengan rasa pahit seimbang dan aroma khas, Nikmat Setiap Saat. Tersedia berbagai ukuran gramasi serta program penukaran hadiah karton.",
+                                            "children": [
+                                                {
+                                                    "id": "node_26c5b790",
+                                                    "label": "Kopi Special",
+                                                    "value": "Tugu Buaya Kopi Special",
+                                                    "response": "Terkenal sejak 1977 karena rasa pahit yang seimbang serta aroma-nya yang khas, membuatnya Nikmat Setiap Saat. Kopi hitam bubuk ini memiliki berbagai varian ukuran berat atau gramasi yang bisa disesuaikan dengan kebutuhan anda setiap hari.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "id": "node_9b8403fa",
+                                                    "label": "Coffee Mix",
+                                                    "value": "Tugu Buaya Coffee Mix",
+                                                    "response": "Campuran kopi dengan bahan lain yang mengakomodasi kebutuhan setiap penggemar Kopi Tugu Buaya untuk merasakan nikmatnya sensasi kopi dengan aroma dan variasi berbeda.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "id": "node_05d3507f",
+                                                    "label": "🎁 Info Tukar Hadiah Karton",
+                                                    "value": "2.3",
+                                                    "response": "🎁 *Program Penukaran Hadiah Karton Tugu Buaya 12g*\r\n\r\nKumpulkan kemasan karton Kopi Tugu Buaya 12g dan tukarkan dengan hadiah menarik:\r\n• 10 Lembar: 1 Sachet Kopi Tugu Buaya 12g\r\n• 50 Lembar: Piring Keramik\r\n• 100 Lembar: Mangkok Keramik\r\n• 250 Lembar: Kaos Eksklusif\r\n• 500 Lembar: Jam Dinding Cantik\r\n• 1.000 Lembar: Dispenser\r\n• 2.500 Lembar: Magic Com\r\n• 5.000 Lembar: Kulkas 1 Pintu\r\n• 10.000 Lembar: Mesin Cuci 2 Tabung\r\n• 17.000 Lembar: Smart TV 32 Inch!",
+                                                    "children": [
+                                                        {
+                                                            "id": "node_60cea3d0",
+                                                            "label": "☕ Info Varian Kopi Tugu Buaya",
+                                                            "value": "Tugu Buaya",
+                                                            "response": "☕ *Kopi Tugu Buaya (Sejak 1977)*\r\nKopi hitam bubuk legendaris dengan rasa pahit seimbang dan aroma khas, Nikmat Setiap Saat. Tersedia berbagai ukuran gramasi serta program penukaran hadiah karton.",
+                                                            "children": []
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "node_2049802b",
+                                            "label": "☕ Kopi Uang Emas",
+                                            "value": "Uang Emas",
+                                            "response": "☕ *Kopi Uang Emas*\r\nKopi hitam bubuk dengan rasa mantap dan body tebal. Ampas kopi cepat turun saat diseduh, sangat cocok untuk stok di rumah maupun usaha warung kopi Anda.",
+                                            "children": [
+                                                {
+                                                    "id": "node_8769184c",
+                                                    "label": "Kopi Special",
+                                                    "value": "Uang Emas Kopi Special",
+                                                    "response": "Kopi hitam bubuk dengan rasa yang pahit dengan body lebih mantap. Ampas kopi cepat turun saat di seduh membuat Kopi Uang Emas menjadi produk yang cocok untuk stok di rumah maupun untuk bisnis warung kopi anda!Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "node_7fabd9cf",
+                                            "label": "☕ Kopi Rasa Sayang",
+                                            "value": "Rasa Sayang",
+                                            "response": "☕ *Kopi Rasa Sayang - Citarasa Tempo Doeloe*\r\nDiracik dari biji kopi pilihan lintas generasi dengan rasa mantap dan harum khas Nusantara.",
+                                            "children": [
+                                                {
+                                                    "id": "node_74351752",
+                                                    "label": "Kopi Gold Special",
+                                                    "value": "Kopi Gold Special",
+                                                    "response": "Diracik dari biji kopi pilihan dengan rasa yang mantap dan harum tercipta sajian kopi lintas generasi dalam Citarasa Tempo Doeloe Kopi Rasa SayangUntuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "id": "node_89e9c11c",
+                                                    "label": "Kopi Super Quality",
+                                                    "value": "Kopi Super Quality",
+                                                    "response": "Biji kopi berkualitas tinggi yang diproses dari biji kopi pilihan, menciptakan rasa yang halus, mantap nan berciri khas di setiap isapan cangkir Kopi Rasa Sayang andaUntuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "id": "node_5e49b064",
+                                                    "label": "Kopi SP Bintang",
+                                                    "value": "Kopi SP Bintang",
+                                                    "response": "Edisi spesial dari kopi hitam bubuk Rasa Sayang, dengan rasa pahit mantap yang berbeda dari yang lain untuk anda pencinta serta penjelajah rasa kopi khas Nusantara.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "id": "node_2e2d0295",
+                                                    "label": "Kopi Bali",
+                                                    "value": "Kopi Bali",
+                                                    "response": "Berasal dari biji kopi asli Bali, diproses dan dikemas ke dalam citarasa khas pulau Dewata untuk disajikan dalam hangatnya suasana dengan sentuhan kontemporer.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "id": "node_28e180a3",
+                                                    "label": "Coffee Mix",
+                                                    "value": "Rasa Sayang Coffee Mix",
+                                                    "response": "Berbahan dasar kopi dan bahan lain pilihan tercipta series Coffee Mix khas Kopi Rasa Sayang dengan tetap mempertahankan sisi klasik ala Citarasa Tempo Doeloe.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "node_43f15014",
+                                            "label": "☕ Kopi CERIA",
+                                            "value": "CERIA",
+                                            "response": "☕ *Kopi CERIA*\r\nKopi hitam bubuk dengan gilingan halus yang menghasilkan seduhan lebih nikmat dan ampas cepat turun. Nyaman dinikmati kapan saja.",
+                                            "children": [
+                                                {
+                                                    "id": "node_358e5edd",
+                                                    "label": "Kopi Bubuk Halus",
+                                                    "value": "Kopi Bubuk Halus",
+                                                    "response": "Kopi Ceria merupakan kopi hitam bubuk dengan gilingan halus yang menghasilkan seduhan lebih nikmat. Ampasnya cepat turun setelah diseduh, sehingga kopi lebih nyaman dinikmati kapan saja. Cocok untuk stok di rumah maupun untuk kebutuhan bisnis warung kopi Anda!Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung dengan tim kami 😊🙏",
+                                                    "children": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "node_9506247a",
+                                            "label": "☕ UCAFE Coffee",
+                                            "value": "UCAFE",
+                                            "response": "☕ *UCAFE Coffee Series*\r\nPilihan kopi modern praktis dengan rasa tebal, aftertaste bersih, dan varian instan tanpa ampas.",
+                                            "children": [
+                                                {
+                                                    "id": "node_6eab6ebe",
+                                                    "label": "Pure Coffee Series",
+                                                    "value": "Pure Coffee Series",
+                                                    "response": "Diracik khusus untuk memberi rasa halus, aftertaste yang bersih, dengan aroma khas dan rasa kopi yang kuat. Series dari UCAFE yang cocok bagi anda penggemar tebalnya rasa kopi untuk konsumsi sehari-hari.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "id": "node_b9b7531e",
+                                                    "label": "Instant Coffee Series",
+                                                    "value": "Instant Coffee Series",
+                                                    "response": "Perpaduan antara kopi, krimer, dengan bahan lain yang dikreasikan dalam beberapa varian kopi instan berkarakter serta tanpa ampas yang siap untuk dinikmati kapanpun dan dimanapun.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "node_4d1be720",
+                    "label": "🍵 Produk Non Kopi",
+                    "value": "1.2",
+                    "response": "🍵 *Koleksi Produk Non Kopi INDRACO*\r\nPilih brand minuman di bawah ini:\r\n\r\n• *Jaheku Premium Ginger* (Minuman jahe hangat dengan bahan alami pilihan)\r\n• *BROCHOCO Chocolate Drink* (Minuman cokelat premium Original & Mix)\r\n\r\nPilih brand di bawah untuk melihat varian lengkapnya:",
+                    "children": [
+                        {
+                            "id": "node_e3cf36da",
+                            "label": "🍵 Jaheku Premium Ginger",
+                            "value": "Jaheku",
+                            "response": "🍵 *Jaheku Premium Ginger*\r\nMinuman jahe alami yang dipadukan dengan bahan pendukung pilihan untuk menghangatkan dan menyegarkan tubuh dalam aktivitas sehari-hari.",
+                            "children": [
+                                {
+                                    "id": "node_fcc41a47",
+                                    "label": "Jaheku Mix Series",
+                                    "value": "Jaheku Mix",
+                                    "response": "",
+                                    "children": []
+                                },
+                                {
+                                    "id": "node_08459cab",
+                                    "label": "🔙 Produk Non Kopi",
+                                    "value": "1.2",
+                                    "response": "🍵 *Koleksi Produk Non Kopi INDRACO*\r\nPilih brand minuman di bawah ini:\r\n\r\n• *Jaheku Premium Ginger* (Minuman jahe hangat dengan bahan alami pilihan)\r\n• *BROCHOCO Chocolate Drink* (Minuman cokelat premium Original & Mix)\r\n\r\nPilih brand di bawah untuk melihat varian lengkapnya:",
+                                    "children": [
+                                        {
+                                            "id": "node_e0200306",
+                                            "label": "🍫 BROCHOCO Chocolate Drink",
+                                            "value": "Brochoco",
+                                            "response": "🍫 *BROCHOCO Chocolate Drink*\r\nMinuman cokelat asli yang meleleh di mulut saat diseduh. Nikmat disajikan panas maupun dingin, atau sebagai kreasi bahan kue di rumah.",
+                                            "children": [
+                                                {
+                                                    "id": "node_b71acc15",
+                                                    "label": "BROCHOCO Original",
+                                                    "value": "BROCHOCO Original",
+                                                    "response": "",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "id": "node_d731e7de",
+                                                    "label": "BROCHOCO Mix",
+                                                    "value": "BROCHOCO Mix",
+                                                    "response": "",
+                                                    "children": []
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "node_a8911707",
+                    "label": "🍳 Bumbu Dapur (Intirasa)",
+                    "value": "1.3",
+                    "response": "🍳 *Koleksi Bumbu Dapur Intirasa*\r\nPilihan varian bumbu berkualitas untuk kebutuhan dapur dan usaha Anda:\r\n\r\n• Bumbu Tabur\r\n• Bumbu Tepung\r\n• Bumbu Pelengkap & Dasar (Santan Instan, dll)\r\n• Krimer Minuman & Masakan\r\n• Bumbu Instan, Kaldu, & Rendam\r\n\r\nKunjungi *www.intirasa.com* untuk katalog lengkap:",
+                    "children": [
+                        {
+                            "id": "node_e85cb798",
+                            "label": "Bumbu Tabur",
+                            "value": "Bumbu Tabur",
+                            "response": "Untuk mengetahui varian lengkapnya, kunjungi www.intirasa.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                            "children": []
+                        },
+                        {
+                            "id": "node_026dd839",
+                            "label": "Bumbu Tepung",
+                            "value": "Bumbu Tepung",
+                            "response": "Untuk mengetahui varian lengkapnya, kunjungi www.intirasa.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                            "children": []
+                        },
+                        {
+                            "id": "node_3aaaaa30",
+                            "label": "Bumbu Dasar & Pelengkap",
+                            "value": "Bumbu Dasar",
+                            "response": "Bahan penting dalam segala masakan maupun minuman yang akan dibuat. Mulai dari santan instan hingga bahan dasar lain yang memudahkan aktivitas dapur dan usaha anda.Untuk mengetahui varian lengkapnya, kunjungi www.intirasa.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                            "children": []
+                        },
+                        {
+                            "id": "node_3c8c753b",
+                            "label": "Krimer",
+                            "value": "Krimer",
+                            "response": "Untuk mengetahui varian lengkapnya, kunjungi www.intirasa.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                            "children": []
+                        },
+                        {
+                            "id": "node_13f4b726",
+                            "label": "Bumbu Instan & Kaldu",
+                            "value": "Bumbu Instan",
+                            "response": "Untuk mengetahui varian lengkapnya, kunjungi www.intirasa.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                            "children": []
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "node_1d6a7996",
+            "label": "🤝 Informasi & Kerjasama",
+            "value": "2",
+            "response": "🤝 *Informasi & Kerjasama INDRACO Group*\r\nSilakan pilih informasi yang Anda butuhkan:\r\n\r\n• *Informasi Distributor Terdekat* (Tersedia di 38 Provinsi)\r\n• *Cara Menjadi Reseller / Distributor*\r\n• *Informasi Penukaran Hadiah* (Karton Tugu Buaya & Voucher Toko Online)\r\n• *Lowongan Pekerjaan* (Karir di INDRACO Group)\r\n• *Penawaran Kerjasama* (Event, Manufaktur, Supplier, Creative/Endorsement)\r\n\r\nPilih salah satu opsi di bawah ini:",
+            "children": [
+                {
+                    "id": "node_82280f9c",
+                    "label": "📍 Info Distributor Terdekat",
+                    "value": "2.1",
+                    "response": "📍 *Informasi Distributor Terdekat INDRACO*\r\n\r\nDistributor tersebar hampir di seluruh provinsi di Indonesia. Untuk memudahkan Anda menemukan distributor terdekat, mohon lengkapi data berikut:\r\n\r\n• *Nama*:\r\n• *Nomor WhatsApp Aktif*:\r\n• *Domisili (Kota/Provinsi)*:\r\n\r\nTim INDRACO akan segera menghubungi dan mengarahkan ke distributor terdekat.",
+                    "children": [
+                        {
+                            "id": "node_8e97a573",
+                            "label": "💼 Syarat Menjadi Distributor/Reseller",
+                            "value": "2.2",
+                            "response": "💼 *Syarat Menjadi Reseller / Pembelian Jumlah Banyak*\r\n\r\nTerima kasih atas minat Anda bermitra dengan INDRACO Group. Untuk menjadi reseller atau pembelian grosir, siapkan brand/produk yang diinginkan, lalu informasikan:\r\n\r\n• *Nama*:\r\n• *Nomor WhatsApp Aktif*:\r\n• *Domisili / Lokasi Usaha*:\r\n\r\nTim penjualan kami akan segera mengontak Anda untuk penawaran harga terbaik.",
+                            "children": [
+                                {
+                                    "id": "node_4ed9bbfd",
+                                    "label": "📍 Cek Distributor Terdekat",
+                                    "value": "2.1",
+                                    "response": "📍 *Informasi Distributor Terdekat INDRACO*\r\n\r\nDistributor tersebar hampir di seluruh provinsi di Indonesia. Untuk memudahkan Anda menemukan distributor terdekat, mohon lengkapi data berikut:\r\n\r\n• *Nama*:\r\n• *Nomor WhatsApp Aktif*:\r\n• *Domisili (Kota/Provinsi)*:\r\n\r\nTim INDRACO akan segera menghubungi dan mengarahkan ke distributor terdekat.",
+                                    "children": []
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "node_cb4cd1c7",
+                    "label": "💼 Syarat Reseller / Distributor",
+                    "value": "2.2",
+                    "response": "💼 *Syarat Menjadi Reseller / Pembelian Jumlah Banyak*\r\n\r\nTerima kasih atas minat Anda bermitra dengan INDRACO Group. Untuk menjadi reseller atau pembelian grosir, siapkan brand/produk yang diinginkan, lalu informasikan:\r\n\r\n• *Nama*:\r\n• *Nomor WhatsApp Aktif*:\r\n• *Domisili / Lokasi Usaha*:\r\n\r\nTim penjualan kami akan segera mengontak Anda untuk penawaran harga terbaik.",
+                    "children": []
+                },
+                {
+                    "id": "node_fde0d426",
+                    "label": "🎁 Penukaran Hadiah Karton",
+                    "value": "2.3",
+                    "response": "🎁 *Program Penukaran Hadiah Karton Tugu Buaya 12g*\r\n\r\nKumpulkan kemasan karton Kopi Tugu Buaya 12g dan tukarkan dengan hadiah menarik:\r\n• 10 Lembar: 1 Sachet Kopi Tugu Buaya 12g\r\n• 50 Lembar: Piring Keramik\r\n• 100 Lembar: Mangkok Keramik\r\n• 250 Lembar: Kaos Eksklusif\r\n• 500 Lembar: Jam Dinding Cantik\r\n• 1.000 Lembar: Dispenser\r\n• 2.500 Lembar: Magic Com\r\n• 5.000 Lembar: Kulkas 1 Pintu\r\n• 10.000 Lembar: Mesin Cuci 2 Tabung\r\n• 17.000 Lembar: Smart TV 32 Inch!",
+                    "children": [
+                        {
+                            "id": "node_60cea3d0",
+                            "label": "☕ Info Varian Kopi Tugu Buaya",
+                            "value": "Tugu Buaya",
+                            "response": "☕ *Kopi Tugu Buaya (Sejak 1977)*\r\nKopi hitam bubuk legendaris dengan rasa pahit seimbang dan aroma khas, Nikmat Setiap Saat. Tersedia berbagai ukuran gramasi serta program penukaran hadiah karton.",
+                            "children": [
+                                {
+                                    "id": "node_26c5b790",
+                                    "label": "Kopi Special",
+                                    "value": "Tugu Buaya Kopi Special",
+                                    "response": "Terkenal sejak 1977 karena rasa pahit yang seimbang serta aroma-nya yang khas, membuatnya Nikmat Setiap Saat. Kopi hitam bubuk ini memiliki berbagai varian ukuran berat atau gramasi yang bisa disesuaikan dengan kebutuhan anda setiap hari.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                    "children": []
+                                },
+                                {
+                                    "id": "node_9b8403fa",
+                                    "label": "Coffee Mix",
+                                    "value": "Tugu Buaya Coffee Mix",
+                                    "response": "Campuran kopi dengan bahan lain yang mengakomodasi kebutuhan setiap penggemar Kopi Tugu Buaya untuk merasakan nikmatnya sensasi kopi dengan aroma dan variasi berbeda.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                    "children": []
+                                },
+                                {
+                                    "id": "node_05d3507f",
+                                    "label": "🎁 Info Tukar Hadiah Karton",
+                                    "value": "2.3",
+                                    "response": "🎁 *Program Penukaran Hadiah Karton Tugu Buaya 12g*\r\n\r\nKumpulkan kemasan karton Kopi Tugu Buaya 12g dan tukarkan dengan hadiah menarik:\r\n• 10 Lembar: 1 Sachet Kopi Tugu Buaya 12g\r\n• 50 Lembar: Piring Keramik\r\n• 100 Lembar: Mangkok Keramik\r\n• 250 Lembar: Kaos Eksklusif\r\n• 500 Lembar: Jam Dinding Cantik\r\n• 1.000 Lembar: Dispenser\r\n• 2.500 Lembar: Magic Com\r\n• 5.000 Lembar: Kulkas 1 Pintu\r\n• 10.000 Lembar: Mesin Cuci 2 Tabung\r\n• 17.000 Lembar: Smart TV 32 Inch!",
+                                    "children": []
+                                },
+                                {
+                                    "id": "node_e7efcd47",
+                                    "label": "🔙 Kategori Kopi",
+                                    "value": "1.1",
+                                    "response": "☕ *Koleksi Brand Kopi INDRACO*\r\nPilih brand kopi di bawah ini untuk melihat series & variannya:\r\n\r\n• *Supresso Coffee* (Single Origin, Gourmet, The Collections, BaliCafe, World Blend)\r\n• *Tugu Buaya* (Kopi Special, Coffee Mix)\r\n• *Uang Emas* (Kopi Special)\r\n• *Rasa Sayang* (Gold Special, Super Quality, SP Bintang, Kopi Bali, Coffee Mix)\r\n• *CERIA* (Kopi Bubuk Halus)\r\n• *UCAFE* (Pure Coffee, Instant Coffee)\r\n\r\nKlik brand yang ingin Anda lihat atau kunjungi *www.indracostore.com*.",
+                                    "children": [
+                                        {
+                                            "id": "node_20115c93",
+                                            "label": "☕ Supresso Coffee",
+                                            "value": "Supresso",
+                                            "response": "☕ *Supresso Coffee*\r\nKoleksi kopi premium Nusantara dan mancanegara dengan citarasa anggun dan kompleks. Pilih varian series Supresso di bawah ini:",
+                                            "children": [
+                                                {
+                                                    "id": "node_8a706974",
+                                                    "label": "Single Origin",
+                                                    "value": "Single Origin",
+                                                    "response": "Biji kopi yang berasal dari seluruh penjuru daerah di Indonesia. Mulai Aceh, Toraja, hingga Flores Bajawa. Koleksi kopi single-origin dari Supresso menghasilkan citarasa premium dengan ciri khas yang anggun.Untuk mengetahui varian lengkapnya, kunjungi www.supresso.com atau ketik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "id": "node_ac4aa4a9",
+                                                    "label": "Gourmet Collections",
+                                                    "value": "Gourmet Collections",
+                                                    "response": "Diolah dari berbagai varian biji kopi di seluruh daerah Indonesia membentuk karakter yang unik nan seimbang dengan citarasa yang kompleks. Pilihan terbaik untuk semua variasi kopi.Untuk mengetahui varian lengkapnya, kunjungi www.supresso.com atau ketik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "id": "node_7177e86a",
+                                                    "label": "The Collections",
+                                                    "value": "The Collections",
+                                                    "response": "Salah satu series yang dikhususkan untuk anda penikmat kopi yang sesungguhnya. Diolah dari bahan-bahan pilihan yang memiliki keunikan dari segi pembuatan, pengolahan, hingga proses serta hasil jadi dari biji kopi Peaberry hingga Luwak Coffee.Untuk mengetahui varian lengkapnya, kunjungi www.supresso.com atau ketik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "id": "node_683c47b9",
+                                                    "label": "BaliCafe",
+                                                    "value": "BaliCafe",
+                                                    "response": "Series khusus biji kopi asli dari pulau Dewata. Varian kopi nikmat dan unik serta sekaligus menjadi sudut rekreasi anda secara langsung dari rumah.Untuk mengetahui varian lengkapnya, kunjungi www.supresso.com atau ketik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "id": "node_a9ea2703",
+                                                    "label": "World Blend",
+                                                    "value": "World Blend",
+                                                    "response": "Berasal dari mancanegara, berbagai biji kopi yang patut anda coba. Sensasi hasil bumi dari setiap dataran di belahan dunia menuju cangkir dalam genggaman anda.Untuk mengetahui varian lengkapnya, kunjungi www.supresso.com atau ketik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "node_3088925e",
+                                            "label": "☕ Kopi Tugu Buaya",
+                                            "value": "Tugu Buaya",
+                                            "response": "☕ *Kopi Tugu Buaya (Sejak 1977)*\r\nKopi hitam bubuk legendaris dengan rasa pahit seimbang dan aroma khas, Nikmat Setiap Saat. Tersedia berbagai ukuran gramasi serta program penukaran hadiah karton.",
+                                            "children": []
+                                        },
+                                        {
+                                            "id": "node_2049802b",
+                                            "label": "☕ Kopi Uang Emas",
+                                            "value": "Uang Emas",
+                                            "response": "☕ *Kopi Uang Emas*\r\nKopi hitam bubuk dengan rasa mantap dan body tebal. Ampas kopi cepat turun saat diseduh, sangat cocok untuk stok di rumah maupun usaha warung kopi Anda.",
+                                            "children": [
+                                                {
+                                                    "id": "node_8769184c",
+                                                    "label": "Kopi Special",
+                                                    "value": "Uang Emas Kopi Special",
+                                                    "response": "Kopi hitam bubuk dengan rasa yang pahit dengan body lebih mantap. Ampas kopi cepat turun saat di seduh membuat Kopi Uang Emas menjadi produk yang cocok untuk stok di rumah maupun untuk bisnis warung kopi anda!Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "node_7fabd9cf",
+                                            "label": "☕ Kopi Rasa Sayang",
+                                            "value": "Rasa Sayang",
+                                            "response": "☕ *Kopi Rasa Sayang - Citarasa Tempo Doeloe*\r\nDiracik dari biji kopi pilihan lintas generasi dengan rasa mantap dan harum khas Nusantara.",
+                                            "children": [
+                                                {
+                                                    "id": "node_74351752",
+                                                    "label": "Kopi Gold Special",
+                                                    "value": "Kopi Gold Special",
+                                                    "response": "Diracik dari biji kopi pilihan dengan rasa yang mantap dan harum tercipta sajian kopi lintas generasi dalam Citarasa Tempo Doeloe Kopi Rasa SayangUntuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "id": "node_89e9c11c",
+                                                    "label": "Kopi Super Quality",
+                                                    "value": "Kopi Super Quality",
+                                                    "response": "Biji kopi berkualitas tinggi yang diproses dari biji kopi pilihan, menciptakan rasa yang halus, mantap nan berciri khas di setiap isapan cangkir Kopi Rasa Sayang andaUntuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "id": "node_5e49b064",
+                                                    "label": "Kopi SP Bintang",
+                                                    "value": "Kopi SP Bintang",
+                                                    "response": "Edisi spesial dari kopi hitam bubuk Rasa Sayang, dengan rasa pahit mantap yang berbeda dari yang lain untuk anda pencinta serta penjelajah rasa kopi khas Nusantara.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "id": "node_2e2d0295",
+                                                    "label": "Kopi Bali",
+                                                    "value": "Kopi Bali",
+                                                    "response": "Berasal dari biji kopi asli Bali, diproses dan dikemas ke dalam citarasa khas pulau Dewata untuk disajikan dalam hangatnya suasana dengan sentuhan kontemporer.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "id": "node_28e180a3",
+                                                    "label": "Coffee Mix",
+                                                    "value": "Rasa Sayang Coffee Mix",
+                                                    "response": "Berbahan dasar kopi dan bahan lain pilihan tercipta series Coffee Mix khas Kopi Rasa Sayang dengan tetap mempertahankan sisi klasik ala Citarasa Tempo Doeloe.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "node_43f15014",
+                                            "label": "☕ Kopi CERIA",
+                                            "value": "CERIA",
+                                            "response": "☕ *Kopi CERIA*\r\nKopi hitam bubuk dengan gilingan halus yang menghasilkan seduhan lebih nikmat dan ampas cepat turun. Nyaman dinikmati kapan saja.",
+                                            "children": [
+                                                {
+                                                    "id": "node_358e5edd",
+                                                    "label": "Kopi Bubuk Halus",
+                                                    "value": "Kopi Bubuk Halus",
+                                                    "response": "Kopi Ceria merupakan kopi hitam bubuk dengan gilingan halus yang menghasilkan seduhan lebih nikmat. Ampasnya cepat turun setelah diseduh, sehingga kopi lebih nyaman dinikmati kapan saja. Cocok untuk stok di rumah maupun untuk kebutuhan bisnis warung kopi Anda!Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung dengan tim kami 😊🙏",
+                                                    "children": []
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "node_9506247a",
+                                            "label": "☕ UCAFE Coffee",
+                                            "value": "UCAFE",
+                                            "response": "☕ *UCAFE Coffee Series*\r\nPilihan kopi modern praktis dengan rasa tebal, aftertaste bersih, dan varian instan tanpa ampas.",
+                                            "children": [
+                                                {
+                                                    "id": "node_6eab6ebe",
+                                                    "label": "Pure Coffee Series",
+                                                    "value": "Pure Coffee Series",
+                                                    "response": "Diracik khusus untuk memberi rasa halus, aftertaste yang bersih, dengan aroma khas dan rasa kopi yang kuat. Series dari UCAFE yang cocok bagi anda penggemar tebalnya rasa kopi untuk konsumsi sehari-hari.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "id": "node_b9b7531e",
+                                                    "label": "Instant Coffee Series",
+                                                    "value": "Instant Coffee Series",
+                                                    "response": "Perpaduan antara kopi, krimer, dengan bahan lain yang dikreasikan dalam beberapa varian kopi instan berkarakter serta tanpa ampas yang siap untuk dinikmati kapanpun dan dimanapun.Untuk mengetahui varian lengkapnya, kunjungi www.indracostore.com atau klik YA untuk berkomunikasi langsung kepada tim kami 😊🙏",
+                                                    "children": []
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "node_68b52706",
+                    "label": "💼 Lowongan Pekerjaan (Karir)",
+                    "value": "2.4",
+                    "response": "💼 *Karir & Lowongan Pekerjaan INDRACO Group*\r\n\r\nInformasi posisi terbuka (Manufaktur, Marketing, IT, Finance, HRD, dll) dapat diakses melalui:\r\n🌐 *www.indraco.com/career*\r\nAtau kirimkan CV & Portfolio Anda ke email:\r\n📧 *recruitment@indraco.com*",
+                    "children": []
+                },
+                {
+                    "id": "node_82e5fb39",
+                    "label": "🤝 Sponsorship & Supplier",
+                    "value": "2.5",
+                    "response": "🤝 *Penawaran Kerjasama & Sponsorship*\r\n\r\n• *Event / Acara Kampus / Musik*: Kirim proposal ke *info@indraco.com* (Subjek: Event_Nama Acara_Kategori)\r\n• *Supplier Kopi / Jahe / Bahan Baku*: Kirim penawaran ke *info@indraco.com* (Subjek: Supplier_Nama Perusahaan_Kategori Item)\r\n• *Creative / Endorsement / Agency*: Kirim ke *dm@indraco.com* & *info@indraco.com* (Subjek: Creative_Nama Perusahaan_Kategori Item)",
+                    "children": []
+                }
+            ]
+        },
+        {
+            "id": "node_ad47ee1b",
+            "label": "🛠️ Kendala Belanja Online",
+            "value": "3",
+            "response": "🛠️ *Pusat Bantuan & Kendala Belanja Online*\r\nSilakan pilih kendala yang sedang Anda alami:",
+            "children": [
+                {
+                    "id": "node_23dda7ca",
+                    "label": "🛒 Kendala Checkout & Keranjang",
+                    "value": "3.1",
+                    "response": "🛒 *Panduan Kendala Checkout & Keranjang*\r\n\r\n1. Pastikan produk masih memiliki kuota stok (tidak Out of Stock).\r\n2. Pilih opsi varian produk (jika ada) sebelum menekan 'Beli Sekarang'.\r\n3. Buka Keranjang, pastikan data penerima & alamat tujuan sudah benar.\r\n4. Pilih opsi pengiriman dan metode pembayaran yang diinginkan.\r\n5. Tekan tombol 'Proses Untuk Pembayaran'.",
+                    "children": [
+                        {
+                            "id": "node_200db698",
+                            "label": "💳 Kendala Pembayaran",
+                            "value": "3.4",
+                            "response": "💳 *Kendala Pembayaran*\r\n\r\n1. Pastikan koneksi internet stabil saat proses pembayaran.\r\n2. Pastikan Anda telah memilih metode pembayaran yang tersedia (Manual Transfer, VA, Kartu Kredit, atau E-Wallet).\r\n3. Pastikan memeriksa kembali produk yang diorder, alamat, dan ekspedisi.",
+                            "children": [
+                                {
+                                    "id": "node_b9588b91",
+                                    "label": "🛒 Kendala Checkout",
+                                    "value": "3.1",
+                                    "response": "🛒 *Panduan Kendala Checkout & Keranjang*\r\n\r\n1. Pastikan produk masih memiliki kuota stok (tidak Out of Stock).\r\n2. Pilih opsi varian produk (jika ada) sebelum menekan 'Beli Sekarang'.\r\n3. Buka Keranjang, pastikan data penerima & alamat tujuan sudah benar.\r\n4. Pilih opsi pengiriman dan metode pembayaran yang diinginkan.\r\n5. Tekan tombol 'Proses Untuk Pembayaran'.",
+                                    "children": []
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "node_f3e74c96",
+                    "label": "🚚 Kendala Pengiriman & Alamat",
+                    "value": "3.2",
+                    "response": "🚚 *Kendala Pilihan Pengiriman & Alamat*\r\n\r\n1. Pastikan kolom provinsi, kota/kabupaten, dan kode pos terisi sesuai.\r\n2. Pastikan alamat lengkap dan nomor WhatsApp aktif sudah benar.\r\n3. Jika pilihan ekspedisi tidak muncul, coba refresh browser Anda.",
+                    "children": []
+                },
+                {
+                    "id": "node_8242ce42",
+                    "label": "🏷️ Kendala Voucher Promo",
+                    "value": "3.3",
+                    "response": "🏷️ *Kendala Penggunaan Voucher Promo*\r\n\r\n1. Pastikan kode voucher yang dimasukkan sesuai dengan huruf besar/kecilnya.\r\n2. Pastikan voucher Anda masih dalam periode penggunaan dan belum melewati batas penukaran.\r\n3. Jika voucher reguler toko, klik 'Makin Hemat Pakai Promo' atau 'Ambil Voucher' pada halaman keranjang.",
+                    "children": [
+                        {
+                            "id": "node_c6c2df6d",
+                            "label": "🛒 Kembali ke Info Checkout",
+                            "value": "3.1",
+                            "response": "🛒 *Panduan Kendala Checkout & Keranjang*\r\n\r\n1. Pastikan produk masih memiliki kuota stok (tidak Out of Stock).\r\n2. Pilih opsi varian produk (jika ada) sebelum menekan 'Beli Sekarang'.\r\n3. Buka Keranjang, pastikan data penerima & alamat tujuan sudah benar.\r\n4. Pilih opsi pengiriman dan metode pembayaran yang diinginkan.\r\n5. Tekan tombol 'Proses Untuk Pembayaran'.",
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "id": "node_2c9c36db",
+                    "label": "🔐 Kendala Akun & Password",
+                    "value": "3.5",
+                    "response": "🔐 *Kendala Login & Akun*\r\n\r\n1. Pastikan Anda telah melakukan verifikasi email pada inbox email pendaftaran.\r\n2. Jika lupa kata sandi, klik 'Lupa Password' di pojok kanan atas halaman untuk reset kata sandi.\r\n3. Pastikan email dan password yang dimasukkan sudah sesuai.",
+                    "children": []
+                },
+                {
+                    "id": "node_4babb3f2",
+                    "label": "📦 Komplain Produk Rusak",
+                    "value": "3.6",
+                    "response": "📦 *Layanan Komplain & Kepuasan Pelanggan INDRACO*\r\n\r\nKepuasan Anda adalah prioritas kami. Jika terjadi kerusakan kemasan, produk tidak sesuai, atau terdapat saran layanan, mohon siapkan video unboxing dan kirimkan data:\r\n\r\n• *Nama Anda*:\r\n• *Produk yang dibeli*:\r\n• *Tanggal transaksi & nomor order*:\r\n\r\nTim kami akan segera memproses penggantian atau tindak lanjut keluhan Anda.",
+                    "children": []
+                }
+            ]
+        },
+        {
+            "id": "node_6a8a0dbe",
+            "label": "💬 Bicara dengan CS",
+            "value": "YA",
+            "response": "",
+            "children": []
+        }
+    ]
+}

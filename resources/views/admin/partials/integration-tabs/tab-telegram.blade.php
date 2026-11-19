@@ -50,7 +50,7 @@
                     <!-- Input 1: Bot Token -->
                     <div>
                         <label class="block text-[11.5px] font-semibold text-apple-textPrimary mb-1">Telegram Bot Token (dari @BotFather)</label>
-                        <input type="text" name="telegram_bot_token" id="inputTelegramBotToken" value="{{ old('telegram_bot_token', $widgetSetting->telegram_bot_token ?? '') }}" placeholder="Contoh: 7123456789:AAHq_ABCDEF123456789..." class="w-full text-[12px] font-mono px-3 py-2 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500">
+                        <input type="password" name="telegram_bot_token" id="inputTelegramBotToken" value="" autocomplete="off" placeholder="{{ $widgetSetting->telegram_bot_token ? 'Token tersimpan (kosongkan untuk tetap memakai token lama)' : 'Contoh: 7123456789:AAHq_ABCDEF123456789...' }}" class="w-full text-[12px] font-mono px-3 py-2 bg-apple-canvas/40 border border-apple-border rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500">
                         <p class="text-[10.5px] text-apple-textTertiary mt-1">Dibuat melalui bot resmi Telegram <strong>@BotFather</strong>.</p>
                     </div>
 
@@ -102,15 +102,6 @@
                     <!-- Live Webhook Set Result Box -->
                     <div id="telegramWebhookResult" class="hidden p-3 rounded-xl text-[12px]"></div>
 
-                    <!-- Browser Manual Link Helper -->
-                    <div class="p-3 bg-neutral-50 border border-apple-border rounded-xl text-[11px] text-apple-textSecondary flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <div class="flex items-center gap-1.5">
-                            <span>💡 Atau buka link registrasi manual di browser:</span>
-                        </div>
-                        <a id="linkManualWebhook" href="https://api.telegram.org/bot{{ $widgetSetting->telegram_bot_token ?? '' }}/setWebhook?url={{ urlencode(url('/api/v1/telegram/webhook')) }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-sky-600 hover:text-sky-700 font-semibold underline break-all">
-                            <span>🔗 Buka Link Registrasi Webhook Telegram &rarr;</span>
-                        </a>
-                    </div>
                 </div>
 
                 <!-- Step-by-Step Setup Guide Card -->

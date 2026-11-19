@@ -4,28 +4,30 @@ namespace App\Traits;
 
 use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Isolasi tenant: query otomatis disaring ke tenant aktif ('current_tenant_id'
+ * di-bind oleh middleware EnforceTenantScope / ResolveProjectKey).
+ */
 trait BelongsToTenant
 {
-    public static function bootBelongsToTenant()
+    public static function bootBelongsToTenant(): void
     {
-        // 1. Global Scope: Auto-filter all queries by active tenant_id
         static::addGlobalScope('tenant_isolation', function (Builder $builder) {
-            if (app()->has('current_tenant_id') && ($tenantId = app('current_tenant_id'))) {
-                $table = $builder->getModel()->getTable();
-                $builder->where($table . '.tenant_id', $tenantId);
+            if (app()->bound('current_tenant_id') && ($tenantId = app('current_tenant_id'))) {
+                $builder->where($builder->getModel()->qualifyColumn('tenant_id'), $tenantId);
             }
         });
 
-        // 2. Auto-assign tenant_id on model creation if not manually specified
         static::creating(function ($model) {
-            if (empty($model->tenant_id) && app()->has('current_tenant_id')) {
+            if (empty($model->tenant_id) && app()->bound('current_tenant_id')) {
                 $model->tenant_id = app('current_tenant_id');
             }
         });
     }
 
-    public function tenant()
+    public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
     }

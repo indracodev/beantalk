@@ -38,8 +38,9 @@ class BuildWidgetCommand extends Command
         $this->info('🚀 Membangun BeanTalk Universal Chat SDK...');
 
         $scriptPath = base_path('packages/chat-sdk/build.js');
-        if (!file_exists($scriptPath)) {
+        if (! file_exists($scriptPath)) {
             $this->error("File build script tidak ditemukan di: {$scriptPath}");
+
             return 1;
         }
 
@@ -49,14 +50,16 @@ class BuildWidgetCommand extends Command
             $this->output->write($buffer);
         });
 
-        if (!$process->isSuccessful()) {
+        if (! $process->isSuccessful()) {
             $this->line('');
             $this->error('❌ Proses build gagal.');
+
             return 1;
         }
 
         $this->line('');
         $this->info('✨ Bundle widget berhasil dikompilasi dan disalin ke folder public/.');
+
         return 0;
     }
 }

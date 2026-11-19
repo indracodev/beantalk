@@ -6,153 +6,135 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Project;
 use App\Models\Visitor;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class ConversationService
 {
-    /**
-     * Generates a unique, short, human-friendly customer code (e.g. CUS-8F21)
-     */
+    /** Kode pelanggan pendek & ramah, mis. CUS-8F21. */
     public function generateCustomerCode(?string $seed = null): string
     {
-        $hash = strtoupper(substr(md5($seed ?? \Illuminate\Support\Str::uuid()), 0, 4));
-        return 'CUS-' . $hash;
+        return 'CUS-'.strtoupper(substr(md5($seed ?? (string) Str::uuid()), 0, 4));
     }
 
-    /**
-     * Resolves an existing visitor or creates a new one based on client UUID
-     */
     public function getOrCreateVisitor(Project $project, string $visitorUuid, ?string $ip = null, ?string $userAgent = null, ?string $name = null, ?string $email = null): Visitor
     {
-        $visitor = Visitor::where('project_id', $project->id)
-            ->where('visitor_uuid', $visitorUuid)
-            ->first();
+        $name = $name ? strip_tags($name) : null;
+        $email = $email ? strtolower(trim($email)) : null;
 
-        if ($visitor) {
-            $updates = [
+        $visitor = Visitor::where('project_id', $project->id)->where('visitor_uuid', $visitorUuid)->first();
+
+        if (! $visitor) {
+            return Visitor::create([
+                'project_id' => $project->id,
+                'visitor_uuid' => $visitorUuid,
+                'customer_code' => $this->generateCustomerCode($visitorUuid.$project->id),
+                'name' => $name,
+                'email' => $email,
+                'ip_address' => $ip,
+                'user_agent' => $userAgent,
                 'last_seen_at' => now(),
-            ];
-            if ($name && (empty($visitor->name) || $visitor->name !== $name)) {
-                $updates['name'] = strip_tags($name);
-            }
-            if ($email && (empty($visitor->email) || $visitor->email !== $email)) {
-                $updates['email'] = strtolower(trim($email));
-            }
-            if (empty($visitor->customer_code)) {
-                $updates['customer_code'] = $this->generateCustomerCode($visitorUuid . $project->id);
-            }
-            $visitor->update($updates);
-            return $visitor;
+            ]);
         }
 
-        return Visitor::create([
-            'project_id'    => $project->id,
-            'visitor_uuid'  => $visitorUuid,
-            'customer_code' => $this->generateCustomerCode($visitorUuid . $project->id),
-            'name'          => $name ? strip_tags($name) : null,
-            'email'         => $email ? strtolower(trim($email)) : null,
-            'ip_address'    => $ip,
-            'user_agent'    => $userAgent,
-            'last_seen_at'  => now(),
-        ]);
+        $visitor->fill(array_filter([
+            'name' => $name,
+            'email' => $email,
+            'customer_code' => $visitor->customer_code ?: $this->generateCustomerCode($visitorUuid.$project->id),
+        ]));
+        $visitor->last_seen_at = now();
+        $visitor->save();
+
+        return $visitor;
     }
 
     /**
-     * Ambil percakapan HANYA bila milik pengunjung pemegang visitor_uuid (header X-Visitor-Uuid atau input).
-     * Tanpa uuid atau bukan pemilik = null (controller membalas 404). Menutup celah B1/B2.
+     * Percakapan HANYA bila milik pemegang visitor_uuid. Tanpa uuid / bukan pemilik = null (controller → 404).
      */
-    public function findForVisitor(Project $project, $conversationId, ?string $visitorUuid): ?Conversation
+    public function findForVisitor(Project $project, mixed $conversationId, ?string $visitorUuid): ?Conversation
     {
-        if (empty($visitorUuid) || !is_numeric($conversationId) || (int) $conversationId <= 0) {
+        if (empty($visitorUuid) || ! is_numeric($conversationId) || (int) $conversationId <= 0) {
             return null;
         }
 
         return Conversation::where('project_id', $project->id)
-            ->where('id', (int) $conversationId)
-            ->whereHas('visitor', function ($q) use ($project, $visitorUuid) {
-                $q->where('project_id', $project->id)->where('visitor_uuid', $visitorUuid);
-            })
+            ->whereKey((int) $conversationId)
+            ->whereHas('visitor', fn ($q) => $q->where('project_id', $project->id)->where('visitor_uuid', $visitorUuid))
             ->first();
     }
 
-    /**
-     * Gets the active conversation for a visitor ONLY if it is open/pending and has messages
-     */
-    public function getActiveConversation(Project $project, Visitor $visitor, bool $includeClosedFallback = false): ?Conversation
+    /** Percakapan aktif (open/pending) pengunjung. */
+    public function getActiveConversation(Project $project, Visitor $visitor): ?Conversation
     {
-        $conversation = Conversation::where('project_id', $project->id)
+        return Conversation::where('project_id', $project->id)
             ->where('visitor_id', $visitor->id)
             ->whereIn('status', ['open', 'pending'])
             ->latest('id')
             ->first();
-
-        if ($conversation) {
-            return $conversation;
-        }
-
-        if ($includeClosedFallback) {
-            return Conversation::where('project_id', $project->id)
-                ->where('visitor_id', $visitor->id)
-                ->whereHas('messages')
-                ->latest('id')
-                ->first();
-        }
-
-        return null;
     }
 
-    /**
-     * Gets all conversation tickets history for a visitor
-     */
-    public function getVisitorConversations(Project $project, Visitor $visitor, int $limit = 20)
+    /** Riwayat tiket pengunjung (cuplikan tanpa catatan internal). */
+    public function getVisitorConversations(Project $project, Visitor $visitor, int $limit = 20): Collection
     {
         return Conversation::where('project_id', $project->id)
             ->where('visitor_id', $visitor->id)
             ->whereHas('messages')
-            ->with(['latestMessage' => function ($q) {
-                $q->where('is_internal_note', false); // cuplikan untuk widget tidak boleh memuat catatan internal
-            }])
+            ->with('latestPublicMessage')
             ->latest('id')
             ->take($limit)
             ->get();
     }
 
+    /** Bentuk ringkas tiket untuk widget. */
+    public function toWidgetSummary(Conversation $c): array
+    {
+        $fallbackPreview = $c->latestPublicMessage ? mb_substr(strip_tags($c->latestPublicMessage->content), 0, 75) : null;
+
+        return [
+            'id' => $c->id,
+            'status' => $c->status,
+            'channel' => $c->channel,
+            'channel_label' => $c->channel_label,
+            'last_message_preview' => $c->last_message_preview ?? $fallbackPreview,
+            'last_message_at' => ($c->last_message_at ?? $c->created_at)?->toIso8601String(),
+            'unread_visitor_count' => (int) $c->unread_visitor_count,
+            'created_at' => $c->created_at?->toIso8601String(),
+        ];
+    }
+
     /**
-     * Gets the active conversation for a visitor or creates a new thread on first customer message
-     * Guarantees 1 single consolidated conversation per customer
+     * Ambil percakapan aktif pengunjung atau buat baru saat pesan pertama.
+     * Menjamin 1 thread terbuka per pengunjung (thread ganda dikonsolidasi).
      */
     public function getOrCreateConversation(Project $project, Visitor $visitor, array $context = []): Conversation
     {
         return DB::transaction(function () use ($project, $visitor, $context) {
-            // 1. Ambil semua percakapan terbuka/aktif milik visitor ini
-            $conversations = Conversation::where('project_id', $project->id)
+            $open = Conversation::where('project_id', $project->id)
                 ->where('visitor_id', $visitor->id)
                 ->whereIn('status', ['open', 'pending'])
-                ->orderBy('id', 'asc')
+                ->orderBy('id')
                 ->lockForUpdate()
                 ->get();
 
-            if ($conversations->isNotEmpty()) {
-                $primaryConv = $conversations->first();
-
-                // Konsolidasi pesan jika sebelumnya sempat terbuat lebih dari 1 thread untuk customer yang sama
-                if ($conversations->count() > 1) {
-                    $otherIds = $conversations->slice(1)->pluck('id')->toArray();
-                    Message::whereIn('conversation_id', $otherIds)->update(['conversation_id' => $primaryConv->id]);
+            if ($primary = $open->first()) {
+                if ($open->count() > 1) {
+                    $otherIds = $open->slice(1)->modelKeys();
+                    Message::whereIn('conversation_id', $otherIds)->update(['conversation_id' => $primary->id]);
                     Conversation::whereIn('id', $otherIds)->delete();
                 }
 
-                // Update page context jika berganti URL
-                if (!empty($context['page_url']) && $primaryConv->page_url !== $context['page_url']) {
-                    $primaryConv->update([
+                if (! empty($context['page_url']) && $primary->page_url !== $context['page_url']) {
+                    $primary->update([
                         'page_url' => $context['page_url'],
-                        'page_title' => $context['page_title'] ?? $primaryConv->page_title,
+                        'page_title' => $context['page_title'] ?? $primary->page_title,
                     ]);
                 }
-                return $primaryConv;
+
+                return $primary;
             }
 
-            // 2. Buat percakapan baru saat pesan pertama dikirim
             return Conversation::create([
                 'tenant_id' => $project->tenant_id,
                 'project_id' => $project->id,
@@ -167,42 +149,47 @@ class ConversationService
         });
     }
 
+    /** Ubah status tiket + sinkron topik forum Telegram (tutup/buka ulang). */
+    public function setStatus(Conversation $conversation, string $status): void
+    {
+        $conversation->update(['status' => $status]);
+
+        $telegram = app(TelegramService::class);
+        $status === 'closed' ? $telegram->closeForumTopic($conversation) : $telegram->reopenForumTopic($conversation);
+    }
+
     /**
-     * Appends a message to the conversation with strict idempotency check
-     * 
-     * @return array ['message' => Message, 'is_duplicate' => bool]
+     * Tambah pesan dengan idempotensi client_message_id.
+     *
+     * @return array{message: Message, is_duplicate: bool}
      */
     public function appendMessage(Conversation $conversation, array $payload): array
     {
+        $senderType = $payload['sender_type'] ?? 'visitor';
         $clientMessageId = $payload['client_message_id'] ?? null;
 
-        // 1. Idempotency Check: Cegah duplikasi saat koneksi timeout atau client retry
         if ($clientMessageId) {
             $existing = Message::where('conversation_id', $conversation->id)
                 ->where('client_message_id', $clientMessageId)
                 ->first();
 
-            // client_message_id milik pengirim lain (mis. "tg_…" agen atau catatan internal) tidak boleh dikembalikan.
-            if ($existing && ($existing->sender_type !== ($payload['sender_type'] ?? 'visitor') || $existing->is_internal_note)) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'client_message_id' => 'client_message_id sudah dipakai.',
-                ]);
-            }
-
             if ($existing) {
-                return [
-                    'message' => $existing,
-                    'is_duplicate' => true,
-                ];
+                // client_message_id milik pengirim lain / catatan internal tidak boleh dikembalikan.
+                if ($existing->sender_type !== $senderType || $existing->is_internal_note) {
+                    throw ValidationException::withMessages(['client_message_id' => 'client_message_id sudah dipakai.']);
+                }
+
+                return ['message' => $existing, 'is_duplicate' => true];
             }
         }
 
-        // 2. Simpan pesan baru dalam database transaction
-        return DB::transaction(function () use ($conversation, $payload, $clientMessageId) {
+        return DB::transaction(function () use ($conversation, $payload, $senderType, $clientMessageId) {
+            $isInternal = (bool) ($payload['is_internal_note'] ?? false);
+
             $message = Message::create([
                 'conversation_id' => $conversation->id,
                 'tenant_id' => $conversation->tenant_id,
-                'sender_type' => $payload['sender_type'] ?? 'visitor',
+                'sender_type' => $senderType,
                 'sender_id' => $payload['sender_id'] ?? null,
                 'sender_name' => $payload['sender_name'] ?? 'Pengunjung',
                 'client_message_id' => $clientMessageId,
@@ -210,31 +197,27 @@ class ConversationService
                 'content_type' => $payload['content_type'] ?? 'text',
                 'metadata' => $payload['metadata'] ?? null,
                 'status' => 'sent',
-                'is_internal_note' => $payload['is_internal_note'] ?? false,
+                'is_internal_note' => $isInternal,
             ]);
 
-            // Catatan internal tidak terlihat pelanggan: jangan ubah cuplikan & penghitung belum dibaca.
-            if (!empty($payload['is_internal_note'])) {
+            // Catatan internal tak terlihat pelanggan: cuplikan & counter tidak berubah.
+            if ($isInternal) {
                 return ['message' => $message, 'is_duplicate' => false];
             }
 
-            // 3. Update preview dan unread counter di parent conversation
-            $snippet = mb_substr(strip_tags($payload['content']), 0, 120);
-            $isVisitor = ($payload['sender_type'] ?? 'visitor') === 'visitor';
-            $currentAgentUnread = (int) ($conversation->unread_agent_count ?? 0);
-            $currentVisitorUnread = (int) ($conversation->unread_visitor_count ?? 0);
-
-            $conversation->update([
+            $extra = [
                 'last_message_at' => now(),
-                'last_message_preview' => $snippet,
-                'unread_agent_count' => $isVisitor ? ($currentAgentUnread + 1) : 0,
-                'unread_visitor_count' => !$isVisitor ? ($currentVisitorUnread + 1) : $currentVisitorUnread,
-            ]);
-
-            return [
-                'message' => $message,
-                'is_duplicate' => false,
+                'last_message_preview' => mb_substr(strip_tags($payload['content']), 0, 120),
             ];
+
+            // Increment atomik di SQL (aman dari race dua pesan bersamaan).
+            if ($senderType === 'visitor') {
+                $conversation->increment('unread_agent_count', 1, $extra);
+            } else {
+                $conversation->increment('unread_visitor_count', 1, $extra + ['unread_agent_count' => 0]);
+            }
+
+            return ['message' => $message, 'is_duplicate' => false];
         });
     }
 }

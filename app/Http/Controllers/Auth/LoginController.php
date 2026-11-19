@@ -9,119 +9,68 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class LoginController extends Controller
 {
-    /**
-     * Root URL redirector.
-     * GET /
-     *
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function root()
+    /** GET / */
+    public function root(): RedirectResponse
     {
-        if (Auth::check()) {
-            return redirect()->route('admin.dashboard');
-        }
-
-        return redirect('/login');
+        return Auth::check() ? to_route('admin.dashboard') : redirect('/login');
     }
 
-    /**
-     * Public CDN Endpoint for Embed Widget
-     * GET /{file}.js
-     */
-    public function widgetScript($file)
+    /** GET /{chat|widget|chat-widget}.js — fallback CDN widget. */
+    public function widgetScript(string $file): BinaryFileResponse
     {
-        $target = public_path($file . '.js');
-        if (!file_exists($target)) {
-            $target = public_path('chat-widget.js');
-        }
-        if (file_exists($target)) {
-            return response()->file($target, [
-                'Content-Type' => 'application/javascript; charset=utf-8',
-                'Access-Control-Allow-Origin' => '*',
-                'Cache-Control' => 'public, max-age=3600',
-            ]);
-        }
-        abort(404);
+        $path = collect([public_path("{$file}.js"), public_path('chat-widget.js')])->first(fn ($p) => is_file($p));
+        abort_unless($path, 404);
+
+        return response()->file($path, [
+            'Content-Type' => 'application/javascript; charset=utf-8',
+            'Access-Control-Allow-Origin' => '*',
+            'Cache-Control' => 'public, max-age=3600',
+        ]);
     }
 
-    /**
-     * Show the login form.
-     * GET /login
-     *
-     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
-     */
-    public function showLoginForm()
+    /** GET /login */
+    public function showLoginForm(): View|RedirectResponse
     {
-        if (Auth::check()) {
-            return redirect()->route('admin.inbox');
-        }
-
-        return view('auth.login');
+        return Auth::check() ? to_route('admin.inbox') : view('auth.login');
     }
 
-    /**
-     * Handle an authentication attempt using Email OR Username.
-     * POST /login
-     */
+    /** POST /login — email ATAU username. */
     public function login(Request $request): RedirectResponse
     {
-        $request->validate([
-            'login'    => 'required|string',
+        $data = $request->validate([
+            'login' => 'required|string|max:255',
             'password' => 'required|string',
         ], [
-            'login.required'    => 'Email atau username wajib diisi.',
+            'login.required' => 'Email atau username wajib diisi.',
             'password.required' => 'Password wajib diisi.',
         ]);
 
-        $loginInput = trim($request->input('login'));
-        $password   = $request->input('password');
-
-        // Deteksi apakah input berupa alamat email atau username
-        $isEmail = filter_var($loginInput, FILTER_VALIDATE_EMAIL);
-        $field   = $isEmail ? 'email' : 'username';
-
-        // Cari user berdasarkan field yang sesuai
-        $user = User::where($field, $loginInput)->first();
-
-        // Fallback: Jika tidak ditemukan via username, coba cari via email
-        if (!$user && !$isEmail) {
-            $user = User::where('email', $loginInput)->first();
+        $user = User::findByLogin($data['login']);
+        if (! $user || ! Hash::check($data['password'], $user->password)) {
+            return back()->withInput($request->only('login', 'remember'))
+                ->withErrors(['login' => 'Email/username atau password yang Anda masukkan salah.']);
         }
 
-        if (!$user || !Hash::check($password, $user->password)) {
-            return back()->withInput($request->only('login', 'remember'))->withErrors([
-                'login' => 'Email/username atau password yang Anda masukkan salah.',
-            ]);
-        }
-
-        // Login ke session
         Auth::login($user, $request->boolean('remember'));
+        $request->session()->regenerate();
 
         if ($user->status === 'offline') {
             $user->update(['status' => 'online']);
         }
 
-        $request->session()->regenerate();
-
         return redirect()->intended(route('admin.inbox'));
     }
 
-    /**
-     * Log the user out of the application.
-     * POST /logout
-     */
+    /** POST /logout */
     public function logout(Request $request): RedirectResponse
     {
-        $user = Auth::user();
-        if ($user) {
-            $user->update(['status' => 'offline']);
-        }
+        $request->user()?->update(['status' => 'offline']);
 
         Auth::logout();
-
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

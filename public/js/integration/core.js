@@ -1,0 +1,133 @@
+/* Integrasi detail — core. Data server: window.BT (lihat integration-detail.blade.php). */
+// Initial Data from Backend
+let currentFaqRules = BT.faqRules;
+if (!Array.isArray(currentFaqRules)) {
+    currentFaqRules = [];
+}
+
+let currentSocialChannels = BT.socialChannels;
+if (!Array.isArray(currentSocialChannels)) {
+    currentSocialChannels = [];
+}
+
+let currentWelcomeOptions = BT.welcomeOptions;
+if (!Array.isArray(currentWelcomeOptions)) {
+    currentWelcomeOptions = [];
+}
+
+let currentBotTree = BT.botTree;
+if (!Array.isArray(currentBotTree)) {
+    currentBotTree = [];
+}
+
+// Ensure every node in tree has a unique ID and children array
+function ensureTreeIds(nodes) {
+    if (!Array.isArray(nodes)) return [];
+    nodes.forEach((node, idx) => {
+        if (!node.id) {
+            node.id = 'node_' + Math.random().toString(36).substr(2, 7) + '_' + (Date.now() + idx);
+        }
+        if (node.children && Array.isArray(node.children)) {
+            ensureTreeIds(node.children);
+        } else {
+            node.children = [];
+        }
+    });
+    return nodes;
+}
+ensureTreeIds(currentBotTree);
+
+let collapsedNodes = new Set();
+let draggedNodeId = null;
+
+const PLATFORM_OPTIONS = [
+    { value: 'whatsapp', name: 'WhatsApp', placeholder: '08123456789 atau https://wa.me/...', badgeClass: 'bg-emerald-100 text-emerald-800' },
+    { value: 'instagram', name: 'Instagram', placeholder: '@username atau https://instagram.com/...', badgeClass: 'bg-pink-100 text-pink-800' },
+    { value: 'threads', name: 'Threads', placeholder: '@username atau https://threads.net/@...', badgeClass: 'bg-neutral-900 text-white' },
+    { value: 'x', name: 'X (Twitter)', placeholder: '@username atau https://x.com/...', badgeClass: 'bg-neutral-900 text-white' },
+    { value: 'facebook', name: 'Facebook', placeholder: 'username atau https://facebook.com/...', badgeClass: 'bg-blue-100 text-blue-800' },
+    { value: 'tiktok', name: 'TikTok', placeholder: '@username atau https://tiktok.com/@...', badgeClass: 'bg-neutral-900 text-white' },
+    { value: 'youtube', name: 'YouTube', placeholder: '@channel atau https://youtube.com/@...', badgeClass: 'bg-red-100 text-red-800' },
+    { value: 'telegram', name: 'Telegram', placeholder: '@username atau https://t.me/...', badgeClass: 'bg-sky-100 text-sky-800' },
+    { value: 'shopee', name: 'Shopee Store', placeholder: 'https://shopee.co.id/...', badgeClass: 'bg-orange-100 text-orange-800' },
+    { value: 'tokopedia', name: 'Tokopedia Store', placeholder: 'https://tokopedia.com/...', badgeClass: 'bg-green-100 text-green-800' },
+    { value: 'custom', name: 'Custom Link / Website', placeholder: 'https://...', badgeClass: 'bg-slate-100 text-slate-800' }
+];
+
+const BRAND_ICONS_SVG = {
+    whatsapp: `<svg class="w-4 h-4 text-[#25D366]" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24zm4.52 11.53c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.03-1.25-.75-.67-1.26-1.5-1.41-1.75-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.44.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.15-1.18-.07-.12-.23-.19-.48-.32z"/></svg>`,
+    instagram: `<svg class="w-4 h-4 text-[#E1306C]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>`,
+    threads: `<svg class="w-4 h-4 text-neutral-900" viewBox="0 0 24 24" fill="currentColor"><path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017C1.5 8.418 2.35 5.564 3.995 3.516 5.845 1.211 8.598.03 12.179.006h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.592 12c.024 3.088.715 5.5 2.054 7.164 1.43 1.778 3.63 2.691 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.34-.779-.963-1.4-1.785-1.816a9.93 9.93 0 0 1-.367 2.36c-.495 1.595-1.4 2.726-2.614 3.266-.966.43-2.11.5-3.201.198-1.266-.35-2.297-1.163-2.903-2.292-.507-.943-.726-2.12-.617-3.312.2-2.193 1.567-3.882 3.76-4.642.89-.309 1.832-.416 2.77-.37a9.04 9.04 0 0 1 1.588.191c-.07-.48-.172-.94-.32-1.37-.483-1.397-1.378-2.2-2.658-2.39-1.12-.166-2.24.092-3.138.725l-1.17-1.638c1.258-.886 2.77-1.27 4.278-1.07 1.944.258 3.382 1.452 4.086 3.39.258.71.42 1.5.487 2.37.654.265 1.238.595 1.74.997 1.176.94 1.926 2.277 2.17 3.868.335 2.18-.263 4.585-1.734 6.395C18.6 22.465 15.847 23.977 12.186 24zM10.57 14.545c-.076.835.06 1.576.383 2.177.382.71 1.003 1.175 1.747 1.381.672.186 1.378.14 1.978-.127.777-.345 1.383-1.117 1.748-2.29.265-.854.374-1.79.326-2.678-.94-.31-1.96-.416-2.96-.316-1.578.184-2.838 1.07-2.986 2.553l-.004.044-.002.024-.002.017.005-.037-.002.015-.002.015.002-.015z"/></svg>`,
+    x: `<svg class="w-4 h-4 text-neutral-900" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
+    twitter: `<svg class="w-4 h-4 text-neutral-900" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
+    facebook: `<svg class="w-4 h-4 text-[#1877F2]" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`,
+    messenger: `<svg class="w-4 h-4 text-[#1877F2]" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`,
+    tiktok: `<svg class="w-4 h-4 text-neutral-900" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg>`,
+    youtube: `<svg class="w-4 h-4 text-[#FF0000]" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>`,
+    telegram: `<svg class="w-4 h-4 text-[#229ED9]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .37z"/></svg>`,
+    shopee: `<svg class="w-4 h-4 text-[#EE4D2D]" viewBox="0 0 24 24" fill="currentColor"><path d="M19.78 7.37c-.36-.58-.87-1.04-1.53-1.37-.66-.33-1.42-.5-2.28-.5H8.03c-.86 0-1.62.17-2.28.5-.66.33-1.17.79-1.53 1.37-.36.58-.54 1.25-.54 2.01v9.23c0 .76.18 1.43.54 2.01.36.58.87 1.04 1.53 1.37.66.33 1.42.5 2.28.5h7.94c.86 0 1.62-.17 2.28-.5.66-.33 1.17-.79 1.53-1.37.36-.58.54-1.25.54-2.01V9.38c0-.76-.18-1.43-.54-2.01zm-7.78-4.87c1.38 0 2.5.89 2.78 2.1h-5.56c.28-1.21 1.4-2.1 2.78-2.1z"/></svg>`,
+    tokopedia: `<svg class="w-4 h-4 text-[#03AC0E]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>`,
+    custom: `<svg class="w-4 h-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`
+};
+
+function getSocialPreviewIconHtml(chan, platform) {
+    if (chan && chan.icon_type === 'custom' && chan.custom_icon) {
+        const custom = (chan.custom_icon || '').trim();
+        if (custom) {
+            if (custom.startsWith('<svg') && custom.endsWith('</svg>')) {
+                return custom;
+            }
+            return `<img src="${escapeHtml(custom)}" alt="icon" class="w-4 h-4 object-contain rounded" onerror="this.onerror=null; this.parentElement.innerHTML=BRAND_ICONS_SVG['${platform}'] || BRAND_ICONS_SVG.custom;" />`;
+        }
+    }
+    const p = platform || 'whatsapp';
+    return BRAND_ICONS_SVG[p] || BRAND_ICONS_SVG.custom;
+}
+
+// 1. Tab Switching Function (Zero dependencies, Bulletproof inline display toggle)
+function switchDetailTab(tabName) {
+    const tabs = ['bot', 'appearance', 'mascot', 'social', 'embed', 'telegram', 'hours', 'sound'];
+    
+    // Save to hidden input and update URL
+    const hiddenTab = document.getElementById('hiddenActiveTab');
+    if (hiddenTab) hiddenTab.value = tabName;
+    try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', tabName);
+        window.history.replaceState(null, '', url.toString());
+    } catch (e) {}
+
+    tabs.forEach(t => {
+        const pane = document.getElementById('tab-pane-' + t);
+        const btn = document.getElementById('tab-btn-' + t);
+        
+        if (pane) {
+            pane.style.display = (t === tabName) ? 'flex' : 'none';
+        }
+        
+        if (btn) {
+            if (t === tabName) {
+                if (t === 'bot') {
+                    btn.className = 'tab-btn shrink-0 whitespace-nowrap px-3.5 py-2 rounded-lg text-[12px] font-semibold transition flex items-center gap-2 bg-purple-600 text-white shadow-2xs cursor-pointer';
+                } else if (t === 'mascot') {
+                    btn.className = 'tab-btn shrink-0 whitespace-nowrap px-3.5 py-2 rounded-lg text-[12px] font-semibold transition flex items-center gap-2 bg-amber-500 text-white shadow-2xs cursor-pointer';
+                } else if (t === 'telegram') {
+                    btn.className = 'tab-btn shrink-0 whitespace-nowrap px-3.5 py-2 rounded-lg text-[12px] font-semibold transition flex items-center gap-2 bg-sky-600 text-white shadow-2xs cursor-pointer';
+                } else if (t === 'hours') {
+                    btn.className = 'tab-btn shrink-0 whitespace-nowrap px-3.5 py-2 rounded-lg text-[12px] font-semibold transition flex items-center gap-2 bg-amber-600 text-white shadow-2xs cursor-pointer';
+                } else if (t === 'sound') {
+                    btn.className = 'tab-btn shrink-0 whitespace-nowrap px-3.5 py-2 rounded-lg text-[12px] font-semibold transition flex items-center gap-2 bg-rose-600 text-white shadow-2xs cursor-pointer';
+                } else {
+                    btn.className = 'tab-btn shrink-0 whitespace-nowrap px-3.5 py-2 rounded-lg text-[12px] font-semibold transition flex items-center gap-2 bg-apple-blue text-white shadow-2xs cursor-pointer';
+                }
+            } else {
+                btn.className = 'tab-btn shrink-0 whitespace-nowrap px-3.5 py-2 rounded-lg text-[12px] font-medium text-apple-textSecondary hover:text-apple-textPrimary hover:bg-apple-canvas transition flex items-center gap-2 cursor-pointer';
+            }
+        }
+    });
+
+    if (tabName === 'mascot') {
+        setTimeout(initAdminMascotSandbox, 50);
+    }
+}
+

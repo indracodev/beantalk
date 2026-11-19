@@ -22,11 +22,15 @@ use Tests\TestCase;
 class VisitorOwnershipSecurityTest extends TestCase
 {
     const KEY = 'pk_live_ownership_test';
+
     const PEMILIK = '11111111-1111-4111-8111-111111111111';
+
     const PENYUSUP = '22222222-2222-4222-8222-222222222222';
 
     protected $tenant;
+
     protected $project;
+
     protected $conv;
 
     protected function setUp(): void

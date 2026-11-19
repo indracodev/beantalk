@@ -12,6 +12,7 @@ use Tests\TestCase;
 class SupressoCoffeeChatbotTest extends TestCase
 {
     protected $apiKey;
+
     protected $project;
 
     protected function setUp(): void
@@ -25,7 +26,7 @@ class SupressoCoffeeChatbotTest extends TestCase
         $this->apiKey = ApiKey::where('project_id', $this->project->id)->first();
     }
 
-    public function testSupressoCoffeeSeederSuccessfullyCreatesOrUpdatesProjectAndKey()
+    public function test_supresso_coffee_seeder_successfully_creates_or_updates_project_and_key()
     {
         $this->assertNotNull($this->project);
         $this->assertContains($this->project->name, ['SUPRESSO', 'Supresso Coffee']);
@@ -34,29 +35,29 @@ class SupressoCoffeeChatbotTest extends TestCase
 
         $setting = $this->project->widgetSetting;
         $this->assertNotNull($setting);
-        $this->assertTrue((bool)$setting->bot_enabled);
+        $this->assertTrue((bool) $setting->bot_enabled);
         $this->assertEquals('Supresso Assistant', $setting->bot_name);
         $this->assertIsArray($setting->bot_rules);
         $this->assertGreaterThan(30, count($setting->bot_rules));
 
         // Verify options do NOT contain numbering like "1.", "1️⃣", etc.
         foreach ($setting->bot_welcome_options as $opt) {
-            $this->assertFalse((bool)preg_match('/^\d+[\.\)]\s*/', $opt['label']), "Option {$opt['label']} should not start with numbers");
+            $this->assertFalse((bool) preg_match('/^\d+[\.\)]\s*/', $opt['label']), "Option {$opt['label']} should not start with numbers");
             $this->assertStringNotContainsString('1️⃣', $opt['label']);
             $this->assertStringNotContainsString('2️⃣', $opt['label']);
         }
     }
 
-    public function testFirstInboundMessageReceivesSupressoWelcomeMenu()
+    public function test_first_inbound_message_receives_supresso_welcome_menu()
     {
-        $visitorUuid = 'supresso-test-vis-' . uniqid();
+        $visitorUuid = 'supresso-test-vis-'.uniqid();
 
         $res = $this->withHeaders([
             'X-Project-Key' => $this->apiKey->public_key,
-        ])->postJson("/api/v1/client/conversations/0/messages", [
-            'visitor_uuid'      => $visitorUuid,
-            'content'           => 'Hello',
-            'client_message_id' => 'msg-supresso-01-' . uniqid(),
+        ])->postJson('/api/v1/client/conversations/0/messages', [
+            'visitor_uuid' => $visitorUuid,
+            'content' => 'Hello',
+            'client_message_id' => 'msg-supresso-01-'.uniqid(),
         ]);
 
         $res->assertStatus(201);
@@ -82,17 +83,17 @@ class SupressoCoffeeChatbotTest extends TestCase
         $this->assertNotContains('1. Order', $labels);
     }
 
-    public function testVisitorSelectingOrderOrHowToBuyGetsPurchaseChannels()
+    public function test_visitor_selecting_order_or_how_to_buy_gets_purchase_channels()
     {
-        $visitorUuid = 'supresso-test-vis-' . uniqid();
+        $visitorUuid = 'supresso-test-vis-'.uniqid();
 
         // 1. Initial message
         $this->withHeaders([
             'X-Project-Key' => $this->apiKey->public_key,
-        ])->postJson("/api/v1/client/conversations/0/messages", [
-            'visitor_uuid'      => $visitorUuid,
-            'content'           => 'Hi',
-            'client_message_id' => 'msg-sup-order-01-' . uniqid(),
+        ])->postJson('/api/v1/client/conversations/0/messages', [
+            'visitor_uuid' => $visitorUuid,
+            'content' => 'Hi',
+            'client_message_id' => 'msg-sup-order-01-'.uniqid(),
         ]);
 
         $conv = Conversation::where('project_id', $this->project->id)->latest('id')->first();
@@ -101,9 +102,9 @@ class SupressoCoffeeChatbotTest extends TestCase
         $this->withHeaders([
             'X-Project-Key' => $this->apiKey->public_key,
         ])->postJson("/api/v1/client/conversations/{$conv->id}/messages", [
-            'visitor_uuid'      => $visitorUuid,
-            'content'           => 'How to Buy',
-            'client_message_id' => 'msg-sup-order-02-' . uniqid(),
+            'visitor_uuid' => $visitorUuid,
+            'content' => 'How to Buy',
+            'client_message_id' => 'msg-sup-order-02-'.uniqid(),
         ]);
 
         $lastBotMsg = Message::where('conversation_id', $conv->id)
@@ -122,17 +123,17 @@ class SupressoCoffeeChatbotTest extends TestCase
         $this->assertContains('Order Issue', $labels);
     }
 
-    public function testVisitorSelectingOrderIssueGetsOrderIssueAssistance()
+    public function test_visitor_selecting_order_issue_gets_order_issue_assistance()
     {
-        $visitorUuid = 'supresso-test-vis-' . uniqid();
+        $visitorUuid = 'supresso-test-vis-'.uniqid();
 
         // 1. Initial message
         $this->withHeaders([
             'X-Project-Key' => $this->apiKey->public_key,
-        ])->postJson("/api/v1/client/conversations/0/messages", [
-            'visitor_uuid'      => $visitorUuid,
-            'content'           => 'Hi',
-            'client_message_id' => 'msg-sup-issue-01-' . uniqid(),
+        ])->postJson('/api/v1/client/conversations/0/messages', [
+            'visitor_uuid' => $visitorUuid,
+            'content' => 'Hi',
+            'client_message_id' => 'msg-sup-issue-01-'.uniqid(),
         ]);
 
         $conv = Conversation::where('project_id', $this->project->id)->latest('id')->first();
@@ -141,9 +142,9 @@ class SupressoCoffeeChatbotTest extends TestCase
         $this->withHeaders([
             'X-Project-Key' => $this->apiKey->public_key,
         ])->postJson("/api/v1/client/conversations/{$conv->id}/messages", [
-            'visitor_uuid'      => $visitorUuid,
-            'content'           => 'Order Issue',
-            'client_message_id' => 'msg-sup-issue-02-' . uniqid(),
+            'visitor_uuid' => $visitorUuid,
+            'content' => 'Order Issue',
+            'client_message_id' => 'msg-sup-issue-02-'.uniqid(),
         ]);
 
         $lastBotMsg = Message::where('conversation_id', $conv->id)
@@ -162,17 +163,17 @@ class SupressoCoffeeChatbotTest extends TestCase
         $this->assertNotContains('1.1 Order status', $labels);
     }
 
-    public function testVisitorSelectingShippingOptionsGetsShippingDetails()
+    public function test_visitor_selecting_shipping_options_gets_shipping_details()
     {
-        $visitorUuid = 'supresso-test-vis-' . uniqid();
+        $visitorUuid = 'supresso-test-vis-'.uniqid();
 
         // 1. Initial message
         $this->withHeaders([
             'X-Project-Key' => $this->apiKey->public_key,
-        ])->postJson("/api/v1/client/conversations/0/messages", [
-            'visitor_uuid'      => $visitorUuid,
-            'content'           => 'Hi',
-            'client_message_id' => 'msg-sup-ship-01-' . uniqid(),
+        ])->postJson('/api/v1/client/conversations/0/messages', [
+            'visitor_uuid' => $visitorUuid,
+            'content' => 'Hi',
+            'client_message_id' => 'msg-sup-ship-01-'.uniqid(),
         ]);
 
         $conv = Conversation::where('project_id', $this->project->id)->latest('id')->first();
@@ -181,9 +182,9 @@ class SupressoCoffeeChatbotTest extends TestCase
         $this->withHeaders([
             'X-Project-Key' => $this->apiKey->public_key,
         ])->postJson("/api/v1/client/conversations/{$conv->id}/messages", [
-            'visitor_uuid'      => $visitorUuid,
-            'content'           => 'Shipping Options',
-            'client_message_id' => 'msg-sup-ship-02-' . uniqid(),
+            'visitor_uuid' => $visitorUuid,
+            'content' => 'Shipping Options',
+            'client_message_id' => 'msg-sup-ship-02-'.uniqid(),
         ]);
 
         $lastBotMsg = Message::where('conversation_id', $conv->id)
@@ -196,30 +197,30 @@ class SupressoCoffeeChatbotTest extends TestCase
         $this->assertStringContainsString('Ninjavan', $lastBotMsg->content);
     }
 
-    public function testVisitorRequestingCSGetsHandoff()
+    public function test_visitor_requesting_cs_gets_handoff()
     {
-        $visitorUuid = 'supresso-test-vis-' . uniqid();
+        $visitorUuid = 'supresso-test-vis-'.uniqid();
 
         $this->withHeaders([
             'X-Project-Key' => $this->apiKey->public_key,
-        ])->postJson("/api/v1/client/conversations/0/messages", [
-            'visitor_uuid'      => $visitorUuid,
-            'content'           => 'CS',
-            'client_message_id' => 'msg-sup-cs-' . uniqid(),
+        ])->postJson('/api/v1/client/conversations/0/messages', [
+            'visitor_uuid' => $visitorUuid,
+            'content' => 'CS',
+            'client_message_id' => 'msg-sup-cs-'.uniqid(),
         ]);
 
         $conv = Conversation::where('project_id', $this->project->id)->latest('id')->first();
-        $this->assertFalse((bool)$conv->is_bot_active);
+        $this->assertFalse((bool) $conv->is_bot_active);
     }
 
-    public function testSeederDoesNotDuplicateOrTouchSupressoCoId()
+    public function test_seeder_does_not_duplicate_or_touch_supresso_co_id()
     {
         // Create supresso.co.id project to simulate database state
         $tenant = $this->project->tenant;
         $idProject = Project::create([
             'tenant_id' => $tenant->id,
-            'name'      => 'supresso.co.id',
-            'slug'      => 'supressocoid',
+            'name' => 'supresso.co.id',
+            'slug' => 'supressocoid',
             'is_active' => true,
         ]);
 

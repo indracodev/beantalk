@@ -12,129 +12,47 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    /**
-     * Authenticate staff/agent via Email OR Username.
-     * POST /api/v1/auth/login
-     */
+    /** POST /api/v1/auth/login — field 'login' (atau 'username'/'email') + password. */
     public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'login'    => 'required_without_all:username,email|string',
-            'username' => 'nullable|string',
-            'email'    => 'nullable|string',
+            'login' => 'required_without_all:username,email|nullable|string|max:255',
+            'username' => 'nullable|string|max:255',
+            'email' => 'nullable|string|max:255',
             'password' => 'required|string',
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code'    => 'VALIDATION_ERROR',
-                    'message' => 'Silakan masukkan email/username dan password.',
-                    'details' => $validator->errors()
-                ]
-            ], 422);
+            return $this->fail('VALIDATION_ERROR', 'Silakan masukkan email/username dan password.', 422, ['details' => $validator->errors()]);
         }
 
-        // Resolusi field login: prioritas 'login', lalu 'username', lalu 'email'
-        $loginInput = trim($request->input('login') ?? $request->input('username') ?? $request->input('email'));
-        $password   = $request->input('password');
-
-        // Deteksi apakah input berupa alamat email atau username
-        $isEmail = filter_var($loginInput, FILTER_VALIDATE_EMAIL);
-        $field   = $isEmail ? 'email' : 'username';
-
-        // Cari user berdasarkan email atau username
-        $user = User::where($field, $loginInput)->first();
-
-        // Fallback: Jika tidak ketemu via username, coba cari via email juga
-        if (!$user && !$isEmail) {
-            $user = User::where('email', $loginInput)->first();
+        $user = User::findByLogin((string) ($request->input('login') ?? $request->input('username') ?? $request->input('email')));
+        if (! $user || ! Hash::check($request->input('password'), $user->password)) {
+            return $this->fail('INVALID_CREDENTIALS', 'Email/username atau password tidak valid.', 401);
         }
 
-        if (!$user || !Hash::check($password, $user->password)) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code'    => 'INVALID_CREDENTIALS',
-                    'message' => 'Email/username atau password tidak valid.'
-                ]
-            ], 401);
-        }
-
-        // Login ke session guard jika request berbasis web
         Auth::login($user, $request->boolean('remember'));
-
-        // Update status user ke online jika sedang offline
         if ($user->status === 'offline') {
             $user->update(['status' => 'online']);
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'user' => [
-                    'id'         => $user->id,
-                    'tenant_id'  => $user->tenant_id,
-                    'name'       => $user->name,
-                    'username'   => $user->username,
-                    'email'      => $user->email,
-                    'role'       => $user->role,
-                    'status'     => $user->status,
-                    'avatar_url' => $user->avatar_url,
-                ],
-                'message' => 'Login berhasil.'
-            ]
-        ]);
+        return $this->ok(['user' => $user->toProfileArray(), 'message' => 'Login berhasil.']);
     }
 
-    /**
-     * Get current authenticated user profile
-     * GET /api/v1/auth/me
-     */
+    /** GET /api/v1/auth/me */
     public function me(Request $request): JsonResponse
     {
         $user = $request->user();
 
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code'    => 'UNAUTHORIZED',
-                    'message' => 'Sesi login tidak ditemukan.'
-                ]
-            ], 401);
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'user' => [
-                    'id'         => $user->id,
-                    'tenant_id'  => $user->tenant_id,
-                    'name'       => $user->name,
-                    'username'   => $user->username,
-                    'email'      => $user->email,
-                    'role'       => $user->role,
-                    'status'     => $user->status,
-                    'avatar_url' => $user->avatar_url,
-                ]
-            ]
-        ]);
+        return $user
+            ? $this->ok(['user' => $user->toProfileArray()])
+            : $this->fail('UNAUTHORIZED', 'Sesi login tidak ditemukan.', 401);
     }
 
-    /**
-     * Logout current user
-     * POST /api/v1/auth/logout
-     */
+    /** POST /api/v1/auth/logout */
     public function logout(Request $request): JsonResponse
     {
-        $user = $request->user();
-
-        if ($user) {
-            $user->update(['status' => 'offline']);
-        }
-
+        $request->user()?->update(['status' => 'offline']);
         Auth::logout();
 
         if ($request->hasSession()) {
@@ -142,11 +60,6 @@ class AuthController extends Controller
             $request->session()->regenerateToken();
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'message' => 'Logout berhasil.'
-            ]
-        ]);
+        return $this->ok(['message' => 'Logout berhasil.']);
     }
 }

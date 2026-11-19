@@ -2,328 +2,192 @@
 
 namespace App\Http\Controllers\Api\Client;
 
+use App\Http\Controllers\Api\Client\Concerns\ResolvesVisitorConversation;
 use App\Http\Controllers\Controller;
-use App\Models\Project;
+use App\Mail\ChatTranscriptMail;
+use App\Models\Message;
+use App\Models\Visitor;
+use App\Services\ActivityLogger;
+use App\Services\BotService;
 use App\Services\ConversationService;
 use App\Services\PollingService;
+use App\Services\TelegramService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class MessageController extends Controller
 {
-    protected $conversationService;
-    protected $pollingService;
-    protected $botService;
+    use ResolvesVisitorConversation;
+
+    private const ANONYMOUS_NAMES = ['pengunjung', 'visitor', 'anda', 'guest'];
 
     public function __construct(
-        ConversationService $conversationService,
-        PollingService $pollingService,
-        \App\Services\BotService $botService
-    ) {
-        $this->conversationService = $conversationService;
-        $this->pollingService = $pollingService;
-        $this->botService = $botService;
+        private ConversationService $conversations,
+        private PollingService $polling,
+        private BotService $bot,
+        private TelegramService $telegram,
+    ) {}
+
+    /** GET /api/v1/client/conversations — daftar tiket milik pengunjung. */
+    public function listConversations(Request $request): JsonResponse
+    {
+        $uuid = $this->visitorUuid($request);
+        if (! $uuid) {
+            return $this->fail('VISITOR_REQUIRED', 'visitor_uuid parameter is required.', 422);
+        }
+
+        $project = $this->project($request);
+        $visitor = Visitor::where('project_id', $project->id)->where('visitor_uuid', $uuid)->first();
+
+        $list = $visitor
+            ? $this->conversations->getVisitorConversations($project, $visitor)->map(fn ($c) => $this->conversations->toWidgetSummary($c))
+            : [];
+
+        return $this->ok(['conversations' => $list]);
     }
 
-    /**
-     * Lists conversation tickets for a visitor
-     * GET /api/v1/client/conversations
-     */
-    public function listConversations(Request $request)
+    /** POST /api/v1/client/conversations/{id}/resolve — pengunjung menyelesaikan tiket. */
+    public function resolve(Request $request, string $id): JsonResponse
     {
-        /** @var Project $project */
-        $project = $request->attributes->get('project');
-
-        $visitorUuid = $request->input('visitor_uuid') ?: $request->header('X-Visitor-Uuid');
-        if (!$visitorUuid) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'VISITOR_REQUIRED',
-                    'message' => 'visitor_uuid parameter is required.'
-                ]
-            ], 422);
+        $conversation = $this->ownedConversation($request, $id);
+        if (! $conversation) {
+            return $this->conversationNotFound();
         }
 
-        $visitor = \App\Models\Visitor::where('project_id', $project->id)
-            ->where('visitor_uuid', $visitorUuid)
-            ->first();
+        $this->conversations->setStatus($conversation, 'closed');
+        ChatTranscriptMail::sendTo($conversation);
 
-        if (!$visitor) {
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'conversations' => []
-                ]
-            ]);
-        }
-
-        $conversations = $this->conversationService->getVisitorConversations($project, $visitor);
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'conversations' => $conversations->map(function ($c) {
-                    return [
-                        'id'                   => $c->id,
-                        'status'               => $c->status,
-                        'channel'              => $c->channel,
-                        'channel_label'        => $c->channel_label,
-                        'last_message_preview' => $c->last_message_preview ?? ($c->latestMessage ? mb_substr(strip_tags($c->latestMessage->content), 0, 75) : null),
-                        'last_message_at'      => $c->last_message_at ? $c->last_message_at->toIso8601String() : ($c->created_at ? $c->created_at->toIso8601String() : null),
-                        'unread_visitor_count' => (int) $c->unread_visitor_count,
-                        'created_at'           => $c->created_at ? $c->created_at->toIso8601String() : null,
-                    ];
-                })
-            ]
-        ]);
-    }
-
-    /**
-     * Customer resolves conversation directly from widget
-     * POST /api/v1/client/conversations/{id}/resolve
-     */
-    public function resolve(Request $request, $conversationId)
-    {
-        /** @var Project $project */
-        $project = $request->attributes->get('project');
-
-        // Pemilik wajib (B2): tanpa visitor_uuid atau bukan pemilik = 404.
-        $conversation = $this->conversationService->findForVisitor($project, $conversationId, self::visitorUuid($request));
-        if (!$conversation) {
-            return self::notFound();
-        }
-
-        $conversation->update(['status' => 'closed']);
-
-        try {
-            $telegramService = app(\App\Services\TelegramService::class);
-            $telegramService->closeForumTopic($conversation);
-        } catch (\Throwable $e) {}
-
-        // Auto-send transcript email to visitor
-        $conversation->load(['visitor', 'project']);
-        $visitor = $conversation->visitor;
-        $visitorEmail = $visitor ? $visitor->email : null;
-        if ($visitorEmail) {
-            try {
-                $projectName = $conversation->project ? $conversation->project->name : 'BeanTalk';
-                $visitorName = $visitor->name ?: ($visitor->display_name ?? 'Pengunjung');
-                \Illuminate\Support\Facades\Mail::to($visitorEmail)->send(
-                    new \App\Mail\ChatTranscriptMail($conversation, $projectName, $visitorName)
-                );
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning("[ChatTranscript] Self-resolve email gagal: {$e->getMessage()}");
-            }
-        }
-
-        \App\Services\ActivityLogger::log(
+        ActivityLogger::log(
             'conversation.status_updated',
             "Pengunjung menandai percakapan #{$conversation->id} selesai",
             $conversation,
-            ['status' => 'closed', 'resolved_by' => 'customer']
+            ['status' => 'closed', 'resolved_by' => 'customer'],
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id'     => $conversation->id,
-                'status' => 'closed',
-            ]
-        ]);
+        return $this->ok(['id' => $conversation->id, 'status' => 'closed']);
     }
 
-    /**
-     * Polls messages with index scan: WHERE conversation_id = ? AND id > ?
-     * GET /api/v1/client/conversations/{id}/messages?after_id=123
-     */
-    public function index(Request $request, $conversationId)
+    /** GET /api/v1/client/conversations/{id}/messages?after_id= — polling range scan. */
+    public function index(Request $request, string $id): JsonResponse
     {
-        /** @var Project $project */
-        $project = $request->attributes->get('project');
-
-        // Pemilik wajib (B1): sebelumnya cukup tahu ID untuk membaca chat orang lain.
-        $visitorUuid = self::visitorUuid($request);
-        if ($visitorUuid === null) {
-            // ponytail: masa transisi widget lama ter-cache (tidak kirim uuid saat polling) → daftar kosong, tanpa data.
-            // Hapus cabang ini (jadi 404) setelah ±2 minggu sejak deploy.
-            $afterId = (int) $request->query('after_id', 0);
-
-            return response()->json(['success' => true, 'data' => ['messages' => [], 'last_id' => $afterId]]);
-        }
-        $conversation = $this->conversationService->findForVisitor($project, $conversationId, $visitorUuid);
-        if (!$conversation) {
-            return self::notFound();
-        }
-
         $afterId = (int) $request->query('after_id', 0);
-        $limit = min((int) $request->query('limit', 50), 100);
 
-        $messages = $this->pollingService->pollMessages($conversation, $afterId, $limit);
+        // ponytail: masa transisi widget lama ter-cache (polling tanpa uuid) → daftar kosong. Jadikan 404 setelah ±2 minggu sejak deploy.
+        if ($this->visitorUuid($request) === null) {
+            return $this->ok(['messages' => [], 'last_id' => $afterId]);
+        }
 
-        // Jika visitor menarik pesan, reset unread_visitor_count
+        $conversation = $this->ownedConversation($request, $id);
+        if (! $conversation) {
+            return $this->conversationNotFound();
+        }
+
+        $messages = $this->polling->pollMessages($conversation, $afterId, min((int) $request->query('limit', 50), 100));
+
         if ($conversation->unread_visitor_count > 0 && $messages->isNotEmpty()) {
             $conversation->update(['unread_visitor_count' => 0]);
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'messages' => $messages->map(function ($msg) {
-                    return [
-                        'id'                => $msg->id,
-                        'client_message_id' => $msg->client_message_id,
-                        'sender_type'       => $msg->sender_type,
-                        'sender_name'       => $msg->sender_name,
-                        'content'           => $msg->content,
-                        'content_type'      => $msg->content_type,
-                        'metadata'          => $msg->metadata,
-                        'status'            => $msg->status,
-                        'created_at'        => $msg->created_at ? $msg->created_at->toIso8601String() : null,
-                    ];
-                }),
-                'last_id' => $messages->isNotEmpty() ? $messages->last()->id : $afterId,
-            ]
+        return $this->ok([
+            'messages' => $messages->map(fn (Message $m) => $m->toWidgetArray()),
+            'last_id' => $messages->last()?->id ?? $afterId,
         ]);
     }
 
-    /**
-     * Appends a message from the visitor with idempotency guarantee
-     * POST /api/v1/client/conversations/{id}/messages
-     */
-    public function store(Request $request, $conversationId)
+    /** POST /api/v1/client/conversations/{id}/messages — kirim pesan (idempoten). */
+    public function store(Request $request, string $id): JsonResponse
     {
-        if (!$request->has('content') && $request->has('message')) {
+        if (! $request->has('content') && $request->has('message')) {
             $request->merge(['content' => $request->input('message')]);
         }
 
-        $request->validate([
-            'content'           => 'required|string|max:5000',
+        $data = $request->validate([
+            'content' => 'required|string|max:5000',
             'client_message_id' => 'nullable|string|max:64',
-            'content_type'      => 'nullable|string|in:text,image,file,card',
-            'metadata'          => 'nullable|array',
+            'content_type' => 'nullable|string|in:text,image,file,card',
+            'metadata' => 'nullable|array',
+            'sender_name' => 'nullable|string|max:100',
+            'page_url' => 'nullable|string|max:500',
+            'page_title' => 'nullable|string|max:255',
         ]);
 
-        /** @var Project $project */
-        $project = $request->attributes->get('project');
-
+        $project = $this->project($request);
         $conversation = null;
-        if (!empty($conversationId) && is_numeric($conversationId) && (int)$conversationId > 0) {
-            // Pemilik wajib (B2): ID percakapan orang lain = 404, bukan menyisipkan pesan.
-            $conversation = $this->conversationService->findForVisitor($project, $conversationId, self::visitorUuid($request));
-            if (!$conversation) {
-                return self::notFound();
+
+        if (is_numeric($id) && (int) $id > 0) {
+            $conversation = $this->ownedConversation($request, $id);
+            if (! $conversation) {
+                return $this->conversationNotFound();
+            }
+            if ($conversation->status === 'closed') {
+                return $this->fail('CONVERSATION_CLOSED', 'Tiket percakapan ini telah selesai. Silakan buat tiket baru.', 422);
             }
         }
 
-        // Jika percakapan lama sudah berstatus 'closed', jangan izinkan kirim ke tiket lama ini
-        if ($conversation && $conversation->status === 'closed') {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'CONVERSATION_CLOSED',
-                    'message' => 'Tiket percakapan ini telah selesai. Silakan buat tiket baru.',
-                ]
-            ], 422);
-        }
-
-        // Jika conversation belum ada (misal pesan pertama dari widget), resolve/create on demand!
-        if (!$conversation) {
-            $visitorUuid = $request->input('visitor_uuid');
-            if ($visitorUuid) {
-                $visitor = $this->conversationService->getOrCreateVisitor(
-                    $project,
-                    $visitorUuid,
-                    $request->ip(),
-                    $request->userAgent(),
-                    $request->input('sender_name')
-                );
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'error' => [
-                        'code' => 'CONVERSATION_NOT_FOUND',
-                        'message' => 'Percakapan tidak ditemukan untuk project ini.',
-                    ]
-                ], 404);
+        // Pesan pertama dari widget: buat visitor + percakapan on-demand.
+        if (! $conversation) {
+            $uuid = $request->input('visitor_uuid');
+            if (! is_string($uuid) || $uuid === '') {
+                return $this->fail('CONVERSATION_NOT_FOUND', 'Percakapan tidak ditemukan untuk project ini.', 404);
             }
-
-            $conversation = $this->conversationService->getOrCreateConversation($project, $visitor, [
-                'page_url'   => $request->input('page_url'),
-                'page_title' => $request->input('page_title'),
+            $visitor = $this->conversations->getOrCreateVisitor($project, $uuid, $request->ip(), $request->userAgent(), $data['sender_name'] ?? null);
+            $conversation = $this->conversations->getOrCreateConversation($project, $visitor, [
+                'page_url' => $data['page_url'] ?? null,
+                'page_title' => $data['page_title'] ?? null,
             ]);
         }
 
-        $rawSenderName = strip_tags(trim($request->input('sender_name', '')));
-        if ($rawSenderName && !in_array(strtolower($rawSenderName), ['pengunjung', 'visitor', 'anda', 'guest'])) {
-            if ($conversation->visitor && empty($conversation->visitor->name)) {
-                $conversation->visitor->update(['name' => $rawSenderName]);
-            }
-            $finalSenderName = $rawSenderName;
-        } else {
-            $finalSenderName = $conversation->visitor->name ?: ($conversation->visitor->display_name ?? 'Tamu');
-        }
-
-        $result = $this->conversationService->appendMessage($conversation, [
-            'sender_type'       => 'visitor',
-            'sender_name'       => $finalSenderName,
-            'content'           => $request->input('content'),
-            'client_message_id' => $request->input('client_message_id'),
-            'content_type'      => $request->input('content_type', 'text'),
-            'metadata'          => $request->input('metadata'),
+        $result = $this->conversations->appendMessage($conversation, [
+            'sender_type' => 'visitor',
+            'sender_name' => $this->resolveSenderName($conversation->visitor, $data['sender_name'] ?? ''),
+            'content' => $data['content'],
+            'client_message_id' => $data['client_message_id'] ?? null,
+            'content_type' => $data['content_type'] ?? 'text',
+            'metadata' => $data['metadata'] ?? null,
         ]);
 
         $msg = $result['message'];
-
-        // Trigger Bot Auto-Responder & Telegram Sync jika pesan bukan duplikasi
-        if (!$result['is_duplicate']) {
-            try {
-                $this->botService->processInboundMessage($conversation, $msg);
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('[BotService] Inbound processing warning: ' . $e->getMessage());
-            }
-
-            try {
-                $telegramService = app(\App\Services\TelegramService::class);
-                $telegramService->sendNewTicketAlert($conversation, $msg);
-                $telegramService->forwardVisitorMessage($conversation, $msg);
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('[TelegramService] Message forward warning: ' . $e->getMessage());
-            }
+        if (! $result['is_duplicate']) {
+            $this->afterVisitorMessage($conversation, $msg);
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id'                => $msg->id,
-                'conversation_id'   => $conversation->id,
-                'client_message_id' => $msg->client_message_id,
-                'sender_type'       => $msg->sender_type,
-                'sender_name'       => $msg->sender_name,
-                'content'           => $msg->content,
-                'content_type'      => $msg->content_type,
-                'metadata'          => $msg->metadata,
-                'created_at'        => $msg->created_at ? $msg->created_at->toIso8601String() : null,
-                'is_duplicate'      => $result['is_duplicate'],
-            ]
-        ], $result['is_duplicate'] ? 200 : 201);
+        return $this->ok(
+            $msg->toWidgetArray() + ['conversation_id' => $conversation->id, 'is_duplicate' => $result['is_duplicate']],
+            $result['is_duplicate'] ? 200 : 201,
+        );
     }
 
-    /** visitor_uuid dari header (widget) atau body/query (kompatibel klien lama). */
-    public static function visitorUuid(Request $request): ?string
+    /** Nama pengirim: input eksplisit (bukan "Pengunjung" dsb.) atau nama tersimpan. */
+    private function resolveSenderName(Visitor $visitor, string $input): string
     {
-        $uuid = $request->header('X-Visitor-Uuid') ?: $request->input('visitor_uuid');
+        $name = strip_tags(trim($input));
+        if ($name !== '' && ! in_array(strtolower($name), self::ANONYMOUS_NAMES, true)) {
+            if (empty($visitor->name)) {
+                $visitor->update(['name' => $name]);
+            }
 
-        return is_string($uuid) && $uuid !== '' ? $uuid : null;
+            return $name;
+        }
+
+        return $visitor->name ?: $visitor->display_name;
     }
 
-    public static function notFound()
+    /** Bot auto-responder + sinkron Telegram; kegagalan integrasi tidak menggagalkan kirim pesan. */
+    private function afterVisitorMessage($conversation, Message $msg): void
     {
-        return response()->json([
-            'success' => false,
-            'error' => [
-                'code' => 'CONVERSATION_NOT_FOUND',
-                'message' => 'Percakapan tidak ditemukan.',
-            ],
-        ], 404);
+        try {
+            $this->bot->processInboundMessage($conversation, $msg);
+        } catch (Throwable $e) {
+            Log::warning('[BotService] '.$e->getMessage());
+        }
+
+        try {
+            $this->telegram->sendNewTicketAlert($conversation, $msg);
+            $this->telegram->forwardVisitorMessage($conversation, $msg);
+        } catch (Throwable $e) {
+            Log::warning('[TelegramService] '.$e->getMessage());
+        }
     }
 }

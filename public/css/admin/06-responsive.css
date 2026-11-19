@@ -1,0 +1,259 @@
+/* ==========================================================================
+   RESPONSIVE BREAKPOINTS
+   ========================================================================== */
+
+/* Tablet & Laptop Sedang (769px – 1024px): Sidebar auto-collapse ke icon mode */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .sidebar:not(.force-expanded) {
+        width: 68px !important;
+    }
+    .sidebar:not(.force-expanded) .nav-text,
+    .sidebar:not(.force-expanded) .nav-label,
+    .sidebar:not(.force-expanded) .brand-logo-text,
+    .sidebar:not(.force-expanded) .user-info {
+        display: none;
+    }
+    .sidebar:not(.force-expanded) .sidebar-toggle-btn {
+        position: absolute;
+        right: 20px;
+        transform: rotate(180deg);
+    }
+    .sidebar:not(.force-expanded) .footer-actions {
+        flex-direction: column;
+    }
+    .sidebar:not(.force-expanded) .footer-btn span {
+        display: none;
+    }
+    .sidebar:not(.force-expanded) .nav-badge {
+        position: absolute;
+        top: 4px;
+        right: 6px;
+        padding: 2px 5px;
+        font-size: 10px;
+    }
+    .resize-handle-sidebar {
+        display: none;
+    }
+    .page-container {
+        padding: 24px 20px;
+    }
+}
+
+/* Mobile Devices (<= 768px): Sidebar Off-Canvas Drawer + Sticky Mobile Top Bar */
+@media (max-width: 768px) {
+    .mobile-top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 52px;
+        padding: 0 16px;
+        background: var(--bg-surface);
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        z-index: 35;
+    }
+
+    .btn-hamburger, .btn-theme-mobile {
+        background: var(--bg-subtle);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 6px;
+        color: var(--text-main);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s ease;
+    }
+
+    .btn-hamburger:hover, .btn-theme-mobile:hover {
+        background: var(--bg-canvas);
+        border-color: var(--border-hover);
+    }
+
+    .mobile-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        color: var(--text-main);
+    }
+
+    .mobile-brand-name {
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+    }
+
+    .mobile-top-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .mobile-unread-pill {
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+    /* Sidebar Drawer */
+    .sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 270px !important;
+        max-width: 82vw !important;
+        z-index: 100 !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .sidebar.open-mobile {
+        transform: translateX(0) !important;
+    }
+
+    .sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(2px);
+        z-index: 90;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+    }
+
+    .sidebar-backdrop.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .resize-handle-sidebar {
+        display: none !important;
+    }
+
+    .page-container {
+        padding: 16px 14px;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .projects-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================================================
+   IMPERSONATION (LOGIN AS) BANNER & CONTROLS
+   ========================================================================== */
+.impersonation-banner {
+    background: linear-gradient(135deg, #F59E0B, #D97706);
+    color: #FFFFFF;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    font-size: 13px;
+    box-shadow: 0 2px 6px rgba(217, 119, 6, 0.25);
+    flex-shrink: 0;
+    z-index: 50;
+    animation: slideDownFade 0.2s ease;
+}
+
+@keyframes slideDownFade {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.impersonation-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+}
+
+.impersonation-info svg {
+    flex-shrink: 0;
+}
+
+.impersonate-role-tag {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.2);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-impersonate-leave {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #0F172A;
+    color: #F8FAFC;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.btn-impersonate-leave:hover {
+    background: #1E293B;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.btn-login-as {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 11px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg-surface);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-login-as:hover {
+    border-color: var(--accent);
+    background: var(--bg-subtle);
+    transform: translateY(-1px);
+}
+
+.current-user-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+}

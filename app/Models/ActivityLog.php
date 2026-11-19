@@ -4,12 +4,11 @@ namespace App\Models;
 
 use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ActivityLog extends Model
 {
     use BelongsToTenant;
-
-    protected $table = 'activity_logs';
 
     public $timestamps = false;
 
@@ -28,28 +27,16 @@ class ActivityLog extends Model
         'created_at',
     ];
 
-    protected $casts = [
-        'properties' => 'array',
-        'created_at' => 'datetime',
-    ];
-
-    public function user()
+    protected function casts(): array
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return [
+            'properties' => 'array',
+            'created_at' => 'datetime',
+        ];
     }
 
-    public function scopeByRole($query, $role)
+    public function user(): BelongsTo
     {
-        return $query->where('user_role', $role);
-    }
-
-    public function scopeByAction($query, $action)
-    {
-        return $query->where('action', $action);
-    }
-
-    public function scopeByUser($query, $userId)
-    {
-        return $query->where('user_id', $userId);
+        return $this->belongsTo(User::class);
     }
 }

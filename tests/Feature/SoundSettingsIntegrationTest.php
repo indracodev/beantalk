@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\ApiKey;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Project;
@@ -9,18 +10,18 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Visitor;
 use App\Models\WidgetSetting;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class SoundSettingsIntegrationTest extends TestCase
 {
-    use DatabaseTransactions;
-
     protected Tenant $tenant;
+
     protected User $admin;
+
     protected Project $project;
+
     protected WidgetSetting $widgetSetting;
 
     protected function setUp(): void
@@ -28,31 +29,31 @@ class SoundSettingsIntegrationTest extends TestCase
         parent::setUp();
 
         $this->tenant = Tenant::create([
-            'name'   => 'Sound Tenant',
-            'slug'   => 'sound-tenant-' . uniqid(),
+            'name' => 'Sound Tenant',
+            'slug' => 'sound-tenant-'.uniqid(),
             'status' => 'active',
         ]);
 
         $this->admin = User::create([
             'tenant_id' => $this->tenant->id,
-            'name'      => 'Sound Admin',
-            'email'     => 'soundadmin_' . uniqid() . '@example.com',
-            'password'  => bcrypt('password123'),
-            'role'      => 'superadmin',
+            'name' => 'Sound Admin',
+            'email' => 'soundadmin_'.uniqid().'@example.com',
+            'password' => bcrypt('password123'),
+            'role' => 'superadmin',
         ]);
 
         $this->project = Project::create([
             'tenant_id' => $this->tenant->id,
-            'name'      => 'Sound Store',
-            'slug'      => 'sound-store-' . uniqid(),
-            'status'    => 'active',
+            'name' => 'Sound Store',
+            'slug' => 'sound-store-'.uniqid(),
+            'status' => 'active',
         ]);
 
         $this->widgetSetting = WidgetSetting::create([
-            'project_id'     => $this->project->id,
-            'primary_color'  => '#0071E3',
-            'sound_enabled'  => true,
-            'sound_type'     => 'pedestrian',
+            'project_id' => $this->project->id,
+            'primary_color' => '#0071E3',
+            'sound_enabled' => true,
+            'sound_type' => 'pedestrian',
             'sound_duration' => 15,
         ]);
     }
@@ -74,9 +75,9 @@ class SoundSettingsIntegrationTest extends TestCase
     public function test_admin_can_update_sound_settings(): void
     {
         $payload = [
-            'primary_color'  => '#E11D48',
-            'sound_enabled'  => '1',
-            'sound_type'     => 'ambulance',
+            'primary_color' => '#E11D48',
+            'sound_enabled' => '1',
+            'sound_type' => 'ambulance',
             'sound_duration' => 30,
         ];
 
@@ -100,10 +101,10 @@ class SoundSettingsIntegrationTest extends TestCase
         $fakeMp3 = UploadedFile::fake()->createWithContent('custom-chime.mp3', 'fake mp3 sound file data');
 
         $payload = [
-            'primary_color'     => '#0071E3',
-            'sound_enabled'     => '1',
-            'sound_type'        => 'custom',
-            'sound_duration'    => 20,
+            'primary_color' => '#0071E3',
+            'sound_enabled' => '1',
+            'sound_type' => 'custom',
+            'sound_duration' => 20,
             'sound_custom_file' => $fakeMp3,
         ];
 
@@ -124,26 +125,26 @@ class SoundSettingsIntegrationTest extends TestCase
     public function test_dashboard_poll_updates_includes_sound_payload_for_latest_incoming(): void
     {
         $visitor = Visitor::create([
-            'project_id'       => $this->project->id,
-            'visitor_uuid'     => 'vis-' . uniqid(),
-            'name'             => 'Customer Sound Test',
-            'last_seen_at'     => now(),
+            'project_id' => $this->project->id,
+            'visitor_uuid' => 'vis-'.uniqid(),
+            'name' => 'Customer Sound Test',
+            'last_seen_at' => now(),
         ]);
 
         $conversation = Conversation::create([
-            'tenant_id'          => $this->tenant->id,
-            'project_id'         => $this->project->id,
-            'visitor_id'         => $visitor->id,
-            'status'             => 'open',
+            'tenant_id' => $this->tenant->id,
+            'project_id' => $this->project->id,
+            'visitor_id' => $visitor->id,
+            'status' => 'open',
             'unread_agent_count' => 1,
         ]);
 
         $msg = Message::create([
-            'tenant_id'       => $this->tenant->id,
+            'tenant_id' => $this->tenant->id,
             'conversation_id' => $conversation->id,
-            'sender_type'     => 'visitor',
-            'sender_name'     => 'Customer Sound Test',
-            'content'         => 'Halo apakah toko buka?',
+            'sender_type' => 'visitor',
+            'sender_name' => 'Customer Sound Test',
+            'content' => 'Halo apakah toko buka?',
         ]);
 
         $response = $this->actingAs($this->admin)->getJson(
@@ -174,9 +175,9 @@ class SoundSettingsIntegrationTest extends TestCase
     public function test_admin_can_update_customer_widget_sound_settings(): void
     {
         $payload = [
-            'primary_color'         => '#0071E3',
-            'widget_sound_enabled'  => '1',
-            'widget_sound_type'     => 'pop',
+            'primary_color' => '#0071E3',
+            'widget_sound_enabled' => '1',
+            'widget_sound_type' => 'pop',
         ];
 
         $response = $this->actingAs($this->admin)->put(
@@ -195,21 +196,21 @@ class SoundSettingsIntegrationTest extends TestCase
     {
         $this->widgetSetting->update([
             'widget_sound_enabled' => true,
-            'widget_sound_type'    => 'ding',
+            'widget_sound_type' => 'ding',
         ]);
 
-        $apiKey = \App\Models\ApiKey::create([
-            'tenant_id'  => $this->tenant->id,
+        $apiKey = ApiKey::create([
+            'tenant_id' => $this->tenant->id,
             'project_id' => $this->project->id,
-            'public_key' => 'pk_live_test_sound_' . uniqid(),
-            'name'       => 'Test Key',
-            'is_active'  => true,
+            'public_key' => 'pk_live_test_sound_'.uniqid(),
+            'name' => 'Test Key',
+            'is_active' => true,
         ]);
 
         $response = $this->withHeaders([
             'X-Project-Key' => $apiKey->public_key,
         ])->postJson('/api/v1/client/session/init', [
-            'visitor_uuid' => 'vis-uuid-' . uniqid(),
+            'visitor_uuid' => 'vis-uuid-'.uniqid(),
         ]);
 
         $response->assertStatus(200);

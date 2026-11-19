@@ -4,48 +4,38 @@ namespace App\Services;
 
 use App\Models\ActivityLog;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 
 class ActivityLogger
 {
     /**
-     * Record an audit activity log entry
+     * Catat audit trail. User default = user sesi (tidak pernah dari header klien).
      *
-     * @param string $action e.g. 'integration.created', 'role.updated', 'message.replied'
-     * @param string $description Human-readable description
-     * @param mixed $subject Associated Eloquent model or null
-     * @param array $properties Additional context or parameters
-     * @param User|null $user The user performing the action, or null to auto-resolve
-     * @return ActivityLog
+     * @param  string  $action  mis. 'integration.created', 'role.updated'
      */
-    public static function log(
-        string $action,
-        string $description,
-        $subject = null,
-        array $properties = [],
-        ?User $user = null
-    ): ActivityLog {
-        if (!$user && request()) {
-            $user = request()->user() ?: (request()->header('X-User-Id') ? User::find(request()->header('X-User-Id')) : null);
-        }
+    public static function log(string $action, string $description, ?Model $subject = null, array $properties = [], ?User $user = null): ActivityLog
+    {
+        $request = request();
+        $user ??= $request->user();
 
-        $tenantId = $user ? $user->tenant_id : (app()->bound('current_tenant_id') ? app('current_tenant_id') : ($subject && isset($subject->tenant_id) ? $subject->tenant_id : 1));
+        $tenantId = $user?->tenant_id
+            ?? (app()->bound('current_tenant_id') ? app('current_tenant_id') : null)
+            ?? $subject?->tenant_id
+            ?? $subject?->project?->tenant_id;
 
-        $role = $user ? $user->role : ($properties['role'] ?? 'system');
-        $userName = $user ? $user->name : ($properties['user_name'] ?? 'System / Automated');
-
-        return ActivityLog::create([
-            'tenant_id'    => $tenantId,
-            'user_id'      => $user ? $user->id : null,
-            'user_name'    => $userName,
-            'user_role'    => $role,
-            'action'       => $action,
-            'description'  => $description,
-            'subject_type' => $subject ? get_class($subject) : null,
-            'subject_id'   => $subject ? $subject->getKey() : null,
-            'properties'   => !empty($properties) ? $properties : null,
-            'ip_address'   => request() ? request()->ip() : '127.0.0.1',
-            'user_agent'   => request() ? substr(request()->userAgent() ?? '', 0, 500) : 'CLI/System',
-            'created_at'   => now(),
+        return ActivityLog::withoutGlobalScopes()->create([
+            'tenant_id' => $tenantId,
+            'user_id' => $user?->id,
+            'user_name' => $user?->name ?? ($properties['user_name'] ?? 'System / Automated'),
+            'user_role' => $user?->role ?? ($properties['role'] ?? 'system'),
+            'action' => $action,
+            'description' => $description,
+            'subject_type' => $subject ? $subject::class : null,
+            'subject_id' => $subject?->getKey(),
+            'properties' => $properties ?: null,
+            'ip_address' => $request->ip(),
+            'user_agent' => mb_substr((string) $request->userAgent(), 0, 500),
+            'created_at' => now(),
         ]);
     }
 }

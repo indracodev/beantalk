@@ -5,45 +5,23 @@ namespace Database\Seeders;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     * Hanya menyemai Tenant dan Akun Superadmin utama.
-     */
-    public function run()
+    /** Tenant root + superadmin utama + chatbot bawaan. */
+    public function run(): void
     {
-        // 1. Tenant Root
-        $tenant = Tenant::firstOrCreate(
-            ['slug' => 'indraco'],
-            [
-                'name'      => 'PT Indraco Jaya Perkasa',
-                'plan'      => 'enterprise',
-                'is_active' => true,
-            ]
-        );
-
-        // Bind tenant ke app container selama seeding
+        $tenant = Tenant::firstOrCreate(['slug' => 'indraco'], ['name' => 'PT Indraco Jaya Perkasa', 'plan' => 'enterprise', 'is_active' => true]);
         app()->instance('current_tenant_id', $tenant->id);
 
-        // 2. Akun Superadmin Utama (Fresh & Tunggal)
-        User::firstOrCreate(
-            ['tenant_id' => $tenant->id, 'email' => 'superadmin@indraco.com'],
-            [
-                'name'     => 'Superadmin',
-                'username' => 'superadmin',
-                'password' => Hash::make('password'),
-                'role'     => 'superadmin',
-                'status'   => 'online',
-            ]
-        );
+        User::firstOrCreate(['tenant_id' => $tenant->id, 'email' => 'superadmin@indraco.com'], [
+            'name' => 'Superadmin',
+            'username' => 'superadmin',
+            'password' => env('SEED_SUPERADMIN_PASSWORD', 'password'), // ganti segera setelah login pertama
+            'role' => 'superadmin',
+            'status' => 'online',
+        ]);
 
-        // 3. Semai Chatbot & Widget Setting INDRACO Store
-        $this->call(IndracoStoreChatbotSeeder::class);
-
-        // 4. Semai Chatbot & Widget Setting Supresso Coffee SG
-        $this->call(SupressoCoffeeChatbotSeeder::class);
+        $this->call([IndracoStoreChatbotSeeder::class, SupressoCoffeeChatbotSeeder::class]);
     }
 }

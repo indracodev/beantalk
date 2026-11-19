@@ -14,44 +14,16 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;450;500;550;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['-apple-system', 'BlinkMacSystemFont', 'Inter', 'SF Pro Text', 'system-ui', 'sans-serif'],
-                        mono: ['SF Mono', 'JetBrains Mono', 'ui-monospace', 'Menlo', 'monospace']
-                    },
-                    colors: {
-                        apple: {
-                            canvas: '#F5F5F7',
-                            surface: '#FFFFFF',
-                            sidebar: '#F2F2F7',
-                            border: 'rgba(0, 0, 0, 0.08)',
-                            subtleBorder: 'rgba(0, 0, 0, 0.04)',
-                            divider: '#E5E5EA',
-                            textPrimary: '#1D1D1F',
-                            textSecondary: '#6E6E73',
-                            textTertiary: '#86868B',
-                            blue: '#0071E3',
-                            blueHover: '#0077ED',
-                            green: '#34C759',
-                            orange: '#FF9500',
-                            red: '#FF3B30',
-                        }
-                    },
-                    boxShadow: {
-                        'apple-sm': '0 1px 2px rgba(0, 0, 0, 0.04)',
-                        'apple-card': '0 2px 8px -2px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03)',
-                        'apple-popover': '0 12px 32px -4px rgba(0, 0, 0, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.06)',
-                        'apple-modal': '0 24px 48px -12px rgba(0, 0, 0, 0.18), 0 0 1px rgba(0, 0, 0, 0.15)'
-                    }
-                }
-            }
-        }
-    </script>
+    <script src="@asset('js/tailwind-config.js')"></script>
 
-    <link rel="stylesheet" href="{{ asset('css/admin.css') }}?v={{ file_exists(public_path('css/admin.css')) ? filemtime(public_path('css/admin.css')) : time() }}">
+    <link rel="stylesheet" href="@asset('css/admin/01-base.css')">
+    <link rel="stylesheet" href="@asset('css/admin/02-layout.css')">
+    <link rel="stylesheet" href="@asset('css/admin/03-components.css')">
+    <link rel="stylesheet" href="@asset('css/admin/04-integrations-alerts.css')">
+    <link rel="stylesheet" href="@asset('css/admin/05-modals-resize.css')">
+    <link rel="stylesheet" href="@asset('css/admin/06-responsive.css')">
+    <link rel="stylesheet" href="@asset('css/admin/07-badges-toast.css')">
+    <link rel="stylesheet" href="@asset('css/admin/08-loader.css')">
     @stack('styles')
 
     <!-- CRITICAL: Early State & Anti-Flicker Script (Zero layout shift on page load) -->
@@ -258,22 +230,12 @@
     </div>
 
     <!-- Global Admin Scripts -->
-    <script src="{{ asset('js/admin.js') }}?v={{ file_exists(public_path('js/admin.js')) ? filemtime(public_path('js/admin.js')) : time() }}"></script>
-    <script>
-        function togglePasswordVisibility(inputId, btn) {
-            const input = document.getElementById(inputId);
-            if (!input) return;
-            const isPassword = input.type === 'password';
-            input.type = isPassword ? 'text' : 'password';
-
-            const eyeIcon = btn.querySelector('.eye-icon');
-            const eyeOffIcon = btn.querySelector('.eye-off-icon');
-            if (eyeIcon && eyeOffIcon) {
-                eyeIcon.classList.toggle('hidden', isPassword);
-                eyeOffIcon.classList.toggle('hidden', !isPassword);
-            }
-        }
-    </script>
+    <script src="@asset('js/admin/01-ui-core.js')"></script>
+    <script src="@asset('js/admin/02-layout-panels.js')"></script>
+    <script src="@asset('js/admin/03-audio-engine.js')"></script>
+    <script src="@asset('js/admin/04-tab-badge.js')"></script>
+    <script src="@asset('js/admin/05-global-notifications.js')"></script>
+    <script src="@asset('js/admin/06-loader-and-boot.js')"></script>
     @stack('scripts')
 </body>
 </html>
