@@ -9,12 +9,8 @@
     <title>@yield('title', 'Admin Console') — BeanTalk</title>
     <link rel="icon" id="beantalkFavicon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230071E3'/%3E%3Cpath d='M16 20a4 4 0 0 1 4-4h24a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H24l-8 7v-7a4 4 0 0 1-4-4V20z' fill='%23ffffff'/%3E%3Ccircle cx='26' cy='28' r='2.5' fill='%230071E3'/%3E%3Ccircle cx='32' cy='28' r='2.5' fill='%230071E3'/%3E%3Ccircle cx='38' cy='28' r='2.5' fill='%230071E3'/%3E%3C/svg%3E">
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;450;500;550;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="@asset('css/fonts.css')">
 
-    <script src="@asset('js/tailwind-config.js')"></script>
 
     <link rel="stylesheet" href="@asset('css/admin/01-base.css')">
     <link rel="stylesheet" href="@asset('css/admin/02-layout.css')">
@@ -24,6 +20,8 @@
     <link rel="stylesheet" href="@asset('css/admin/06-responsive.css')">
     <link rel="stylesheet" href="@asset('css/admin/07-badges-toast.css')">
     <link rel="stylesheet" href="@asset('css/admin/08-loader.css')">
+    {{-- Utilitas Tailwind terkompilasi (npm run build:css); dimuat terakhir seperti Play CDN dulu. --}}
+    <link rel="stylesheet" href="@asset('css/tailwind.css')">
     @stack('styles')
 
     <!-- CRITICAL: Early State & Anti-Flicker Script (Zero layout shift on page load) -->
@@ -193,7 +191,7 @@
                     <div>
                         <label class="block font-medium text-apple-textPrimary mb-1" for="myNewPassword">Password Baru</label>
                         <div class="relative">
-                            <input type="password" id="myNewPassword" name="password" class="w-full pl-3 pr-10 py-1.5 border border-apple-border rounded-lg focus:outline-none focus:ring-2 focus:ring-apple-blue/20" placeholder="Minimal 6 karakter" required minlength="6">
+                            <input type="password" id="myNewPassword" name="password" class="w-full pl-3 pr-10 py-1.5 border border-apple-border rounded-lg focus:outline-none focus:ring-2 focus:ring-apple-blue/20" placeholder="Minimal 8 karakter" required minlength="8">
                             <button type="button" onclick="togglePasswordVisibility('myNewPassword', this)" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-apple-textTertiary hover:text-apple-textPrimary p-1 cursor-pointer" title="Tampilkan / Sembunyikan">
                                 <svg class="eye-icon w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                 <svg class="eye-off-icon w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
@@ -204,7 +202,7 @@
                     <div>
                         <label class="block font-medium text-apple-textPrimary mb-1" for="myNewPasswordConfirm">Ulangi Password Baru</label>
                         <div class="relative">
-                            <input type="password" id="myNewPasswordConfirm" name="password_confirmation" class="w-full pl-3 pr-10 py-1.5 border border-apple-border rounded-lg focus:outline-none focus:ring-2 focus:ring-apple-blue/20" placeholder="Ketik ulang password baru" required minlength="6">
+                            <input type="password" id="myNewPasswordConfirm" name="password_confirmation" class="w-full pl-3 pr-10 py-1.5 border border-apple-border rounded-lg focus:outline-none focus:ring-2 focus:ring-apple-blue/20" placeholder="Ketik ulang password baru" required minlength="8">
                             <button type="button" onclick="togglePasswordVisibility('myNewPasswordConfirm', this)" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-apple-textTertiary hover:text-apple-textPrimary p-1 cursor-pointer" title="Tampilkan / Sembunyikan">
                                 <svg class="eye-icon w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                 <svg class="eye-off-icon w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>

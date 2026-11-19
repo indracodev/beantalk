@@ -165,4 +165,21 @@ class Laravel13HardeningTest extends TestCase
 
         $this->assertSame('777:SUPER_SECRET_TOKEN', $this->project->widgetSetting->fresh()->telegram_bot_token);
     }
+
+    public function test_pages_load_no_third_party_assets(): void
+    {
+        $pages = [
+            $this->get('/login')->assertOk()->getContent(),
+            $this->actingAs($this->admin)->get('/admin/dashboard')->assertOk()->getContent(),
+            $this->actingAs($this->admin)->get("/admin/integrations/{$this->project->id}")->assertOk()->getContent(),
+        ];
+
+        foreach ($pages as $html) {
+            preg_match_all('#<(?:script|link)[^>]+(?:src|href)="(https?://[^"/]+)#i', $html, $m);
+            $this->assertSame([], array_values(array_diff(array_unique($m[1]), [rtrim(config('app.url'), '/')])), 'Aset dari host pihak ketiga');
+            foreach (['cdn.tailwindcss.com', 'fonts.googleapis.com', 'fonts.gstatic.com', 'ui-avatars.com'] as $host) {
+                $this->assertStringNotContainsString($host, $html);
+            }
+        }
+    }
 }

@@ -40,7 +40,6 @@ class TeamController extends Controller
             'role' => $data['role'],
             'password' => $data['password'] ?? Str::password(16),
             'status' => 'offline',
-            'avatar_url' => User::defaultAvatar($data['name']),
         ]);
 
         ActivityLogger::log('team.invited', "Menambahkan anggota tim baru: {$user->name} ({$user->email}) sebagai {$user->role}", $user, [

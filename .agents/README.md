@@ -34,6 +34,7 @@ yang bekerja di repo ini. Aturan di sini **wajib** dipatuhi; jika bertentangan d
 | `skills/deploy-shared-hosting` | Rilis ke server cPanel/shared hosting |
 | `skills/import-legacy-db` | Memindahkan data dari DB BeanTalk Laravel 7 |
 | `skills/build-widget-sdk` | Mengubah `packages/chat-sdk` / widget embed |
+| `skills/build-frontend-assets` | Menambah class Tailwind / mengubah font (build CSS lokal) |
 
 ## Hubungan dengan dokumen lain
 

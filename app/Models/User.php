@@ -72,11 +72,6 @@ class User extends Authenticatable
             : $query->where('username', $login)->orWhere('email', $login)->first();
     }
 
-    public static function defaultAvatar(string $name): string
-    {
-        return 'https://ui-avatars.com/api/?name='.urlencode($name).'&background=random';
-    }
-
     /** Ringkasan profil untuk respons API. */
     public function toProfileArray(): array
     {

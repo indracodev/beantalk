@@ -165,9 +165,11 @@ function showToast(title, message) {
     }, 3500);
 }
 
-function copySnippet(key) {
-    const text = `<script src="https://chat.indraco.com/widget.js" data-key="${key}" async><\/script>`;
-    copyToClipboard(text);
+// Salin snippet embed yang dirender server (URL & key benar) dari elemen #elementId.
+function copySnippet(elementId, btn) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    copyToClipboard(el.textContent.trim(), btn);
     showToast('Tersalin', 'Script embed widget telah disalin ke clipboard.');
 }
 

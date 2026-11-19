@@ -16,8 +16,13 @@
 - Vanilla JS + Web API. Tanpa framework/bundler untuk admin. Cek sintaks: `node --check file.js`.
 
 ## CSS & aset
-- CSS admin di `public/css/admin/NN-*.css` (urutan = cascade). Tailwind saat ini via Play CDN + `public/js/tailwind-config.js`.
-  ponytail: Play CDN JIT di browser; upgrade ke CSS hasil kompilasi (Tailwind CLI) setelah QA visual.
+- **Tanpa CDN / layanan pihak ketiga.** Semua aset lokal di `public/` (dijaga test `test_pages_load_no_third_party_assets`).
+- Tailwind v3 **dikompilasi** → `public/css/tailwind.css` (config `tailwind.config.js`, sumber `resources/css/tailwind.css`).
+  Setelah menambah class Tailwind baru di Blade/JS/PHP: `npm run build:css` lalu commit hasilnya. Dev UI: `npm run watch:css`.
+  Jangan merakit nama class sepotong (`'bg-' + warna`) — tulis nama lengkap agar terdeteksi scanner.
+- Font self-hosted (`public/fonts`, `public/css/fonts.css`) dari `@fontsource` via `npm run build:fonts`.
+- Avatar = inisial (CSS), bukan layanan gambar eksternal.
+- CSS admin di `public/css/admin/NN-*.css` (urutan = cascade); `tailwind.css` dimuat terakhir.
 - Selalu `@asset()` untuk cache-busting (`?v=filemtime`), jangan `?v=time()`.
 - Ikon: SVG inline `viewBox="0 0 24 24"`, `currentColor`. Tanpa emoji sistem.
 - Aset publik terkompilasi (widget, css, js) **di-commit** (server tanpa Node).

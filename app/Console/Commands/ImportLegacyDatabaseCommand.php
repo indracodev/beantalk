@@ -78,6 +78,11 @@ class ImportLegacyDatabaseCommand extends Command
 
     private function transform(string $table, array $row): array
     {
+        // Avatar default lama dari layanan pihak ketiga (nama staf bocor ke ui-avatars.com) → pakai inisial lokal.
+        if ($table === 'users' && str_contains((string) ($row['avatar_url'] ?? ''), 'ui-avatars.com')) {
+            $row['avatar_url'] = null;
+        }
+
         if ($table === 'widget_settings' && ! empty($row['telegram_bot_token'])) {
             $row['telegram_bot_token'] = Crypt::encryptString($row['telegram_bot_token']);
         }

@@ -36,7 +36,7 @@ app/
 | Simpan pengaturan widget | `WidgetSettingsUpdater::update()` |
 | Normalisasi URL kanal sosial | `SocialChannels::normalizeUrl()/fromInput()/forEditor()` |
 | Lookup login email/username | `User::findByLogin()` |
-| Username unik / avatar default | `User::uniqueUsernameFrom()`, `User::defaultAvatar()` |
+| Username unik | `User::uniqueUsernameFrom()` (avatar = inisial lokal, tanpa layanan eksternal) |
 | Kirim transkrip | `ChatTranscriptMail::sendTo($conversation)` |
 | Audit log | `ActivityLogger::log($action, $desc, $subject, $props)` |
 | Resolusi project key (ter-cache) | `ApiKey::resolveActive()` / `ApiKey::forgetProjectCache()` |

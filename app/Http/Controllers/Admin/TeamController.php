@@ -57,7 +57,6 @@ class TeamController extends Controller
             'password' => $data['password'],
             'telegram_username' => $this->telegramHandle($data),
             'status' => 'offline',
-            'avatar_url' => User::defaultAvatar($data['name']),
         ]);
 
         ActivityLogger::log('team.invited', "Menambahkan anggota tim baru: {$user->name} ({$user->email}) sebagai {$user->role}", $user, [
