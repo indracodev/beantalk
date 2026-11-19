@@ -23,4 +23,4 @@ find app resources/views public/js public/css tests -type f \( -name '*.php' -o 
 | Test | base class abstrak berisi `setUp()` + kelas per fitur |
 
 Verifikasi wajib: `php artisan test --compact`, `php artisan view:cache`, `node --check` tiap JS, smoke halaman di MySQL.
-Pengecualian yang diterima: bundle hasil build, data JSON, satu modul IIFE kohesif (mis. `03-audio-engine.js`) — beri catatan.
+Pengecualian yang diterima: bundle hasil build (`chat-widget.js`, `tailwind.css`) dan data JSON. Modul IIFE besar dipecah dengan memindahkan fungsi murni ke modul sendiri (contoh `03a-audio-tones.js` + `03b-audio-engine.js`).

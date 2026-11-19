@@ -13,8 +13,10 @@
 
 
     <link rel="stylesheet" href="@asset('css/admin/01-base.css')">
-    <link rel="stylesheet" href="@asset('css/admin/02-layout.css')">
-    <link rel="stylesheet" href="@asset('css/admin/03-components.css')">
+    <link rel="stylesheet" href="@asset('css/admin/02a-layout-shell.css')">
+    <link rel="stylesheet" href="@asset('css/admin/02b-layout-main.css')">
+    <link rel="stylesheet" href="@asset('css/admin/03a-components-tables.css')">
+    <link rel="stylesheet" href="@asset('css/admin/03b-components-widgets.css')">
     <link rel="stylesheet" href="@asset('css/admin/04-integrations-alerts.css')">
     <link rel="stylesheet" href="@asset('css/admin/05-modals-resize.css')">
     <link rel="stylesheet" href="@asset('css/admin/06-responsive.css')">
@@ -230,7 +232,8 @@
     <!-- Global Admin Scripts -->
     <script src="@asset('js/admin/01-ui-core.js')"></script>
     <script src="@asset('js/admin/02-layout-panels.js')"></script>
-    <script src="@asset('js/admin/03-audio-engine.js')"></script>
+    <script src="@asset('js/admin/03a-audio-tones.js')"></script>
+    <script src="@asset('js/admin/03b-audio-engine.js')"></script>
     <script src="@asset('js/admin/04-tab-badge.js')"></script>
     <script src="@asset('js/admin/05-global-notifications.js')"></script>
     <script src="@asset('js/admin/06-loader-and-boot.js')"></script>

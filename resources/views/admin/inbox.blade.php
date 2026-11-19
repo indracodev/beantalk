@@ -79,6 +79,7 @@
     <script src="@asset('js/pages/inbox-page.js')"></script>
     <script src="@asset('js/inbox/01-helpers-audio.js')"></script>
     <script src="@asset('js/inbox/02-feed.js')"></script>
-    <script src="@asset('js/inbox/03-thread-polling.js')"></script>
+    <script src="@asset('js/inbox/03a-thread-polling.js')"></script>
+    <script src="@asset('js/inbox/03b-send-reply-bot.js')"></script>
     <script src="@asset('js/inbox/04-ticket-controls.js')"></script>
 @endpush

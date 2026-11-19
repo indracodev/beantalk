@@ -7,7 +7,8 @@
     <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
     <title>Masuk ke BeanTalk — Universal Customer Chat</title>
     <link rel="stylesheet" href="@asset('css/fonts.css')">
-    <link rel="stylesheet" href="@asset('css/login.css')">
+    <link rel="stylesheet" href="@asset('css/login/01-base.css')">
+    <link rel="stylesheet" href="@asset('css/login/02-form.css')">
 </head>
 <body>
 

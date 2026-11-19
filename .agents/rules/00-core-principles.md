@@ -22,7 +22,7 @@ Jalan pintas yang disengaja wajib diberi penanda:
 | View Blade | 300 baris | partial `admin/partials/<halaman>/` atau komponen `components/admin/` |
 | File JS/CSS tulisan tangan | 300 baris | pecah per seksi, muat berurutan via `@asset` |
 | File test | 300 baris | pecah per fitur, fixture di base class abstrak |
-Pengecualian: bundle hasil build (`public/chat-widget.js`, `public/js/chat-widget.js`), data JSON seeder, `composer.lock`.
+Pengecualian: bundle hasil build (`chat-widget.js`, `public/css/tailwind.css`), data JSON seeder, `composer.lock`.
 
 ## Reuse-first
 - Sebelum menulis helper/query/markup, cari dulu (`grep`) — duplikasi adalah bug yang menunggu.
