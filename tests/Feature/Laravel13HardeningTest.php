@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Mail\ChatTranscriptMail;
 use App\Models\ApiKey;
 use App\Models\Conversation;
 use App\Models\Message;
@@ -14,6 +15,7 @@ use App\Services\ConversationService;
 use App\Services\TelegramService;
 use App\Support\SocialChannels;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 /** Regresi untuk perbaikan keamanan/bug yang ditemukan saat rebuild Laravel 13. */
@@ -181,5 +183,44 @@ class Laravel13HardeningTest extends TestCase
                 $this->assertStringNotContainsString($host, $html);
             }
         }
+    }
+
+    public function test_widget_never_receives_staff_or_telegram_metadata(): void
+    {
+        $visitor = Visitor::create(['project_id' => $this->project->id, 'visitor_uuid' => 'v-meta']);
+        $conv = Conversation::create(['tenant_id' => $this->tenant->id, 'project_id' => $this->project->id, 'visitor_id' => $visitor->id]);
+        $msg = Message::create(['conversation_id' => $conv->id, 'tenant_id' => $this->tenant->id, 'sender_type' => 'agent', 'sender_name' => 'CS', 'content' => 'Hai',
+            'metadata' => ['from_telegram' => true, 'telegram_user_id' => 42, 'telegram_username' => 'cs_secret', 'agent_id' => 7, 'options' => [['label' => 'A', 'value' => 'a']]]]);
+
+        $this->assertSame(['options' => [['label' => 'A', 'value' => 'a']]], $msg->toWidgetArray()['metadata']);
+    }
+
+    public function test_telegram_username_cannot_take_over_bound_agent(): void
+    {
+        $this->project->widgetSetting->update(['telegram_bot_token' => '1:TOKEN', 'telegram_chat_id' => '-100111', 'telegram_topic_mode_enabled' => true]);
+        $this->agent->update(['telegram_username' => 'cs_agent', 'telegram_user_id' => '5']);
+        $visitor = Visitor::create(['project_id' => $this->project->id, 'visitor_uuid' => 'v-tk']);
+        $conv = Conversation::create(['tenant_id' => $this->tenant->id, 'project_id' => $this->project->id, 'visitor_id' => $visitor->id, 'telegram_topic_id' => 9]);
+        $secret = ['X-Telegram-Bot-Api-Secret-Token' => TelegramService::webhookSecret('1:TOKEN')];
+
+        // Orang lain (id berbeda) yang kini memakai username lama staf → ditolak.
+        $this->postJson('/api/v1/telegram/webhook', ['message' => ['message_id' => 1, 'message_thread_id' => 9, 'text' => 'x',
+            'chat' => ['id' => -100111], 'from' => ['id' => 999, 'username' => 'cs_agent', 'is_bot' => false]]], $secret)
+            ->assertJsonPath('note', 'unauthorized_telegram_sender');
+        $this->assertSame(0, $conv->messages()->count());
+    }
+
+    public function test_resolving_closed_ticket_again_does_not_resend_transcript(): void
+    {
+        Mail::fake();
+        ApiKey::create(['tenant_id' => $this->tenant->id, 'project_id' => $this->project->id, 'public_key' => 'pk_live_mail', 'is_active' => true]);
+        $visitor = Visitor::create(['project_id' => $this->project->id, 'visitor_uuid' => 'v-mail', 'email' => 'v@mail.test']);
+        $conv = Conversation::create(['tenant_id' => $this->tenant->id, 'project_id' => $this->project->id, 'visitor_id' => $visitor->id]);
+        $h = ['X-Project-Key' => 'pk_live_mail', 'X-Visitor-Uuid' => 'v-mail'];
+
+        $this->postJson("/api/v1/client/conversations/{$conv->id}/resolve", [], $h)->assertOk();
+        $this->postJson("/api/v1/client/conversations/{$conv->id}/resolve", [], $h)->assertOk();
+
+        Mail::assertSent(ChatTranscriptMail::class, 1);
     }
 }

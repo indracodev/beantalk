@@ -86,19 +86,28 @@ class TelegramWebhookController extends Controller
         return response()->json(['ok' => true, 'conversation_id' => $conversation->id, 'agent_name' => $agent->name]);
     }
 
-    /** Cocokkan akun Telegram pengirim dengan staf tenant (id atau username). */
+    /**
+     * Cocokkan pengirim dengan staf tenant. Identitas utama = telegram_user_id (numerik, permanen).
+     * Username (bisa diganti/diambil orang lain) hanya dipakai sekali untuk staf yang belum terikat,
+     * lalu user id-nya disimpan sehingga pencocokan berikutnya tidak lagi bergantung pada username.
+     */
     private function matchAgent(int $tenantId, array $from): ?User
     {
         $id = ! empty($from['id']) ? (string) $from['id'] : null;
         $username = ! empty($from['username']) ? ltrim(trim($from['username']), '@') : null;
-        if (! $id && ! $username) {
+        if (! $id) {
             return null;
         }
 
-        return User::where('tenant_id', $tenantId)
-            ->where(fn ($q) => $q->when($id, fn ($q) => $q->where('telegram_user_id', $id))
-                ->when($username, fn ($q) => $q->orWhere('telegram_username', $username)))
-            ->first();
+        $staff = User::where('tenant_id', $tenantId);
+        if ($agent = (clone $staff)->where('telegram_user_id', $id)->first()) {
+            return $agent;
+        }
+
+        $agent = $username ? (clone $staff)->whereNull('telegram_user_id')->where('telegram_username', $username)->first() : null;
+        $agent?->update(['telegram_user_id' => $id]);
+
+        return $agent;
     }
 
     private function ack(?string $note = null, array $extra = []): JsonResponse

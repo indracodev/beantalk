@@ -48,6 +48,12 @@ class Message extends Model
         return $this->belongsTo(User::class, 'sender_id');
     }
 
+    /** Key metadata yang boleh sampai ke widget publik (data staf/Telegram/internal tidak pernah ikut). */
+    private const WIDGET_METADATA = [
+        'options', 'is_bot', 'is_welcome', 'is_handoff', 'is_offline',
+        'file_name', 'file_url', 'original_size', 'compressed_size',
+    ];
+
     /** Bentuk pesan untuk widget pengunjung (satu sumber untuk init, polling & kirim). */
     public function toWidgetArray(): array
     {
@@ -58,7 +64,7 @@ class Message extends Model
             'sender_name' => $this->sender_name,
             'content' => $this->content,
             'content_type' => $this->content_type,
-            'metadata' => $this->metadata,
+            'metadata' => array_intersect_key($this->metadata ?? [], array_flip(self::WIDGET_METADATA)) ?: null,
             'status' => $this->status,
             'created_at' => $this->created_at?->toIso8601String(),
         ];

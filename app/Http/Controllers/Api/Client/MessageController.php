@@ -56,6 +56,11 @@ class MessageController extends Controller
             return $this->conversationNotFound();
         }
 
+        // Idempoten: tiket yang sudah selesai tidak memicu email transkrip lagi (cegah spam relay email).
+        if ($conversation->status === 'closed') {
+            return $this->ok(['id' => $conversation->id, 'status' => 'closed']);
+        }
+
         $this->conversations->setStatus($conversation, 'closed');
         ChatTranscriptMail::sendTo($conversation);
 
