@@ -149,4 +149,20 @@ class Laravel13HardeningTest extends TestCase
         $this->postJson('/api/v1/telegram/webhook', $payload(-100111), $secret)->assertJsonPath('conversation_id', $conv->id);
         $this->assertSame(1, $conv->messages()->count());
     }
+
+    public function test_telegram_token_is_never_rendered_and_blank_input_keeps_it(): void
+    {
+        $this->project->widgetSetting->update(['telegram_bot_token' => '777:SUPER_SECRET_TOKEN']);
+
+        $this->actingAs($this->admin)->get("/admin/integrations/{$this->project->id}")
+            ->assertOk()
+            ->assertDontSee('777:SUPER_SECRET_TOKEN', false);
+
+        $this->actingAs($this->admin)->put("/admin/integrations/{$this->project->id}/settings", [
+            'primary_color' => '#000000',
+            'telegram_bot_token' => '',
+        ])->assertRedirect();
+
+        $this->assertSame('777:SUPER_SECRET_TOKEN', $this->project->widgetSetting->fresh()->telegram_bot_token);
+    }
 }
