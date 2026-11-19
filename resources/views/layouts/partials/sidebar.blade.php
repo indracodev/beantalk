@@ -22,7 +22,7 @@
             <a href="{{ route('admin.inbox') }}" data-loading-msg="Memuat Inbox..."
                 class="flex items-center gap-2.5 overflow-hidden text-inherit no-underline">
                 <div
-                    class="w-6 h-6 rounded-md bg-gradient-to-b from-[#333336] to-[#1D1D1F] flex items-center justify-center text-white font-semibold text-[11px] shadow-xs shrink-0">
+                    class="w-6 h-6 rounded-md bg-gradient-to-b from-[#8B6A52] to-[#5E4433] flex items-center justify-center text-white font-semibold text-[11px] shadow-xs shrink-0">
                     B
                 </div>
                 <span

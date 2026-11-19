@@ -1,5 +1,5 @@
 <!-- ========================================== -->
-<div id="resolveTicketModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs transition-opacity">
+<div id="resolveTicketModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-apple-textPrimary/25 backdrop-blur-xs transition-opacity">
     <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-apple-border/80 overflow-hidden transform transition-all flex flex-col animate-scaleIn">
         <div class="px-5 py-4 border-b border-apple-border flex items-center justify-between bg-apple-canvas/40">
             <div class="flex items-center gap-2.5">

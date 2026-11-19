@@ -221,3 +221,12 @@ Dokumen ini mencatat koreksi, pola desain, dan aturan teknis yang dipelajari sel
   - *Konteks*: Dulu satu penghitung `unread_agent_count` per percakapan dikosongkan saat siapa pun membuka chat, sehingga pemantauan superadmin atau satu CS "menghabiskan" status baru untuk semua CS.
   - *Pola*: Status baca per-user di `conversation_participants.last_read_message_id` (tabel sudah ada). Scope `Conversation::unreadFor($user)` = masih menunggu balasan + belum dipegang CS lain + user belum membuka pesan pengunjung terakhir. `markReadBy()` mengecualikan superadmin. Balasan apa pun menutup status untuk semua. Badge/feed/bunyi/dashboard memakai scope yang sama (satu sumber).
 
+- **[2026-11-19] Lesson 31: Admin "Terlalu Kontras" — Akar Masalahnya Token rgba + Modifier Opasitas**:
+  - *Konteks*: User mengeluh halaman admin terlalu kontras. Pengukuran computed style menunjukkan garis kartu/menu/bubble ter-render `rgba(0,0,0,0.8)`.
+  - *Akar masalah*: token `apple.border = rgba(0,0,0,.08)`; Tailwind v3 `border-apple-border/80` **mengganti** alpha menjadi 0.8. Ditambah teks/tombol `#1D1D1F`, header thread blok warna brand penuh, blok kode hitam.
+  - *Pola*: ukur dulu (computed style) sebelum redesign; token warna selalu hex solid; satu palet di Tailwind + CSS var; aksen brand cukup pita tipis. Aturan lengkap di `.agents/rules/06-frontend-blade.md`.
+
+- **[2026-11-19] Lesson 32: Warna Inti Mengikuti Nama Produk (BeanTalk = Biji Kopi)**:
+  - *Konteks*: User meminta warna inti yang tidak berlebihan tetapi khas sesuai nama BeanTalk.
+  - *Pola*: aksen cokelat biji kopi sangrai `#7A5A44` + netral abu batu hangat (bukan krem kekuningan). Ganti tema cukup lewat token: `apple.*` + `:root` CSS, override skala `blue-*` Tailwind, dan elemen yang membaca `var(--apple-blue)` (grafik, favicon). Hindari mengganti kelas satu per satu di view.
+

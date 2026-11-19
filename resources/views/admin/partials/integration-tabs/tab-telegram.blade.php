@@ -97,7 +97,7 @@
                         </div>
                     </div>
 
-                    <div id="telegramWebhookUrl" class="bg-[#1C1C1E] text-neutral-200 font-mono text-[11px] p-2.5 rounded-xl select-all break-all shadow-inner">{{ url('/api/v1/telegram/webhook') }}</div>
+                    <div id="telegramWebhookUrl" class="bg-apple-canvas text-apple-textPrimary border border-apple-border font-mono text-[11px] p-2.5 rounded-xl select-all break-all shadow-inner">{{ url('/api/v1/telegram/webhook') }}</div>
 
                     <!-- Live Webhook Set Result Box -->
                     <div id="telegramWebhookResult" class="hidden p-3 rounded-xl text-[12px]"></div>

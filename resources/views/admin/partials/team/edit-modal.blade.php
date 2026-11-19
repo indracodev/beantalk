@@ -1,5 +1,5 @@
 <!-- MODAL EDIT ANGGOTA TIM -->
-<div class="modal-backdrop fixed inset-0 bg-black/30 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden" id="modalEditTeamMember" onclick="if(event.target===this) closeModal('modalEditTeamMember')">
+<div class="modal-backdrop fixed inset-0 bg-apple-textPrimary/25 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden" id="modalEditTeamMember" onclick="if(event.target===this) closeModal('modalEditTeamMember')">
     <div class="w-full max-w-md bg-white rounded-2xl shadow-apple-modal border border-apple-border overflow-hidden">
         <div class="px-4 py-3.5 border-b border-apple-border flex items-center justify-between bg-apple-canvas/50">
             <h4 class="font-semibold text-[14px] text-apple-textPrimary">Edit Profil &amp; Akun Staf</h4>

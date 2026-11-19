@@ -3,12 +3,12 @@
     class="{{ $isExplicitChat ? 'flex' : 'hidden' }} md:flex flex-1 flex-col h-full bg-white relative overflow-hidden min-w-0 md:min-w-[320px]">
     @if ($activeConversation)
 
-        <!-- Thread Toolbar with Full Integration Brand Color -->
-        <div id="threadHeaderToolbar" class="h-12 md:h-13 px-2.5 md:px-3.5 flex items-center justify-between z-10 shrink-0 gap-2 shadow-xs transition-colors"
-             style="background-color: {{ $activeProjectColor }}; border-bottom: 1px solid rgba(0,0,0,0.12);">
+        <!-- Thread Toolbar: permukaan tenang + pita warna website (sama dengan daftar chat) -->
+        <div id="threadHeaderToolbar" class="min-h-[52px] py-1.5 px-2.5 md:px-3.5 flex items-center justify-between z-10 shrink-0 gap-2 bg-white border-b border-apple-border"
+             style="border-top: 3px solid {{ $activeProjectColor }};">
             <div class="flex items-center gap-2.5 min-w-0 flex-1">
                 <button type="button" onclick="mobileBackToList()"
-                    class="md:hidden p-1.5 -ml-1 rounded-lg text-white/90 hover:text-white hover:bg-white/15 flex items-center justify-center shrink-0 cursor-pointer active:scale-95 transition"
+                    class="md:hidden p-1.5 -ml-1 rounded-lg text-apple-textSecondary hover:text-apple-textPrimary hover:bg-apple-canvas flex items-center justify-center shrink-0 cursor-pointer active:scale-95 transition"
                     title="Kembali ke Daftar Chat">
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <polyline points="15 18 9 12 15 6" />
@@ -17,29 +17,29 @@
 
                 <div class="relative shrink-0">
                     <div id="threadCustomerAvatar"
-                        class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-xs text-white font-bold text-[11px] flex items-center justify-center border border-white/30 shadow-2xs">
+                        class="w-8 h-8 rounded-full bg-apple-canvas text-apple-textPrimary font-semibold text-[11px] flex items-center justify-center border" style="border-color: {{ $activeProjectColor }}66;">
                         {{ $activeInitials }}
                     </div>
                     <span class="w-2.5 h-2.5 rounded-full bg-apple-green absolute bottom-0 right-0 ring-2 ring-white"></span>
                 </div>
 
-                <div class="truncate min-w-0 flex-1 text-white">
+                <div class="truncate min-w-0 flex-1">
                     <div class="flex items-center gap-1.5 flex-wrap">
-                        <h3 id="threadCustomerName" class="font-bold text-[13px] text-white truncate drop-shadow-xs">
+                        <h3 id="threadCustomerName" class="font-semibold text-[13px] text-apple-textPrimary truncate">
                             {{ $activeDisplayName }}
                         </h3>
-                        <span class="text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/30 backdrop-blur-xs">
+                        <span class="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-apple-canvas text-apple-textSecondary border border-apple-border">
                             Tiket #{{ $activeConversation->id }}
                         </span>
-                        <span id="threadStatusPill" class="text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full {{ $activeConversation->status === 'open' ? 'bg-emerald-400/30 text-emerald-100 border border-emerald-300/40' : 'bg-white/20 text-white/80 border border-white/30' }}">
-                            {{ $activeConversation->status === 'open' ? 'OPEN' : 'SELESAI' }}
+                        <span id="threadStatusPill" class="text-[10px] font-medium px-2 py-0.5 rounded-full {{ $activeConversation->status === 'open' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-apple-canvas text-apple-textTertiary border border-apple-border' }}">
+                            {{ $activeConversation->status === 'open' ? 'Open' : 'Selesai' }}
                         </span>
-                        <span id="threadOriginBadge" class="hidden sm:inline-block text-[9px] font-bold tracking-tight uppercase px-2 py-0.5 rounded-full truncate max-w-[120px] bg-white/20 text-white border border-white/30 backdrop-blur-xs shadow-2xs">
+                        <span id="threadOriginBadge" class="hidden sm:inline-block text-[10px] font-medium px-2 py-0.5 rounded-full truncate max-w-[140px] border" style="background-color: {{ $activeProjectColor }}14; color: {{ $activeProjectColor }}; border-color: {{ $activeProjectColor }}30;">
                             {{ $activeSiteName }}
                         </span>
                     </div>
-                    <div id="threadMetaSub" class="text-[10px] text-white/80 truncate font-medium">
-                        {{ $activeCustomerCode }} • CS: <span id="assignedStaffText" class="text-white font-semibold">{{ $assignedStaffName }}</span>
+                    <div id="threadMetaSub" class="text-[10.5px] text-apple-textTertiary truncate">
+                        {{ $activeCustomerCode }} • CS: <span id="assignedStaffText" class="text-apple-textSecondary font-medium">{{ $assignedStaffName }}</span>
                     </div>
                 </div>
             </div>
@@ -51,16 +51,16 @@
                     $isBotActive = (bool) ($activeConversation->is_bot_active ?? true);
                 @endphp
                 <button type="button" id="btnToggleBot" onclick="handleToggleBot()"
-                    class="px-2.5 py-1 text-[10.5px] rounded-lg border border-white/40 bg-white/20 hover:bg-white/30 text-white active:scale-95 transition font-semibold shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                    class="px-2.5 py-1 text-[10.5px] rounded-lg border border-apple-border bg-white hover:bg-apple-canvas text-apple-textPrimary active:scale-95 transition font-medium flex items-center gap-1.5 cursor-pointer"
                     title="{{ $isBotActive ? 'Bot aktif membalas otomatis. Klik untuk menjeda bot.' : 'Bot sedang dijeda. Staf CS menangani percakapan ini. Klik untuk mengaktifkan kembali bot.' }}">
-                    <span class="w-2 h-2 rounded-full {{ $isBotActive ? 'bg-emerald-300 animate-pulse' : 'bg-amber-300' }}" id="botStatusDot"></span>
+                    <span class="w-2 h-2 rounded-full {{ $isBotActive ? 'bg-apple-green animate-pulse' : 'bg-apple-orange' }}" id="botStatusDot"></span>
                     <span id="botToggleText">{{ $isBotActive ? 'Bot: On' : 'Bot: Off' }}</span>
                 </button>
 
                 <!-- Assign Dropdown -->
                 <div class="relative">
                     <select id="assignCsSelect" onchange="handleAssign(this.value)"
-                        class="max-w-[110px] sm:max-w-[135px] px-2 py-1 text-[10.5px] rounded-lg border border-white/40 bg-white text-apple-textPrimary hover:bg-white/95 focus:outline-none focus:ring-2 focus:ring-white/50 font-medium shadow-2xs cursor-pointer truncate">
+                        class="max-w-[110px] sm:max-w-[135px] px-2 py-1 text-[10.5px] rounded-lg border border-apple-border bg-white text-apple-textPrimary hover:bg-apple-canvas focus:outline-none focus:ring-2 focus:ring-apple-blue/20 font-medium cursor-pointer truncate">
                         <option value="">Tugaskan CS</option>
                         @foreach ($staffMembers as $staff)
                             <option value="{{ $staff->id }}"
@@ -73,13 +73,13 @@
 
                 <!-- Status Toggle / Resolve Button -->
                 <button type="button" id="btnToggleStatus" onclick="handleToggleStatus()"
-                    class="px-2.5 py-1 text-[10.5px] rounded-lg border border-white/40 bg-white {{ $activeConversation->status === 'open' ? 'text-apple-red hover:bg-red-50' : 'text-apple-green hover:bg-emerald-50' }} active:scale-95 transition font-semibold shadow-2xs cursor-pointer">
+                    class="px-2.5 py-1 text-[10.5px] rounded-lg border border-apple-border bg-white {{ $activeConversation->status === 'open' ? 'text-apple-red hover:bg-red-50' : 'text-apple-green hover:bg-emerald-50' }} active:scale-95 transition font-medium cursor-pointer">
                     <span>{{ $activeConversation->status === 'open' ? 'Resolve' : 'Reopen' }}</span>
                 </button>
 
                 <!-- Inspector Toggle for Customer Context -->
                 <button type="button" onclick="toggleInspectorMode()"
-                    class="p-1.5 rounded-lg border border-white/30 bg-white/20 hover:bg-white/30 text-white transition shadow-2xs cursor-pointer"
+                    class="p-1.5 rounded-lg border border-apple-border bg-white hover:bg-apple-canvas text-apple-textSecondary transition cursor-pointer"
                     title="Detail Customer">
                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                         <circle cx="12" cy="12" r="10" />

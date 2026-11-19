@@ -4,7 +4,7 @@
 @section('header_title', 'Executive Overview')
 
 @section('content')
-<div class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-24 md:pb-8 flex flex-col gap-5 sm:gap-6 bg-[#F5F5F7]/60 w-full min-h-0">
+<div class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-24 md:pb-8 flex flex-col gap-5 sm:gap-6 w-full min-h-0">
 
     <!-- ====================================================================== -->
     <!-- 1. HEADER & FILTER TOOLBAR                                             -->
@@ -29,7 +29,7 @@
                 <!-- Legend Indicators -->
                 <div class="flex items-center gap-3 text-[11.5px] self-start sm:self-auto">
                     <div class="flex items-center gap-1.5">
-                        <span class="w-2.5 h-2.5 rounded-full bg-[#0071E3] shadow-xs"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-apple-blue shadow-xs"></span>
                         <span class="text-apple-textPrimary font-medium">Inbound Chats</span>
                     </div>
                     <div class="flex items-center gap-1.5">

@@ -51,8 +51,8 @@
         <defs>
             <!-- Area Gradient Inbound -->
             <linearGradient id="inboundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="#0071E3" stop-opacity="0.22" />
-                <stop offset="100%" stop-color="#0071E3" stop-opacity="0.01" />
+                <stop offset="0%" style="stop-color: var(--apple-blue); stop-opacity: 0.22" />
+                <stop offset="100%" style="stop-color: var(--apple-blue); stop-opacity: 0.01" />
             </linearGradient>
             <linearGradient id="resolvedGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stop-color="#34C759" stop-opacity="0.18" />
@@ -82,7 +82,7 @@
 
         @if($inboundPath)
             <!-- Inbound Line (Blue) -->
-            <path d="{{ $inboundPath }}" fill="none" stroke="#0071E3" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="{{ $inboundPath }}" fill="none" style="stroke: var(--apple-blue)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
         @endif
 
         <!-- Interactive Data Points -->
@@ -91,7 +91,7 @@
                 $rpt = $resolvedCoords[$idx];
             @endphp
             <!-- Inbound Dot -->
-            <circle cx="{{ $pt['x'] }}" cy="{{ $pt['y'] }}" r="3.5" fill="#FFFFFF" stroke="#0071E3" stroke-width="2" class="transition-all hover:r-5 cursor-pointer">
+            <circle cx="{{ $pt['x'] }}" cy="{{ $pt['y'] }}" r="3.5" fill="#FFFFFF" style="stroke: var(--apple-blue)" stroke-width="2" class="transition-all hover:r-5 cursor-pointer">
                 <title>{{ $pt['label'] }}: {{ $pt['val'] }} Chats Inbound</title>
             </circle>
             <!-- Resolved Dot -->

@@ -1,5 +1,5 @@
 <!-- MODAL PENGATURAN WIDGET PROYEK INI -->
-<div class="modal-backdrop fixed inset-0 bg-black/30 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden" id="modalSettings_{{ $p->id }}" onclick="if(event.target===this) closeModal('modalSettings_{{ $p->id }}')">
+<div class="modal-backdrop fixed inset-0 bg-apple-textPrimary/25 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden" id="modalSettings_{{ $p->id }}" onclick="if(event.target===this) closeModal('modalSettings_{{ $p->id }}')">
     <div class="w-full max-w-lg bg-white rounded-2xl shadow-apple-modal border border-apple-border overflow-hidden">
         <div class="px-4 py-3.5 border-b border-apple-border flex items-center justify-between bg-apple-canvas/50">
             <div>

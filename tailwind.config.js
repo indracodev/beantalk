@@ -16,28 +16,47 @@ module.exports = {
                 mono: ['SF Mono', 'JetBrains Mono', 'ui-monospace', 'Menlo', 'monospace'],
             },
             colors: {
+                // Skala `blue-*` bawaan diganti skala biji kopi agar semua aksen info/utama di view ikut tema BeanTalk.
+                // (`sky-*` tetap = warna resmi Telegram; `indigo-*` = warna sekunder badge/peran.)
+                blue: {
+                    50: '#F8F4F1',
+                    100: '#EFE6DF',
+                    200: '#E0CFC2',
+                    300: '#CBB09B',
+                    400: '#B08C72',
+                    500: '#93705A',
+                    600: '#7A5A44',
+                    700: '#664A38',
+                    800: '#533C2E',
+                    900: '#443226',
+                    950: '#261B14',
+                },
+                // Palet "Roasted Bean" (BeanTalk = biji kopi): aksen cokelat sangrai, netral abu batu hangat.
+                // Semua hex solid (bukan rgba): modifier /80 Tailwind v3 mengganti alpha.
+                // Harus sama dengan :root di public/css/admin/01-base.css.
                 apple: {
-                    canvas: '#F5F5F7',
+                    canvas: '#F5F4F2',
                     surface: '#FFFFFF',
-                    sidebar: '#F2F2F7',
-                    border: 'rgba(0, 0, 0, 0.08)',
-                    subtleBorder: 'rgba(0, 0, 0, 0.04)',
-                    divider: '#E5E5EA',
-                    textPrimary: '#1D1D1F',
-                    textSecondary: '#6E6E73',
-                    textTertiary: '#86868B',
-                    blue: '#0071E3',
-                    blueHover: '#0077ED',
-                    green: '#34C759',
-                    orange: '#FF9500',
-                    red: '#FF3B30',
+                    sidebar: '#EBE7E2', // oat
+                    border: '#E5E1DC',
+                    subtleBorder: '#EFECE8',
+                    divider: '#E5E1DC',
+                    textPrimary: '#322E2A', // espresso
+                    inkHover: '#45403A',
+                    textSecondary: '#645D56',
+                    textTertiary: '#847C74',
+                    blue: '#7A5A44', // aksen utama: biji kopi sangrai (nama token dipertahankan)
+                    blueHover: '#694B37',
+                    green: '#3FA672',
+                    orange: '#D9922E',
+                    red: '#D9534F',
                 },
             },
             boxShadow: {
-                'apple-sm': '0 1px 2px rgba(0, 0, 0, 0.04)',
-                'apple-card': '0 2px 8px -2px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03)',
-                'apple-popover': '0 12px 32px -4px rgba(0, 0, 0, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.06)',
-                'apple-modal': '0 24px 48px -12px rgba(0, 0, 0, 0.18), 0 0 1px rgba(0, 0, 0, 0.15)',
+                'apple-sm': '0 1px 2px rgba(50, 46, 42, 0.04)',
+                'apple-card': '0 1px 3px rgba(50, 46, 42, 0.04)',
+                'apple-popover': '0 10px 28px -6px rgba(50, 46, 42, 0.12), 0 2px 6px rgba(50, 46, 42, 0.05)',
+                'apple-modal': '0 20px 44px -12px rgba(50, 46, 42, 0.18), 0 0 0 1px rgba(50, 46, 42, 0.05)',
             },
         },
     },

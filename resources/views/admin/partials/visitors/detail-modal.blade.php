@@ -1,5 +1,5 @@
 <!-- 4. VISITOR FOOTPRINT DETAIL MODAL -->
-<div id="modalVisitorDetail" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-xs hidden transition-opacity">
+<div id="modalVisitorDetail" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-apple-textPrimary/25 backdrop-blur-xs hidden transition-opacity">
     <div class="bg-white rounded-2xl border border-apple-border shadow-apple-popover w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         <!-- Modal Header -->
         <div class="px-4 py-3 border-b border-apple-border bg-apple-canvas/50 flex items-center justify-between">

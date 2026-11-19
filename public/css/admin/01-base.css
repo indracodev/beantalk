@@ -2,20 +2,22 @@
    BEANTALK APPLE / macOS DESIGN SYSTEM TOKENS
    ========================================================================== */
 :root {
-    --apple-canvas: #F5F5F7;
+    /* Palet "Roasted Bean" — harus sama dengan tailwind.config.js (apple.*). */
+    --apple-canvas: #F5F4F2;
     --apple-surface: #FFFFFF;
-    --apple-sidebar: #F2F2F7;
-    --apple-border: rgba(0, 0, 0, 0.08);
-    --apple-subtle-border: rgba(0, 0, 0, 0.04);
-    --apple-divider: #E5E5EA;
-    --apple-text-primary: #1D1D1F;
-    --apple-text-secondary: #6E6E73;
-    --apple-text-tertiary: #86868B;
-    --apple-blue: #0071E3;
-    --apple-blue-hover: #0077ED;
-    --apple-green: #34C759;
-    --apple-orange: #FF9500;
-    --apple-red: #FF3B30;
+    --apple-sidebar: #EBE7E2;
+    --apple-border: #E5E1DC;
+    --apple-subtle-border: #EFECE8;
+    --apple-divider: #E5E1DC;
+    --apple-text-primary: #322E2A;
+    --apple-text-secondary: #645D56;
+    --apple-text-tertiary: #847C74;
+    --apple-blue: #7A5A44; /* aksen utama: biji kopi sangrai */
+    --apple-blue-hover: #694B37;
+    --apple-green: #3FA672;
+    --apple-orange: #D9922E;
+    --apple-red: #D9534F;
+    --apple-overlay: rgba(50, 46, 42, 0.28);
 }
 
 /* Native macOS Scrollbar */
@@ -55,7 +57,17 @@
 }
 
 .glass-sidebar {
-    background: #F8F8FA;
+    background: var(--apple-sidebar);
+}
+
+/* Latar ambient area konten: cahaya radial tipis dari warna palet, statis (tanpa animasi, tanpa filter SVG — ringan).
+   Dipasang di <main>; konten di atasnya ikut tergulir sementara latar tetap diam. */
+.ambient-canvas {
+    background:
+        radial-gradient(60rem 36rem at 100% 0%, rgba(122, 90, 68, 0.13), transparent 62%),   /* mocha */
+        radial-gradient(48rem 32rem at 0% 100%, rgba(63, 166, 114, 0.11), transparent 62%),  /* sage / daun kopi */
+        radial-gradient(40rem 28rem at 55% 45%, rgba(201, 154, 94, 0.09), transparent 66%),  /* karamel / crema */
+        var(--apple-canvas);
 }
 
 /* Sidebar Minimized Styles */

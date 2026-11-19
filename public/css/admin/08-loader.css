@@ -8,7 +8,7 @@
     top: 0;
     left: 0;
     height: 2.5px;
-    background: linear-gradient(90deg, #0071E3 0%, #00C7BE 50%, #0071E3 100%);
+    background: linear-gradient(90deg, var(--apple-blue) 0%, #6FA8E8 50%, var(--apple-blue) 100%);
     z-index: 99999;
     width: 0%;
     transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
@@ -72,7 +72,7 @@ html.beantalk-loader-active .beantalk-loader-card {
     width: 20px;
     height: 20px;
     border: 2.5px solid rgba(0, 113, 227, 0.18);
-    border-top-color: #0071E3;
+    border-top-color: var(--apple-blue);
     border-radius: 50%;
     animation: beantalk-spin 0.65s linear infinite;
     flex-shrink: 0;
@@ -81,7 +81,7 @@ html.beantalk-loader-active .beantalk-loader-card {
 .beantalk-loader-text {
     font-size: 12.5px;
     font-weight: 500;
-    color: #1D1D1F;
+    color: var(--apple-text-primary);
     letter-spacing: -0.01em;
 }
 

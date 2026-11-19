@@ -106,8 +106,8 @@
         <svg viewBox="0 0 {{ $svgW }} {{ $svgH }}" class="w-full h-28 sm:h-36 overflow-visible select-none" preserveAspectRatio="none">
             <defs>
                 <linearGradient id="visitorAreaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stop-color="#0071E3" stop-opacity="0.22" />
-                    <stop offset="100%" stop-color="#0071E3" stop-opacity="0.0" />
+                    <stop offset="0%" style="stop-color: var(--apple-blue); stop-opacity: 0.22" />
+                    <stop offset="100%" style="stop-color: var(--apple-blue); stop-opacity: 0.0" />
                 </linearGradient>
             </defs>
 
@@ -128,7 +128,7 @@
 
             <!-- Spline: Pengunjung (Blue) -->
             @if($visPath)
-                <path d="{{ $visPath }}" fill="none" stroke="#0071E3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="{{ $visPath }}" fill="none" style="stroke: var(--apple-blue)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
             @endif
 
             <!-- Spline: Obrolan / Chat (Purple) -->
@@ -139,7 +139,7 @@
             <!-- Interactive Data Points -->
             @foreach($visCoords as $idx => $pt)
                 <g class="cursor-pointer group">
-                    <circle cx="{{ $pt['x'] }}" cy="{{ $pt['y'] }}" r="3" fill="#0071E3" stroke="#FFFFFF" stroke-width="1.5" class="transition-all duration-150 group-hover:r-4.5" />
+                    <circle cx="{{ $pt['x'] }}" cy="{{ $pt['y'] }}" r="3" style="fill: var(--apple-blue)" stroke="#FFFFFF" stroke-width="1.5" class="transition-all duration-150 group-hover:r-4.5" />
                     <title>{{ $pt['label'] }}: {{ $pt['val'] }} pengunjung terlacak</title>
                 </g>
             @endforeach

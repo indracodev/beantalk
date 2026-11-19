@@ -4,7 +4,7 @@
 @section('header_title', 'Pengunjung Terlacak')
 
 @section('content')
-<div class="flex-1 h-full max-h-full min-h-0 min-w-0 overflow-y-auto overscroll-y-contain p-3 sm:p-4 md:p-5 pb-28 md:pb-12 flex flex-col gap-3 sm:gap-3.5 bg-apple-canvas/30 w-full" id="visitorsMainScroll">
+<div class="flex-1 h-full max-h-full min-h-0 min-w-0 overflow-y-auto overscroll-y-contain p-3 sm:p-4 md:p-5 pb-28 md:pb-12 flex flex-col gap-3 sm:gap-3.5 w-full" id="visitorsMainScroll">
     <!-- Compact Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-apple-border gap-2 shrink-0">
         <div class="flex items-center gap-2.5">

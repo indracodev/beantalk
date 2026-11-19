@@ -205,7 +205,7 @@
             </div>
 
             <!-- Global Tree Node Edit Modal -->
-            <div id="modalEditTreeNode" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+            <div id="modalEditTreeNode" class="fixed inset-0 z-50 bg-apple-textPrimary/25 backdrop-blur-xs flex items-center justify-center p-4 hidden">
                 <div class="bg-white rounded-2xl border border-apple-border shadow-2xl max-w-lg w-full p-5 flex flex-col gap-4 animate-in fade-in zoom-in duration-150">
                     <div class="flex items-center justify-between pb-3 border-b border-apple-border">
                         <div class="flex items-center gap-2">

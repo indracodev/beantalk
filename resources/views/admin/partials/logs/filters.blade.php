@@ -26,7 +26,7 @@
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
-                <button type="submit" class="flex-1 sm:flex-initial px-4 py-2 rounded-lg bg-apple-textPrimary text-white hover:bg-black active:scale-[0.98] transition font-medium text-[12px] shadow-2xs inline-flex items-center justify-center gap-1.5 shrink-0">
+                <button type="submit" class="flex-1 sm:flex-initial px-4 py-2 rounded-lg bg-apple-textPrimary text-white hover:bg-apple-inkHover active:scale-[0.98] transition font-medium text-[12px] shadow-2xs inline-flex items-center justify-center gap-1.5 shrink-0">
                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>

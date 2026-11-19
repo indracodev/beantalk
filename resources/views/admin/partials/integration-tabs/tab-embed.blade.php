@@ -111,7 +111,7 @@
                         </button>
                     </div>
 
-                    <div id="embedCodeDetail" class="bg-[#1C1C1E] text-neutral-200 font-mono text-[11px] p-3 rounded-xl select-all break-all leading-relaxed shadow-inner">&lt;script src="{{ url('/chat-widget.js') }}" data-project-key="{{ $publicKey }}" data-api-url="{{ url('/') }}" async&gt;&lt;/script&gt;</div>
+                    <div id="embedCodeDetail" class="bg-apple-canvas text-apple-textPrimary border border-apple-border font-mono text-[11px] p-3 rounded-xl select-all break-all leading-relaxed shadow-inner">&lt;script src="{{ url('/chat-widget.js') }}" data-project-key="{{ $publicKey }}" data-api-url="{{ url('/') }}" async&gt;&lt;/script&gt;</div>
                 </div>
 
                 <!-- API Keys & Domains Quick Glance -->

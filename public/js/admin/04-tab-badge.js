@@ -4,6 +4,9 @@
 // the Chrome / browser tab favicon using HTML5 Canvas & updates document.title
 // ======================================================================
 window.BeanTalkTabBadge = (function() {
+    // Warna aksen dari CSS (--apple-blue) agar favicon selalu sama dengan tema.
+    const accentColor = () => getComputedStyle(document.documentElement).getPropertyValue('--apple-blue').trim() || '#7A5A44';
+
     let unreadCount = 0;
     let canvas = null;
     let ctx = null;
@@ -40,7 +43,7 @@ window.BeanTalkTabBadge = (function() {
         ctx.clearRect(0, 0, 64, 64);
 
         // Apple Blue rounded squircle
-        ctx.fillStyle = '#0071E3';
+        ctx.fillStyle = accentColor();
         if (typeof ctx.roundRect === 'function') {
             ctx.beginPath();
             ctx.roundRect(4, 4, 56, 56, 16);
@@ -70,7 +73,7 @@ window.BeanTalkTabBadge = (function() {
         ctx.fill();
 
         // 3 chat dots inside bubble
-        ctx.fillStyle = '#0071E3';
+        ctx.fillStyle = accentColor();
         ctx.beginPath();
         ctx.arc(24, 28, 2.5, 0, Math.PI * 2);
         ctx.arc(32, 28, 2.5, 0, Math.PI * 2);

@@ -122,7 +122,7 @@
                                     <span id="payload-arrow-tbl-{{ $log->id }}" class="text-[8px] font-bold">▼</span>
                                 </button>
 
-                                <div id="payload-box-tbl-{{ $log->id }}" class="hidden mt-1.5 p-2 bg-[#1E1E1E] text-[#D4D4D4] rounded-lg font-mono text-[11px] overflow-x-auto max-w-xl shadow-inner">
+                                <div id="payload-box-tbl-{{ $log->id }}" class="hidden mt-1.5 p-2 bg-apple-canvas text-apple-textSecondary border border-apple-border rounded-lg font-mono text-[11px] overflow-x-auto max-w-xl shadow-inner">
                                     <pre class="m-0 leading-tight"><code>{{ json_encode($log->properties, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}</code></pre>
                                 </div>
                             </div>

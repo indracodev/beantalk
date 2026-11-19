@@ -116,13 +116,13 @@ function updateBotToggleUI(isActive) {
     if (isActive) {
         text.textContent = 'Bot: On';
         if (dot) {
-            dot.className = 'w-2 h-2 rounded-full bg-emerald-300 animate-pulse';
+            dot.className = 'w-2 h-2 rounded-full bg-apple-green animate-pulse';
         }
         btn.setAttribute('title', 'Bot aktif membalas otomatis. Klik untuk menjeda bot.');
     } else {
         text.textContent = 'Bot: Off';
         if (dot) {
-            dot.className = 'w-2 h-2 rounded-full bg-amber-300';
+            dot.className = 'w-2 h-2 rounded-full bg-apple-orange';
         }
         btn.setAttribute('title', 'Bot sedang dijeda. Staf CS menangani percakapan ini. Klik untuk mengaktifkan kembali bot.');
     }

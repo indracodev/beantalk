@@ -4,7 +4,7 @@
 @section('header_title', 'Team & Access Control')
 
 @section('content')
-<div class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-20 md:pb-6 flex flex-col gap-4 sm:gap-5 bg-apple-canvas/30 w-full">
+<div class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-20 md:pb-6 flex flex-col gap-4 sm:gap-5 w-full">
     <!-- Header with Action -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-apple-border gap-3">
         <div>
@@ -53,7 +53,7 @@
                 <input type="hidden" name="dir" value="{{ request('dir') }}">
             @endif
 
-            <button type="submit" class="px-3 py-1.5 rounded-lg bg-apple-textPrimary text-white hover:bg-black transition font-medium text-[11.5px] shadow-2xs shrink-0">Filter</button>
+            <button type="submit" class="px-3 py-1.5 rounded-lg bg-apple-textPrimary text-white hover:bg-apple-inkHover transition font-medium text-[11.5px] shadow-2xs shrink-0">Filter</button>
             @if(request()->filled('role') || request()->filled('search') || request()->filled('sort'))
                 <a href="{{ route('admin.team') }}" class="px-2 py-1.5 text-apple-textTertiary hover:text-apple-textPrimary text-[11px] shrink-0">Reset</a>
             @endif

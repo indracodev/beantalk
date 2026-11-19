@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id" class="h-full bg-[#F5F5F7] text-[#1D1D1F] antialiased">
+<html lang="id" class="h-full bg-apple-canvas text-apple-textPrimary antialiased">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -66,7 +66,7 @@
     </div>
 
     <!-- Mobile sidebar backdrop overlay -->
-    <div class="sidebar-backdrop fixed inset-0 bg-black/30 backdrop-blur-xs z-30 md:hidden hidden" id="sidebarBackdrop" onclick="closeSidebarMobile()"></div>
+    <div class="sidebar-backdrop fixed inset-0 bg-apple-textPrimary/25 backdrop-blur-xs z-30 md:hidden hidden" id="sidebarBackdrop" onclick="closeSidebarMobile()"></div>
 
     <!-- Modular Sidebar Partial (Full Height macOS style) -->
     @include('layouts.partials.sidebar')
@@ -119,7 +119,7 @@
                 </div>
                 
                 @if(Auth::user()->isSuperAdmin())
-                    <a href="{{ route('admin.integrations') }}" class="inline-flex items-center gap-1.5 bg-apple-textPrimary text-white hover:bg-black active:scale-[0.98] px-2.5 py-1 rounded-lg text-[11px] font-medium transition shadow-apple-sm">
+                    <a href="{{ route('admin.integrations') }}" class="inline-flex items-center gap-1.5 bg-apple-textPrimary text-white hover:bg-apple-inkHover active:scale-[0.98] px-2.5 py-1 rounded-lg text-[11px] font-medium transition shadow-apple-sm">
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                             <line x1="12" y1="5" x2="12" y2="19"></line>
                             <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -152,7 +152,7 @@
         @endif
 
         <!-- Main Content Slot -->
-        <main class="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden relative">
+        <main class="ambient-canvas flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden relative">
             @yield('content')
         </main>
 
@@ -161,7 +161,7 @@
     </div>
 
     <!-- MODAL GANTI PASSWORD SAYA -->
-    <div class="modal-backdrop fixed inset-0 bg-black/30 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden" id="modalChangeMyPassword" onclick="if(event.target===this) closeModal('modalChangeMyPassword')">
+    <div class="modal-backdrop fixed inset-0 bg-apple-textPrimary/25 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden" id="modalChangeMyPassword" onclick="if(event.target===this) closeModal('modalChangeMyPassword')">
         <div class="w-full max-w-md bg-white rounded-2xl shadow-apple-modal border border-apple-border overflow-hidden">
             <div class="px-4 py-3.5 border-b border-apple-border flex items-center justify-between bg-apple-canvas/50">
                 <div class="flex items-center gap-2">

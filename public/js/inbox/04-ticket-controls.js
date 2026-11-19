@@ -119,10 +119,10 @@ async function executeStatusUpdate(targetStatus, closingMsg) {
             const btn = document.getElementById('btnToggleStatus');
             if (btn) {
                 if (newStatus === 'open') {
-                    btn.className = 'px-2.5 py-1 text-[10.5px] rounded-lg border border-white/40 bg-white text-apple-red hover:bg-red-50 active:scale-95 transition font-semibold shadow-2xs cursor-pointer';
+                    btn.className = 'px-2.5 py-1 text-[10.5px] rounded-lg border border-apple-border bg-white text-apple-red hover:bg-red-50 active:scale-95 transition font-medium cursor-pointer';
                     btn.innerHTML = '<span>Resolve</span>';
                 } else {
-                    btn.className = 'px-2.5 py-1 text-[10.5px] rounded-lg border border-white/40 bg-white text-apple-green hover:bg-emerald-50 active:scale-95 transition font-semibold shadow-2xs cursor-pointer';
+                    btn.className = 'px-2.5 py-1 text-[10.5px] rounded-lg border border-apple-border bg-white text-apple-green hover:bg-emerald-50 active:scale-95 transition font-medium cursor-pointer';
                     btn.innerHTML = '<span>Reopen</span>';
                 }
             }
@@ -131,11 +131,11 @@ async function executeStatusUpdate(targetStatus, closingMsg) {
             const statusPillToolbar = document.getElementById('threadStatusPill');
             if (statusPillToolbar) {
                 if (newStatus === 'open') {
-                    statusPillToolbar.className = 'text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-emerald-400/30 text-emerald-100 border border-emerald-300/40';
-                    statusPillToolbar.textContent = 'OPEN';
+                    statusPillToolbar.className = 'text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200';
+                    statusPillToolbar.textContent = 'Open';
                 } else {
-                    statusPillToolbar.className = 'text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-white/20 text-white/80 border border-white/30';
-                    statusPillToolbar.textContent = 'SELESAI';
+                    statusPillToolbar.className = 'text-[10px] font-medium px-2 py-0.5 rounded-full bg-apple-canvas text-apple-textTertiary border border-apple-border';
+                    statusPillToolbar.textContent = 'Selesai';
                 }
             }
 

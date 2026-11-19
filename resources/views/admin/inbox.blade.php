@@ -50,7 +50,7 @@
                 title="Drag to resize customer context column (Double click to reset)"></div>
 
             <!-- Mobile Inspector Backdrop Overlay -->
-            <div id="inspectorBackdrop" class="fixed inset-0 bg-black/30 backdrop-blur-xs z-30 lg:hidden hidden"
+            <div id="inspectorBackdrop" class="fixed inset-0 bg-apple-textPrimary/25 backdrop-blur-xs z-30 lg:hidden hidden"
                 onclick="closeInspectorMobile()"></div>
 
             <!-- ========================================== -->

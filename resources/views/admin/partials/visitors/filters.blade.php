@@ -99,7 +99,7 @@
                 <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100 baris</option>
             </select>
 
-            <button type="submit" class="px-3 py-1.5 rounded-lg bg-apple-textPrimary text-white hover:bg-black transition font-medium text-[11px] shadow-2xs inline-flex items-center gap-1 shrink-0">
+            <button type="submit" class="px-3 py-1.5 rounded-lg bg-apple-textPrimary text-white hover:bg-apple-inkHover transition font-medium text-[11px] shadow-2xs inline-flex items-center gap-1 shrink-0">
                 <span>Cari</span>
             </button>
 

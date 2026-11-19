@@ -4,7 +4,7 @@
 @section('header_title', 'Pengaturan Integrasi: ' . $project->name)
 
 @section('content')
-<div class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-20 md:pb-6 flex flex-col gap-4 sm:gap-5 bg-apple-canvas/30 w-full">
+<div class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-20 md:pb-6 flex flex-col gap-4 sm:gap-5 w-full">
 
     <!-- MAIN FORM WRAPPER -->
     <form id="formIntegrationSettings" action="{{ route('admin.integrations.settings', $project->id) }}" method="POST" enctype="multipart/form-data" onsubmit="serializeAllSettings()" class="flex flex-col gap-4 sm:gap-5 w-full">
