@@ -31,7 +31,13 @@ class TelegramWebhookController extends Controller
             return $this->ack($text === '' ? null : 'no_matching_conversation');
         }
 
-        $conversation = Conversation::with('project.widgetSetting')->where('telegram_topic_id', $topicId)->first();
+        // ID topik forum hanya unik per grup Telegram → wajib dicocokkan dengan chat.id grup milik project.
+        // (telegram_chat_id bukan kolom terenkripsi, jadi aman difilter di PHP setelah index telegram_topic_id.)
+        $chatId = (string) ($msg['chat']['id'] ?? '');
+        $conversation = Conversation::with('project.widgetSetting')
+            ->where('telegram_topic_id', $topicId)
+            ->get()
+            ->first(fn (Conversation $c) => $chatId !== '' && (string) $c->project?->widgetSetting?->telegram_chat_id === $chatId);
         if (! $conversation) {
             return $this->ack('no_matching_conversation');
         }

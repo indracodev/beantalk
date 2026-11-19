@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Visitor;
 use App\Models\WidgetSetting;
 use App\Services\ConversationService;
+use App\Services\TelegramService;
 use App\Support\SocialChannels;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -128,5 +129,24 @@ class Laravel13HardeningTest extends TestCase
         $this->actingAs($this->admin)->postJson("/api/v1/admin/conversations/{$conv->id}/close")->assertNotFound();
         $this->assertSame('agent', $victim->fresh()->role);
         $this->assertNotContains($victim->id, collect($this->actingAs($this->admin)->getJson('/api/v1/admin/team')->json('data.team'))->pluck('id'));
+    }
+
+    public function test_telegram_reply_is_not_routed_across_groups_with_same_topic_id(): void
+    {
+        $this->project->widgetSetting->update(['telegram_bot_token' => '1:TOKEN', 'telegram_chat_id' => '-100111', 'telegram_topic_mode_enabled' => true]);
+        $this->agent->update(['telegram_username' => 'cs_agent']);
+        $visitor = Visitor::create(['project_id' => $this->project->id, 'visitor_uuid' => 'v-tg']);
+        $conv = Conversation::create(['tenant_id' => $this->tenant->id, 'project_id' => $this->project->id, 'visitor_id' => $visitor->id, 'telegram_topic_id' => 7]);
+        $payload = fn (int $chat) => ['message' => [
+            'message_id' => 99, 'message_thread_id' => 7, 'text' => 'Halo',
+            'chat' => ['id' => $chat], 'from' => ['id' => 5, 'username' => 'cs_agent', 'is_bot' => false],
+        ]];
+        $secret = ['X-Telegram-Bot-Api-Secret-Token' => TelegramService::webhookSecret('1:TOKEN')];
+
+        $this->postJson('/api/v1/telegram/webhook', $payload(-100999), $secret)->assertJsonPath('note', 'no_matching_conversation');
+        $this->assertSame(0, $conv->messages()->count());
+
+        $this->postJson('/api/v1/telegram/webhook', $payload(-100111), $secret)->assertJsonPath('conversation_id', $conv->id);
+        $this->assertSame(1, $conv->messages()->count());
     }
 }
